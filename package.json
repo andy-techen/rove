@@ -1,0 +1,19 @@
+{
+  "name": "rove",
+  "private": true,
+  "workspaces": [
+    "apps/mobile"
+  ],
+  "scripts": {
+    "mobile": "yarn workspace mobile start",
+    "api": "cd apps/api && uvicorn main:app --reload",
+    "eslint": "eslint apps/mobile/src apps/mobile/App.tsx"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1"
+  }
+}

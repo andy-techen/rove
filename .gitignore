@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Metro
+.metro-health-check*
+
+# Native builds
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+/apps/mobile/ios
+/apps/mobile/android
+
+# Environment — ignore all .env files at any depth, but keep .env.example tracked
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+build/
+*.egg
+.venv/
+venv/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Supabase
+supabase/.temp/
