@@ -1,89 +1,38 @@
 # Rove
 
-A mobile-first vocal check-in app. Record short clips, get pitch-range analysis, track progress over time.
+A beginner-friendly desktop app for recording vocals over a backing track, layering harmonies, and polishing the mix with plain-language controls. Built with Electron, targeting macOS first.
+
+> The earlier mobile + API version of Rove lives on the `archive/pre-vocal-editor` branch.
+
+## Product principles
+
+1. **Controls describe what you hear, not how audio engineering works.** "Space," not "reverb decay."
+2. **Smart defaults by track role.** Lead, Harmony and Backing Track each start from sensible settings.
+3. **Nothing can sound broken.** Every slider maps to safe ranges under the hood.
+4. **Configurable, not just presets.** Plain-language sliders up front, an "Advanced" toggle for real parameters.
+5. **Non-destructive.** Original recordings are never modified. Edits are instructions stored in the project file.
+
+## Roadmap
+
+| Phase | Goal |
+|---|---|
+| 1. Foundation | Record one track from a USB mic, see the waveform, play it back, save it |
+| 2. Multitrack | Backing track import, multiple vocal tracks, shared timeline, monitoring, latency compensation |
+| 3. Editing | Trim, split, move clips, fades, undo/redo |
+| 4. Polish chain | Clean up, Clarity, Warmth, Smoothness, Space, Soften S sounds |
+| 5. Export | Mixdown to WAV and MP3 with loudness leveling |
 
 ## Stack
 
-- **Mobile**: React Native + Expo (TypeScript)
-- **Backend**: FastAPI (Python) for DSP / pitch analysis
-- **Database & Auth**: Supabase (Postgres, Auth, Storage, Realtime)
+Electron + electron-vite, React + TypeScript, Web Audio API with an AudioWorklet for raw PCM capture, wavesurfer.js for waveforms, electron-builder for packaging.
 
-## Project Structure
-
-```
-rove/
-├── apps/
-│   ├── mobile/          # Expo app
-│   └── api/             # FastAPI service (pitch detection)
-├── supabase/
-│   ├── migrations/      # SQL schema migrations
-│   └── seed.sql         # Initial prompt data
-└── package.json         # Yarn workspace root
-```
-
-## Setup
-
-### Prerequisites
-
-- Node 20+
-- Yarn
-- Python 3.10+ with [`uv`](https://github.com/astral-sh/uv)
-- A Supabase project (hosted or local)
-- Expo Go on a physical device (recommended for audio recording)
-
-### 1. Environment files
+## Development
 
 ```bash
-cp apps/mobile/.env.example apps/mobile/.env
-cp apps/api/.env.example apps/api/.env
+npm install
+npm run dev
 ```
 
-Fill in the Supabase URL and keys from your project's API settings.
+Other scripts: `npm run typecheck`, `npm run lint`, `npm run build:mac`.
 
-### 2. Database
-
-In the Supabase dashboard SQL editor, run each file in order:
-
-1. `supabase/migrations/20240101000000_initial_schema.sql`
-2. `supabase/migrations/20240102000000_add_indexes.sql`
-3. `supabase/migrations/20240103000000_cascade_deletes.sql`
-4. `supabase/seed.sql`
-
-Or use `psql`:
-```bash
-psql "$DATABASE_URL" -f supabase/migrations/20240101000000_initial_schema.sql
-# repeat for each file
-```
-
-### 3. Install dependencies
-
-```bash
-yarn install                                      # mobile deps
-cd apps/api && uv sync && cd -                    # API deps
-```
-
-## Running
-
-**Mobile (Expo)**
-```bash
-yarn mobile
-```
-Scan the QR code with Expo Go on your iPhone.
-
-**API**
-```bash
-yarn api
-```
-Runs on `http://localhost:8000`.
-
-For the mobile app to reach the API on a device, set `EXPO_PUBLIC_FASTAPI_URL` to your machine's LAN IP (e.g. `http://192.168.1.42:8000`) in `apps/mobile/.env`.
-
-## Auth
-
-Email + password. New signups receive a confirmation email; existing users log in directly.
-
-## Lint
-
-```bash
-yarn eslint
-```
+In dev mode macOS attributes microphone permission to your terminal or editor, not the app. If recording is silent, check System Settings > Privacy & Security > Microphone.
