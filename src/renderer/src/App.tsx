@@ -4,6 +4,8 @@ import { loadSavedDeviceId, pickInputDevice, saveDeviceId } from './audio/device
 import { useMicInput } from './audio/useMicInput'
 import { DevicePicker } from './components/DevicePicker'
 import { InputMeter } from './components/InputMeter'
+import { RecordScreen } from './components/RecordScreen'
+import { useSong } from './state/useSong'
 
 type MicAccess = 'requesting' | 'granted' | 'denied'
 type Screen = 'micCheck' | 'record'
@@ -15,6 +17,7 @@ function App(): React.JSX.Element {
   const [checkedDeviceId, setCheckedDeviceId] = useState<string | null>(null)
   const [screen, setScreen] = useState<Screen>('micCheck')
   const { source, error: inputError } = useMicInput(access === 'granted' ? deviceId : null)
+  const song = useSong()
   const levelChecked = deviceId !== null && checkedDeviceId === deviceId
   const deviceLabel = devices.find((d) => d.deviceId === deviceId)?.label || 'Microphone'
 
@@ -61,21 +64,13 @@ function App(): React.JSX.Element {
 
   if (screen === 'record' && access === 'granted') {
     return (
-      <main className="app">
-        <header>
-          <h1>Ready to record</h1>
-          <p className="subtitle">{deviceLabel}</p>
-        </header>
-        <section className="card stack">
-          {inputError && <p className="error">{inputError}</p>}
-          {source && <InputMeter source={source} />}
-          <div className="row">
-            <button className="secondary" onClick={() => setScreen('micCheck')}>
-              Back to mic check
-            </button>
-          </div>
-        </section>
-      </main>
+      <RecordScreen
+        source={source}
+        inputError={inputError}
+        deviceLabel={deviceLabel}
+        song={song}
+        onBack={() => setScreen('micCheck')}
+      />
     )
   }
 

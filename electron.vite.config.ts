@@ -11,6 +11,10 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [react()]
+    plugins: [react()],
+    build: {
+      // AudioWorklet modules must load from a real file: the CSP blocks data: scripts.
+      assetsInlineLimit: (file) => (file.endsWith('.js') ? false : undefined)
+    }
   }
 })

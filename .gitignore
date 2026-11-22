@@ -9,5 +9,7 @@ out
 **/.env
 **/.env.*
 
-# IDE
-.idea/workspace.xml
+# Editors and tools
+.idea/
+.vscode/
+.claude/

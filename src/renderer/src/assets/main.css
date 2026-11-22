@@ -97,6 +97,54 @@ h1 {
   font-size: 14px;
 }
 
+.spread {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.step-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.record-row {
+  align-items: center;
+  gap: 16px;
+}
+
+.record-button {
+  min-width: 112px;
+  padding: 12px 24px;
+  font-weight: 600;
+  background: var(--zone-clip);
+}
+
+.record-button:hover:not(:disabled) {
+  background: var(--zone-clip);
+  filter: brightness(1.1);
+}
+
+.record-button.recording {
+  background: var(--surface-raised);
+  border-color: var(--zone-clip);
+  color: var(--text);
+}
+
+.timer {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.takes {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .error {
   color: var(--zone-clip);
 }

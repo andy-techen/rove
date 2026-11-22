@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, session, systemPreferences } from '
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { registerProjectIpc } from './ipc/project'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -63,6 +64,7 @@ app.whenReady().then(() => {
   ipcMain.handle('mic:openSettings', () =>
     shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone')
   )
+  registerProjectIpc()
 
   createWindow()
 
