@@ -9,13 +9,11 @@
 
 A beginner-friendly desktop app for recording vocals over a backing track, layering harmonies, and polishing the mix with plain-language controls.
 
-## Product principles
+## Who it's for
 
-1. **Controls describe what you hear, not how audio engineering works.** "Space," not "reverb decay."
-2. **Smart defaults by track role.** Lead, Harmony and Backing Track each start from sensible settings.
-3. **Nothing can sound broken.** Every slider maps to safe ranges under the hood.
-4. **Configurable, not just presets.** Plain-language sliders up front, an "Advanced" toggle for real parameters.
-5. **Non-destructive.** Original recordings are never modified. Edits are instructions stored in the project file.
+People who love to sing and want to make something they're proud of, without becoming
+audio engineers. [docs/brand.md](docs/brand.md) has the product principles and how Rove
+should look, sound and feel.
 
 ## Roadmap
 

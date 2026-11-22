@@ -84,7 +84,7 @@
 .chords-now-name {
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 .chords-next-name {

@@ -1,10 +1,13 @@
 .mic-check {
   font-size: var(--font-size-lead);
   max-width: var(--layout-narrow-max);
+  /* Fills the window and sits in its middle; taller content still scrolls from the top. */
+  min-height: 100vh;
   margin: 0 auto;
   padding: var(--space-12) var(--space-7);
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: var(--space-9);
 }
 

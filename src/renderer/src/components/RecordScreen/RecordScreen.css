@@ -149,8 +149,8 @@
   padding: 0;
   border: none;
   border-radius: var(--radius-round);
-  background: var(--color-text);
-  color: var(--color-bg);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   box-shadow: var(--shadow-raised);
   transition:
     transform var(--duration-fast) ease,
@@ -158,8 +158,8 @@
 }
 
 .play-button:hover:not(:disabled) {
-  background: var(--color-text);
-  color: var(--color-bg);
+  background: var(--color-accent-hover);
+  color: var(--color-on-accent);
   transform: scale(var(--scale-hover));
   box-shadow: var(--shadow-raised-hover);
 }

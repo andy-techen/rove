@@ -1,9 +1,10 @@
 # Rove — guidelines for contributors (human and AI)
 
 Rove is an Electron + React + TypeScript desktop app for recording vocals over a
-backing track. `README.md` has the product principles and roadmap. The guidelines
+backing track, for people who love to sing. `README.md` has the roadmap. The guidelines
 below keep the codebase from building up debt; follow them for every change.
 
+- Brand (who it's for, feel, voice, principles; check features against it): @docs/brand.md
 - Design guidelines and patterns: @docs/design.md
 - Development guidelines and patterns: @docs/development.md
 - Writing tests: @docs/testing.md
@@ -26,7 +27,7 @@ src/
                        tabs, transport, processing, lyrics, chords, commands, ui
     components/        One folder per component; shared building blocks in ui/
     styles/            Design tokens and base styles
-docs/                  Design, development and testing guidelines
+docs/                  Brand, design, development, testing and architecture
 ```
 
 ## Working in this repo

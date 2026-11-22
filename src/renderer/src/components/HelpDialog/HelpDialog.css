@@ -109,7 +109,7 @@ button.keymap-keys:hover {
 
 .keymap-keys.capturing {
   border-color: var(--color-accent);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 .keymap-table .keymap-problem {

@@ -1,7 +1,8 @@
 # Design guidelines and patterns
 
-Rove is for beginners. The screen should feel calm and obvious: few words, clear
-icons, and controls that describe what the singer hears.
+How the interface puts the brand (`docs/brand.md`) on screen. The screen should feel
+calm and obvious: few words, clear icons, and controls that describe what the singer
+hears.
 
 ## Visual language
 
@@ -16,14 +17,27 @@ icons, and controls that describe what the singer hears.
   menu → Help). Don't add always-visible paragraphs.
 - **Visible text is for names, values and warnings** the singer must act on (a song
   name, a time, "Too loud!").
-- **Plain language.** Describe what the singer hears ("Space", "Smoothness"), never
-  engineering terms in the main interface. Real parameters live behind Advanced.
+- **Plain language.** Name controls by what the singer hears ("Space", "Smoothness");
+  real parameters live behind Advanced. Tone of voice is in `docs/brand.md`.
 
 ## Styling
 
 - All colours, spacing, radii, font sizes, sizes and durations come from the tokens in
   `src/renderer/src/styles/tokens.css`. Never hard-code one in a component stylesheet.
 - Every colour token has a light and a dark value; check both themes.
+- Colours have jobs. Pick the token by what it means, not how it looks:
+
+  | Token                 | Means                                                     |
+  | --------------------- | --------------------------------------------------------- |
+  | `--color-accent`      | The singer's main action and focus: Play, primary, knobs  |
+  | `--color-on-accent`   | Text and icons on the accent (warm brown, never white)    |
+  | `--color-thumb`       | Slider thumbs and switch dots (cream)                     |
+  | `--color-accent-text` | Accent-coloured text (deeper amber, readable on cream)    |
+  | `--color-wave-vocal`  | The singer's voice on the timeline                        |
+  | `--color-danger`      | Recording, clipping, errors and the playhead              |
+  | `--color-good`        | A healthy level, and the notch where most singers like it |
+  | `--color-warning`     | Getting too loud; always with words or an icon            |
+
 - Each component has its own stylesheet next to it (`Timeline/Timeline.css`), scoped by
   a class named after the component.
 - No `style={{…}}` for appearance. The exception is geometry computed from data at run

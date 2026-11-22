@@ -3,34 +3,37 @@
 :root {
   /* Colour: dark is the default theme. */
   color-scheme: dark;
-  --color-bg: #16171b;
-  --color-surface: #202228;
-  --color-surface-raised: #2a2d35;
-  --color-border: #353945;
-  --color-text: #ecedf1;
-  --color-text-muted: #9aa0ad;
-  --color-accent: #6d83f2;
-  --color-accent-hover: #8597f5;
-  --color-on-accent: #ffffff;
+  --color-bg: #1c1815;
+  --color-surface: #25201c;
+  --color-surface-raised: #302a25;
+  --color-border: #40372f;
+  --color-text: #f6ede4;
+  --color-text-muted: #b3a597;
+  --color-accent: #f2a93b;
+  --color-accent-hover: #f7bb5c;
+  --color-accent-text: #f2a93b;
+  /* Warm brown rather than black: softer on marigold, still 4.9:1 or more. */
+  --color-on-accent: #4a2c06;
   --color-good: #3fbf6a;
   --color-quiet: #5e7a64;
-  --color-warning: #e6b93c;
-  --color-on-warning: #1b1d22;
+  --color-warning: #f0803c;
+  --color-on-warning: #4a2c06;
   --color-danger: #e5534b;
   --color-on-danger: #ffffff;
   --color-good-wash: rgba(63, 191, 106, 0.14);
   --color-danger-wash: rgba(229, 83, 75, 0.35);
-  --color-clip-backing: #263046;
-  --color-wave-backing: #8b9bb4;
-  --color-clip-vocal: #2c2a4a;
-  --color-wave-vocal: #9d8cf5;
-  --color-highlight: rgba(255, 255, 255, 0.18);
+  --color-clip-backing: #2f2924;
+  --color-wave-backing: #a8988a;
+  --color-clip-vocal: #3b2e1c;
+  --color-wave-vocal: #f5b754;
+  --color-highlight: rgba(255, 240, 220, 0.16);
   --color-grid: rgba(255, 255, 255, 0.05);
   --color-backdrop: rgba(0, 0, 0, 0.45);
   --shadow-raised: 0 2px 10px rgba(0, 0, 0, 0.25);
   --shadow-raised-hover: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-thumb: 0 1px 3px rgba(0, 0, 0, 0.45);
-  --color-thumb: #ffffff;
+  /* Cream, not white: thumbs and switch dots sit on marigold and warm greys. */
+  --color-thumb: #fffaf2;
 
   /* Spacing scale. */
   --space-1: 2px;
@@ -142,26 +145,29 @@
 @media (prefers-color-scheme: light) {
   :root {
     color-scheme: light;
-    --color-bg: #f5f6f8;
-    --color-surface: #ffffff;
-    --color-surface-raised: #eef0f4;
-    --color-border: #d9dce3;
-    --color-grid: rgba(0, 0, 0, 0.05);
-    --color-text: #1b1d22;
-    --color-text-muted: #5f6573;
-    --color-accent: #4f6bed;
-    --color-accent-hover: #3f5ad6;
+    --color-bg: #fbf6ef;
+    /* A touch of cream, so panels don't glare against the cream page. */
+    --color-surface: #fffdf9;
+    --color-surface-raised: #f4ece1;
+    --color-border: #e6dacb;
+    --color-grid: rgba(60, 40, 20, 0.06);
+    --color-text: #2a211b;
+    --color-text-muted: #75675a;
+    --color-accent: #eda033;
+    --color-accent-hover: #e08f1f;
+    /* Amber is too light for small text on cream, so text takes a deeper shade. */
+    --color-accent-text: #9c5a06;
     --color-good: #2a9d55;
     --color-quiet: #9bb8a2;
-    --color-warning: #c9961a;
+    --color-warning: #d9621c;
     --color-danger: #d23b33;
     --color-good-wash: rgba(42, 157, 85, 0.12);
     --color-danger-wash: rgba(210, 59, 51, 0.25);
-    --color-clip-backing: #e3e8f2;
-    --color-wave-backing: #5d6f8f;
-    --color-clip-vocal: #ebe7fd;
-    --color-wave-vocal: #6a55d8;
-    --color-highlight: rgba(0, 0, 0, 0.12);
+    --color-clip-backing: #efe6da;
+    --color-wave-backing: #8f7f70;
+    --color-clip-vocal: #fdebcc;
+    --color-wave-vocal: #c47a14;
+    --color-highlight: rgba(80, 50, 20, 0.1);
     --color-backdrop: rgba(0, 0, 0, 0.25);
     --shadow-raised: 0 2px 10px rgba(0, 0, 0, 0.15);
     --shadow-raised-hover: 0 4px 16px rgba(0, 0, 0, 0.2);
