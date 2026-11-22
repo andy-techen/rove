@@ -22,7 +22,7 @@ src/
     constants.ts       Constants both sides need
   renderer/src/
     audio/             Web Audio, by area: engine, mix, polish, pitch, music,
-                       export, encode, dsp, worklets
+                       separation, export, encode, dsp, worklets
     state/             Logic and hooks, by area: song (project, undo, saving), editing,
                        tabs, transport, processing, lyrics, chords, commands, ui
     components/        One folder per component; shared building blocks in ui/

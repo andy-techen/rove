@@ -1,0 +1,29 @@
+.vocals-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* A small ring that fills clockwise as the vocals come out. */
+.vocals-ring {
+  width: var(--size-progress-ring);
+  height: var(--size-progress-ring);
+  border-radius: var(--radius-round);
+  background: conic-gradient(
+    var(--color-accent) calc(var(--progress) * 1turn),
+    var(--color-surface-raised) 0
+  );
+  /* Cut the middle out, leaving a ring. A mask only reads opacity, so any solid token works. */
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--size-progress-ring-width)),
+    var(--color-text) calc(100% - var(--size-progress-ring-width) + 1px)
+  );
+}
+
+.vocals-percent {
+  min-width: var(--layout-progress-percent);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}

@@ -23,9 +23,17 @@ should look, sound and feel.
 | Share as video         | Export the mix as a video for phones: the audio over a photo you import or a background, ready to post         |
 | Better chords          | A more accurate on-device detector (BTC), run on the music without vocals; edit or type chords when it's wrong |
 | Chord backing          | Play the song's chords as the backing track: strummed guitar, piano or a simple beat                           |
-| Remove vocals          | On-device stem separation turns any song into a backing track                                                  |
 | Auto polish            | Analyse a take and set the polish knobs                                                                        |
 | Signing and notarizing | Sign with a Developer ID and notarize, so macOS opens the app without asking                                   |
+
+## Credits
+
+Vocal removal uses [SCNet](https://github.com/starrytong/SCNet) (Tong et al., ICASSP 2024;
+code and pretrained weights MIT, © 2024 starrytong) as exported to ONNX by
+[audiojs](https://huggingface.co/audiojs/scnet), run with
+[@audio/neural-separate](https://github.com/audiojs/neural) and
+[ONNX Runtime Web](https://onnxruntime.ai). Its licence ships with the app in
+`resources/models/scnet/LICENSE`.
 
 ## Stack
 

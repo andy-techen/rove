@@ -54,6 +54,10 @@ export interface RoveApi {
   searchLyrics(query: string): Promise<LyricsResult[]>
   /** Switches the app (and its native menus and dialogs) to a theme, remembered for next time. */
   setTheme(theme: Theme): Promise<Theme>
+  /** The bundled vocal removal model's bytes. */
+  readSeparationModel(): Promise<Uint8Array>
+  /** Saves an instrumental beside the song it came from; resolves to its project path. */
+  saveInstrumental(projectDir: string, source: string, wav: ArrayBuffer): Promise<string>
   /** Where new songs are created. */
   getSongsFolder(): Promise<string>
   /** Asks for a new songs folder; resolves to it, or null if cancelled. */

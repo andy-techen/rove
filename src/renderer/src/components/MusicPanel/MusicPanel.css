@@ -1,0 +1,5 @@
+.music-vocals-error {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-warning);
+}

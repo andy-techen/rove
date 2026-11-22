@@ -8,6 +8,8 @@ import { registerLyricsIpc } from './ipc/lyrics'
 import { registerAppearanceIpc, reportTheme } from './ipc/appearance'
 import { registerKeymapIpc } from './ipc/keymap'
 import { registerSettingsIpc } from './ipc/settings'
+import { registerSeparationIpc } from './ipc/separation'
+import { APP_ORIGIN, registerAppScheme, serveApp } from './appProtocol'
 import { FULL_SCREEN_CHANNEL, NATIVE_EDIT_CHANNEL, NATIVE_EDITS } from '@shared/menu'
 
 // Opening size, and the smallest that still fits the timeline and mixer.
@@ -49,9 +51,11 @@ function createWindow(): void {
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadURL(`${APP_ORIGIN}/index.html`)
   }
 }
+
+registerAppScheme()
 
 async function requestMicAccess(): Promise<boolean> {
   if (process.platform !== 'darwin') return true
@@ -63,6 +67,7 @@ async function requestMicAccess(): Promise<boolean> {
 
 app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.andytechen.rove')
+  serveApp(join(__dirname, '../renderer'))
 
   // Grant audio capture only; the app never needs camera or screen access.
   session.defaultSession.setPermissionRequestHandler((_wc, permission, callback, details) => {
@@ -87,6 +92,7 @@ app.whenReady().then(async () => {
   await registerAppearanceIpc()
   await registerKeymapIpc()
   await registerSettingsIpc()
+  registerSeparationIpc()
 
   createWindow()
 

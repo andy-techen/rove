@@ -38,6 +38,11 @@ export function songFolderName(songName: string): string {
     .trim()
 }
 
+/** The file an instrumental is saved as: its song's name, marked, never an existing name. */
+export function instrumentalName(existing: string[], source: string): string {
+  return uniqueName(existing, `${path.parse(source).name} (no vocals).wav`)
+}
+
 export function uniqueName(existing: string[], desired: string): string {
   if (!existing.includes(desired)) return desired
   const { name, ext } = path.parse(desired)

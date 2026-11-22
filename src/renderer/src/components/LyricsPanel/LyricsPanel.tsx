@@ -55,8 +55,8 @@ export function LyricsPanel({
         </div>
         {lyrics && (
           <IconButton
-            icon={showSearch ? 'lyrics' : 'search'}
-            label={showSearch ? t('lyrics.show') : t('lyrics.change')}
+            icon={showSearch ? 'back' : 'search'}
+            label={showSearch ? t('lyrics.backToLyrics') : t('lyrics.change')}
             disabled={locked}
             onClick={() => setSearching(!showSearch)}
           />

@@ -147,21 +147,52 @@ doesn't analyse the song again.
 
 ## Where the audio work lives (`src/renderer/src/audio`)
 
-| Folder      | What it does                                                                                              |
-| ----------- | --------------------------------------------------------------------------------------------------------- |
-| `engine/`   | The AudioContext, mic devices and input, recorder setup, lining takes up                                  |
-| `mix/`      | The live graph: per-track gain, pan, mute and tone; playback; metronome clicks; meters and waveform peaks |
-| `polish/`   | Polish settings mapped to the noise gate, EQ, compressor, de-esser and reverb                             |
-| `pitch/`    | Sung-note detection, key finding, tuned copies rendered offline                                           |
-| `music/`    | Beat tracking, time-stretch and pitch-shift for the backing track, chord detection                        |
-| `export/`   | Offline mixdown and loudness levelling                                                                    |
-| `encode/`   | WAV and MP3 encoding (takes and exports)                                                                  |
-| `dsp/`      | Shared maths: FFT, resampling, units, and the render cache                                                |
-| `worklets/` | Code that runs on the audio thread: the recorder and the noise gate                                       |
+| Folder        | What it does                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| `engine/`     | The AudioContext, mic devices and input, recorder setup, lining takes up                                  |
+| `mix/`        | The live graph: per-track gain, pan, mute and tone; playback; metronome clicks; meters and waveform peaks |
+| `polish/`     | Polish settings mapped to the noise gate, EQ, compressor, de-esser and reverb                             |
+| `pitch/`      | Sung-note detection, key finding, tuned copies rendered offline                                           |
+| `separation/` | Vocal removal: SCNet in a worker with onnxruntime-web, on the CPU's threads                               |
+| `music/`      | Beat tracking, time-stretch and pitch-shift for the backing track, chord detection                        |
+| `export/`     | Offline mixdown and loudness levelling                                                                    |
+| `encode/`     | WAV and MP3 encoding (takes and exports)                                                                  |
+| `dsp/`        | Shared maths: FFT, resampling, units, and the render cache                                                |
+| `worklets/`   | Code that runs on the audio thread: the recorder and the noise gate                                       |
 
 Heavy work (tuning, speed and key, analysis, export) runs offline into buffers; live
 playback only mixes what's ready. Recordings on disk are never changed: tuned and
 re-pitched versions exist only in memory.
+
+## Vocal removal: a model on the device
+
+```mermaid
+sequenceDiagram
+  actor Singer
+  participant P as MusicPanel
+  participant H as useVocalRemoval
+  participant W as separation worker
+  participant API as window.api
+  participant M as Main
+
+  Singer->>P: Remove vocals
+  P->>H: remove()
+  H->>API: readSeparationModel()
+  API->>M: invoke
+  M-->>H: SCNet model bytes (13 MB, bundled, read once)
+  H->>W: song's channels + model
+  Note over W: @audio/neural-separate: 11 s segments, STFT,<br/>SCNet in onnxruntime-web (CPU threads), iSTFT
+  W-->>H: progress … then the song minus its vocals
+  H->>API: saveInstrumental(dir, song, wav)
+  M->>M: write audio/<song> (no vocals).wav (never overwrites)
+  H->>P: clips play the instrumental; withVocals remembers the song
+```
+
+The model runs inside the app with nothing online. onnxruntime-web only uses more than
+one CPU thread when the page is cross-origin isolated, so the packaged app loads from an
+`app://` protocol that sends those headers (`src/main/appProtocol.ts`) instead of
+`file://`, and the dev server sends them too. "Put vocals back" switches the clips to
+their original songs, which were never touched.
 
 ## What lives where on disk
 

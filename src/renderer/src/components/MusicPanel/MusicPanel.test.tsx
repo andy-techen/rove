@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { MusicSettings } from '../../state/song/project'
+import type { VocalsState } from '../../state/processing/useVocalRemoval'
 import { MusicPanel } from '.'
 
 function renderPanel(music: Partial<MusicSettings> = {}, over = {}) {
@@ -27,6 +28,10 @@ function renderPanel(music: Partial<MusicSettings> = {}, over = {}) {
     onClickOn: vi.fn(),
     canClick: true,
     onReset: vi.fn(),
+    vocals: { state: 'with' } as VocalsState,
+    onRemoveVocals: vi.fn(),
+    onCancelRemoveVocals: vi.fn(),
+    onPutVocalsBack: vi.fn(),
     ...over
   }
   render(<MusicPanel {...props} />)
@@ -106,5 +111,30 @@ describe('MusicPanel', () => {
   it('offers no click when there is no beat to follow', () => {
     renderPanel({}, { canClick: false })
     expect(screen.getByRole('slider', { name: t('music.click') })).toBeDisabled()
+  })
+
+  it('removes the vocals from the music on request', async () => {
+    const { onRemoveVocals } = renderPanel()
+    await userEvent.click(screen.getByRole('button', { name: t('music.removeVocals') }))
+    expect(onRemoveVocals).toHaveBeenCalled()
+  })
+
+  it('shows how far removing the vocals has got, and can stop it', async () => {
+    const { onCancelRemoveVocals } = renderPanel(
+      {},
+      { vocals: { state: 'removing', progress: 0.4 } }
+    )
+    expect(screen.getByRole('progressbar', { name: t('music.removingVocals') })).toHaveAttribute(
+      'aria-valuenow',
+      '40'
+    )
+    await userEvent.click(screen.getByRole('button', { name: t('music.stopRemovingVocals') }))
+    expect(onCancelRemoveVocals).toHaveBeenCalled()
+  })
+
+  it('restores the vocals once they are removed', async () => {
+    const { onPutVocalsBack } = renderPanel({}, { vocals: { state: 'removed' } })
+    await userEvent.click(screen.getByRole('button', { name: t('music.restoreVocals') }))
+    expect(onPutVocalsBack).toHaveBeenCalled()
   })
 })

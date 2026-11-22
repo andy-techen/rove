@@ -13,6 +13,12 @@ import {
 } from './project'
 import { History, emptyHistory, pushHistory, redoHistory, undoHistory } from './history'
 
+/** An audio file just added to the song, already decoded. */
+export interface NewAudio {
+  file: string
+  audio: AudioBuffer
+}
+
 export interface OpenSong {
   dir: string
   data: Project
@@ -46,7 +52,7 @@ export interface Song {
    */
   edit(data: Project, coalesce?: string): void
   /** Like edit, but writes project.json before resolving. Throws if the write fails. */
-  saveProject(data: Project, newAudio?: { file: string; audio: AudioBuffer }): Promise<void>
+  saveProject(data: Project, newAudio?: NewAudio | NewAudio[]): Promise<void>
   undo(): void
   redo(): void
   /** Writes project.json now (File ▸ Save), even if nothing is waiting to be saved. */
@@ -186,16 +192,16 @@ export function useSong(initial: ChosenProject): Song {
     scheduleSave(open.dir)
   }
 
-  const saveProject = async (
-    data: Project,
-    newAudio?: { file: string; audio: AudioBuffer }
-  ): Promise<void> => {
+  const saveProject = async (data: Project, newAudio?: NewAudio | NewAudio[]): Promise<void> => {
     const open = current.current
     if (!open) return
     await writeNow(open.dir, data)
     setHistory((h) => pushHistory(h, open.data))
     show({ dir: open.dir, data })
-    if (newAudio) setAudio((prev) => ({ ...prev, [newAudio.file]: newAudio.audio }))
+    const added = newAudio ? [newAudio].flat() : []
+    if (added.length) {
+      setAudio((prev) => ({ ...prev, ...Object.fromEntries(added.map((a) => [a.file, a.audio])) }))
+    }
   }
 
   const travel = (step: typeof undoHistory): void => {

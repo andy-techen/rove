@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+  instrumentalName,
   nextTakeName,
   nextUntitledName,
   resolveAudioPath,
@@ -81,4 +82,16 @@ describe('resolveAudioPath', () => {
       expect(() => resolveAudioPath(dir, rel)).toThrow()
     }
   )
+})
+
+describe('instrumentalName', () => {
+  it('names the instrumental after the song it came from', () => {
+    expect(instrumentalName([], 'audio/My Song.mp3')).toBe('My Song (no vocals).wav')
+  })
+
+  it('never reuses a name already in the audio folder', () => {
+    expect(instrumentalName(['My Song (no vocals).wav'], 'audio/My Song.mp3')).toBe(
+      'My Song (no vocals)-2.wav'
+    )
+  })
 })
