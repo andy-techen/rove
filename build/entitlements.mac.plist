@@ -10,5 +10,9 @@
     <true/>
     <key>com.apple.security.device.audio-input</key>
     <true/>
+    <!-- Ad-hoc signed builds have no team ID, so Electron's frameworks can't pass
+         library validation; without this the app won't launch. -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
   </dict>
 </plist>

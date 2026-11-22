@@ -33,13 +33,11 @@ jobs:
       - name: Set version from tag
         run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
 
+      # No Developer ID certificate yet, so the app is ad-hoc signed (identity "-"): a
+      # valid signature, but macOS asks people to allow it once. With a certificate,
+      # add CSC_LINK and CSC_KEY_PASSWORD secrets (plus notarization) and drop the flag.
       - name: Build
-        run: npx electron-vite build && npx electron-builder --mac --publish never
-        env:
-          # No Developer ID certificate yet, so the app is ad-hoc signed and macOS asks
-          # people to allow it once. With one, add CSC_LINK and CSC_KEY_PASSWORD secrets
-          # (plus the notarization ones) and drop this line.
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-vite build && npx electron-builder --mac --publish never -c.mac.identity=-
 
       - name: Publish release
         run: >
