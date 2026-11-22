@@ -8,7 +8,7 @@ import { ClickTrack, scheduleClicks } from '../../audio/mix/click'
 import { encodeWav } from '../../audio/encode/wav'
 import { PeakAccumulator } from '../../audio/mix/peaks'
 import { TrackRole, withRecordedClip } from '../song/project'
-import { trackMixes } from '../song/selectors'
+import { playbackKey, trackMixes } from '../song/selectors'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
 import { Song } from '../song/useSong'
 import { ClickGrid, clickTimes, countInSec, countInTicks } from './metronome'
@@ -81,6 +81,10 @@ const MIN_TAKE_SEC = 0.5
 const LIVE_BUCKET_SAMPLES = 480
 // The live mic sits a little under the mix so it doesn't overpower the music.
 const MONITOR_GAIN = 0.8
+
+// An edit made while playing is heard once it settles, so dragging a clip restarts
+// playback once on release rather than on every pointer move.
+const EDIT_SETTLE_MS = 150
 
 export function useTransport(
   song: Song,
@@ -338,6 +342,18 @@ export function useTransport(
     playing.current = processed
     restartRef.current()
   }, [processed])
+
+  // A clip moved, trimmed, split or deleted, or a track removed, while playing: playback
+  // picks up from the same spot with the song as it is now.
+  const lineUp = project ? playbackKey(project) : ''
+  const linedUp = useRef(lineUp)
+  useEffect(() => {
+    if (linedUp.current === lineUp) return
+    linedUp.current = lineUp
+    if (mode !== 'playing') return
+    const timer = setTimeout(() => restartRef.current(), EDIT_SETTLE_MS)
+    return () => clearTimeout(timer)
+  }, [lineUp, mode])
 
   const hasAudio = (tracks ?? []).some((t) => t.clips.some((c) => audio[c.file]))
 

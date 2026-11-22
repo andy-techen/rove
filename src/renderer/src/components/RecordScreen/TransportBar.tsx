@@ -1,5 +1,5 @@
 import { t } from '@shared/copy'
-import { formatDuration, formatMillis } from '../../state/song/project'
+import { formatClock, formatMillis } from '../../state/song/project'
 import { useShortcuts } from '../../state/commands/shortcuts'
 import { InputMeter } from '../InputMeter'
 import { IconButton } from '../ui/IconButton'
@@ -55,7 +55,7 @@ export function TransportBar(props: Props): React.JSX.Element {
         onClick={props.onStop}
       />
       <span className="timer">
-        {formatDuration(props.position)}
+        {formatClock(props.position)}
         <span className="timer-ms">{formatMillis(props.position)}</span>
       </span>
       <div className="transport-meter">

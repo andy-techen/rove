@@ -12,6 +12,7 @@ import {
   trimClipStart,
   withKnownDurations,
   createProject,
+  formatClock,
   formatDuration,
   formatMillis,
   insertClip,
@@ -276,6 +277,18 @@ describe('formatDuration', () => {
     [-1, '0:00']
   ])('%d s is %s', (seconds, text) => {
     expect(formatDuration(seconds)).toBe(text)
+  })
+})
+
+describe('formatClock', () => {
+  it.each([
+    [0, '00:00'],
+    [9.9, '00:09'],
+    [65, '01:05'],
+    [3725, '62:05'],
+    [-1, '00:00']
+  ])('%d s reads %s on the timer', (seconds, text) => {
+    expect(formatClock(seconds)).toBe(text)
   })
 })
 

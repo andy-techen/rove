@@ -174,3 +174,11 @@ export function trackMixes(project: Project): ({ id: string } & TrackMix)[] {
 /** Whether there's anything to export yet. */
 export const canExportSong = (project: Project | undefined): boolean =>
   !!project && songEnd(project) > 0
+
+/**
+ * What playback has lined up: every track's clips. Mix changes (volume, pan, mute,
+ * polish) are left out because the mixer applies them live; a change in this key means
+ * playback has to start again to be heard.
+ */
+export const playbackKey = (project: Project): string =>
+  JSON.stringify(project.tracks.map((track) => [track.id, track.role, track.clips]))

@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { createProject, pasteClip, withRecordedClip } from './project'
+import {
+  createProject,
+  deleteClip,
+  moveClip,
+  pasteClip,
+  withRecordedClip,
+  withTrackChanges,
+  withoutTracks
+} from './project'
 import { polishParams } from '../../audio/polish/polish'
-import { backingTitle, edgeAfter, edgeBefore, mixdownOf, songEnd } from './selectors'
+import { backingTitle, edgeAfter, edgeBefore, mixdownOf, playbackKey, songEnd } from './selectors'
 
 describe('backingTitle', () => {
   it('shows a backing file the way the singer named it', () => {
@@ -69,5 +77,28 @@ describe('mixdownOf', () => {
     const song = recorded()
     const decay = polishParams(song.tracks[0].polish!).reverbDecaySec
     expect(mixdownOf(song, audio).lengthSec).toBeCloseTo(songEnd(song) + decay)
+  })
+})
+
+describe('playbackKey', () => {
+  const song = () => {
+    const p = createProject('Song', 48000)
+    const id = p.tracks[0].id
+    const withClip = withRecordedClip(p, id, { file: 'a.wav', start: 2, offset: 0, duration: 3 })
+    return { p: withClip, id, clipId: withClip.tracks[0].clips[0].id }
+  }
+
+  it('changes when what plays changes: a clip deleted or moved, a track removed', () => {
+    const { p, id, clipId } = song()
+    const key = playbackKey(p)
+    expect(playbackKey(deleteClip(p, id, clipId))).not.toBe(key)
+    expect(playbackKey(moveClip(p, id, clipId, 4))).not.toBe(key)
+    expect(playbackKey(withoutTracks(p, [id]))).not.toBe(key)
+  })
+
+  it('stays the same for mix changes, which the mixer applies live', () => {
+    const { p, id } = song()
+    const mixed = withTrackChanges(p, id, { volume: 0.2, pan: -0.5, muted: true })
+    expect(playbackKey(mixed)).toBe(playbackKey(p))
   })
 })

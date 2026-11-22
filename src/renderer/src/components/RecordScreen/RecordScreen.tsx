@@ -168,9 +168,8 @@ export function RecordScreen({
       song.edit(splitClip(open.data, selected.trackId, selected.clipId, position))
     }
   }
-  const canRemoveTrack = idle && !busy && !!open
   const removeTracks = (removed: string[]): void => {
-    if (!open || !canRemoveTrack) return
+    if (!open || !canEdit) return
     song.edit(withoutTracks(open.data, removed))
     if (selected && removed.includes(selected.trackId)) setSelected(null)
     setSelectedTrackIds((ids) => ids.filter((id) => !removed.includes(id)))
@@ -342,7 +341,7 @@ export function RecordScreen({
             canUndo={canEdit && song.canUndo}
             canRedo={canEdit && song.canRedo}
             canSplit={canSplit}
-            canDelete={deletion?.kind === 'tracks' ? canRemoveTrack : canEdit && !!deletion}
+            canDelete={canEdit && !!deletion}
             onTogglePlay={transport.togglePlay}
             onUndo={song.undo}
             onRedo={song.redo}
