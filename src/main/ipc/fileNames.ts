@@ -60,3 +60,14 @@ export function resolveAudioPath(projectDir: string, relPath: string): string {
   if (path.dirname(full) !== audioDir) throw new Error(t('dialogs.notAudioFile', { path: relPath }))
   return full
 }
+
+/**
+ * A song folder named by the Songbook, as a path directly inside the songs folder, or
+ * null for anything that could reach elsewhere (separators, "." or "..").
+ */
+export function songbookFolder(songsRoot: string, folder: unknown): string | null {
+  if (typeof folder !== 'string' || !folder || folder === '.' || folder === '..') return null
+  if (folder.includes('/') || folder.includes('\\')) return null
+  const dir = path.join(songsRoot, folder)
+  return path.dirname(dir) === songsRoot ? dir : null
+}

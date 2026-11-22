@@ -25,6 +25,22 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
     requestMicAccess: vi.fn(async () => true),
     openMicSettings: vi.fn(async () => {}),
     chooseProjectFolder: vi.fn(async () => null),
+    listSongs: vi.fn(async () => []),
+    openSongbookSong: vi.fn(async (folder: string) => ({
+      dir: `/songs/${folder}`,
+      name: folder,
+      manifest: null
+    })),
+    updateSongbookSong: vi.fn(async (_folder: string, name: string, artist?: string) => ({
+      folder: name,
+      name,
+      ...(artist && { artist }),
+      modifiedAt: 0
+    })),
+    removeSongbookSong: vi.fn(async () => {}),
+    listWishlist: vi.fn(async () => []),
+    addToWishlist: vi.fn(async () => []),
+    removeFromWishlist: vi.fn(async () => []),
     restoreTabs: vi.fn(async () => ({ songs: [], activeSong: null })),
     rememberTabs: vi.fn(async () => {}),
     createSong: vi.fn(async () => ({

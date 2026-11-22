@@ -46,7 +46,8 @@
     "closeTitle": "Close",
     "rename": "Rename song",
     "songName": "Song name",
-    "opening": "Opening…"
+    "opening": "Opening…",
+    "songbook": "Songbook"
   },
   "transport": {
     "play": "Play",
@@ -260,9 +261,13 @@
   "newSong": {
     "title": "New song",
     "nameLabel": "Song name",
-    "namePlaceholder": "Song name, e.g. Golden Hour",
+    "namePlaceholder": "Song name",
     "create": "Create",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "artistLabel": "Artist (optional)",
+    "artistPlaceholder": "Artist",
+    "editTitle": "Edit song",
+    "save": "Save"
   },
   "sidePanels": {
     "width": "Side panel width",
@@ -383,6 +388,7 @@
     "settings": "Settings…",
     "newSong": "New Song",
     "open": "Open…",
+    "songbook": "Songbook…",
     "save": "Save",
     "closeSong": "Close Song",
     "moveSongLeft": "Move Song Left",
@@ -460,5 +466,43 @@
     "reveal": "Show in Finder",
     "close": "Done",
     "failed": "Couldn't export the song. Try again, or pick another folder."
+  },
+  "songbook": {
+    "title": "Songbook",
+    "close": "Close Songbook",
+    "loading": "Looking through your songs…",
+    "error": "Couldn't read your songs.",
+    "empty": "No songs yet. Make one with +, and it'll turn up here.",
+    "item": "Open {name}",
+    "itemOpen": "{name}, already open",
+    "alreadyOpen": "Already open",
+    "justNow": "Just now",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{days} days ago",
+    "newSong": "New song",
+    "removeLabel": "Remove {name}",
+    "cantRemoveOpen": "Close the tab first to remove this song.",
+    "remove": "Remove",
+    "cancel": "Cancel",
+    "removeFailed": "Couldn't remove that song.",
+    "viewsLabel": "Show",
+    "views": {
+      "songs": "Your songs",
+      "wishlist": "Wishlist"
+    },
+    "addToWishlist": "Add",
+    "wishlistEmpty": "Nothing here yet. Add a song you'd love to try.",
+    "wishlistError": "Couldn't update your wishlist.",
+    "start": "Start",
+    "startLabel": "Start {name}",
+    "removeTitle": "Remove {name}?",
+    "removeWarning": "This removes the song and every recording in it. They go to your Mac's Trash, and once the Trash is emptied they're gone for good.",
+    "searchLabel": "Search your songs",
+    "searchPlaceholder": "Search by song or artist",
+    "noMatches": "No songs match that.",
+    "editLabel": "Edit {name}",
+    "cantEditOpen": "Close the tab first to edit this song here.",
+    "editFailed": "Couldn't change that song."
   }
 }

@@ -5,6 +5,7 @@ export const MENU_CHANNEL = 'menu:action'
 export const MENU_ACTIONS = [
   'newSong',
   'open',
+  'songbook',
   'save',
   'export',
   'closeSong',

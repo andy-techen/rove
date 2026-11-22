@@ -19,6 +19,8 @@ export const KEYMAP = {
   settings: { group: 'file', accelerator: 'CmdOrCtrl+,' },
   newSong: { group: 'file', accelerator: 'CmdOrCtrl+N' },
   open: { group: 'file', accelerator: 'CmdOrCtrl+O' },
+  // Beside Open: the other way to open a song.
+  songbook: { group: 'file', accelerator: 'CmdOrCtrl+Shift+O' },
   save: { group: 'file', accelerator: 'CmdOrCtrl+S' },
   export: { group: 'file', accelerator: 'CmdOrCtrl+Shift+E' },
   closeSong: { group: 'file', accelerator: 'CmdOrCtrl+W' },

@@ -2,12 +2,22 @@ import type { ExportFormat } from '../shared/exportFormats'
 import type { KeymapOverrides } from '../shared/keymap'
 import type { LyricsResult } from '../shared/lyrics'
 import type { Theme } from '../shared/appearance'
+import type { WishlistItem } from '../shared/wishlist'
 import type { ContextMenuItem, MenuAction, NativeEdit } from '../shared/menu'
 
 export interface ChosenProject {
   dir: string
   name: string
   manifest: unknown
+  /** Set only when the user named a artist as they created the song. */
+  artist?: string
+}
+
+export interface SongbookEntry {
+  folder: string
+  name: string
+  artist?: string
+  modifiedAt: number
 }
 
 export interface ImportedBackingTrack {
@@ -36,11 +46,23 @@ export interface RoveApi {
   requestMicAccess(): Promise<boolean>
   openMicSettings(): Promise<void>
   chooseProjectFolder(): Promise<ChosenProject | null>
+  /** Every Rove song under the songs folder, newest first, for the Songbook. */
+  listSongs(): Promise<SongbookEntry[]>
+  /** Opens a song by its folder name under the songs folder. */
+  openSongbookSong(folder: string): Promise<ChosenProject>
+  /** Changes a closed song's name and artist; resolves to its entry, folder renamed to match. */
+  updateSongbookSong(folder: string, name: string, artist?: string): Promise<SongbookEntry>
+  /** Moves a song folder to the Trash. The Songbook only offers this for closed songs. */
+  removeSongbookSong(folder: string): Promise<void>
+  /** Songs to try later, newest first. Add and remove resolve to the updated list. */
+  listWishlist(): Promise<WishlistItem[]>
+  addToWishlist(name: string, artist?: string): Promise<WishlistItem[]>
+  removeFromWishlist(id: string): Promise<WishlistItem[]>
   /** Reopens the songs that were open last time. */
   restoreTabs(): Promise<{ songs: ChosenProject[]; activeSong: string | null }>
   rememberTabs(dirs: string[], active: string | null): Promise<void>
   /** Makes a song folder under ~/Music/Rove, named after the song (untitled without a name). */
-  createSong(name?: string): Promise<ChosenProject>
+  createSong(name?: string, artist?: string): Promise<ChosenProject>
   /** Resolves to the song's folder, which moves when Rove manages it. */
   renameSong(projectDir: string, name: string): Promise<string>
   importBackingTrack(projectDir: string): Promise<ImportedBackingTrack | null>

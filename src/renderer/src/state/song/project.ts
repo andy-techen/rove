@@ -45,6 +45,8 @@ export interface Track {
 export interface Project {
   version: 2
   name: string
+  /** Who's singing it. Optional; shown in the Songbook and used by later voice features. */
+  artist?: string | null
   sampleRate: number
   /** What tuning pulls notes toward; unset or null means the nearest of any note. */
   key?: SongKey | null
@@ -276,8 +278,11 @@ export function withTrackAudio(
   }
 }
 
-export function createProject(name: string, sampleRate: number): Project {
-  return withNewTrack({ version: 2, name, sampleRate, tracks: [] }, 'vocal').project
+export function createProject(name: string, sampleRate: number, artist?: string): Project {
+  const trimmed = artist?.trim()
+  const base: Project = { version: 2, name, sampleRate, tracks: [] }
+  if (trimmed) base.artist = trimmed
+  return withNewTrack(base, 'vocal').project
 }
 
 // --- Clip editing. Every edit changes only clip windows; audio files are untouched.
@@ -466,12 +471,17 @@ function migrateV1(v1: ProjectV1): Project {
 }
 
 export function parseProject(data: unknown): Project {
-  const p = data as { version?: unknown; name?: unknown; tracks?: unknown } | null
+  const p = data as { version?: unknown; name?: unknown; tracks?: unknown; artist?: unknown } | null
   if (!p || typeof p.name !== 'string' || !Array.isArray(p.tracks)) {
     throw new Error(t('song.notRoveProject'))
   }
   if (p.version === 1) return migrateV1(p as ProjectV1)
-  if (p.version === 2) return p as Project
+  if (p.version === 2) {
+    const project = p as Project
+    // Only keep an artist field that's actually a non-empty string.
+    if (typeof project.artist !== 'string' || !project.artist.trim()) delete project.artist
+    return project
+  }
   throw new Error(t('song.notRoveProject'))
 }
 

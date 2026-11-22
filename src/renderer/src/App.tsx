@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { HelpDialog } from './components/HelpDialog'
 import { NewSongDialog } from './components/NewSongDialog'
 import { SettingsDialog } from './components/SettingsDialog'
+import { SongbookDialog } from './components/SongbookDialog'
 import { MicCheck } from './components/MicCheck'
 import { RecordScreen } from './components/RecordScreen'
 import { Command, onCommand, useShortcutKeys } from './state/commands/commands'
@@ -20,6 +21,7 @@ function App(): React.JSX.Element {
   const [helpOpen, setHelpOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [naming, setNaming] = useState(false)
+  const [songbookOpen, setSongbookOpen] = useState(false)
   const tabs = useTabs(onboarded)
 
   const showMicCheck = screen === 'micCheck' || mic.access === 'denied'
@@ -49,6 +51,7 @@ function App(): React.JSX.Element {
       else if (!onboarded) return
       else if (action === 'newSong') setNaming(true)
       else if (action === 'open') void tabs.open()
+      else if (action === 'songbook') setSongbookOpen(true)
       else if (action === 'closeSong' && tabs.activeId) tabs.close(tabs.activeId)
       else if ((action === 'moveSongLeft' || action === 'moveSongRight') && tabs.activeId) {
         const at = tabs.tabs.findIndex((item) => item.id === tabs.activeId)
@@ -74,6 +77,7 @@ function App(): React.JSX.Element {
           onMove={tabs.move}
           onClose={tabs.close}
           onNew={() => setNaming(true)}
+          onSongbook={() => setSongbookOpen(true)}
         />
       ))}
       {!showMicCheck && tabs.error && <p className="error app-error">{tabs.error}</p>}
@@ -82,11 +86,34 @@ function App(): React.JSX.Element {
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
       {naming && (
         <NewSongDialog
-          onCreate={(name) => {
+          onCreate={(name, artist) => {
             setNaming(false)
-            void tabs.newSong(name)
+            void tabs.newSong(name, artist)
           }}
           onClose={() => setNaming(false)}
+        />
+      )}
+      {songbookOpen && (
+        <SongbookDialog
+          openFolders={tabs.tabs.map((tab) => {
+            const dir = tabs.info[tab.id]?.dir ?? tab.initial.dir
+            // Basename only: openFolders is compared against the folder name under
+            // the songs folder, not an arbitrary path.
+            return dir.split(/[\\/]/).pop() ?? ''
+          })}
+          onOpen={(folder) => {
+            setSongbookOpen(false)
+            void tabs.openByName(folder)
+          }}
+          onNew={() => {
+            setSongbookOpen(false)
+            setNaming(true)
+          }}
+          onStart={(name, artist) => {
+            setSongbookOpen(false)
+            void tabs.newSong(name, artist)
+          }}
+          onClose={() => setSongbookOpen(false)}
         />
       )}
     </>

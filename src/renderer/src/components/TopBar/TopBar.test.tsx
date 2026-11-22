@@ -20,6 +20,7 @@ function renderBar(overrides: Partial<Parameters<typeof TopBar>[0]> = {}) {
     onMove: vi.fn(),
     onClose: vi.fn(),
     onNew: vi.fn(),
+    onSongbook: vi.fn(),
     onSave: vi.fn(),
     canExport: true,
     onExport: vi.fn(),

@@ -5,6 +5,7 @@ import {
   nextTakeName,
   nextUntitledName,
   resolveAudioPath,
+  songbookFolder,
   songFolderName,
   uniqueFolderName,
   uniqueName
@@ -93,5 +94,17 @@ describe('instrumentalName', () => {
     expect(instrumentalName(['My Song (no vocals).wav'], 'audio/My Song.mp3')).toBe(
       'My Song (no vocals)-2.wav'
     )
+  })
+})
+
+describe('songbookFolder', () => {
+  it('accepts a folder name directly inside the songs folder', () => {
+    expect(songbookFolder('/Music/Rove', 'Fly Away')).toBe('/Music/Rove/Fly Away')
+  })
+
+  it('refuses anything that could reach outside it', () => {
+    for (const bad of ['', '.', '..', '../Desktop', 'a/b', 'a\\b', 3, null]) {
+      expect(songbookFolder('/Music/Rove', bad)).toBeNull()
+    }
   })
 })

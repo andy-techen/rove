@@ -10,6 +10,7 @@ import { registerAppearanceIpc, reportTheme } from './ipc/appearance'
 import { registerKeymapIpc } from './ipc/keymap'
 import { registerSettingsIpc } from './ipc/settings'
 import { registerSeparationIpc } from './ipc/separation'
+import { registerWishlistIpc } from './ipc/wishlist'
 import { APP_ORIGIN, registerAppScheme, serveApp } from './appProtocol'
 import { FULL_SCREEN_CHANNEL, NATIVE_EDIT_CHANNEL, NATIVE_EDITS } from '@shared/menu'
 
@@ -98,6 +99,7 @@ app.whenReady().then(async () => {
   await registerKeymapIpc()
   await registerSettingsIpc()
   registerSeparationIpc()
+  registerWishlistIpc()
 
   createWindow()
 

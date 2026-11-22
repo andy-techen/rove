@@ -6,18 +6,25 @@ import { Dialog } from '../ui/Dialog'
 import './NewSongDialog.css'
 
 interface Props {
-  onCreate(name: string): void
+  onCreate(name: string, artist?: string): void
   onClose(): void
+  /** A song's current details, to change them rather than start a new song. */
+  editing?: { name: string; artist?: string }
 }
 
-/** Names a new song before it's made: the folder, the tab and the lyrics search use it. */
-export function NewSongDialog({ onCreate, onClose }: Props): React.JSX.Element {
-  const [name, setName] = useState('')
+/**
+ * Names a song: a new one before it's made (the folder, the tab and the lyrics search
+ * use the name), or an existing one from the Songbook.
+ */
+export function NewSongDialog({ onCreate, onClose, editing }: Props): React.JSX.Element {
+  const [name, setName] = useState(editing?.name ?? '')
+  const [artist, setArtist] = useState(editing?.artist ?? '')
   const field = useRef<HTMLInputElement>(null)
-  const trimmed = name.trim()
+  const trimmedName = name.trim()
+  const trimmedArtist = artist.trim()
   return (
     <Dialog
-      title={t('newSong.title')}
+      title={editing ? t('newSong.editTitle') : t('newSong.title')}
       closeLabel={t('newSong.cancel')}
       onClose={onClose}
       initialFocus={field}
@@ -27,7 +34,7 @@ export function NewSongDialog({ onCreate, onClose }: Props): React.JSX.Element {
         className="new-song-form"
         onSubmit={(e) => {
           e.preventDefault()
-          if (trimmed) onCreate(trimmed)
+          if (trimmedName) onCreate(trimmedName, trimmedArtist || undefined)
         }}
       >
         <input
@@ -39,12 +46,20 @@ export function NewSongDialog({ onCreate, onClose }: Props): React.JSX.Element {
           maxLength={SONG_NAME_MAX_LENGTH}
           onChange={(e) => setName(e.target.value)}
         />
+        <input
+          type="text"
+          aria-label={t('newSong.artistLabel')}
+          placeholder={t('newSong.artistPlaceholder')}
+          value={artist}
+          maxLength={SONG_NAME_MAX_LENGTH}
+          onChange={(e) => setArtist(e.target.value)}
+        />
         <div className="new-song-actions">
           <Button variant="quiet" onClick={onClose}>
             {t('newSong.cancel')}
           </Button>
-          <Button type="submit" disabled={!trimmed}>
-            {t('newSong.create')}
+          <Button type="submit" disabled={!trimmedName}>
+            {editing ? t('newSong.save') : t('newSong.create')}
           </Button>
         </div>
       </form>

@@ -96,6 +96,7 @@ interface Props {
   onMove(tabId: string, toIndex: number): void
   onClose(tabId: string): void
   onNew(): void
+  onSongbook(): void
 }
 
 /** One open song: its tab bar, transport, timeline and polish panel. */
@@ -109,7 +110,8 @@ export function RecordScreen({
   onSwitch,
   onMove,
   onClose,
-  onNew
+  onNew,
+  onSongbook
 }: Props): React.JSX.Element {
   const song = useSong(initial)
   const { song: open, audio, skipBacking, busy } = song
@@ -420,6 +422,7 @@ export function RecordScreen({
         onMove={onMove}
         onClose={onClose}
         onNew={onNew}
+        onSongbook={onSongbook}
         onSave={() => void song.saveNow()}
         canExport={canExport}
         onExport={openExport}

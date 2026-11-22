@@ -33,6 +33,7 @@ interface Props {
   onMove(tabId: string, toIndex: number): void
   onClose(tabId: string): void
   onNew(): void
+  onSongbook(): void
   onSave(): void
   /** Nothing recorded or added yet means nothing to export. */
   canExport: boolean
@@ -54,6 +55,7 @@ export function TopBar({
   onMove,
   onClose,
   onNew,
+  onSongbook,
   onSave,
   canExport,
   onExport
@@ -160,6 +162,14 @@ export function TopBar({
           label={t('topBar.newSong')}
           disabled={disabled}
           onClick={onNew}
+        />
+        <IconButton
+          icon="songbook"
+          iconSize={TAB_ICON_SIZE}
+          label={t('topBar.songbook')}
+          title={shortcuts.label(t('topBar.songbook'), 'songbook')}
+          disabled={disabled}
+          onClick={onSongbook}
         />
       </nav>
       {saveState && (

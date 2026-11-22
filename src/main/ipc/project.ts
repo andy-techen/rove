@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent, shell } from 'electron'
 import { SONG_NAME_MAX_LENGTH } from '@shared/constants'
 import { t } from '@shared/copy'
 import fs from 'node:fs/promises'
@@ -8,6 +8,7 @@ import {
   nextTakeName,
   nextUntitledName,
   resolveAudioPath,
+  songbookFolder,
   songFolderName,
   uniqueFolderName,
   uniqueName
@@ -89,6 +90,40 @@ async function readManifest(projectDir: string): Promise<unknown> {
   }
 }
 
+// Folders Rove created under the songs folder follow the song name. Folders the user
+// picked elsewhere are theirs to organize, so only the name in project.json changes.
+async function followName(projectDir: string, songName: string): Promise<string> {
+  const folder = songFolderName(songName)
+  if (!folder) throw new Error(t('dialogs.songNameNeeded'))
+  if (path.dirname(projectDir) !== songsRoot() || path.basename(projectDir) === folder) {
+    return projectDir
+  }
+  const siblings = (await fs.readdir(songsRoot())).filter((n) => n !== path.basename(projectDir))
+  const target = path.join(songsRoot(), uniqueFolderName(siblings, folder))
+  await fs.rename(projectDir, target)
+  if (openProjects.delete(projectDir)) openProjects.add(target)
+  return target
+}
+
+// Write then rename so a crash mid-write can't leave a half-written project file.
+async function writeManifestFile(projectDir: string, manifest: unknown): Promise<void> {
+  const target = path.join(projectDir, MANIFEST)
+  const tmp = `${target}.tmp`
+  await fs.writeFile(tmp, JSON.stringify(manifest, null, 2))
+  await fs.rename(tmp, target)
+}
+
+const cleanText = (raw: unknown): string =>
+  typeof raw === 'string' ? raw.trim().slice(0, SONG_NAME_MAX_LENGTH) : ''
+
+/** A Rove song inside the songs folder, named by the Songbook; anything else is refused. */
+async function songbookSong(folder: unknown): Promise<string> {
+  const dir = songbookFolder(songsRoot(), folder)
+  if (!dir) throw new Error(t('dialogs.songNotOpen'))
+  await fs.access(path.join(dir, MANIFEST))
+  return dir
+}
+
 export function registerProjectIpc(): void {
   ipcMain.handle('project:choose', async (e) => {
     const options = {
@@ -104,6 +139,84 @@ export function registerProjectIpc(): void {
     if (result.canceled || !result.filePaths[0]) return null
     return openSong(result.filePaths[0])
   })
+
+  // Lists every song under the songs folder for the Songbook. Folders without a
+  // project.json are skipped: the user's other folders aren't Rove songs.
+  ipcMain.handle('project:list', async () => {
+    const root = songsRoot()
+    let entries: import('node:fs').Dirent[]
+    try {
+      entries = await fs.readdir(root, { withFileTypes: true })
+    } catch {
+      return []
+    }
+    const songs: { folder: string; name: string; artist?: string; modifiedAt: number }[] = []
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      const dir = path.join(root, entry.name)
+      try {
+        const [manifest, stat] = await Promise.all([
+          readManifest(dir),
+          fs.stat(path.join(dir, MANIFEST))
+        ])
+        const m = manifest as { name?: unknown; artist?: unknown } | null
+        const name = m && typeof m.name === 'string' && m.name.trim() ? m.name : entry.name
+        const artist = m && typeof m.artist === 'string' && m.artist.trim() ? m.artist : undefined
+        songs.push({
+          folder: entry.name,
+          name,
+          ...(artist && { artist }),
+          modifiedAt: stat.mtimeMs
+        })
+      } catch {
+        // Not a Rove song (no project.json) or unreadable; skip it.
+      }
+    }
+    songs.sort((a, b) => b.modifiedAt - a.modifiedAt)
+    return songs
+  })
+
+  // Opens a song by its folder name under the songs folder. The renderer can't pass
+  // an arbitrary path: anything with a separator, parent reference or that resolves
+  // outside the songs folder is refused.
+  ipcMain.handle('project:openByName', async (_e, folder: unknown) => {
+    const dir = await songbookSong(folder)
+    return openSong(dir)
+  })
+
+  // The singer asked to remove the whole song, so it goes to the Trash, where they can
+  // still get it back; Rove itself never deletes recordings. The Songbook keeps songs
+  // open in a tab out of reach (openProjects also holds songs whose tabs have closed).
+  ipcMain.handle('project:trashByName', async (_e, folder: unknown) => {
+    const dir = await songbookSong(folder)
+    await shell.trashItem(dir)
+    openProjects.delete(dir)
+  })
+
+  // Changes a closed song's name and artist from the Songbook; its folder follows the name.
+  ipcMain.handle(
+    'project:updateDetails',
+    async (_e, folder: unknown, name: unknown, artist: unknown) => {
+      const dir = await songbookSong(folder)
+      const songName = cleanText(name)
+      if (!songFolderName(songName)) throw new Error(t('dialogs.songNameNeeded'))
+      const manifest = await readManifest(dir)
+      if (!manifest || typeof manifest !== 'object') throw new Error(t('dialogs.songNotOpen'))
+      const next: Record<string, unknown> = { ...manifest, name: songName }
+      const artistName = cleanText(artist)
+      if (artistName) next.artist = artistName
+      else delete next.artist
+      await writeManifestFile(dir, next)
+      const moved = await followName(dir, songName)
+      const { mtimeMs } = await fs.stat(path.join(moved, MANIFEST))
+      return {
+        folder: path.basename(moved),
+        name: songName,
+        ...(artistName && { artist: artistName }),
+        modifiedAt: mtimeMs
+      }
+    }
+  )
 
   ipcMain.handle('project:restoreTabs', async () => {
     const { openSongs, activeSong } = await recallTabs()
@@ -126,8 +239,10 @@ export function registerProjectIpc(): void {
   })
 
   // A named song gets a folder after its name; an unnamed one (the first launch) is untitled.
-  ipcMain.handle('project:createNew', async (_e, name: unknown) => {
+  ipcMain.handle('project:createNew', async (_e, name: unknown, artist: unknown) => {
     const wanted = typeof name === 'string' ? name.trim().slice(0, SONG_NAME_MAX_LENGTH) : ''
+    const artistName =
+      typeof artist === 'string' ? artist.trim().slice(0, SONG_NAME_MAX_LENGTH) : ''
     await fs.mkdir(songsRoot(), { recursive: true })
     const existing = await fs.readdir(songsRoot())
     const folder = songFolderName(wanted)
@@ -137,24 +252,13 @@ export function registerProjectIpc(): void {
     )
     await fs.mkdir(dir)
     const opened = await openSong(dir)
-    return folder ? { ...opened, name: wanted } : opened
+    const named = folder ? { ...opened, name: wanted } : opened
+    return artistName ? { ...named, artist: artistName } : named
   })
 
-  // Folders Rove created under ~/Music/Rove follow the song name. Folders the user
-  // picked elsewhere are theirs to organize, so only the name in project.json changes.
   ipcMain.handle('project:rename', async (_e, projectDir: string, songName: string) => {
     assertOpen(projectDir)
-    const folder = songFolderName(songName)
-    if (!folder) throw new Error(t('dialogs.songNameNeeded'))
-    if (path.dirname(projectDir) !== songsRoot() || path.basename(projectDir) === folder) {
-      return projectDir
-    }
-    const siblings = (await fs.readdir(songsRoot())).filter((n) => n !== path.basename(projectDir))
-    const target = path.join(songsRoot(), uniqueFolderName(siblings, folder))
-    await fs.rename(projectDir, target)
-    openProjects.delete(projectDir)
-    openProjects.add(target)
-    return target
+    return followName(projectDir, songName)
   })
 
   // Copies the chosen file into the project so the song folder is self-contained
@@ -208,10 +312,6 @@ export function registerProjectIpc(): void {
 
   ipcMain.handle('project:writeManifest', async (_e, projectDir: string, manifest: unknown) => {
     assertOpen(projectDir)
-    // Write then rename so a crash mid-write can't leave a half-written project file.
-    const target = path.join(projectDir, MANIFEST)
-    const tmp = `${target}.tmp`
-    await fs.writeFile(tmp, JSON.stringify(manifest, null, 2))
-    await fs.rename(tmp, target)
+    await writeManifestFile(projectDir, manifest)
   })
 }

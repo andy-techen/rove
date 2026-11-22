@@ -1,0 +1,181 @@
+.songbook {
+  width: min(var(--layout-dialog), calc(100vw - var(--space-12)));
+}
+
+.songbook-views {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.songbook-view {
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-ui);
+  cursor: pointer;
+}
+
+.songbook-view.active {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+/* Scrolling clips whatever reaches past the edge, focus rings included, so the body
+   leaves room for a full ring (offset plus width) and pulls back out by as much to
+   stay lined up with the search box. */
+.songbook-body {
+  --songbook-ring-room: calc(var(--size-focus-ring) * 2);
+  height: min(50vh, var(--layout-songbook-list));
+  overflow-y: auto;
+  padding: var(--songbook-ring-room);
+  margin: calc(-1 * var(--songbook-ring-room));
+}
+
+.songbook-note {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-ui);
+  text-align: center;
+  padding: var(--space-6) 0;
+}
+
+.songbook-error {
+  color: var(--color-danger);
+}
+
+.songbook-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.songbook-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-right: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.songbook-item:hover,
+.songbook-item:focus-within {
+  border-color: var(--color-border);
+}
+
+.wishlist-item {
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+}
+
+.songbook-open {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font-size: var(--font-size-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.songbook-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: var(--font-size-ui);
+}
+
+.songbook-name {
+  font-weight: var(--font-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.songbook-artist,
+.songbook-when {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.songbook-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.songbook-when {
+  flex-shrink: 0;
+}
+
+.songbook-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.wishlist-add {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.wishlist-add input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-ui);
+}
+
+.songbook-search {
+  width: 100%;
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-ui);
+}
+
+.remove-song {
+  width: min(var(--layout-dialog-narrow), calc(100vw - var(--space-12)));
+}
+
+.remove-song-warning {
+  margin: 0 0 var(--space-8);
+  font-size: var(--font-size-ui);
+  line-height: 1.5;
+}
+
+.remove-song-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+.remove-song-confirm.btn {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-thumb);
+}

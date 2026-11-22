@@ -14,8 +14,18 @@ describe('NewSongDialog', () => {
   it('starts a song with the name typed, ready to type straight away', async () => {
     const { onCreate } = renderDialog()
     expect(screen.getByRole('textbox', { name: t('newSong.nameLabel') })).toHaveFocus()
-    await userEvent.keyboard('Golden Hour{Enter}')
-    expect(onCreate).toHaveBeenCalledWith('Golden Hour')
+    await userEvent.keyboard('Fly Away{Enter}')
+    expect(onCreate).toHaveBeenCalledWith('Fly Away', undefined)
+  })
+
+  it('passes along a artist when one is given', async () => {
+    const { onCreate } = renderDialog()
+    await userEvent.keyboard('Fly Away')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: t('newSong.artistLabel') }),
+      'Sam{Enter}'
+    )
+    expect(onCreate).toHaveBeenCalledWith('Fly Away', 'Sam')
   })
 
   it('needs a name before it can start', () => {

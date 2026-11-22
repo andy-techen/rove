@@ -20,8 +20,10 @@ export interface Tabs {
   /** Moves a tab to a new place in the bar (remembered for next launch). */
   move(tabId: string, toIndex: number): void
   close(tabId: string): void
-  newSong(name?: string): Promise<void>
+  newSong(name?: string, artist?: string): Promise<void>
   open(): Promise<void>
+  /** Opens a song from the Songbook by its folder name. */
+  openByName(folder: string): Promise<void>
 }
 
 const tab = (initial: ChosenProject): Tab => ({ id: crypto.randomUUID(), initial })
@@ -98,9 +100,9 @@ export function useTabs(enabled: boolean): Tabs {
       setTabs(remaining)
       if (tabId === activeId) setActiveId(remaining[Math.max(0, index - 1)].id)
     },
-    newSong: async (name) => {
+    newSong: async (name, artist) => {
       try {
-        add(await window.api.createSong(name))
+        add(await window.api.createSong(name, artist))
       } catch {
         setError(t('app.newSongFailed'))
       }
@@ -109,6 +111,13 @@ export function useTabs(enabled: boolean): Tabs {
       try {
         const chosen = await window.api.chooseProjectFolder()
         if (chosen) add(chosen)
+      } catch {
+        setError(t('app.openFolderFailed'))
+      }
+    },
+    openByName: async (folder) => {
+      try {
+        add(await window.api.openSongbookSong(folder))
       } catch {
         setError(t('app.openFolderFailed'))
       }

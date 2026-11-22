@@ -38,7 +38,12 @@ export const STROKE_ICONS = {
   // A chord box: strings and frets with two finger dots (tiny rings that read as dots).
   chords:
     'M6 4h12M6 4v16M10 4v16M14 4v16M18 4v16M6 10h12M6 15h12M10 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM14 11.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z',
-  lyrics: 'M4 6h14M4 10h14M4 14h6M14 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0M18 18v-6h3'
+  lyrics: 'M4 6h14M4 10h14M4 14h6M14 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0M18 18v-6h3',
+  // A pencil: change a song's details.
+  edit: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4',
+  // A closed book: the Songbook. A note on the cover is lost at top-bar size.
+  songbook:
+    'M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19'
 } as const
 
 export const FILLED_ICONS = {

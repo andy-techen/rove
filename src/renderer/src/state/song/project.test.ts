@@ -542,3 +542,10 @@ describe('withTrackName', () => {
     expect(withTrackName(p, id, '   ').tracks[0].name).toBe('Vocal 1')
   })
 })
+
+describe('createProject artist', () => {
+  it('keeps a named artist and leaves out a blank one', () => {
+    expect(createProject('Song', 48000, '  Sam ').artist).toBe('Sam')
+    expect(createProject('Song', 48000, '  ')).not.toHaveProperty('artist')
+  })
+})

@@ -3,6 +3,7 @@ import { EXPORT_CHANNELS } from '@shared/exportFormats'
 import { LYRICS_CHANNELS } from '@shared/lyrics'
 import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/appearance'
 import { SETTINGS_CHANNELS } from '@shared/settings'
+import { WISHLIST_CHANNELS } from '@shared/wishlist'
 import { parseOverrides } from '@shared/keymap'
 import {
   CONTEXT_MENU_CHANNEL,
@@ -58,9 +59,17 @@ const api: RoveApi = {
   requestMicAccess: () => ipcRenderer.invoke('mic:requestAccess'),
   openMicSettings: () => ipcRenderer.invoke('mic:openSettings'),
   chooseProjectFolder: () => ipcRenderer.invoke('project:choose'),
+  listSongs: () => ipcRenderer.invoke('project:list'),
+  openSongbookSong: (folder) => ipcRenderer.invoke('project:openByName', folder),
+  updateSongbookSong: (folder, name, artist) =>
+    ipcRenderer.invoke('project:updateDetails', folder, name, artist),
+  removeSongbookSong: (folder) => ipcRenderer.invoke('project:trashByName', folder),
+  listWishlist: () => ipcRenderer.invoke(WISHLIST_CHANNELS.list),
+  addToWishlist: (name, artist) => ipcRenderer.invoke(WISHLIST_CHANNELS.add, name, artist),
+  removeFromWishlist: (id) => ipcRenderer.invoke(WISHLIST_CHANNELS.remove, id),
   restoreTabs: () => ipcRenderer.invoke('project:restoreTabs'),
   rememberTabs: (dirs, active) => ipcRenderer.invoke('project:rememberTabs', dirs, active),
-  createSong: (name) => ipcRenderer.invoke('project:createNew', name),
+  createSong: (name, artist) => ipcRenderer.invoke('project:createNew', name, artist),
   renameSong: (dir, name) => ipcRenderer.invoke('project:rename', dir, name),
   importBackingTrack: (dir) => ipcRenderer.invoke('project:importBackingTrack', dir),
   saveTake: (dir, wav) => ipcRenderer.invoke('project:saveTake', dir, wav),

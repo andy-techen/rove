@@ -58,6 +58,7 @@ export function installMenu(keymap: Keymap): void {
       submenu: [
         shortcut('newSong'),
         shortcut('open'),
+        shortcut('songbook'),
         separator,
         shortcut('save'),
         shortcut('export'),
