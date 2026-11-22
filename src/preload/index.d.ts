@@ -1,8 +1,10 @@
-import { ElectronAPI } from '@electron-toolkit/preload'
+export interface RoveApi {
+  requestMicAccess(): Promise<boolean>
+  openMicSettings(): Promise<void>
+}
 
 declare global {
   interface Window {
-    electron: ElectronAPI
-    api: unknown
+    api: RoveApi
   }
 }

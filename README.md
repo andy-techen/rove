@@ -35,4 +35,6 @@ npm run dev
 
 Other scripts: `npm run typecheck`, `npm run lint`, `npm run build:mac`.
 
-In dev mode macOS attributes microphone permission to your terminal or editor, not the app. If recording is silent, check System Settings > Privacy & Security > Microphone.
+In dev mode macOS attributes microphone permission to the app that launched `npm run dev` (Terminal, iTerm, VS Code), not to Rove. Run it from one of those and allow access once. If recording is silent, check System Settings > Privacy & Security > Microphone.
+
+Don't start the dev app from a tool that disclaims responsibility for its child processes (such as the Claude desktop app). macOS then asks on behalf of `volta-shim`/`node`, which have no stable signature, so the prompt keeps coming back even after you click Allow.
