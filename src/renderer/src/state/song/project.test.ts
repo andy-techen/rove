@@ -33,7 +33,9 @@ import {
   withNewTrack,
   withRecordedClip,
   withTrackAudio,
-  withTrackChanges
+  withTrackChanges,
+  withVocalsBack,
+  withoutVocals
 } from './project'
 
 const clip = (id: string, start: number, duration: number, offset = 0): Clip => ({
@@ -460,5 +462,33 @@ describe('music tone and click', () => {
   it('switches the metronome on and off, keeping its volume', () => {
     const on = withClickOn(withClick(createProject('Song', 48000), 0.4), true)
     expect(musicOf(on)).toMatchObject({ clickOn: true, click: 0.4 })
+  })
+})
+
+describe('removing vocals', () => {
+  const song = (): Project => {
+    const project = createProject('Song', 48000)
+    const { project: withBacking, track } = withNewTrack(project, 'backing')
+    return withTrackAudio(withBacking, track.id, 'audio/song.mp3', 180)
+  }
+  const backing = (p: Project) => p.tracks.find((t) => t.role === 'backing')!
+
+  it('plays the instrumental in place of the song, remembering the original', () => {
+    const p = song()
+    const removed = withoutVocals(p, backing(p).id, {
+      'audio/song.mp3': 'audio/song (no vocals).wav'
+    })
+    expect(backing(removed).clips[0]).toMatchObject({
+      file: 'audio/song (no vocals).wav',
+      withVocals: 'audio/song.mp3'
+    })
+  })
+
+  it('puts the original song back', () => {
+    const p = song()
+    const id = backing(p).id
+    const back = withVocalsBack(withoutVocals(p, id, { 'audio/song.mp3': 'audio/x.wav' }), id)
+    expect(backing(back).clips[0].file).toBe('audio/song.mp3')
+    expect(backing(back).clips[0].withVocals).toBeUndefined()
   })
 })

@@ -83,6 +83,8 @@
   --size-splitter: 8px;
   --size-scrollbar: 10px;
   --size-drop-marker: 2px;
+  --size-progress-ring: 16px;
+  --size-progress-ring-width: 3px;
   --size-scrollbar-inset: 3px;
   --size-playhead: 2px;
   --size-switch-width: 30px;
@@ -111,6 +113,7 @@
   --layout-song-name-max: 200px;
   --layout-mic-button-max: 220px;
   --layout-meter-min: 220px;
+  --layout-progress-percent: 32px;
   --layout-meter-max: 420px;
   --layout-knob-control: 124px;
   --layout-advanced-column: 360px;

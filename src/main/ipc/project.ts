@@ -4,6 +4,7 @@ import { t } from '@shared/copy'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
+  instrumentalName,
   nextTakeName,
   nextUntitledName,
   resolveAudioPath,
@@ -185,6 +186,20 @@ export function registerProjectIpc(): void {
     await fs.writeFile(path.join(projectDir, 'audio', fileName), Buffer.from(data), { flag: 'wx' })
     return `audio/${fileName}`
   })
+
+  // An instrumental made by removing the vocals: a new file beside its song, which stays.
+  ipcMain.handle(
+    'project:saveInstrumental',
+    async (_e, projectDir: string, source: string, data: ArrayBuffer) => {
+      assertOpen(projectDir)
+      resolveAudioPath(projectDir, source)
+      const fileName = instrumentalName(await audioDirFiles(projectDir), source)
+      await fs.writeFile(path.join(projectDir, 'audio', fileName), Buffer.from(data), {
+        flag: 'wx'
+      })
+      return `audio/${fileName}`
+    }
+  )
 
   ipcMain.handle('project:readAudio', async (_e, projectDir: string, relPath: string) => {
     assertOpen(projectDir)

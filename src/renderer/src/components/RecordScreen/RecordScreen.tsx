@@ -42,6 +42,7 @@ import {
 } from '../../state/editing/trackSelection'
 import { useExport } from '../../state/song/useExport'
 import { bufferFor, useProcessedAudio } from '../../state/processing/processedAudio'
+import { useVocalRemoval } from '../../state/processing/useVocalRemoval'
 import { useSongKey } from '../../state/processing/songKey'
 import { useBeat } from '../../state/transport/useBeat'
 import { useChords } from '../../state/chords/useChords'
@@ -305,6 +306,10 @@ export function RecordScreen({
   const polishTrack =
     open?.data.tracks.find((track) => track.id === selectedTrackId) ??
     open?.data.tracks.find((track) => track.role === 'vocal')
+  const vocalRemoval = useVocalRemoval(
+    song,
+    polishTrack?.role === 'backing' ? polishTrack.id : null
+  )
   const error = song.error ?? transport.error
 
   return (
@@ -463,6 +468,11 @@ export function RecordScreen({
               onClick={(level, key) => song.edit(withClick(open.data, level), key)}
               onClickOn={(on) => song.edit(withClickOn(open.data, on))}
               canClick={grid !== null}
+              vocals={vocalRemoval.vocals}
+              vocalsError={vocalRemoval.error}
+              onRemoveVocals={vocalRemoval.remove}
+              onCancelRemoveVocals={vocalRemoval.cancel}
+              onPutVocalsBack={vocalRemoval.putBack}
               onReset={() =>
                 song.edit(
                   withMusicTone(withMusicPitch(withMusicSpeed(open.data, 1), 0), {

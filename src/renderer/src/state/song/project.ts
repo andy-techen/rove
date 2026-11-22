@@ -16,6 +16,8 @@ export interface Clip {
   fadeIn?: number
   /** Seconds to fade out to silence at the clip's end. */
   fadeOut?: number
+  /** Set when the vocals were removed: the song this clip played before (still on disk). */
+  withVocals?: string
 }
 
 export type TrackRole = 'vocal' | 'backing'
@@ -550,3 +552,38 @@ export function withMusicPitch(project: Project, semitones: number): Project {
   const key = project.key && transposeKey(project.key, shift)
   return { ...project, key, music: { ...music, semitones: next } }
 }
+
+const mapTrack = (project: Project, trackId: string, change: (track: Track) => Track): Project => ({
+  ...project,
+  tracks: project.tracks.map((track) => (track.id === trackId ? change(track) : track))
+})
+
+/** The backing track plays instrumentals in place of its songs, keeping the songs for later. */
+export function withoutVocals(
+  project: Project,
+  trackId: string,
+  instrumentals: Record<string, string>
+): Project {
+  return mapTrack(project, trackId, (track) => ({
+    ...track,
+    clips: track.clips.map((clip) =>
+      clip.file in instrumentals
+        ? { ...clip, file: instrumentals[clip.file], withVocals: clip.file }
+        : clip
+    )
+  }))
+}
+
+/** The backing track plays its original songs again. */
+export function withVocalsBack(project: Project, trackId: string): Project {
+  return mapTrack(project, trackId, (track) => ({
+    ...track,
+    clips: track.clips.map(({ withVocals, ...clip }) =>
+      withVocals ? { ...clip, file: withVocals } : clip
+    )
+  }))
+}
+
+/** Every clip of the track plays an instrumental made from its song. */
+export const vocalsRemoved = (track: Track): boolean =>
+  track.clips.length > 0 && track.clips.every((clip) => clip.withVocals !== undefined)

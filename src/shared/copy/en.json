@@ -136,7 +136,7 @@
       },
       "clarity": {
         "label": "Clarity",
-        "hint": "Brings words forward and adds a little sparkle"
+        "hint": "Brings the words forward"
       },
       "warmth": {
         "label": "Warmth",
@@ -156,7 +156,7 @@
       },
       "tuning": {
         "label": "Tuning",
-        "hint": "Pulls each note toward the song’s key: low sounds natural, high snaps"
+        "hint": "Pulls notes into the song's key"
       }
     },
     "params": {
@@ -175,19 +175,19 @@
       "retuneMs": "Retune speed"
     },
     "paramHints": {
-      "gateThresholdDb": "Sounds quieter than this are muted between lines",
+      "gateThresholdDb": "Quieter sounds are muted",
       "lowCutHz": "Removes rumble below this pitch",
       "warmthDb": "Boosts or cuts the body of the voice",
-      "presenceDb": "Boosts or cuts how forward the words sound",
+      "presenceDb": "How forward the words sound",
       "airDb": "Boosts or cuts the breathy top end",
-      "compThresholdDb": "Singing louder than this gets turned down",
-      "compRatio": "How strongly loud moments are turned down",
-      "makeupDb": "Lifts the whole voice after evening it out",
+      "compThresholdDb": "Louder singing is turned down",
+      "compRatio": "How much loud parts are tamed",
+      "makeupDb": "Overall level of the voice",
       "deEssThresholdDb": "“S” sounds louder than this get softened",
       "reverbMix": "How much room sound is mixed in",
       "reverbDecaySec": "How long the room sound rings on",
-      "tuneStrength": "How far each note is pulled toward the key",
-      "retuneMs": "How quickly notes snap to pitch; slower sounds more natural"
+      "tuneStrength": "How far notes move to the key",
+      "retuneMs": "How fast notes snap to pitch"
     },
     "switchLabel": "Polish on",
     "advancedTitle": "Show the settings behind each control",
@@ -227,7 +227,7 @@
     "title": "Settings",
     "close": "Close",
     "songsFolder": "Songs folder",
-    "songsFolderHint": "New songs are saved here. Songs you already have stay where they are.",
+    "songsFolderHint": "Where new songs are saved",
     "changeFolder": "Change…",
     "chooseFolderTitle": "Choose where to save new songs",
     "chooseFolderButton": "Use This Folder"
@@ -269,7 +269,7 @@
     "title": "Music",
     "label": "Music settings for {name}",
     "speed": "Speed",
-    "speedHint": "Plays the music faster or slower, in the same key",
+    "speedHint": "Faster or slower, same key",
     "typeBpm": "Tempo in beats per minute",
     "typeSpeed": "Speed in percent",
     "typeKey": "Key change in semitones",
@@ -277,7 +277,7 @@
     "percent": "%",
     "speedValue": "{percent}%",
     "key": "Key",
-    "keyHint": "Moves the music higher or lower, at the same speed",
+    "keyHint": "Higher or lower, same speed",
     "semitones": "semitones",
     "plus": "+{n}",
     "minus": "−{n}",
@@ -288,10 +288,17 @@
     "db": "dB",
     "resetTone": "Back to the original {name}",
     "click": "Metronome",
-    "clickHint": "Ticks on the music’s beat, with a count-in before recording. The knob sets its volume.",
+    "clickHint": "Ticks on the beat, with a count-in",
     "clickOn": "Metronome on",
     "clickOnTitle": "Metronome on",
     "clickOffTitle": "Metronome off",
+    "removeVocals": "Remove vocals",
+    "removeVocalsHint": "Remove vocals (takes a few minutes)",
+    "removingVocals": "Removing vocals",
+    "removingPercent": "{percent}%",
+    "stopRemovingVocals": "Stop removing vocals",
+    "restoreVocals": "Restore vocals",
+    "removeVocalsFailed": "Couldn't remove the vocals. Try again, or try another copy of the song.",
     "typeClick": "Metronome volume, typed value",
     "clickNoBeat": "No steady beat found in this music",
     "off": "Off",
@@ -327,17 +334,18 @@
     "byArtist": "{title} · {artist}",
     "searchLabel": "Song and artist",
     "search": "Search",
-    "searchHint": "Search by song and artist. Lyrics come from LRCLIB.",
+    "searchHint": "Search by song and artist (LRCLIB)",
     "searching": "Searching…",
     "noResults": "No lyrics found. Try different words.",
     "searchFailed": "Couldn’t reach the lyrics library. Check your internet connection.",
     "notSynced": "Not synced",
     "resultDetail": "{artist} · {duration}",
+    "backToLyrics": "Back to lyrics",
     "change": "Find other lyrics",
     "earlier": "Lyrics earlier",
     "later": "Lyrics later",
     "offset": "{sign}{seconds} s",
-    "timingHint": "Move the words earlier or later to match the music",
+    "timingHint": "Move the words earlier or later",
     "untimed": "These lyrics have no timing, so they won’t follow along.",
     "goToLine": "Go to “{line}”",
     "instrumental": "♪"

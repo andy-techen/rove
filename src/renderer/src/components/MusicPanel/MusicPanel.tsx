@@ -12,6 +12,9 @@ import { KnobControl, KnobRow } from '../ui/KnobControl'
 import { parseTypedNumber } from '../ui/NumberField'
 import { Panel } from '../ui/Panel'
 import { Switch } from '../ui/Switch'
+import type { VocalsState } from '../../state/processing/useVocalRemoval'
+import { VocalsControl } from './VocalsControl'
+import './MusicPanel.css'
 import { formatSigned, parseSemitones, parseSpeed, speedPercent, tempoAt } from './musicFormat'
 
 interface Props {
@@ -32,6 +35,12 @@ interface Props {
   canClick: boolean
   /** Back to the original speed, key and tone. */
   onReset(): void
+  vocals: VocalsState
+  /** Why removing the vocals last failed, if it did. */
+  vocalsError?: string | null
+  onRemoveVocals(): void
+  onCancelRemoveVocals(): void
+  onPutVocalsBack(): void
 }
 
 type ToneField = 'bassDb' | 'brightnessDb'
@@ -51,7 +60,12 @@ export function MusicPanel({
   onClick,
   onClickOn,
   canClick,
-  onReset
+  onReset,
+  vocals,
+  vocalsError,
+  onRemoveVocals,
+  onCancelRemoveVocals,
+  onPutVocalsBack
 }: Props): React.JSX.Element {
   const changed =
     music.speed !== 1 || music.semitones !== 0 || music.bassDb !== 0 || music.brightnessDb !== 0
@@ -97,12 +111,21 @@ export function MusicPanel({
       title={t('music.title')}
       subject={trackName}
       actions={
-        <IconButton
-          icon="reset"
-          label={t('music.reset')}
-          disabled={locked || !changed}
-          onClick={onReset}
-        />
+        <>
+          <VocalsControl
+            vocals={vocals}
+            locked={locked}
+            onRemove={onRemoveVocals}
+            onCancel={onCancelRemoveVocals}
+            onPutBack={onPutVocalsBack}
+          />
+          <IconButton
+            icon="reset"
+            label={t('music.reset')}
+            disabled={locked || !changed}
+            onClick={onReset}
+          />
+        </>
       }
     >
       <KnobRow>
@@ -187,6 +210,11 @@ export function MusicPanel({
           }}
         />
       </KnobRow>
+      {vocalsError && (
+        <p className="music-vocals-error" role="alert">
+          {vocalsError}
+        </p>
+      )}
     </Panel>
   )
 }

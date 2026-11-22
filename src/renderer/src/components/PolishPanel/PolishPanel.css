@@ -1,4 +1,7 @@
+/* A flex box, so the switch centres on the header's icons instead of sitting on a text
+   baseline (which left it a few pixels high). */
 .polish-switch {
+  display: flex;
   margin-right: var(--space-2);
 }
 
