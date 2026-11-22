@@ -78,4 +78,14 @@ describe('snapGesture', () => {
     expect(snapGesture(drag, 'trimEnd', 3.27, view)).toEqual({ deltaSec: 3.3, at: 7.3 })
     expect(snapGesture(drag, 'fadeIn', 0.49, view)).toEqual({ deltaSec: 0.49, at: null })
   })
+
+  it('lines up clips dragged together by the start of the first, not their own edges', () => {
+    const { project, drag } = song()
+    // The group runs 2–4 s and 10–13 s; dragging the later clip moves the group's start.
+    const later = project.tracks[1].clips[0]
+    const group = { ...drag, clip: later, moving: [drag.clip, later] }
+    // Group start would be 7.27, near the playhead (7.3); its own clips don't attract it.
+    expect(snapGesture(group, 'move', 5.27, view)).toEqual({ deltaSec: 5.3, at: 7.3 })
+    expect(snapGesture(group, 'move', 1.98, { ...view, gridSec: 0 }).at).toBeNull()
+  })
 })

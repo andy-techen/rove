@@ -9,6 +9,8 @@ export interface GestureStart {
   clip: Clip
   /** Length of the clip's audio file, the limit for trimming its end. */
   fileSec: number
+  /** Every clip a move drags along (the selection or group), including this one. */
+  moving?: Clip[]
 }
 
 /**

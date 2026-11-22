@@ -565,6 +565,7 @@ export function RecordScreen({
                       : [ref]
                 gesture.current = {
                   together,
+                  moving: together.flatMap((r) => findClip(open.data, r.trackId, r.clipId) ?? []),
                   laneShift: 0,
                   base: open.data,
                   trackId: ref.trackId,

@@ -1,3 +1,4 @@
+import { Clip } from '../song/project'
 import { ClipGestureKind, GestureStart } from './clipGestures'
 
 /** What a drag can snap to, from the timeline as it's shown. */
@@ -21,21 +22,32 @@ export interface Snapped {
 const PRECISION = 1e6
 const tidy = (sec: number): number => Math.round(sec * PRECISION) / PRECISION
 
-/** The song start, the playhead, and every edge of every other clip, on any track. */
+const movingClips = (start: GestureStart): Clip[] =>
+  start.moving?.length ? start.moving : [start.clip]
+
+/** The song start, the playhead, and every edge of every clip not being dragged, on any track. */
 function edgesBesides(start: GestureStart, playheadSec: number): number[] {
+  const moving = new Set(movingClips(start).map((c) => c.id))
   const edges = start.base.tracks.flatMap((track) =>
-    track.clips
-      .filter((c) => c.id !== start.clip.id)
-      .flatMap((c) => [c.start, c.start + c.duration])
+    track.clips.filter((c) => !moving.has(c.id)).flatMap((c) => [c.start, c.start + c.duration])
   )
   return [0, playheadSec, ...edges]
 }
 
-/** The edges of the dragged clip that move with this gesture, where they began. */
+/**
+ * The edges that move with this gesture, where they began. Clips moved together (a group
+ * or selection) line up by where they start and end as a whole, like one clip.
+ */
 function movingEdges(start: GestureStart, kind: ClipGestureKind): number[] {
   const { clip } = start
   const end = clip.start + clip.duration
-  if (kind === 'move') return [clip.start, end]
+  if (kind === 'move') {
+    const moving = movingClips(start)
+    return [
+      Math.min(...moving.map((c) => c.start)),
+      Math.max(...moving.map((c) => c.start + c.duration))
+    ]
+  }
   if (kind === 'trimStart') return [clip.start]
   if (kind === 'trimEnd') return [end]
   return []
