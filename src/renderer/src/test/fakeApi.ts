@@ -12,6 +12,7 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
     platform: 'darwin',
     onFullScreen: () => () => {},
     nativeEdit: vi.fn(async () => {}),
+    showContextMenu: vi.fn(async () => {}),
     onMenu: (listener) => {
       menuListeners.add(listener)
       return () => menuListeners.delete(listener)

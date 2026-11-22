@@ -5,6 +5,7 @@ import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/appearance'
 import { SETTINGS_CHANNELS } from '@shared/settings'
 import { parseOverrides } from '@shared/keymap'
 import {
+  CONTEXT_MENU_CHANNEL,
   FULL_SCREEN_CHANNEL,
   KEYMAP_CHANNELS,
   MENU_CHANNEL,
@@ -52,6 +53,7 @@ const api: RoveApi = {
     return () => ipcRenderer.removeListener(KEYMAP_CHANNELS.changed, handler)
   },
   captureShortcutKeys: (on) => ipcRenderer.invoke(KEYMAP_CHANNELS.capture, on),
+  showContextMenu: (items) => ipcRenderer.invoke(CONTEXT_MENU_CHANNEL, items),
   nativeEdit: (command) => ipcRenderer.invoke(NATIVE_EDIT_CHANNEL, command),
   requestMicAccess: () => ipcRenderer.invoke('mic:requestAccess'),
   openMicSettings: () => ipcRenderer.invoke('mic:openSettings'),

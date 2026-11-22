@@ -6,10 +6,12 @@ import { indexForSlot } from '../../state/tabs/tabOrder'
 import { ClipRef, clipsInBox, includesClip } from '../../state/editing/clipSets'
 import { useShortcuts } from '../../state/commands/shortcuts'
 import { LaneView } from '../../state/song/selectors'
+import { MenuTarget } from '../../state/commands/contextMenu'
 import { Button } from '../ui/Button'
 import { IconButton } from '../ui/IconButton'
 import { cx } from '../ui/cx'
 import { ClipView, GesturePhase } from './ClipView'
+import { ClipBlockView } from './ClipBlockView'
 import { AddTrackRow } from './AddTrackRow'
 import { TrackHeader } from './TrackHeader'
 import { SnapView } from '../../state/editing/snapping'
@@ -67,12 +69,16 @@ interface Props {
   /** Selected tracks; the last is the one clicked most recently. */
   selectedTrackIds: string[]
   onSelectTrack(trackId: string, mode: SelectMode): void
+  /** Right-click on a clip, an empty spot in a lane, or a track's name. */
+  onContextMenu(target: MenuTarget, trackId: string, clip: ClipRef | null): void
   onClipGesture(
     clip: ClipRef,
     kind: ClipGestureKind,
     phase: GesturePhase,
     deltaSec: number,
-    snap: SnapView
+    snap: SnapView,
+    /** The lane under the pointer, for moving clips into another track. */
+    overTrackId: string | null
   ): void
   /** Where a dragged clip has snapped, shown as a guide line; null when it hasn't. */
   snapAt: number | null
@@ -123,6 +129,7 @@ export function Timeline({
   onSelectBox,
   selectedTrackIds,
   onSelectTrack,
+  onContextMenu,
   onClipGesture,
   snapAt,
   onMoveTrack,
@@ -265,6 +272,16 @@ export function Timeline({
     onPointerCancel: () => setBox(null)
   }
 
+  /** The track whose lane spans this height on screen, if any. */
+  const trackAt = (clientY: number): string | null => {
+    const lanes = [...(lanesRef.current?.querySelectorAll<HTMLElement>('[data-track]') ?? [])]
+    const over = lanes.find((el) => {
+      const r = el.getBoundingClientRect()
+      return clientY >= r.top && clientY < r.bottom
+    })
+    return over?.dataset.track ?? null
+  }
+
   const lane = (track: LaneView, index: number, group: LaneView[]): ReactNode => {
     const isRecording = recording?.trackId === track.id
     const sameGroup = drag?.role === track.role
@@ -315,6 +332,7 @@ export function Timeline({
           recordDisabled={!canRecord || recording !== null}
           selected={selectedTrackIds.includes(track.id)}
           onSelect={(mode) => onSelectTrack(track.id, mode)}
+          onContextMenu={() => onContextMenu('track', track.id, null)}
           onRecord={() => onRecord(track.id)}
           onStop={onStop}
         />
@@ -331,7 +349,46 @@ export function Timeline({
             const target = e.target as HTMLElement
             if (!target.closest('.clip, button, .playhead')) onLaneClick(track.id)
           }}
+          onContextMenu={(e) => {
+            e.preventDefault()
+            const clip = (e.target as HTMLElement).closest<HTMLElement>('[data-clip-id]')
+            const clipId = clip?.dataset.clipId
+            if (clipId) return onContextMenu('clip', track.id, { trackId: track.id, clipId })
+            // Pasting from this menu lands where the click was.
+            seekFromClick(e)
+            onContextMenu('lane', track.id, null)
+          }}
         >
+          {track.blocks.map((b) => {
+            const first = { trackId: track.id, clipId: b.clipIds[0] }
+            return (
+              <ClipBlockView
+                key={b.clipIds[0]}
+                block={b}
+                kind={track.role}
+                pxPerSec={pxPerSec}
+                scrollX={scrollX}
+                selected={includesClip(selectedClips, first)}
+                editable={canEdit && !isRecording}
+                onSelect={(mode) => onSelect(first, mode)}
+                onGesture={(kind, phase, delta, free, clientY) =>
+                  onClipGesture(
+                    first,
+                    kind,
+                    phase,
+                    delta,
+                    {
+                      toleranceSec: SNAP_PX / pxPerSec,
+                      gridSec: minorStep(tickStep),
+                      playheadSec: position,
+                      free
+                    },
+                    trackAt(clientY)
+                  )
+                }
+              />
+            )
+          })}
           {track.clips.map((c) => (
             <ClipView
               key={c.id}
@@ -344,13 +401,20 @@ export function Timeline({
               selected={includesClip(selectedClips, { trackId: track.id, clipId: c.id })}
               editable={canEdit && !isRecording}
               onSelect={(mode) => onSelect({ trackId: track.id, clipId: c.id }, mode)}
-              onGesture={(kind, phase, delta, free) =>
-                onClipGesture({ trackId: track.id, clipId: c.id }, kind, phase, delta, {
-                  toleranceSec: SNAP_PX / pxPerSec,
-                  gridSec: minorStep(tickStep),
-                  playheadSec: position,
-                  free
-                })
+              onGesture={(kind, phase, delta, free, clientY) =>
+                onClipGesture(
+                  { trackId: track.id, clipId: c.id },
+                  kind,
+                  phase,
+                  delta,
+                  {
+                    toleranceSec: SNAP_PX / pxPerSec,
+                    gridSec: minorStep(tickStep),
+                    playheadSec: position,
+                    free
+                  },
+                  trackAt(clientY)
+                )
               }
             />
           ))}

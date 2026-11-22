@@ -15,6 +15,7 @@ const lane = (overrides: Partial<LaneView>): LaneView => ({
   pan: 0,
   muted: false,
   clips: [],
+  blocks: [],
   ...overrides
 })
 
@@ -47,6 +48,7 @@ function renderTimeline(overrides: Partial<Parameters<typeof Timeline>[0]> = {})
     onRenaming: vi.fn(),
     onRenameTrack: vi.fn(),
     onLaneClick: vi.fn(),
+    onContextMenu: vi.fn(),
     snapAt: null,
     ...overrides
   }
@@ -219,5 +221,11 @@ describe('Timeline', () => {
     const lanes = document.querySelectorAll('[data-track] .lane-area')
     fireEvent.click(lanes[1])
     expect(props.onLaneClick).toHaveBeenCalledWith('v2')
+  })
+
+  it('opens a menu for the track when its name is right-clicked', () => {
+    const props = renderTimeline()
+    fireEvent.contextMenu(screen.getByRole('button', { name: /^Vocal 1/ }))
+    expect(props.onContextMenu).toHaveBeenCalledWith('track', 'v1', null)
   })
 })

@@ -14,6 +14,7 @@ import {
   backingTitle,
   edgeAfter,
   edgeBefore,
+  joinGroups,
   mixdownOf,
   pasteTarget,
   playbackKey,
@@ -129,5 +130,24 @@ describe('pasteTarget', () => {
     const { p, v1, b1 } = song()
     expect(pasteTarget(p, v1, b1)).toBe(v1)
     expect(pasteTarget(p, v1, null)).toBe(v1)
+  })
+})
+
+describe('joinGroups', () => {
+  const clip = (id: string, start: number, group?: string) => ({ id, start, duration: 1, group })
+
+  it('draws grouped clips next to each other as one block', () => {
+    const { clips, blocks } = joinGroups([clip('a', 0, 'g'), clip('b', 3, 'g'), clip('c', 6)])
+    expect(blocks).toEqual([{ start: 0, end: 4, clipIds: ['a', 'b'] }])
+    expect(clips.map((c) => [c.joinedBefore, c.joinedAfter])).toEqual([
+      [false, true],
+      [true, false],
+      [false, false]
+    ])
+  })
+
+  it('keeps a clip from outside the group between them as its own clip', () => {
+    const { blocks } = joinGroups([clip('a', 0, 'g'), clip('x', 2), clip('b', 4, 'g')])
+    expect(blocks).toEqual([])
   })
 })

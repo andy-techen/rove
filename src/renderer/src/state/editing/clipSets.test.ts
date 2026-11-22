@@ -7,9 +7,12 @@ import {
   copyClips,
   deleteClips,
   groupClips,
+  isOneGroup,
   moveClips,
   pasteClips,
+  laneShiftTo,
   pickClip,
+  shiftLanes,
   ungroupClips,
   withGroupmates
 } from './clipSets'
@@ -48,6 +51,13 @@ describe('clip groups', () => {
     expect(startsOf(ungrouped, v1)).toEqual(startsOf(p, v1))
   })
 
+  it('knows when the clips are already one whole group', () => {
+    const { p, a, b, c } = song()
+    const grouped = groupClips(p, [a, c])
+    expect(isOneGroup(grouped, [a, c])).toBe(true)
+    expect(isOneGroup(grouped, [a, c, b])).toBe(false)
+  })
+
   it('needs two or more clips to make a group', () => {
     const { p, a } = song()
     expect(anyGrouped(groupClips(p, [a]), [a])).toBe(false)
@@ -70,6 +80,32 @@ describe('moveClips', () => {
     expect(startsOf(moveClips(p, [a, b], -5), v1)).toEqual([
       ['a.wav', 0],
       ['b.wav', 4]
+    ])
+  })
+
+  it('moves clips to another track of the same kind', () => {
+    const { p, v1, v2, b } = song()
+    const moved = moveClips(p, [b], 0, 1)
+    expect(startsOf(moved, v1)).toEqual([['a.wav', 2]])
+    expect(startsOf(moved, v2)).toEqual([
+      ['c.wav', 3],
+      ['b.wav', 6]
+    ])
+  })
+
+  it('only counts lanes of the same kind as somewhere to move to', () => {
+    const { p, v1, v2 } = song()
+    const backing = withNewTrack(p, 'backing')
+    expect(laneShiftTo(p, v1, v2)).toBe(1)
+    expect(laneShiftTo(backing.project, v1, backing.track.id)).toBeNull()
+  })
+
+  it('keeps clips in their lanes when one would go past the last track', () => {
+    const { p, v1, a, c } = song()
+    expect(shiftLanes(p, [a, c], 1)).toBeNull()
+    expect(startsOf(moveClips(p, [a, c], 1, 1), v1)).toEqual([
+      ['a.wav', 3],
+      ['b.wav', 6]
     ])
   })
 

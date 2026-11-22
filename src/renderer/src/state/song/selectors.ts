@@ -26,8 +26,16 @@ export interface ClipShape {
   fadeIn: number
   fadeOut: number
   audio: AudioBuffer | null
-  /** Linked with other clips (picked and moved together). */
-  grouped: boolean
+  /** Joined to the clip before / after it in the lane: same group, so drawn as one. */
+  joinedBefore: boolean
+  joinedAfter: boolean
+}
+
+/** Grouped clips next to each other in a lane, drawn as one block behind them. */
+export interface ClipBlock {
+  start: number
+  end: number
+  clipIds: string[]
 }
 
 /** What the timeline draws for one track lane. */
@@ -42,6 +50,7 @@ export interface LaneView {
   pan: number
   muted: boolean
   clips: ClipShape[]
+  blocks: ClipBlock[]
 }
 
 // Imported backing files are copied in as "backing-<original name>".
@@ -80,18 +89,45 @@ export function selectLanes(
       startVolume: startingVolume(track.role, track.part, !!track.sourceName),
       pan: track.pan,
       muted: track.muted,
-      clips: track.clips.map((c) => ({
-        id: c.id,
-        start: c.start,
-        offset: c.offset,
-        duration: c.duration,
-        grouped: c.group !== undefined,
-        fadeIn: c.fadeIn ?? 0,
-        fadeOut: c.fadeOut ?? 0,
-        audio: bufferFor(audio, processed, track.id, c.file) ?? null
-      }))
+      ...joinGroups(
+        track.clips.map((c) => ({
+          id: c.id,
+          start: c.start,
+          offset: c.offset,
+          duration: c.duration,
+          group: c.group,
+          fadeIn: c.fadeIn ?? 0,
+          fadeOut: c.fadeOut ?? 0,
+          audio: bufferFor(audio, processed, track.id, c.file) ?? null
+        }))
+      )
     }
   })
+}
+
+/**
+ * Grouped clips read as one clip: each run of clips in a lane that share a group (with
+ * nothing else between them) becomes a block, and its clips are marked as joined.
+ */
+export function joinGroups<C extends { id: string; start: number; duration: number }>(
+  clips: (C & { group?: string })[]
+): { clips: (C & { joinedBefore: boolean; joinedAfter: boolean })[]; blocks: ClipBlock[] } {
+  const sorted = [...clips].sort((a, b) => a.start - b.start)
+  const blocks: ClipBlock[] = []
+  const joined = sorted.map(({ group, ...clip }, i) => {
+    const prev = sorted[i - 1]?.group
+    const next = sorted[i + 1]?.group
+    const joinedBefore = group !== undefined && prev === group
+    const joinedAfter = group !== undefined && next === group
+    const end = clip.start + clip.duration
+    if (joinedBefore) {
+      const block = blocks[blocks.length - 1]
+      block.end = end
+      block.clipIds.push(clip.id)
+    } else if (joinedAfter) blocks.push({ start: clip.start, end, clipIds: [clip.id] })
+    return { ...(clip as unknown as C), joinedBefore, joinedAfter }
+  })
+  return { clips: joined, blocks }
 }
 
 /** Split needs the playhead strictly inside the selected clip. */

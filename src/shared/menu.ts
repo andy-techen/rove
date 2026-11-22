@@ -25,6 +25,8 @@ export const MENU_ACTIONS = [
   'ungroupClips',
   'moveTrackUp',
   'moveTrackDown',
+  'renameTrack',
+  'removeTrack',
   'playPause',
   'stopPlayback',
   'goToStart',
@@ -42,6 +44,23 @@ export type MenuAction = (typeof MENU_ACTIONS)[number]
 
 export function isMenuAction(value: unknown): value is MenuAction {
   return typeof value === 'string' && (MENU_ACTIONS as readonly string[]).includes(value)
+}
+
+/** The window asks the main process to show a right-click menu of these rows. */
+export const CONTEXT_MENU_CHANNEL = 'menu:context'
+
+/** One row of a right-click menu: an action (dimmed when it can't run now) or a divider. */
+export type ContextMenuItem = { action: MenuAction; enabled: boolean } | 'separator'
+
+/** Keeps only well-formed rows from the window; anything else is dropped. */
+export function parseContextMenu(raw: unknown): ContextMenuItem[] {
+  if (!Array.isArray(raw)) return []
+  return raw.flatMap((item: unknown): ContextMenuItem[] => {
+    if (item === 'separator') return ['separator']
+    if (typeof item !== 'object' || item === null) return []
+    const { action, enabled } = item as Record<string, unknown>
+    return isMenuAction(action) ? [{ action, enabled: enabled === true }] : []
+  })
 }
 
 /** The main process tells the window whether it's full screen (macOS hides the window buttons then). */

@@ -2,7 +2,7 @@ import type { ExportFormat } from '../shared/exportFormats'
 import type { KeymapOverrides } from '../shared/keymap'
 import type { LyricsResult } from '../shared/lyrics'
 import type { Theme } from '../shared/appearance'
-import type { MenuAction, NativeEdit } from '../shared/menu'
+import type { ContextMenuItem, MenuAction, NativeEdit } from '../shared/menu'
 
 export interface ChosenProject {
   dir: string
@@ -22,6 +22,8 @@ export interface RoveApi {
   onFullScreen(listener: (fullScreen: boolean) => void): () => void
   /** Runs a text-editing command (undo, cut, paste…) on the focused field. */
   nativeEdit(command: NativeEdit): Promise<void>
+  /** Shows a right-click menu; the choice arrives through `onMenu`. */
+  showContextMenu(items: ContextMenuItem[]): Promise<void>
   /** Listens for native menu choices; returns a function that stops listening. */
   onMenu(listener: (action: MenuAction) => void): () => void
   /** The shortcuts the person has rebound (the rest keep their defaults). */

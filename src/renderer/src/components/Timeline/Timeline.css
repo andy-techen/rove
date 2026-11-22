@@ -446,10 +446,27 @@
   padding: var(--space-1);
 }
 
-/* Linked clips: a dashed edge says they move together (selected, the accent edge shows). */
-.clip.grouped:not(.selected) {
-  outline: 1px dashed currentColor;
-  outline-offset: calc(-1 * var(--space-1));
+/* Grouped clips read as one clip: the block behind them draws the shape and the
+   selection, and the clips inside drop their own fill, corners and outline. */
+.clip.joined-before,
+.clip.joined-after {
+  background: transparent;
+  outline: none;
+}
+
+.clip.joined-before {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.clip.joined-after {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.lane-muted .clip.joined-before,
+.lane-muted .clip.joined-after {
+  opacity: 1;
 }
 
 /* The box dragged across the timeline to select clips. */

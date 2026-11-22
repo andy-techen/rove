@@ -3,6 +3,7 @@ import { t } from '@shared/copy'
 import type { ChosenProject } from '../../../../preload/index.d'
 import { getAudioContext } from '../../audio/engine/engine'
 import { Command, onCommand, typingIn } from '../../state/commands/commands'
+import { MenuTarget, contextMenu } from '../../state/commands/contextMenu'
 import { GestureStart, applyClipGesture } from '../../state/editing/clipGestures'
 import { snapGesture } from '../../state/editing/snapping'
 import {
@@ -12,7 +13,10 @@ import {
   deleteClips,
   groupClips,
   includesClip,
+  isOneGroup,
+  laneShiftTo,
   moveClips,
+  shiftLanes,
   pasteClips,
   pickClip,
   ungroupClips,
@@ -49,6 +53,7 @@ import {
 import { Microphone } from '../../state/transport/useMicrophone'
 import {
   DeleteFocus,
+  SelectMode,
   deletionOf,
   selectTracks,
   tracksActedOn
@@ -143,7 +148,9 @@ export function RecordScreen({
   const [deleteFocus, setDeleteFocus] = useState<DeleteFocus>(null)
   const exporter = useExport(song)
   const [exportOpen, setExportOpen] = useState(false)
-  const gesture = useRef<(GestureStart & { key: string; together: ClipRef[] }) | null>(null)
+  const gesture = useRef<
+    (GestureStart & { key: string; together: ClipRef[]; laneShift: number }) | null
+  >(null)
   const gestureCount = useRef(0)
 
   const name = open?.data.name
@@ -239,6 +246,46 @@ export function RecordScreen({
     const at = open.data.tracks.filter((t) => t.role === track.role).indexOf(track)
     moveTrackTo(track.id, at + by)
   }
+  const selectClip = (clip: ClipRef | null, how: SelectMode): void => {
+    if (!clip || !open) return setSelection([])
+    // Pressing a clip that's already selected keeps the selection, so it can be
+    // dragged together; ⌘ or ⇧ adds or removes clips.
+    if (!(how === 'only' && includesClip(selectedClips, clip)))
+      setSelection(pickClip(open.data, selectedClips, clip, how))
+    setSelectedTrackIds([clip.trackId])
+    setDeleteFocus('clip')
+  }
+  const kindOfSelected = open?.data.tracks.filter(
+    (t) => t.role === open.data.tracks.find((s) => s.id === selectedTrackId)?.role
+  )
+  const placeOfSelected = kindOfSelected?.findIndex((t) => t.id === selectedTrackId) ?? -1
+
+  // A right-click picks what it's on first; the menu waits for that render, so it shows
+  // what can be done to the new selection.
+  const menuFor = useRef<MenuTarget | null>(null)
+  const [menuRequest, setMenuRequest] = useState(0)
+  const showMenu = useRef<() => void>(() => {})
+  useEffect(() => {
+    showMenu.current = () => {
+      const target = menuFor.current
+      menuFor.current = null
+      if (!target || !open) return
+      void window.api.showContextMenu(
+        contextMenu(target, {
+          canEdit,
+          selectedClips: selectedClips.length,
+          anyGrouped: anyGrouped(open.data, selectedClips),
+          oneGroup: isOneGroup(open.data, selectedClips),
+          canPaste: clipboard !== null,
+          canSplit,
+          canMoveUp: placeOfSelected > 0,
+          canMoveDown: placeOfSelected >= 0 && placeOfSelected < (kindOfSelected?.length ?? 0) - 1
+        })
+      )
+    }
+  })
+  useEffect(() => showMenu.current(), [menuRequest])
+
   // Navigation follows the selected clip's track, else the selected track, else every track.
   const navTrack = selected?.trackId ?? selectedTrackId
 
@@ -298,6 +345,12 @@ export function RecordScreen({
         break
       case 'moveTrackDown':
         nudgeTrack(1)
+        break
+      case 'renameTrack':
+        if (canEdit && selectedTrackId) setRenamingTrackId(selectedTrackId)
+        break
+      case 'removeTrack':
+        removeTracks(selectedTrackIds)
         break
       case 'deselect':
         setSelection([])
@@ -452,15 +505,7 @@ export function RecordScreen({
               song.edit(next, field === 'muted' ? undefined : `mix:${trackId}:${field}`)
             }}
             selectedClips={selectedClips}
-            onSelect={(clip, how) => {
-              if (!clip || !open) return setSelection([])
-              // Pressing a clip that's already selected keeps the selection, so it can be
-              // dragged together; ⌘ or ⇧ adds or removes clips.
-              if (!(how === 'only' && includesClip(selectedClips, clip)))
-                setSelection(pickClip(open.data, selectedClips, clip, how))
-              setSelectedTrackIds([clip.trackId])
-              setDeleteFocus('clip')
-            }}
+            onSelect={selectClip}
             onSelectBox={(clips, add) => {
               if (!open) return
               const picked = withGroupmates(open.data, clips)
@@ -490,22 +535,39 @@ export function RecordScreen({
             onRenameTrack={(trackId, name) => {
               if (open && canEdit) song.edit(withTrackName(open.data, trackId, name))
             }}
+            onContextMenu={(target, trackId, clip) => {
+              if (clip) selectClip(clip, 'only')
+              else if (target === 'track') {
+                // Right-clicking one of several selected tracks keeps them all selected.
+                if (!selectedTrackIds.includes(trackId)) setSelectedTrackIds([trackId])
+                setSelection([])
+                setDeleteFocus('tracks')
+              } else {
+                setSelectedTrackIds([trackId])
+                setDeleteFocus(null)
+              }
+              menuFor.current = target
+              setMenuRequest((n) => n + 1)
+            }}
             onLaneClick={(trackId) => {
               setSelectedTrackIds([trackId])
               setDeleteFocus(null)
             }}
-            onClipGesture={(ref, kind, phase, delta, snap) => {
+            onClipGesture={(ref, kind, phase, delta, snap, overTrackId) => {
               if (!open) return
               if (phase === 'start') {
                 const clip = findClip(open.data, ref.trackId, ref.clipId)
                 if (!clip) return
                 // Dragging one of several selected clips moves them all.
                 const together =
-                  kind === 'move' && selectedClips.length > 1 && includesClip(selectedClips, ref)
-                    ? selectedClips
-                    : []
+                  kind !== 'move'
+                    ? []
+                    : selectedClips.length > 1 && includesClip(selectedClips, ref)
+                      ? selectedClips
+                      : [ref]
                 gesture.current = {
                   together,
+                  laneShift: 0,
                   base: open.data,
                   trackId: ref.trackId,
                   clip,
@@ -520,10 +582,16 @@ export function RecordScreen({
               const g = gesture.current
               if (!g) return
               const snapped = snapGesture(g, kind, delta, snap)
-              const next = g.together.length
-                ? moveClips(g.base, g.together, snapped.deltaSec)
-                : applyClipGesture(g, kind, snapped.deltaSec)
-              song.edit(next, g.key)
+              if (!g.together.length) {
+                song.edit(applyClipGesture(g, kind, snapped.deltaSec), g.key)
+              } else {
+                // Over another lane of the same kind, the clips move into it; elsewhere
+                // (a lane of another kind, the ruler) they stay where they last were.
+                const shift = laneShiftTo(g.base, g.trackId, overTrackId)
+                if (shift !== null && shiftLanes(g.base, g.together, shift)) g.laneShift = shift
+                song.edit(moveClips(g.base, g.together, snapped.deltaSec, g.laneShift), g.key)
+                setSelection(shiftLanes(g.base, g.together, g.laneShift) ?? g.together)
+              }
               setSnapAt(phase === 'end' ? null : snapped.at)
               if (phase === 'end') gesture.current = null
             }}

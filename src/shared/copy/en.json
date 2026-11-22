@@ -221,7 +221,9 @@
       "dark": "Dark"
     },
     "checkMicrophone": "Check Microphone…",
-    "help": "Rove Help"
+    "help": "Rove Help",
+    "renameTrack": "Rename Track",
+    "removeTrack": "Remove Track"
   },
   "settings": {
     "title": "Settings",
@@ -243,7 +245,7 @@
       "punchIn": "Click a spot on the timeline, then record to sing over just that part.",
       "edit": "Drag a clip to move it, its edges to trim, and its top corners to fade.",
       "sweetSpot": "The green notch under each Polish slider marks our suggested setting.",
-      "selectClips": "Drag across an empty part of the timeline to select several clips; ⌘-click adds one. Group them from the Edit menu to keep them together.",
+      "selectClips": "Drag across an empty part of the timeline to select several clips; ⌘-click adds one. Group them from the Edit menu, or right-click, to keep them together. Drag clips up or down to move them to another track.",
       "moveTracks": "Drag a track by its name to move it up or down.",
       "selectTracks": "⌘-click or ⇧-click track names to select several, then mute or remove them together.",
       "tuning": "Turn up Tuning in Polish to pull notes into the song’s key. Rove hears the key from the music.",

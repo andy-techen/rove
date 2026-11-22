@@ -17,6 +17,7 @@ interface Props {
   selected: boolean
   /** Recording, or the song is busy: tracks stay put. */
   onSelect(mode: SelectMode): void
+  onContextMenu(): void
   onRecord(): void
   onStop(): void
   /** Whether the track can be dragged to a new place right now. */
@@ -44,6 +45,7 @@ export function TrackHeader({
   recordDisabled,
   selected,
   onSelect,
+  onContextMenu,
   onRecord,
   onStop,
   draggable,
@@ -60,6 +62,10 @@ export function TrackHeader({
       draggable={draggable && !renaming}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        onContextMenu()
+      }}
     >
       {renaming ? (
         <NameField

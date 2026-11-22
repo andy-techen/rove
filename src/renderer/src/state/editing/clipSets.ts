@@ -31,6 +31,15 @@ export function withGroupmates(project: Project, refs: ClipRef[]): ClipRef[] {
   return [...mates, ...refs]
 }
 
+/** Whether the clips are exactly one whole group already, so grouping would change nothing. */
+export function isOneGroup(project: Project, refs: ClipRef[]): boolean {
+  const groups = new Set(clipsOf(project, refs).map(({ clip }) => clip.group))
+  const [group] = groups
+  return (
+    groups.size === 1 && group !== undefined && withGroupmates(project, refs).length === refs.length
+  )
+}
+
 /** Whether any of the clips belongs to a group. */
 export const anyGrouped = (project: Project, refs: ClipRef[]): boolean =>
   clipsOf(project, refs).some(({ clip }) => clip.group !== undefined)
@@ -59,26 +68,68 @@ export function ungroupClips(project: Project, refs: ClipRef[]): Project {
   return withClips(project, (c, ref) => (has(all, ref) ? { ...c, group: undefined } : c))
 }
 
+/** How many lanes apart two tracks of the same kind are; null for another kind or none. */
+export function laneShiftTo(
+  project: Project,
+  fromTrackId: string,
+  toTrackId: string | null
+): number | null {
+  const from = project.tracks.find((t) => t.id === fromTrackId)
+  const to = project.tracks.find((t) => t.id === toTrackId)
+  if (!from || !to || from.role !== to.role) return null
+  const kin = project.tracks.filter((t) => t.role === from.role)
+  return kin.indexOf(to) - kin.indexOf(from)
+}
+
 /**
- * Slides the clips together by `deltaSec`, stopping where the earliest reaches the start
- * of the song. They're lifted off their tracks first, so they never punch each other out;
+ * Where each clip lands when dragged `shift` lanes down (up when negative), staying among
+ * tracks of its own kind; null when any would go past the last of them.
+ */
+export function shiftLanes(project: Project, refs: ClipRef[], shift: number): ClipRef[] | null {
+  if (shift === 0) return refs
+  const shifted: ClipRef[] = []
+  for (const ref of refs) {
+    const track = project.tracks.find((t) => t.id === ref.trackId)
+    const kin = project.tracks.filter((t) => t.role === track?.role)
+    const target = track && kin[kin.indexOf(track) + shift]
+    if (!target) return null
+    shifted.push({ trackId: target.id, clipId: ref.clipId })
+  }
+  return shifted
+}
+
+/**
+ * Slides the clips together by `deltaSec`, and `laneShift` lanes down or up, stopping
+ * where the earliest reaches the start of the song. Clips only change lanes when all of
+ * them can. They're lifted off their tracks first, so they never punch each other out;
  * whatever else they land on is punched out, as with moving one clip.
  */
-export function moveClips(project: Project, refs: ClipRef[], deltaSec: number): Project {
+export function moveClips(
+  project: Project,
+  refs: ClipRef[],
+  deltaSec: number,
+  laneShift = 0
+): Project {
   const moving = clipsOf(project, refs)
   if (moving.length === 0) return project
+  const to = shiftLanes(project, moving, laneShift) ?? moving
   const earliest = Math.min(...moving.map(({ clip }) => clip.start))
   const delta = Math.max(deltaSec, -earliest)
+  const touched = new Set([...moving, ...to].map((r) => r.trackId))
   return {
     ...project,
     tracks: project.tracks.map((t) => {
-      const mine = moving.filter((m) => m.trackId === t.id)
-      if (mine.length === 0) return t
-      const rest = t.clips.filter((c) => !mine.some((m) => m.clipId === c.id))
+      if (!touched.has(t.id)) return t
+      const rest = t.clips.filter(
+        (c) => !moving.some((m) => m.trackId === t.id && m.clipId === c.id)
+      )
       return {
         ...t,
-        clips: mine.reduce(
-          (clips, { clip }) => insertClip(clips, { ...clip, start: clip.start + delta }),
+        clips: moving.reduce(
+          (clips, { clip }, i) =>
+            to[i].trackId === t.id
+              ? insertClip(clips, { ...clip, start: clip.start + delta })
+              : clips,
           rest
         )
       }
