@@ -7,6 +7,7 @@ below keep the codebase from building up debt; follow them for every change.
 - Design guidelines and patterns: @docs/design.md
 - Development guidelines and patterns: @docs/development.md
 - Writing tests: @docs/testing.md
+- How the app fits together (processes, data flow, files): [docs/architecture.md](docs/architecture.md)
 
 ## Layout
 
@@ -19,8 +20,10 @@ src/
     copy/en.json       Every user-facing string
     constants.ts       Constants both sides need
   renderer/src/
-    audio/             Web Audio: engine, mixer, polish chain, playback, worklets
-    state/             Project model, selectors, hooks (useSong, useTabs, useTransport…)
+    audio/             Web Audio, by area: engine, mix, polish, pitch, music,
+                       export, encode, dsp, worklets
+    state/             Logic and hooks, by area: song (project, undo, saving), editing,
+                       tabs, transport, processing, lyrics, chords, commands, ui
     components/        One folder per component; shared building blocks in ui/
     styles/            Design tokens and base styles
 docs/                  Design, development and testing guidelines

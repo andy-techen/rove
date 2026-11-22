@@ -1,6 +1,6 @@
 import { resolve } from 'path'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react()],
@@ -16,6 +16,8 @@ export default defineConfig({
     setupFiles: ['src/renderer/src/test/setup.ts'],
     // Each test starts with fresh call counts on the fake window.api.
     clearMocks: true,
+    // Agent worktrees live in .claude/ and carry their own copy of the tests.
+    exclude: [...configDefaults.exclude, '.claude/**'],
     css: false
   }
 })

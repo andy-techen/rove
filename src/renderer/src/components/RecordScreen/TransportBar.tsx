@@ -1,6 +1,6 @@
 import { t } from '@shared/copy'
-import { formatDuration, formatMillis } from '../../state/project'
-import { useShortcuts } from '../../state/shortcuts'
+import { formatDuration, formatMillis } from '../../state/song/project'
+import { useShortcuts } from '../../state/commands/shortcuts'
 import { InputMeter } from '../InputMeter'
 import { IconButton } from '../ui/IconButton'
 

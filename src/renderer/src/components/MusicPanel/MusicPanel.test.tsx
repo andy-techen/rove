@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
-import { MusicSettings } from '../../state/project'
+import { MusicSettings } from '../../state/song/project'
 import { MusicPanel } from '.'
 
 function renderPanel(music: Partial<MusicSettings> = {}, over = {}) {

@@ -1,5 +1,5 @@
 import { t } from '@shared/copy'
-import { MUSIC_SEMITONES_MAX } from '../../state/project'
+import { MUSIC_SEMITONES_MAX } from '../../state/song/project'
 import { parseTypedNumber } from '../ui/NumberField'
 
 const PERCENT = 100

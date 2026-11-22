@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
-import { applyOverrides } from '../state/keymap'
+import { applyOverrides } from '../state/commands/keymap'
 import { createFakeApi } from './fakeApi'
 
 afterEach(() => {

@@ -1,7 +1,7 @@
 import { t } from '@shared/copy'
-import { Chord } from '../../audio/chords'
-import { gripOf } from '../../state/guitarShapes'
-import { chordName } from '../../state/noteNames'
+import { Chord } from '../../audio/music/chords'
+import { gripOf } from '../../state/chords/guitarShapes'
+import { chordName } from '../../state/chords/noteNames'
 
 // The chord box, in its own units: six strings across, four frets down, with room
 // above for open and muted marks and to the left for the starting fret.

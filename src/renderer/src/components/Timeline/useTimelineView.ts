@@ -8,7 +8,7 @@ import {
   timelineLength,
   zoomAround
 } from './timelineMath'
-import { Command, onCommand } from '../../state/commands'
+import { Command, onCommand } from '../../state/commands/commands'
 
 // Each ⌘= / ⌘− press zooms by this factor.
 const ZOOM_STEP = 1.5

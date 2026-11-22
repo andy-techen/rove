@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { t } from '@shared/copy'
-import { SongLyrics, lyricsFromResult, searchFromName } from '../../state/lyrics'
-import { formatDuration } from '../../state/project'
-import { useLyricsSearch } from '../../state/useLyricsSearch'
+import { SongLyrics, lyricsFromResult, searchFromName } from '../../state/lyrics/lyrics'
+import { formatDuration } from '../../state/song/project'
+import { useLyricsSearch } from '../../state/lyrics/useLyricsSearch'
 import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
 

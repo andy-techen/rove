@@ -11,6 +11,7 @@ export const MENU_ACTIONS = [
   'moveSongLeft',
   'moveSongRight',
   'micCheck',
+  'settings',
   'help',
   'undo',
   'redo',

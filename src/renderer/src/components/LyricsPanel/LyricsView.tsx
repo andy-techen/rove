@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { t } from '@shared/copy'
-import { SongLyrics, activeLineIndex, lineStart } from '../../state/lyrics'
+import { SongLyrics, activeLineIndex, lineStart } from '../../state/lyrics/lyrics'
 import { cx } from '../ui/cx'
 import { scrollWithin } from '../ui/scrollWithin'
 

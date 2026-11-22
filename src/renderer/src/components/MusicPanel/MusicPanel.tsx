@@ -1,12 +1,12 @@
 import { t } from '@shared/copy'
-import { SongKey } from '../../audio/key'
+import { SongKey } from '../../audio/pitch/key'
 import {
   MUSIC_SEMITONES_MAX,
   MUSIC_SPEED_RANGE,
   MUSIC_TONE_MAX_DB,
   MusicSettings
-} from '../../state/project'
-import { keyName } from '../../state/noteNames'
+} from '../../state/song/project'
+import { keyName } from '../../state/chords/noteNames'
 import { IconButton } from '../ui/IconButton'
 import { KnobControl, KnobRow } from '../ui/KnobControl'
 import { parseTypedNumber } from '../ui/NumberField'

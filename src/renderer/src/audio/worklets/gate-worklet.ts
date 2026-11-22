@@ -1,6 +1,6 @@
 // "Noise reduction": a gentle noise gate. Between phrases it turns the signal
 // down by `range` dB rather than muting it, so breaths and tails don't chop off.
-import { dbToGain } from '../units'
+import { dbToGain } from '../dsp/units'
 import { GATE_PROCESSOR } from './messages'
 
 const ATTACK_SEC = 0.002

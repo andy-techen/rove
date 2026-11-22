@@ -11,8 +11,8 @@ import {
   isGesture,
   withBinding
 } from '@shared/keymap'
-import { saveOverrides, useKeymap } from '../../state/keymap'
-import { useShortcuts } from '../../state/shortcuts'
+import { saveOverrides, useKeymap } from '../../state/commands/keymap'
+import { useShortcuts } from '../../state/commands/shortcuts'
 import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'

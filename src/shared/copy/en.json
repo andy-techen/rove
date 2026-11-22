@@ -223,6 +223,15 @@
     "checkMicrophone": "Check Microphone…",
     "help": "Rove Help"
   },
+  "settings": {
+    "title": "Settings",
+    "close": "Close",
+    "songsFolder": "Songs folder",
+    "songsFolderHint": "New songs are saved here. Songs you already have stay where they are.",
+    "changeFolder": "Change…",
+    "chooseFolderTitle": "Choose where to save new songs",
+    "chooseFolderButton": "Use This Folder"
+  },
   "help": {
     "title": "Help",
     "close": "Close",
@@ -357,6 +366,7 @@
       "playback": "Playback",
       "view": "View"
     },
+    "settings": "Settings…",
     "newSong": "New Song",
     "open": "Open…",
     "save": "Save",

@@ -1,4 +1,4 @@
-import { PeakAccumulator } from '../../audio/peaks'
+import { PeakAccumulator } from '../../audio/mix/peaks'
 
 export { PeakAccumulator }
 

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { LyricsResult } from '@shared/lyrics'
-import { SongLyrics } from '../../state/lyrics'
+import { SongLyrics } from '../../state/lyrics/lyrics'
 import { LyricsPanel } from '.'
 
 const timed: SongLyrics = {

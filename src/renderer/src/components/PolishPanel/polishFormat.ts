@@ -6,7 +6,7 @@ import {
   PolishParam,
   PolishSettings,
   clampParam
-} from '../../audio/polish'
+} from '../../audio/polish/polish'
 
 const PERCENT = 100
 // Small values (under 10) get one decimal so a few tenths of a dB are visible.

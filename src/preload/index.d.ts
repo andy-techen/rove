@@ -54,6 +54,10 @@ export interface RoveApi {
   searchLyrics(query: string): Promise<LyricsResult[]>
   /** Switches the app (and its native menus and dialogs) to a theme, remembered for next time. */
   setTheme(theme: Theme): Promise<Theme>
+  /** Where new songs are created. */
+  getSongsFolder(): Promise<string>
+  /** Asks for a new songs folder; resolves to it, or null if cancelled. */
+  chooseSongsFolder(): Promise<string | null>
   /** Listens for the chosen theme (now, then on each change); returns an unsubscribe. */
   onTheme(listener: (theme: Theme) => void): () => void
 }

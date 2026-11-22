@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
-import { defaultPolish } from '../../audio/polish'
+import { defaultPolish } from '../../audio/polish/polish'
 import { PolishPanel } from '.'
 
 function renderPanel(polish = defaultPolish('lead')) {

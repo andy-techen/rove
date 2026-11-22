@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
-import { ChordSegment } from '../../audio/chords'
+import { ChordSegment } from '../../audio/music/chords'
 import { ChordsPanel } from '.'
 
 const chords: ChordSegment[] = [

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { PeakAccumulator, overviewOf } from '../../audio/peaks'
-import { useColorScheme } from '../../state/colorScheme'
+import { PeakAccumulator, overviewOf } from '../../audio/mix/peaks'
+import { useColorScheme } from '../../state/ui/colorScheme'
 import { drawPeaks } from './timelineMath'
 
 interface Props {

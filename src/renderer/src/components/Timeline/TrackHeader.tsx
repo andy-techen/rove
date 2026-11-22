@@ -1,6 +1,6 @@
 import { t } from '@shared/copy'
-import { TrackRole } from '../../state/project'
-import { SelectMode, selectMode } from '../../state/trackSelection'
+import { TrackRole } from '../../state/song/project'
+import { SelectMode, selectMode } from '../../state/editing/trackSelection'
 import { cx } from '../ui/cx'
 import { IconButton } from '../ui/IconButton'
 import { Tooltip } from '../ui/Tooltip'

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { HelpDialog } from './components/HelpDialog'
 import { NewSongDialog } from './components/NewSongDialog'
+import { SettingsDialog } from './components/SettingsDialog'
 import { MicCheck } from './components/MicCheck'
 import { RecordScreen } from './components/RecordScreen'
-import { Command, onCommand, useShortcutKeys } from './state/commands'
-import { syncKeymap } from './state/keymap'
-import { hasOnboarded, markOnboarded } from './state/onboarding'
-import { useMicrophone } from './state/useMicrophone'
-import { useTabs } from './state/useTabs'
+import { Command, onCommand, useShortcutKeys } from './state/commands/commands'
+import { syncKeymap } from './state/commands/keymap'
+import { hasOnboarded, markOnboarded } from './state/ui/onboarding'
+import { useMicrophone } from './state/transport/useMicrophone'
+import { useTabs } from './state/tabs/useTabs'
 import './App.css'
 
 type Screen = 'micCheck' | 'record'
@@ -17,6 +18,7 @@ function App(): React.JSX.Element {
   const [onboarded, setOnboarded] = useState(hasOnboarded)
   const [screen, setScreen] = useState<Screen>(onboarded ? 'record' : 'micCheck')
   const [helpOpen, setHelpOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [naming, setNaming] = useState(false)
   const tabs = useTabs(onboarded)
 
@@ -42,6 +44,7 @@ function App(): React.JSX.Element {
   useEffect(() => {
     menu.current = (action) => {
       if (action === 'help') setHelpOpen(true)
+      else if (action === 'settings') setSettingsOpen(true)
       else if (action === 'micCheck') setScreen('micCheck')
       else if (!onboarded) return
       else if (action === 'newSong') setNaming(true)
@@ -76,6 +79,7 @@ function App(): React.JSX.Element {
       {!showMicCheck && tabs.error && <p className="error app-error">{tabs.error}</p>}
       {showMicCheck && <MicCheck mic={mic} onboarding={!onboarded} onDone={finishMicCheck} />}
       {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
+      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
       {naming && (
         <NewSongDialog
           onCreate={(name) => {

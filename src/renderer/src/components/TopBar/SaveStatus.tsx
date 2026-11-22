@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { saveDetail, saveLabel } from '../../state/saveStatus'
-import { SaveState } from '../../state/useSong'
+import { saveDetail, saveLabel } from '../../state/song/saveStatus'
+import { SaveState } from '../../state/song/useSong'
 import { cx } from '../ui/cx'
 import { Tooltip } from '../ui/Tooltip'
 

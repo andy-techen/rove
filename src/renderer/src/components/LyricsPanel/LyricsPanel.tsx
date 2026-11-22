@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { t } from '@shared/copy'
-import { SongLyrics, formatOffset, isTimed } from '../../state/lyrics'
+import { SongLyrics, formatOffset, isTimed } from '../../state/lyrics/lyrics'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
 import { LyricsSearch } from './LyricsSearch'

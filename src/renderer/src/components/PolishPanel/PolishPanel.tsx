@@ -7,7 +7,7 @@ import {
   PolishSettings,
   defaultPolish,
   polishParams
-} from '../../audio/polish'
+} from '../../audio/polish/polish'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
 import { KnobControl, KnobRow } from '../ui/KnobControl'

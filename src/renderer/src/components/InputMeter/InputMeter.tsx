@@ -1,6 +1,6 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
-import { createMeter } from '../../audio/engine'
+import { createMeter } from '../../audio/engine/engine'
 import {
   GOOD_DB,
   LOUD_DB,
@@ -12,7 +12,7 @@ import {
   meterFill,
   nextDisplayDb,
   toDb
-} from '../../audio/meter'
+} from '../../audio/mix/meter'
 import './InputMeter.css'
 
 const MS_PER_SEC = 1000

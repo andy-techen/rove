@@ -1,5 +1,5 @@
 import { t } from '@shared/copy'
-import { gainToSlider, sliderToGain } from '../../audio/mixer'
+import { gainToSlider, sliderToGain } from '../../audio/mix/mixer'
 import { cx } from '../ui/cx'
 import { Icon } from '../ui/Icon'
 import { IconButton } from '../ui/IconButton'

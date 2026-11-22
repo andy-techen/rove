@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { t } from '@shared/copy'
-import { Microphone } from '../../state/useMicrophone'
+import { Microphone } from '../../state/transport/useMicrophone'
 import { DevicePicker } from '../DevicePicker'
 import { InputMeter } from '../InputMeter'
 import { Button } from '../ui/Button'

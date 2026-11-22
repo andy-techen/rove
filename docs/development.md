@@ -11,16 +11,20 @@
 
 - **Components render and wire events.** They don't compute what to show or decide
   what's allowed.
-- **Selectors** (`state/selectors.ts`) derive view data from the project: what each
+- **Selectors** (`state/song/selectors.ts`) derive view data from the project: what each
   timeline lane shows, whether Split is possible, whether recording can start.
-- **Project operations** (`state/project.ts`) are pure functions that return a new
+- **Project operations** (`state/song/project.ts`) are pure functions that return a new
   project: add a track, punch in a take, trim, split, fade.
 - **Hooks own side effects**: `useSong` (one open song, undo history, saving),
   `useTabs`, `useTransport` (playback and recording), `useMicrophone`.
 - **Audio maths** (`audio/`) is pure where possible: slider-to-parameter mapping,
-  latency estimation, fades, peaks, pitch detection, key finding and pitch shifting. The Web Audio graph is built in `mixer.ts`.
+  latency estimation, fades, peaks, pitch detection, key finding and pitch shifting. The Web Audio graph is built in `audio/mix/mixer.ts`.
 
 If a component grows an `if` chain or a calculation, move it into a helper and test it.
+
+`audio/` and `state/` are grouped by area (`audio/pitch/`, `state/song/`, …; the full
+list is in `CLAUDE.md`). A new file goes in the folder for its area, with its test next to
+it; start a new folder only when no area fits.
 
 ## Components
 
@@ -55,7 +59,7 @@ Import components through their folder (`'../Timeline'`), not deep paths.
   rebuilds the menu. In the renderer, read keys with `useShortcuts()` so text updates
   when a shortcut changes; never format a default accelerator directly.
 - Menu items and in-app keys arrive as one stream: subscribe with `onCommand()`
-  (`state/commands.ts`), not `window.api.onMenu`. Keys with ⌘ or ⌥ go through the
+  (`state/commands/commands.ts`), not `window.api.onMenu`. Keys with ⌘ or ⌥ go through the
   menu; single keys and text keys (arrows, ⌫) are handled in the renderer so they don't
   swallow typing.
 
@@ -79,7 +83,7 @@ workarounds (with a link) are worth a comment; restating the code isn't.
 - The renderer can only touch song folders the main process opened (dialog, created,
   or restored). Validate every path that crosses IPC.
 - Audio files are never overwritten or deleted. Takes are written with `wx`.
-- Tuning plays and exports tuned copies held in memory (`audio/tuning.ts`); the
+- Tuning plays and exports tuned copies held in memory (`audio/pitch/tuning.ts`); the
   recordings on disk stay as sung.
 - Only the main process goes online (lyrics search, `main/ipc/lyrics.ts`), and only
   with words the singer typed. Validate what comes back (`parseSearchResults`).

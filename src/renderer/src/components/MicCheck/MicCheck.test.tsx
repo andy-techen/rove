@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
-import { Microphone } from '../../state/useMicrophone'
+import { Microphone } from '../../state/transport/useMicrophone'
 import { MicCheck } from '.'
 
 const mic = (overrides: Partial<Microphone>): Microphone => ({

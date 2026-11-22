@@ -11,6 +11,7 @@ import {
   uniqueFolderName,
   uniqueName
 } from './fileNames'
+import { songsFolder } from './settings'
 
 const MANIFEST = 'project.json'
 const BACKING_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg']
@@ -20,7 +21,7 @@ const BACKING_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg']
 const openProjects = new Set<string>()
 
 const stateFile = (): string => path.join(app.getPath('userData'), 'state.json')
-const songsRoot = (): string => path.join(app.getPath('music'), 'Rove')
+const songsRoot = songsFolder
 
 interface SavedTabs {
   openSongs: string[]

@@ -1,10 +1,10 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import type { ChosenProject } from '../../../../preload/index.d'
-import { getAudioContext } from '../../audio/engine'
-import { Command, onCommand, typingIn } from '../../state/commands'
-import { GestureStart, applyClipGesture } from '../../state/clipGestures'
-import { snapGesture } from '../../state/snapping'
+import { getAudioContext } from '../../audio/engine/engine'
+import { Command, onCommand, typingIn } from '../../state/commands/commands'
+import { GestureStart, applyClipGesture } from '../../state/editing/clipGestures'
+import { snapGesture } from '../../state/editing/snapping'
 import {
   Clip,
   deleteClip,
@@ -23,7 +23,7 @@ import {
   withLyrics,
   withTrackPolish,
   withoutTracks
-} from '../../state/project'
+} from '../../state/song/project'
 import {
   canExportSong,
   canSplitAt,
@@ -32,19 +32,24 @@ import {
   hasMusicChoice,
   selectLanes,
   songEnd
-} from '../../state/selectors'
-import { Microphone } from '../../state/useMicrophone'
-import { DeleteFocus, deletionOf, selectTracks, tracksActedOn } from '../../state/trackSelection'
-import { useExport } from '../../state/useExport'
-import { bufferFor, useProcessedAudio } from '../../state/processedAudio'
-import { useSongKey } from '../../state/songKey'
-import { useBeat } from '../../state/useBeat'
-import { useChords } from '../../state/useChords'
-import { PANEL_MIN_HEIGHT, SIDE_WIDTH, useSidePanelSize } from '../../state/sidePanels'
-import { useElementHeight } from '../../state/useElementHeight'
-import { clickGrid } from '../../state/metronome'
-import { useSong } from '../../state/useSong'
-import { useTransport } from '../../state/useTransport'
+} from '../../state/song/selectors'
+import { Microphone } from '../../state/transport/useMicrophone'
+import {
+  DeleteFocus,
+  deletionOf,
+  selectTracks,
+  tracksActedOn
+} from '../../state/editing/trackSelection'
+import { useExport } from '../../state/song/useExport'
+import { bufferFor, useProcessedAudio } from '../../state/processing/processedAudio'
+import { useSongKey } from '../../state/processing/songKey'
+import { useBeat } from '../../state/transport/useBeat'
+import { useChords } from '../../state/chords/useChords'
+import { PANEL_MIN_HEIGHT, SIDE_WIDTH, useSidePanelSize } from '../../state/ui/sidePanels'
+import { useElementHeight } from '../../state/ui/useElementHeight'
+import { clickGrid } from '../../state/transport/metronome'
+import { useSong } from '../../state/song/useSong'
+import { useTransport } from '../../state/transport/useTransport'
 import { ExportDialog } from '../ExportDialog'
 import { ChordsPanel } from '../ChordsPanel'
 import { LyricsPanel } from '../LyricsPanel'

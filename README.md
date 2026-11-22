@@ -19,12 +19,15 @@ A beginner-friendly desktop app for recording vocals over a backing track, layer
 
 ## Roadmap
 
-| Next                   | Goal                                                                                      |
-| ---------------------- | ----------------------------------------------------------------------------------------- |
-| Video                  | Record camera video with the vocal, in sync with the timeline, and export it with the mix |
-| Remove vocals          | On-device stem separation turns any song into a backing track                             |
-| Auto polish            | Analyse a take and set the polish knobs                                                   |
-| Signing and notarizing | Sign with a Developer ID and notarize, so macOS opens the app without asking              |
+| Next                   | Goal                                                                                                           |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Video                  | Record camera video with the vocal, in sync with the timeline, and export it with the mix                      |
+| Share as video         | Export the mix as a video for phones: the audio over a photo you import or a background, ready to post         |
+| Better chords          | A more accurate on-device detector (BTC), run on the music without vocals; edit or type chords when it's wrong |
+| Chord backing          | Play the song's chords as the backing track: strummed guitar, piano or a simple beat                           |
+| Remove vocals          | On-device stem separation turns any song into a backing track                                                  |
+| Auto polish            | Analyse a take and set the polish knobs                                                                        |
+| Signing and notarizing | Sign with a Developer ID and notarize, so macOS opens the app without asking                                   |
 
 ## Stack
 

@@ -7,6 +7,7 @@ import { registerExportIpc } from './ipc/export'
 import { registerLyricsIpc } from './ipc/lyrics'
 import { registerAppearanceIpc, reportTheme } from './ipc/appearance'
 import { registerKeymapIpc } from './ipc/keymap'
+import { registerSettingsIpc } from './ipc/settings'
 import { FULL_SCREEN_CHANNEL, NATIVE_EDIT_CHANNEL, NATIVE_EDITS } from '@shared/menu'
 
 // Opening size, and the smallest that still fits the timeline and mixer.
@@ -85,6 +86,7 @@ app.whenReady().then(async () => {
   registerLyricsIpc()
   await registerAppearanceIpc()
   await registerKeymapIpc()
+  await registerSettingsIpc()
 
   createWindow()
 

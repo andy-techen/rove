@@ -16,6 +16,7 @@ export interface Shortcut {
 }
 
 export const KEYMAP = {
+  settings: { group: 'file', accelerator: 'CmdOrCtrl+,' },
   newSong: { group: 'file', accelerator: 'CmdOrCtrl+N' },
   open: { group: 'file', accelerator: 'CmdOrCtrl+O' },
   save: { group: 'file', accelerator: 'CmdOrCtrl+S' },
