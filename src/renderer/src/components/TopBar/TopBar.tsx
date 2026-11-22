@@ -4,6 +4,7 @@ import { IconButton } from '../ui/IconButton'
 import { Theme, nextTheme } from '@shared/appearance'
 import { useTheme } from '../../state/ui/colorScheme'
 import { IconName } from '../ui/Icon'
+import { Logo } from '../ui/Logo'
 import { useShortcuts } from '../../state/commands/shortcuts'
 import { useFullScreen } from '../../state/ui/useFullScreen'
 import { cx } from '../ui/cx'
@@ -74,7 +75,9 @@ export function TopBar({
   const fullScreen = useFullScreen()
   return (
     <header className={cx('topbar', isMac && 'titlebar', isMac && !fullScreen && 'window-buttons')}>
-      <span className="brand">{t('app.name')}</span>
+      <span className="brand">
+        <Logo />
+      </span>
       <nav className="tabs" role="tablist" aria-label={t('topBar.tabsLabel')}>
         {tabs.map((tab, index) => {
           const active = tab.id === activeId

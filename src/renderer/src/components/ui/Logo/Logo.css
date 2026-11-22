@@ -1,0 +1,41 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text);
+}
+
+.logo-icon,
+.logo-word {
+  display: block;
+  flex-shrink: 0;
+}
+
+.logo-word {
+  width: auto;
+}
+
+.logo-sm {
+  gap: var(--space-3);
+}
+
+.logo-sm .logo-icon {
+  width: var(--size-logo-icon-sm);
+  height: var(--size-logo-icon-sm);
+}
+
+.logo-sm .logo-word {
+  height: var(--size-logo-word-sm);
+}
+
+.logo-lg {
+  gap: var(--space-6);
+}
+
+.logo-lg .logo-icon {
+  width: var(--size-logo-icon-lg);
+  height: var(--size-logo-icon-lg);
+}
+
+.logo-lg .logo-word {
+  height: var(--size-logo-word-lg);
+}

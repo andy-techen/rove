@@ -19,6 +19,11 @@ const mic = (overrides: Partial<Microphone>): Microphone => ({
 })
 
 describe('MicCheck', () => {
+  it('is headed by the Rove logo', () => {
+    render(<MicCheck mic={mic({})} onboarding onDone={vi.fn()} />)
+    expect(screen.getByRole('heading', { name: t('app.name') })).toBeInTheDocument()
+  })
+
   it('explains how to fix blocked access and lets the singer retry', async () => {
     const m = mic({ access: 'denied' })
     render(<MicCheck mic={m} onboarding onDone={vi.fn()} />)

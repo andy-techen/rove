@@ -4,6 +4,7 @@ import { Microphone } from '../../state/transport/useMicrophone'
 import { DevicePicker } from '../DevicePicker'
 import { InputMeter } from '../InputMeter'
 import { Button } from '../ui/Button'
+import { Logo } from '../ui/Logo'
 import './MicCheck.css'
 
 interface Props {
@@ -23,7 +24,9 @@ export function MicCheck({ mic, onboarding, onDone }: Props): React.JSX.Element 
   return (
     <main className="mic-check">
       <header>
-        <h1 className="mic-check-title">{t('app.name')}</h1>
+        <h1 className="mic-check-title">
+          <Logo size="lg" />
+        </h1>
         <p className="muted">
           {onboarding ? t('micCheck.subtitleOnboarding') : t('micCheck.subtitleRevisit')}
         </p>

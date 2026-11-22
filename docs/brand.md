@@ -60,8 +60,8 @@ warm, relaxed, flattering, a little magical.
 
 - **Marigold means you.** Your voice on the timeline, your main action (Play, the
   primary button), the knobs you turn. Used sparingly, so it stays meaningful.
-- **Warm grounds.** Cream by day, warm charcoal by night. Never cold blue-grey, never
-  pure black or white.
+- **Warm grounds.** Cream by day, warm graphite by night: greys with just a hint of
+  warmth. Never cold blue-grey, never brown, never pure black or white.
 - **Colours keep their jobs.** Red means recording or something gone wrong. Green
   means healthy, or a good place to set a control. Neither is ever decoration.
 - **Light and dark are equals.** Dark is evening, not a studio.
@@ -76,7 +76,9 @@ Values live in `src/renderer/src/styles/tokens.css`; how to apply them is in
 - Not literal: no microphones, mixing desks or editor waveforms. The voice as
   something warm and alive.
 - **Icon (on trial):** Orb sunrise, a voice-orb sun rising over the sea. It always
-  appears on its own sky tile, never cut out onto a transparent or dark ground.
+  appears on its own sky tile, never cut out onto a transparent or dark ground. In the
+  app the icon and wordmark appear together (`Logo`): in the top bar and heading the
+  mic check.
 - **Wordmark (on trial):** lowercase "rove" in heavy, round strokes
   (`design/logo/wordmarks/rounded.svg`).
 - Other concepts are kept in `design/logo/` for reference.

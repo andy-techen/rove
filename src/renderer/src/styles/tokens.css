@@ -1,14 +1,15 @@
 /* Design tokens. Every colour, size and timing in component styles comes from here. */
 
 :root {
-  /* Colour: dark is the default theme. */
+  /* Colour: dark is the default theme. Dark is warm graphite: near-neutral greys with a
+     hint of warmth, so the marigold glows without the screen turning brown. */
   color-scheme: dark;
-  --color-bg: #1c1815;
-  --color-surface: #25201c;
-  --color-surface-raised: #302a25;
-  --color-border: #40372f;
-  --color-text: #f6ede4;
-  --color-text-muted: #b3a597;
+  --color-bg: #1a1918;
+  --color-surface: #232221;
+  --color-surface-raised: #2d2c2a;
+  --color-border: #3b3936;
+  --color-text: #f3f1ee;
+  --color-text-muted: #aba69f;
   --color-accent: #f2a93b;
   --color-accent-hover: #f7bb5c;
   --color-accent-text: #f2a93b;
@@ -22,11 +23,11 @@
   --color-on-danger: #ffffff;
   --color-good-wash: rgba(63, 191, 106, 0.14);
   --color-danger-wash: rgba(229, 83, 75, 0.35);
-  --color-clip-backing: #2f2924;
-  --color-wave-backing: #a8988a;
-  --color-clip-vocal: #3b2e1c;
+  --color-clip-backing: #2c2b29;
+  --color-wave-backing: #a29d96;
+  --color-clip-vocal: #372e20;
   --color-wave-vocal: #f5b754;
-  --color-highlight: rgba(255, 240, 220, 0.16);
+  --color-highlight: rgba(255, 250, 240, 0.14);
   --color-grid: rgba(255, 255, 255, 0.05);
   --color-backdrop: rgba(0, 0, 0, 0.45);
   --shadow-raised: 0 2px 10px rgba(0, 0, 0, 0.25);
@@ -86,6 +87,10 @@
   --size-splitter: 8px;
   --size-scrollbar: 10px;
   --size-drop-marker: 2px;
+  --size-logo-icon-sm: 20px;
+  --size-logo-word-sm: 14px;
+  --size-logo-icon-lg: 56px;
+  --size-logo-word-lg: 40px;
   --size-progress-ring: 16px;
   --size-progress-ring-width: 3px;
   --size-scrollbar-inset: 3px;

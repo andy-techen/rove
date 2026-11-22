@@ -59,9 +59,9 @@ describe('TopBar', () => {
     expect(props.onNew).toHaveBeenCalled()
   })
 
-  it('shows the app name before the song tabs', () => {
+  it('shows the logo before the song tabs', () => {
     renderBar()
-    expect(screen.getByText(t('app.name'))).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: t('app.name') })).toBeInTheDocument()
   })
 
   it('shows that the song is saved, and when', async () => {

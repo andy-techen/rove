@@ -27,8 +27,7 @@
 
 .brand {
   flex-shrink: 0;
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-muted);
+  display: flex;
 }
 
 /* Tabs */

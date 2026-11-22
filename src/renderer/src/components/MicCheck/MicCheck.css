@@ -12,8 +12,8 @@
 }
 
 .mic-check-title {
-  font-size: var(--font-size-title);
-  font-weight: var(--font-weight-bold);
+  display: flex;
+  margin-bottom: var(--space-5);
 }
 
 .mic-check-card {
