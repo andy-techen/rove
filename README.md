@@ -45,3 +45,17 @@ npm run dev
 Other scripts: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build:mac`.
 
 In dev mode macOS attributes microphone permission to the app that launched `npm run dev` (Terminal, iTerm, VS Code), not to Rove. Run it from one of those and allow access once. If the meter stays flat, check System Settings > Privacy & Security > Microphone.
+
+## Releases
+
+Push a version tag and GitHub Actions (`.github/workflows/release.yml`) checks the code,
+builds a universal `.dmg` (Apple silicon and Intel) and publishes it as a GitHub release:
+
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+The tag sets the app's version. Until the app is signed with a Developer ID and
+notarized, macOS blocks the first launch: open the app once, then go to System Settings >
+Privacy & Security and choose **Open Anyway**.

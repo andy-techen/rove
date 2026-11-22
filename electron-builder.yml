@@ -12,6 +12,10 @@ files:
 asarUnpack:
   - resources/**
 mac:
+  # One download for both Apple silicon and Intel Macs.
+  target:
+    - target: dmg
+      arch: universal
   hardenedRuntime: true
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
