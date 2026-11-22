@@ -80,8 +80,9 @@ Values live in `src/renderer/src/styles/tokens.css`; how to apply them is in
   app the icon and wordmark appear together (`Logo`): in the top bar and heading the
   mic check.
 - **Wordmark (on trial):** lowercase "rove" in heavy, round strokes
-  (`design/logo/wordmarks/rounded.svg`).
-- Other concepts are kept in `design/logo/` for reference.
+  (`design/logo/wordmark.svg`).
+- The icon's source is `design/logo/icon.svg`. Drafts of other concepts aren't kept in
+  the repo.
 
 ## Sharing and community (later)
 

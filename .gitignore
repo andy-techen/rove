@@ -13,3 +13,8 @@ out
 .idea/
 .vscode/
 .claude/
+
+# Logo drafts stay local; only the chosen icon and wordmark are kept.
+design/logo/*
+!design/logo/icon.svg
+!design/logo/wordmark.svg
