@@ -1,0 +1,56 @@
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-ui);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+/* The checkbox draws itself as a pill with a sliding knob. */
+.switch input {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--size-switch-width);
+  height: var(--size-switch-height);
+  margin: 0;
+  border-radius: var(--size-switch-height);
+  background: var(--color-border);
+  appearance: none;
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+}
+
+.switch input::after {
+  content: '';
+  position: absolute;
+  top: var(--space-1);
+  left: var(--space-1);
+  width: calc(var(--size-switch-height) - var(--space-1) * 2);
+  height: calc(var(--size-switch-height) - var(--space-1) * 2);
+  border-radius: var(--radius-round);
+  background: var(--color-on-accent);
+  box-shadow: var(--shadow-raised);
+  transition: transform var(--duration-fast) ease;
+}
+
+.switch input:checked {
+  background: var(--color-accent);
+}
+
+.switch input:checked::after {
+  transform: translateX(calc(var(--size-switch-width) - var(--size-switch-height)));
+}
+
+.switch input:disabled {
+  opacity: var(--opacity-disabled);
+  /* The plain arrow: a no-entry cursor would sit over the tooltip saying why. */
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch input,
+  .switch input::after {
+    transition: none;
+  }
+}

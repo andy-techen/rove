@@ -1,0 +1,44 @@
+// 24×24 outline icons (stroked) and filled glyphs, by name.
+export const STROKE_ICONS = {
+  undo: 'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',
+  redo: 'M15 14l5-5-5-5M20 9H10a6 6 0 0 0 0 12h3',
+  split: 'M12 3v18M7 8l-4 4 4 4M17 8l4 4-4 4',
+  delete: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',
+  plus: 'M12 5v14M5 12h14',
+  minus: 'M5 12h14',
+  close: 'M6 6l12 12M18 6L6 18',
+  volume: 'M4 9h4l5-4v14l-5-4H4zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12',
+  muted: 'M4 9h4l5-4v14l-5-4H4zM17 9.5l5 5M22 9.5l-5 5',
+  pan: 'M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4',
+  zoomIn: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4M8 11h6M11 8v6',
+  zoomOut: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4M8 11h6',
+  help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01',
+  folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  mic: 'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3',
+  chevronDown: 'M6 9l6 6 6-6',
+  reset: 'M4 4v5h5M5.1 15a7.5 7.5 0 1 0 1.6-7.8L4 9',
+  tune: 'M4 6h9M17 6h3M15 4v4M4 12h3M11 12h9M9 10v4M4 18h11M19 18h1M17 16v4',
+  export: 'M12 15V3M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5',
+  save: 'M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM7 3v5h8V3M7 21v-7h10v7',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
+  sun: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M20 13.5A8 8 0 1 1 10.5 4a6.5 6.5 0 0 0 9.5 9.5z',
+  // A screen: follow the computer's own setting.
+  display: 'M4 4h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8 20h8M12 16v4',
+  // A side panel with an arrow toward the edge: tuck the panel away.
+  hidePanel:
+    'M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM15 5v14M8 9l3 3-3 3',
+  // A chord box: strings and frets with two finger dots (tiny rings that read as dots).
+  chords:
+    'M6 4h12M6 4v16M10 4v16M14 4v16M18 4v16M6 10h12M6 15h12M10 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM14 11.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z',
+  lyrics: 'M4 6h14M4 10h14M4 14h6M14 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0M18 18v-6h3'
+} as const
+
+export const FILLED_ICONS = {
+  play: 'M8 5.5v13a.5.5 0 0 0 .76.43l10.4-6.5a.5.5 0 0 0 0-.86L8.76 5.07A.5.5 0 0 0 8 5.5z',
+  pause: 'M7 5h3.5v14H7zM13.5 5H17v14h-3.5z',
+  record: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z',
+  stop: 'M6 7.5A1.5 1.5 0 0 1 7.5 6h9A1.5 1.5 0 0 1 18 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 16.5z'
+} as const
+
+export type IconName = keyof typeof STROKE_ICONS | keyof typeof FILLED_ICONS

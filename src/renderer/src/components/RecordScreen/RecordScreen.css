@@ -1,0 +1,197 @@
+.screen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* The workspace beside the lyrics, when they're open. */
+.screen-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/*
+ * Exactly the window's height: the timeline gives up room to the transport and polish
+ * panel and scrolls its own lanes. The workspace only scrolls as a fallback when the
+ * window is too short for even that.
+ */
+.workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  min-width: 0;
+  padding: var(--space-8) var(--space-7);
+  overflow-y: auto;
+}
+
+.workspace > :not(.timeline) {
+  flex-shrink: 0;
+}
+
+.transport-messages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: var(--font-size-ui);
+}
+
+.transport-messages:empty {
+  display: none;
+}
+
+/* Transport */
+
+.transport {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-7);
+}
+
+.transport-meter {
+  flex: 1;
+  min-width: var(--layout-meter-min);
+  max-width: var(--layout-meter-max);
+}
+
+.timer {
+  font-size: var(--font-size-display);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Milliseconds for lining up edits, quieter than the minutes and seconds. */
+.timer-ms {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.edit-tools {
+  display: flex;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+.panel-toggles {
+  position: relative;
+  display: flex;
+  gap: var(--space-1);
+  /* The divider sits midway: the transport's gap is pulled in to match the padding. */
+  margin-left: calc(var(--space-4) - var(--space-7));
+  padding-left: calc(var(--space-4) + 1px);
+}
+
+/* A short divider between the edit tools and the side-panel toggles. */
+.panel-toggles::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 1px;
+  height: var(--size-control-xs);
+  transform: translateY(-50%);
+  background: var(--color-border);
+}
+
+/* The side panels: lyrics and chords, stacked when both are open. Drag the left edge
+   to widen them, and the line between them to share the height. */
+.side-panels {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--side-width);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.side-panels-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.side-panel-slot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Each panel scrolls inside its own share of the column, never past the divider. */
+  overflow: hidden;
+}
+
+.side-panel-top {
+  flex: 0 0 var(--lyrics-height);
+}
+
+/* The line between lyrics and chords sits at the centre of the drag handle, right on
+   the edge where the panels meet, so the accent line shown while dragging covers it. */
+.side-panels-split::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+  background: var(--color-border);
+}
+
+.play-button {
+  flex-shrink: 0;
+  width: var(--size-control-md);
+  height: var(--size-control-md);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--color-text);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-raised);
+  transition:
+    transform var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+
+.play-button:hover:not(:disabled) {
+  background: var(--color-text);
+  color: var(--color-bg);
+  transform: scale(var(--scale-hover));
+  box-shadow: var(--shadow-raised-hover);
+}
+
+.play-button:active:not(:disabled) {
+  transform: scale(var(--scale-press));
+}
+
+.play-button:disabled {
+  box-shadow: none;
+}
+
+/* Play's partner: the same size, in a quieter fill. */
+.stop-button {
+  flex-shrink: 0;
+  width: var(--size-control-md);
+  height: var(--size-control-md);
+  /* Sits close to play, as a pair. */
+  margin-left: calc(var(--space-3) - var(--space-7));
+  padding: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-highlight);
+  color: var(--color-text);
+}
+
+.stop-button:hover:not(:disabled) {
+  background: var(--color-highlight);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-button {
+    transition: none;
+  }
+}

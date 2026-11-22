@@ -1,0 +1,65 @@
+.btn {
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  color: var(--color-text);
+  background: transparent;
+}
+
+.btn:disabled {
+  opacity: var(--opacity-disabled);
+  /* The plain arrow: a no-entry cursor would sit over the tooltip saying why. */
+  cursor: default;
+}
+
+.btn-md {
+  padding: var(--space-4) var(--space-7);
+}
+
+.btn-sm {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-ui);
+  line-height: var(--line-height);
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.btn-secondary {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-border);
+}
+
+/* No fill until hovered, in muted text: for in-place actions like "+ Add vocal". */
+.btn-ghost {
+  color: var(--color-text-muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+/* Secondary actions that shouldn't draw the eye: a soft fill and muted text, still
+   plainly a button. */
+.btn-quiet {
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+}
+
+.btn-quiet:hover:not(:disabled) {
+  background: var(--color-border);
+  color: var(--color-text);
+}

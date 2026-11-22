@@ -1,0 +1,42 @@
+/* auto-fit: however many knobs a panel has, they spread across its whole width. */
+.knob-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--layout-knob-control), 1fr));
+  gap: var(--space-7) var(--space-4);
+}
+
+.knob-row-dimmed {
+  opacity: var(--opacity-dimmed);
+}
+
+.knob-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.knob-control-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.knob-control-value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.knob-control-reset {
+  /* Overhangs the value line instead of growing it, so showing it moves nothing. */
+  margin-block: calc(-1 * var(--space-3));
+}

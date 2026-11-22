@@ -6,7 +6,7 @@ import eslintPluginReactHooks from 'eslint-plugin-react-hooks'
 import eslintPluginReactRefresh from 'eslint-plugin-react-refresh'
 
 export default defineConfig(
-  { ignores: ['**/node_modules', '**/dist', '**/out'] },
+  { ignores: ['**/node_modules', '**/dist', '**/out', '.claude'] },
   tseslint.configs.recommended,
   eslintPluginReact.configs.flat.recommended,
   eslintPluginReact.configs.flat['jsx-runtime'],
@@ -29,19 +29,9 @@ export default defineConfig(
     }
   },
   {
-    files: ['src/renderer/src/audio/worklets/*.js'],
-    languageOptions: {
-      globals: {
-        AudioWorkletProcessor: 'readonly',
-        registerProcessor: 'readonly',
-        currentFrame: 'readonly',
-        currentTime: 'readonly',
-        sampleRate: 'readonly'
-      }
-    },
-    rules: {
-      '@typescript-eslint/explicit-function-return-type': 'off'
-    }
+    // Test helpers stay short; their return types are obvious from use.
+    files: ['**/*.test.{ts,tsx}', 'src/renderer/src/test/**'],
+    rules: { '@typescript-eslint/explicit-function-return-type': 'off' }
   },
   eslintConfigPrettier
 )

@@ -1,11 +1,15 @@
+import { t } from '@shared/copy'
+
 const SAVED_DEVICE_KEY = 'rove.inputDeviceId'
+// Chromium's id for "whatever the system's input is set to".
+const SYSTEM_DEFAULT_ID = 'default'
 
 export function pickInputDevice(
   inputs: MediaDeviceInfo[],
   preferredId: string | null
 ): string | null {
   if (preferredId && inputs.some((d) => d.deviceId === preferredId)) return preferredId
-  if (inputs.some((d) => d.deviceId === 'default')) return 'default'
+  if (inputs.some((d) => d.deviceId === SYSTEM_DEFAULT_ID)) return SYSTEM_DEFAULT_ID
   return inputs[0]?.deviceId ?? null
 }
 
@@ -29,13 +33,13 @@ export function describeInputError(err: unknown): string {
   const name = err instanceof DOMException ? err.name : ''
   switch (name) {
     case 'NotAllowedError':
-      return 'Microphone access is blocked.'
+      return t('inputErrors.blocked')
     case 'NotFoundError':
     case 'OverconstrainedError':
-      return "That microphone isn't connected anymore. Pick another one."
+      return t('inputErrors.gone')
     case 'NotReadableError':
-      return 'That microphone is busy in another app or was unplugged.'
+      return t('inputErrors.busy')
     default:
-      return "Couldn't open that microphone."
+      return t('inputErrors.generic')
   }
 }

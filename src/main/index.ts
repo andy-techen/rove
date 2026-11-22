@@ -1,18 +1,25 @@
 import { app, shell, BrowserWindow, ipcMain, session, systemPreferences } from 'electron'
 import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { electronApp, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { registerProjectIpc } from './ipc/project'
+import { registerExportIpc } from './ipc/export'
+import { registerLyricsIpc } from './ipc/lyrics'
+import { registerAppearanceIpc, reportTheme } from './ipc/appearance'
+import { registerKeymapIpc } from './ipc/keymap'
+import { FULL_SCREEN_CHANNEL, NATIVE_EDIT_CHANNEL, NATIVE_EDITS } from '@shared/menu'
+
+// Opening size, and the smallest that still fits the timeline and mixer.
+const WINDOW = { width: 900, height: 670, minWidth: 640, minHeight: 480 }
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
-    minWidth: 640,
-    minHeight: 480,
+    ...WINDOW,
     show: false,
     autoHideMenuBar: true,
     title: 'Rove',
+    // On macOS the song tabs sit in the title bar, beside the window controls.
+    ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset' as const } : {}),
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -25,6 +32,13 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
+
+  const reportFullScreen = (): void =>
+    mainWindow.webContents.send(FULL_SCREEN_CHANNEL, mainWindow.isFullScreen())
+  mainWindow.on('enter-full-screen', reportFullScreen)
+  mainWindow.on('leave-full-screen', reportFullScreen)
+  mainWindow.webContents.on('did-finish-load', reportFullScreen)
+  mainWindow.webContents.on('did-finish-load', () => reportTheme(mainWindow))
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
@@ -46,12 +60,8 @@ async function requestMicAccess(): Promise<boolean> {
   return systemPreferences.askForMediaAccess('microphone')
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.andytechen.rove')
-
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
 
   // Grant audio capture only; the app never needs camera or screen access.
   session.defaultSession.setPermissionRequestHandler((_wc, permission, callback, details) => {
@@ -64,7 +74,17 @@ app.whenReady().then(() => {
   ipcMain.handle('mic:openSettings', () =>
     shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone')
   )
+  // Text fields keep their own undo, cut, copy and paste (see the Edit menu).
+  ipcMain.handle(NATIVE_EDIT_CHANNEL, (e, command: unknown) => {
+    if ((NATIVE_EDITS as readonly unknown[]).includes(command)) {
+      e.sender[command as (typeof NATIVE_EDITS)[number]]()
+    }
+  })
   registerProjectIpc()
+  registerExportIpc()
+  registerLyricsIpc()
+  await registerAppearanceIpc()
+  await registerKeymapIpc()
 
   createWindow()
 

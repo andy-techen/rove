@@ -1,0 +1,16 @@
+.music-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.music-notes:empty {
+  display: none;
+}
+
+/* Something the singer may need to act on, so it stands out from the muted notes. */
+.music-warning {
+  color: var(--color-text);
+}

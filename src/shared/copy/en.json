@@ -1,0 +1,449 @@
+{
+  "app": {
+    "name": "Rove",
+    "openFailed": "Couldn't open your songs.",
+    "newSongFailed": "Couldn't create a new song.",
+    "openFolderFailed": "Couldn't open that folder."
+  },
+  "micCheck": {
+    "subtitleOnboarding": "Let’s get your mic ready.",
+    "subtitleRevisit": "Check your mic level.",
+    "requesting": "Asking for microphone access…",
+    "denied": "Rove can't hear your microphone. Turn on access for Rove in System Settings, then try again.",
+    "openSettings": "Open System Settings",
+    "tryAgain": "Try again",
+    "noMicrophone": "No microphone found. Plug one in and it will show up here.",
+    "continue": "Continue",
+    "continueHint": "Sing in the green for a moment to continue.",
+    "done": "Done",
+    "microphone": "Microphone",
+    "microphoneNumbered": "Microphone {number}"
+  },
+  "meter": {
+    "label": "Input level",
+    "ariaLabel": "Microphone input level",
+    "hints": {
+      "silent": "Sing a few lines to check your level.",
+      "quiet": "A bit quiet. Move a little closer to the mic.",
+      "good": "Sounds good. Keep it about here.",
+      "loud": "Getting loud. Ease back from the mic a little.",
+      "clip": "Too loud! Back off the mic or turn down its gain."
+    }
+  },
+  "inputErrors": {
+    "blocked": "Microphone access is blocked.",
+    "gone": "That microphone isn't connected anymore. Pick another one.",
+    "busy": "That microphone is busy in another app or was unplugged.",
+    "generic": "Couldn't open that microphone."
+  },
+  "latency": {
+    "title": "Line up your recordings",
+    "measured": "Measured delay: {ms} ms. New takes are shifted to line up with the music.",
+    "estimated": "Using an estimate ({ms} ms). Measure once for takes that land exactly on the beat.",
+    "measuring": "Listening for clicks… keep the room quiet for a few seconds.",
+    "failed": "Couldn't hear the clicks clearly. Take your headphones off, turn your speakers up, and hold the mic near them, then try again.",
+    "measure": "Measure delay",
+    "measureAgain": "Measure again",
+    "useEstimate": "Use estimate",
+    "explainer": "Rove plays a few clicks and listens with your mic. Unplug headphones first."
+  },
+  "topBar": {
+    "tabsLabel": "Open songs",
+    "newSong": "New song",
+    "open": "Open…",
+    "close": "Close {name}",
+    "closeTitle": "Close",
+    "rename": "Rename song",
+    "songName": "Song name",
+    "opening": "Opening…"
+  },
+  "transport": {
+    "play": "Play",
+    "pause": "Pause",
+    "stopPlayback": "Stop",
+    "stopPlaybackTitle": "Stop and go back to the start",
+    "panelsToolbar": "Side panels",
+    "editToolbar": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "split": "Split clip",
+    "delete": "Delete",
+    "needsBacking": "Add a backing track below, or record without music.",
+    "saving": "Saving…",
+    "tooShort": "That take was too short to keep.",
+    "retrySave": "Try saving again",
+    "discardTake": "Discard take",
+    "saveFailed": "Couldn't save that take to your song folder. Check the folder still exists.",
+    "recorderFailed": "Couldn't start the recorder.",
+    "engineFailed": "Couldn't start the audio engine."
+  },
+  "timeline": {
+    "label": "Song timeline",
+    "zoom": "Zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "backingTrack": "Backing track",
+    "addBacking": "Add a music file",
+    "addBackingRow": "+ Add backing track",
+    "addVocalRow": "+ Add vocal",
+    "lead": "Lead",
+    "harmony": "Harmony",
+    "cancel": "Cancel",
+    "noMusic": "No music",
+    "recordWithoutMusic": "Sing without music",
+    "vocalDetail": "{part} · {length}",
+    "recordBacking": "Record the music",
+    "fromFile": "Upload",
+    "recordNew": "Record",
+    "recorded": "Recorded",
+    "recordedDetail": "Recorded · {length}"
+  },
+  "track": {
+    "record": "Record {name}",
+    "stop": "Stop recording {name}",
+    "stopTitle": "Stop",
+    "selectVocal": "Select {name}",
+    "mute": "Mute {name}",
+    "unmute": "Unmute {name}",
+    "muteTitle": "Mute this track",
+    "mutedTitle": "Muted: click to hear this track",
+    "volume": "{name} volume",
+    "volumeTitle": "Volume {percent}%",
+    "volumeShort": "Vol",
+    "position": "{name} position, left to right",
+    "positionTitle": "Position: {where}",
+    "positionIcon": "Where the track sits, left to right",
+    "left": "L",
+    "right": "R",
+    "centre": "Centre",
+    "panLeft": "{percent}% left",
+    "panRight": "{percent}% right",
+    "volumePercent": "{percent}%",
+    "selectBacking": "{name}: {detail}"
+  },
+  "clip": {
+    "trim": "Drag to trim",
+    "fadeIn": "Drag to fade in",
+    "fadeOut": "Drag to fade out"
+  },
+  "polish": {
+    "title": "Polish",
+    "label": "Polish {name}",
+    "compareTitle": "Compare with the untouched recording",
+    "reset": "Reset",
+    "resetTitle": "Back to where most singers like it",
+    "resetControl": "Reset {name} to suggested",
+    "amount": "{percent}%",
+    "percent": "%",
+    "off": "Off",
+    "advanced": "Advanced settings",
+    "hideAdvanced": "Hide advanced settings",
+    "followSlider": "Follow the slider again",
+    "vocalOnly": "Polish is for vocal tracks. Select a vocal to shape its sound.",
+    "controls": {
+      "cleanup": {
+        "label": "Noise reduction",
+        "hint": "Quiets hum and room noise between lines"
+      },
+      "clarity": {
+        "label": "Clarity",
+        "hint": "Brings words forward and adds a little sparkle"
+      },
+      "warmth": {
+        "label": "Warmth",
+        "hint": "Fuller body, less thin"
+      },
+      "smoothness": {
+        "label": "Evenness",
+        "hint": "Evens out loud and soft moments"
+      },
+      "space": {
+        "label": "Space",
+        "hint": "Places the voice in a room"
+      },
+      "deEss": {
+        "label": "Smoothness",
+        "hint": "Softens sharp “s” and “t” sounds"
+      },
+      "tuning": {
+        "label": "Tuning",
+        "hint": "Pulls each note toward the song’s key: low sounds natural, high snaps"
+      }
+    },
+    "params": {
+      "gateThresholdDb": "Gate threshold",
+      "lowCutHz": "Low cut",
+      "warmthDb": "Low-mid (250 Hz)",
+      "presenceDb": "Presence (3.5 kHz)",
+      "airDb": "Air (10 kHz)",
+      "compThresholdDb": "Compressor threshold",
+      "compRatio": "Compressor ratio",
+      "makeupDb": "Makeup gain",
+      "deEssThresholdDb": "De-esser threshold",
+      "reverbMix": "Reverb mix",
+      "reverbDecaySec": "Reverb decay",
+      "tuneStrength": "Correction",
+      "retuneMs": "Retune speed"
+    },
+    "paramHints": {
+      "gateThresholdDb": "Sounds quieter than this are muted between lines",
+      "lowCutHz": "Removes rumble below this pitch",
+      "warmthDb": "Boosts or cuts the body of the voice",
+      "presenceDb": "Boosts or cuts how forward the words sound",
+      "airDb": "Boosts or cuts the breathy top end",
+      "compThresholdDb": "Singing louder than this gets turned down",
+      "compRatio": "How strongly loud moments are turned down",
+      "makeupDb": "Lifts the whole voice after evening it out",
+      "deEssThresholdDb": "“S” sounds louder than this get softened",
+      "reverbMix": "How much room sound is mixed in",
+      "reverbDecaySec": "How long the room sound rings on",
+      "tuneStrength": "How far each note is pulled toward the key",
+      "retuneMs": "How quickly notes snap to pitch; slower sounds more natural"
+    },
+    "switchLabel": "Polish on",
+    "advancedTitle": "Show the settings behind each control",
+    "typeValue": "{name}, typed value"
+  },
+  "song": {
+    "openFailed": "Couldn't open this song.",
+    "audioMissing": "Couldn't load the audio for {name}. The file may have been moved.",
+    "saveFailed": "Couldn't save your latest changes. Check the song folder still exists.",
+    "renameFailed": "Couldn't rename the song.",
+    "backingFailed": "Couldn't use that file as a backing track. Try an MP3, WAV or M4A.",
+    "addVocalFailed": "Couldn't add a vocal track.",
+    "notRoveProject": "This folder's project.json isn't a Rove project file."
+  },
+  "dialogs": {
+    "openSongTitle": "Open a song folder",
+    "openSongButton": "Open",
+    "backingTitle": "Choose a backing track",
+    "backingButton": "Add backing track",
+    "audioFiles": "Audio",
+    "songNotOpen": "That song folder is not open.",
+    "songNameNeeded": "Song names need at least one letter or number.",
+    "notAudioFile": "Not a project audio file: {path}",
+    "untitledSong": "Untitled Song"
+  },
+  "menu": {
+    "appearance": "Appearance",
+    "themes": {
+      "system": "Match System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "checkMicrophone": "Check Microphone…",
+    "help": "Rove Help"
+  },
+  "help": {
+    "title": "Help",
+    "close": "Close",
+    "intro": "Record over a backing track, layer harmonies, then polish the sound.",
+    "shortcutsTitle": "Keyboard shortcuts",
+    "tipsTitle": "Tips",
+    "tips": {
+      "headphones": "Wear headphones while recording so the music stays out of your vocal.",
+      "punchIn": "Click a spot on the timeline, then record to sing over just that part.",
+      "edit": "Drag a clip to move it, its edges to trim, and its top corners to fade.",
+      "sweetSpot": "The green notch under each Polish slider marks where most singers like it.",
+      "selectTracks": "⌘-click or ⇧-click track names to select several, then mute or remove them together.",
+      "tuning": "Turn up Tuning in Polish to pull notes into the song’s key. Rove hears the key from the music.",
+      "music": "Select the music track to change its speed or key.",
+      "chords": "Open Chords to see the music’s chords as it plays; click one to jump there.",
+      "lyrics": "Open Lyrics to search for the words. They follow along as you sing; click a line to jump there."
+    }
+  },
+  "newSong": {
+    "title": "New song",
+    "nameLabel": "Song name",
+    "namePlaceholder": "Song name, e.g. Golden Hour",
+    "create": "Create",
+    "cancel": "Cancel"
+  },
+  "sidePanels": {
+    "width": "Side panel width",
+    "split": "Lyrics and chords height"
+  },
+  "panel": {
+    "subject": "· {name}",
+    "typeValue": "{name}, typed value"
+  },
+  "music": {
+    "title": "Music",
+    "label": "Music settings for {name}",
+    "speed": "Speed",
+    "speedHint": "Plays the music faster or slower, in the same key",
+    "typeBpm": "Tempo in beats per minute",
+    "typeSpeed": "Speed in percent",
+    "typeKey": "Key change in semitones",
+    "bpm": "BPM",
+    "percent": "%",
+    "speedValue": "{percent}%",
+    "key": "Key",
+    "keyHint": "Moves the music higher or lower, at the same speed",
+    "semitones": "semitones",
+    "plus": "+{n}",
+    "minus": "−{n}",
+    "nowIn": "Now in {key}",
+    "bass": "Bass",
+    "bassHint": "More or less low end in the music",
+    "brightness": "Brightness",
+    "brightnessHint": "More or less top end in the music",
+    "db": "dB",
+    "resetTone": "Back to the original {name}",
+    "click": "Metronome",
+    "clickHint": "Ticks on the music’s beat, with a count-in before recording. The knob sets its volume.",
+    "clickOn": "Metronome on",
+    "clickOnTitle": "Metronome on",
+    "clickOffTitle": "Metronome off",
+    "typeClick": "Metronome volume, typed value",
+    "clickNoBeat": "No steady beat found in this music",
+    "off": "Off",
+    "vocalsStay": "Vocals already recorded keep their own speed and key.",
+    "reset": "Back to the original speed and key",
+    "resetSpeed": "Back to the original speed",
+    "resetKey": "Back to the original key"
+  },
+  "appearance": {
+    "label": "Theme: {theme}"
+  },
+  "chords": {
+    "title": "Chords",
+    "label": "Chords",
+    "show": "Show chords",
+    "hide": "Hide chords",
+    "minorName": "{root}m",
+    "now": "Now",
+    "next": "Next",
+    "listening": "Listening for chords…",
+    "noMusic": "Add music to see its chords.",
+    "none": "No chords heard in this music.",
+    "detected": "Chords are worked out from the music, so a few may be off.",
+    "noChord": "—",
+    "goTo": "Go to {chord} at {time}",
+    "grip": "How to play {chord} on guitar",
+    "fret": "{n}fr"
+  },
+  "lyrics": {
+    "title": "Lyrics",
+    "label": "Lyrics",
+    "show": "Show lyrics",
+    "hide": "Hide lyrics",
+    "byArtist": "{title} · {artist}",
+    "searchLabel": "Song and artist",
+    "search": "Search",
+    "searchHint": "Search by song and artist. Lyrics come from LRCLIB.",
+    "searching": "Searching…",
+    "noResults": "No lyrics found. Try different words.",
+    "searchFailed": "Couldn’t reach the lyrics library. Check your internet connection.",
+    "notSynced": "Not synced",
+    "resultDetail": "{artist} · {duration}",
+    "change": "Find other lyrics",
+    "earlier": "Lyrics earlier",
+    "later": "Lyrics later",
+    "offset": "{sign}{seconds} s",
+    "timingHint": "Move the words earlier or later to match the music",
+    "untimed": "These lyrics have no timing, so they won’t follow along.",
+    "goToLine": "Go to “{line}”",
+    "instrumental": "♪"
+  },
+  "tuning": {
+    "keyName": "{note} {mode}",
+    "major": "major",
+    "minor": "minor",
+    "noteNames": "C C♯ D E♭ E F F♯ G A♭ A B♭ B"
+  },
+  "save": {
+    "saving": "Saving…",
+    "justNow": "Saved just now",
+    "seconds": "Saved less than a minute ago",
+    "minutes": "Saved {minutes} min ago",
+    "at": "Saved at {time}",
+    "failed": "Not saved",
+    "detail": "Everything is saved automatically. Last saved at {time}.",
+    "detailSaving": "Saving your latest change…",
+    "detailFailed": "Couldn't save your latest changes. Check the song folder still exists."
+  },
+  "keymap": {
+    "groups": {
+      "file": "File",
+      "edit": "Edit",
+      "playback": "Playback",
+      "view": "View"
+    },
+    "newSong": "New Song",
+    "open": "Open…",
+    "save": "Save",
+    "closeSong": "Close Song",
+    "moveSongLeft": "Move Song Left",
+    "moveSongRight": "Move Song Right",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "split": "Split Clip",
+    "deleteClip": "Delete",
+    "selectAll": "Select All",
+    "deselect": "Deselect",
+    "playPause": "Play / Pause",
+    "stopPlayback": "Stop",
+    "goToStart": "Go to Start",
+    "goToEnd": "Go to End",
+    "previousEdge": "Previous Clip Edge",
+    "nextEdge": "Next Clip Edge",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "zoomFit": "Show Whole Song",
+    "toggleLyrics": "Show or Hide Lyrics",
+    "toggleChords": "Show or Hide Chords",
+    "zoomGesture": "Zoom Where You Point (or pinch)",
+    "action": "Action",
+    "keys": "Shortcut",
+    "change": "Change the shortcut for {label} ({keys})",
+    "pressKeys": "Press keys…",
+    "reset": "Use the original shortcut for {label}",
+    "resetAll": "Reset all",
+    "hint": "Click a shortcut, then press the new keys. Esc cancels.",
+    "taken": "{keys} is already used for {label}.",
+    "reserved": "{keys} is kept for your Mac or for moving around the app.",
+    "invalid": "That key can't be part of a shortcut.",
+    "typing": "{keys} would go off while you type. Add ⌘ or ⌥.",
+    "export": "Export…"
+  },
+  "shortcut": "{label} ({keys})",
+  "export": {
+    "title": "Export song",
+    "open": "Export song",
+    "nothing": "Record or add something to export first",
+    "dialogTitle": "Export Song",
+    "format": "Format",
+    "formats": {
+      "wav": "WAV",
+      "mp3": "MP3"
+    },
+    "formatHints": {
+      "wav": "Best quality, for mastering or uploading",
+      "mp3": "Smaller file, for sharing"
+    },
+    "loudness": "Loudness",
+    "loudnessOptions": {
+      "streaming": "Ready for streaming",
+      "loud": "Louder",
+      "asMixed": "As mixed"
+    },
+    "loudnessHelp": "Ready for streaming matches streaming services. Louder pushes harder. As mixed changes nothing.",
+    "start": "Export",
+    "cancel": "Cancel",
+    "stages": {
+      "mixing": "Mixing…",
+      "levelling": "Levelling loudness…",
+      "tuning": "Tuning vocals…",
+      "encoding": "Encoding… {percent}%",
+      "saving": "Saving…"
+    },
+    "done": "Saved “{file}”.",
+    "reveal": "Show in Finder",
+    "close": "Done",
+    "failed": "Couldn't export the song. Try again, or pick another folder."
+  }
+}

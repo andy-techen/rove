@@ -1,0 +1,196 @@
+.lyrics-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lyrics-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-6) var(--space-4) var(--space-7);
+}
+
+.lyrics-heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.lyrics-heading h2 {
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-semibold);
+}
+
+.lyrics-song,
+.lyrics-result-detail {
+  overflow: hidden;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lyrics-timing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-7) var(--space-4);
+}
+
+.lyrics-offset,
+.lyrics-note,
+.lyrics-status {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.lyrics-offset {
+  min-width: var(--layout-advanced-value);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.lyrics-note {
+  padding: 0 var(--space-7) var(--space-4);
+}
+
+.lyrics-status:empty {
+  display: none;
+}
+
+/* Lines */
+
+.lyrics-lines {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-4) var(--space-7) var(--space-10);
+  list-style: none;
+}
+
+.lyric {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text);
+  font-size: var(--font-size-lead);
+  line-height: 1.4;
+  text-align: left;
+  transition:
+    color var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
+}
+
+button.lyric:hover {
+  background: var(--color-surface-raised);
+}
+
+.lyric-past {
+  color: var(--color-text-muted);
+}
+
+.lyric-active {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+}
+
+.lyric-break {
+  min-height: var(--space-7);
+  padding: 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+/* Search */
+
+.lyrics-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-6);
+  min-height: 0;
+  overflow-y: auto;
+  /* Room for the focus ring, which draws outside a field and would be clipped here. */
+  padding: calc(var(--size-focus-ring) * 2) var(--space-7) var(--space-7);
+}
+
+.lyrics-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.lyrics-search input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-ui);
+}
+
+.lyrics-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lyrics-result {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-1) var(--space-4);
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.lyrics-result:hover:not(:disabled) {
+  background: var(--color-surface-raised);
+}
+
+.lyrics-result-title {
+  overflow: hidden;
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lyrics-result-detail {
+  grid-column: 1;
+}
+
+.lyrics-badge {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyric {
+    transition: none;
+  }
+}

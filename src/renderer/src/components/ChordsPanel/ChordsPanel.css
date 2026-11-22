@@ -1,0 +1,144 @@
+.chords-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chords-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-6) var(--space-4) var(--space-7);
+}
+
+.chords-header h2 {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-semibold);
+}
+
+.chords-message {
+  padding: 0 var(--space-7);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+/* What's playing now, large enough to read while singing, with how to hold it. */
+.chords-now {
+  display: flex;
+  align-items: center;
+  gap: var(--space-7);
+  padding: 0 var(--space-7) var(--space-6);
+}
+
+.chords-now-names {
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-4);
+}
+
+.grip {
+  flex-shrink: 0;
+  width: var(--layout-grip);
+  overflow: visible;
+}
+
+.grip-line {
+  stroke: var(--color-text-muted);
+  stroke-width: var(--size-grip-line);
+}
+
+.grip-nut {
+  stroke: var(--color-text);
+  stroke-width: var(--size-grip-nut);
+}
+
+.grip-dot {
+  fill: var(--color-text);
+}
+
+.grip-open,
+.grip-muted {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: var(--size-grip-mark);
+}
+
+.grip-fret {
+  fill: var(--color-text-muted);
+  font-size: var(--size-grip-label);
+  dominant-baseline: middle;
+}
+
+.chords-now-label {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.chords-now-name {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent);
+}
+
+.chords-next-name {
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-semibold);
+}
+
+.chords-list {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--layout-chord), 1fr));
+  align-content: start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0 var(--space-7) var(--space-7);
+  list-style: none;
+}
+
+.chord {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.chord:hover {
+  background: var(--color-surface-raised);
+}
+
+.chord-name {
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-semibold);
+}
+
+.chord-time {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.chord-past {
+  opacity: var(--opacity-dimmed);
+}
+
+.chord-active {
+  border-color: var(--color-accent);
+  background: var(--color-surface-raised);
+}

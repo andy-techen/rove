@@ -1,4 +1,6 @@
 import path from 'node:path'
+import { SONG_NAME_MAX_LENGTH } from '@shared/constants'
+import { t } from '@shared/copy'
 
 export function nextTakeName(existing: string[]): string {
   let max = 0
@@ -7,6 +9,33 @@ export function nextTakeName(existing: string[]): string {
     if (match) max = Math.max(max, Number(match[1]))
   }
   return `take-${String(max + 1).padStart(3, '0')}.wav`
+}
+
+// Compared case-insensitively because the default macOS file system is.
+export function uniqueFolderName(existing: string[], desired: string): string {
+  const taken = new Set(existing.map((n) => n.toLowerCase()))
+  if (!taken.has(desired.toLowerCase())) return desired
+  for (let i = 2; ; i++) {
+    const candidate = `${desired} ${i}`
+    if (!taken.has(candidate.toLowerCase())) return candidate
+  }
+}
+
+export function nextUntitledName(existing: string[]): string {
+  return uniqueFolderName(existing, t('dialogs.untitledSong'))
+}
+
+// Song names are free text; folder names can't contain path separators, and a
+// leading dot would hide the folder in Finder.
+export function songFolderName(songName: string): string {
+  return Array.from(songName)
+    .filter((ch) => ch >= ' ')
+    .join('')
+    .replace(/[/\\:]/g, '-')
+    .trim()
+    .replace(/^\.+/, '')
+    .slice(0, SONG_NAME_MAX_LENGTH)
+    .trim()
 }
 
 export function uniqueName(existing: string[], desired: string): string {
@@ -23,6 +52,6 @@ export function uniqueName(existing: string[], desired: string): string {
 export function resolveAudioPath(projectDir: string, relPath: string): string {
   const audioDir = path.resolve(projectDir, 'audio')
   const full = path.resolve(projectDir, relPath)
-  if (path.dirname(full) !== audioDir) throw new Error(`Not a project audio file: ${relPath}`)
+  if (path.dirname(full) !== audioDir) throw new Error(t('dialogs.notAudioFile', { path: relPath }))
   return full
 }

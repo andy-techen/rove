@@ -1,8 +1,28 @@
-// 16-bit PCM mono. Plenty for Phase 1; 24-bit/float would add editing headroom later.
-export function encodeWav(samples: Float32Array, sampleRate: number): ArrayBuffer {
-  const bytesPerSample = 2
-  const dataSize = samples.length * bytesPerSample
-  const buffer = new ArrayBuffer(44 + dataSize)
+// Takes are 16-bit mono; exports are 24-bit stereo for headroom in mastering.
+export type BitDepth = 16 | 24
+const PCM_FORMAT = 1
+const BITS_PER_BYTE = 8
+// The canonical 44-byte RIFF/WAVE header; the offsets below follow its layout.
+// http://soundfile.sapp.org/doc/WaveFormat/
+const HEADER_BYTES = 44
+const FMT_CHUNK_BYTES = 16
+// Largest positive and negative integer sample at each depth.
+const FULL_SCALE: Record<BitDepth, { positive: number; negative: number }> = {
+  16: { positive: 0x7fff, negative: 0x8000 },
+  24: { positive: 0x7fffff, negative: 0x800000 }
+}
+
+/** PCM WAV from one buffer per channel (interleaved on write); clamps to full scale. */
+export function encodeWav(
+  channels: Float32Array[],
+  sampleRate: number,
+  bitDepth: BitDepth = 16
+): ArrayBuffer {
+  const bytesPerSample = bitDepth / BITS_PER_BYTE
+  const blockAlign = bytesPerSample * channels.length
+  const frames = channels[0]?.length ?? 0
+  const dataSize = frames * blockAlign
+  const buffer = new ArrayBuffer(HEADER_BYTES + dataSize)
   const view = new DataView(buffer)
 
   const writeString = (offset: number, str: string): void => {
@@ -10,29 +30,39 @@ export function encodeWav(samples: Float32Array, sampleRate: number): ArrayBuffe
   }
 
   writeString(0, 'RIFF')
-  view.setUint32(4, 36 + dataSize, true)
+  view.setUint32(4, HEADER_BYTES - 8 + dataSize, true)
   writeString(8, 'WAVE')
   writeString(12, 'fmt ')
-  view.setUint32(16, 16, true)
-  view.setUint16(20, 1, true) // PCM
-  view.setUint16(22, 1, true) // mono
+  view.setUint32(16, FMT_CHUNK_BYTES, true)
+  view.setUint16(20, PCM_FORMAT, true)
+  view.setUint16(22, channels.length, true)
   view.setUint32(24, sampleRate, true)
-  view.setUint32(28, sampleRate * bytesPerSample, true)
-  view.setUint16(32, bytesPerSample, true)
-  view.setUint16(34, 16, true)
+  view.setUint32(28, sampleRate * blockAlign, true)
+  view.setUint16(32, blockAlign, true)
+  view.setUint16(34, bitDepth, true)
   writeString(36, 'data')
   view.setUint32(40, dataSize, true)
 
-  let offset = 44
-  for (const s of samples) {
-    const clamped = Math.max(-1, Math.min(1, s))
-    view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true)
-    offset += 2
+  const { positive, negative } = FULL_SCALE[bitDepth]
+  let offset = HEADER_BYTES
+  for (let i = 0; i < frames; i++) {
+    for (const channel of channels) {
+      const clamped = Math.max(-1, Math.min(1, channel[i]))
+      const value = Math.trunc(clamped < 0 ? clamped * negative : clamped * positive)
+      if (bitDepth === 16) {
+        view.setInt16(offset, value, true)
+      } else {
+        // 24-bit little-endian: the low two bytes, then the signed high byte.
+        view.setUint16(offset, value & 0xffff, true)
+        view.setInt8(offset + 2, value >> 16)
+      }
+      offset += bytesPerSample
+    }
   }
   return buffer
 }
 
-export function concatSamples(chunks: Float32Array[]): Float32Array {
+export function concatSamples(chunks: Float32Array[]): Float32Array<ArrayBuffer> {
   const out = new Float32Array(chunks.reduce((sum, c) => sum + c.length, 0))
   let offset = 0
   for (const c of chunks) {

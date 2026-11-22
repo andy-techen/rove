@@ -1,0 +1,117 @@
+.help-dialog h3 {
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-ui);
+  color: var(--color-text-muted);
+}
+
+.help-tips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-left: var(--space-8);
+  font-size: var(--font-size-ui);
+}
+
+/* Shortcuts table */
+
+.keymap-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-2);
+}
+
+.keymap-header h3 {
+  margin: 0;
+}
+
+.keymap-header .btn {
+  margin-left: auto;
+}
+
+.keymap-scroll {
+  max-height: var(--layout-keymap-max);
+  overflow-y: auto;
+  /* Room for the focus ring on the first and last rows' keys. */
+  padding: var(--space-1);
+}
+
+.keymap-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--space-9);
+  align-items: start;
+}
+
+.keymap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-ui);
+}
+
+.keymap-table th,
+.keymap-table td {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  font-weight: var(--font-weight-normal);
+}
+
+.keymap-table td {
+  text-align: right;
+}
+
+.keymap-table .keymap-group {
+  padding-top: var(--space-7);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-caps);
+}
+
+.keymap-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.keymap-keys {
+  min-width: var(--layout-shortcut-keys);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-size-caption);
+  text-align: center;
+}
+
+.keymap-keys kbd {
+  font-family: inherit;
+}
+
+button.keymap-keys {
+  cursor: pointer;
+}
+
+button.keymap-keys:hover {
+  border-color: var(--color-text-muted);
+}
+
+.keymap-keys.changed {
+  border-color: var(--color-accent);
+}
+
+.keymap-keys.capturing {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.keymap-table .keymap-problem {
+  font-size: var(--font-size-caption);
+}

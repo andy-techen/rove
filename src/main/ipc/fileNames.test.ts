@@ -1,6 +1,13 @@
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { nextTakeName, resolveAudioPath, uniqueName } from './fileNames'
+import {
+  nextTakeName,
+  nextUntitledName,
+  resolveAudioPath,
+  songFolderName,
+  uniqueFolderName,
+  uniqueName
+} from './fileNames'
 
 describe('nextTakeName', () => {
   it('starts at take-001', () => {
@@ -15,6 +22,37 @@ describe('nextTakeName', () => {
 
   it('never reuses a number after a gap', () => {
     expect(nextTakeName(['take-003.wav'])).toBe('take-004.wav')
+  })
+})
+
+describe('nextUntitledName', () => {
+  it('uses "Untitled Song" when free', () => {
+    expect(nextUntitledName(['My Song'])).toBe('Untitled Song')
+  })
+
+  it('numbers later untitled songs, filling the first free number', () => {
+    expect(nextUntitledName(['Untitled Song', 'Untitled Song 2', 'Untitled Song 4'])).toBe(
+      'Untitled Song 3'
+    )
+  })
+})
+
+describe('uniqueFolderName', () => {
+  it('treats names differing only in case as taken, like the macOS file system', () => {
+    expect(uniqueFolderName(['my song'], 'My Song')).toBe('My Song 2')
+  })
+})
+
+describe('songFolderName', () => {
+  it.each([
+    ['Summer Demo', 'Summer Demo'],
+    ['  AC/DC: Cover  ', 'AC-DC- Cover'],
+    ['..hidden', 'hidden'],
+    ['a\\b', 'a-b'],
+    ['   ', ''],
+    ['x'.repeat(150), 'x'.repeat(100)]
+  ])('%j becomes %j', (input, expected) => {
+    expect(songFolderName(input)).toBe(expected)
   })
 })
 

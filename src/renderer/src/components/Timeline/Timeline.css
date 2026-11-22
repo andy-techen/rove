@@ -1,0 +1,408 @@
+.timeline {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  /* Always room for the ruler and one whole lane. */
+  min-height: calc(var(--layout-ruler) + var(--lane-height));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.timeline > .lane {
+  flex-shrink: 0;
+}
+
+.timeline-lanes {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.lane {
+  display: grid;
+  grid-template-columns: var(--layout-lane-header) 1fr var(--layout-mixer);
+  height: var(--lane-height);
+  border-top: 1px solid var(--color-border);
+}
+
+.ruler-lane {
+  height: var(--layout-ruler);
+  border-top: none;
+}
+
+.lane-add {
+  height: var(--layout-lane-add);
+}
+
+/* The add row lines its text up with the track names above it. */
+.add-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: calc(var(--space-4) * -1);
+}
+
+.add-cancel {
+  color: var(--color-text-muted);
+}
+
+.scroll-lane {
+  height: var(--layout-scrollbar);
+}
+
+.lane-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: 0 var(--space-4) 0 var(--space-6);
+  border-right: 1px solid var(--color-border);
+}
+
+.lane-recording .lane-header {
+  box-shadow: inset 3px 0 0 var(--color-danger);
+}
+
+.lane-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-left: calc(var(--space-3) * -1);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.lane-title:hover,
+.track-selected .lane-title {
+  background: var(--color-surface-raised);
+}
+
+.track-selected .lane-title {
+  box-shadow: inset var(--size-focus-ring) 0 0 var(--color-accent);
+}
+
+.lane-name {
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+}
+
+.lane-name,
+.lane-detail {
+  max-width: 100%;
+}
+
+.lane-detail {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-record {
+  flex-shrink: 0;
+  width: var(--size-control-md);
+  height: var(--size-control-md);
+  padding: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+  color: var(--color-danger);
+}
+
+.track-record:hover:not(:disabled) {
+  color: var(--color-danger);
+  background: var(--color-border);
+}
+
+.track-record.recording,
+.track-record.recording:hover:not(:disabled) {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-on-danger);
+}
+
+.lane-area {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.seekable {
+  cursor: pointer;
+}
+
+.lane-empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-6);
+  font-size: var(--font-size-ui);
+}
+
+/* Ruler */
+
+.ruler {
+  font-size: var(--font-size-micro);
+  color: var(--color-text-muted);
+}
+
+.ruler {
+  cursor: ew-resize;
+}
+
+.tick {
+  position: absolute;
+  top: var(--space-2);
+  bottom: 0;
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.tick-minor {
+  position: absolute;
+  bottom: 0;
+  height: var(--space-3);
+  border-left: 1px solid var(--color-border);
+  pointer-events: none;
+}
+
+/* Faint lines through the lanes at each labelled ruler time, for lining up edits. */
+.timeline-lanes .lane-area {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--color-grid) 0 1px,
+    transparent 1px var(--grid-px)
+  );
+  background-position-x: var(--grid-offset);
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: var(--size-playhead);
+  background: var(--color-danger);
+  cursor: ew-resize;
+}
+
+/* A wider invisible grip, so the line is easy to catch. */
+.playhead::before {
+  content: '';
+  position: absolute;
+  inset: 0 calc(var(--space-2) * -1);
+}
+
+/* A handle on the ruler marks where to grab. */
+.ruler .playhead::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--space-5);
+  height: var(--space-5);
+  background: var(--color-danger);
+  border-radius: var(--radius-sm);
+  transform: translate(-50%, -40%) rotate(45deg);
+}
+
+.timeline-scrollbar {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.timeline-scroll-content {
+  height: 1px;
+}
+
+/* Clips */
+
+.clip {
+  position: absolute;
+  top: var(--clip-inset);
+  bottom: var(--clip-inset);
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.clip.editable {
+  cursor: grab;
+}
+
+.clip.editable:active {
+  cursor: grabbing;
+}
+
+.clip.selected {
+  outline: var(--size-focus-ring) solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+.lane-muted .clip {
+  opacity: var(--opacity-muted-clip);
+}
+
+.clip-backing {
+  background: var(--color-clip-backing);
+  color: var(--color-wave-backing);
+}
+
+.clip-vocal {
+  background: var(--color-clip-vocal);
+  color: var(--color-wave-vocal);
+}
+
+.clip-recording {
+  background: var(--color-danger-wash);
+  color: var(--color-danger);
+}
+
+.waveform {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+
+.clip-trim {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: var(--size-trim-handle);
+  cursor: ew-resize;
+}
+
+.clip-trim.left {
+  left: 0;
+}
+
+.clip-trim.right {
+  right: 0;
+}
+
+.clip:hover .clip-trim.left,
+.clip.selected .clip-trim.left {
+  background: linear-gradient(to right, var(--color-highlight), transparent);
+}
+
+.clip:hover .clip-trim.right,
+.clip.selected .clip-trim.right {
+  background: linear-gradient(to left, var(--color-highlight), transparent);
+}
+
+.fade-handle {
+  position: absolute;
+  top: var(--space-1);
+  z-index: 2;
+  width: var(--size-handle);
+  height: var(--size-handle);
+  margin-left: calc(var(--size-handle) / -2);
+  border: var(--space-1) solid var(--color-surface);
+  border-radius: var(--radius-round);
+  background: var(--color-text);
+  cursor: ew-resize;
+  opacity: 0;
+}
+
+.clip:hover .fade-handle,
+.clip.selected .fade-handle {
+  opacity: 1;
+}
+
+.fade-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fade-overlay polygon {
+  fill: var(--color-bg);
+  opacity: var(--opacity-fade-shade);
+}
+
+.fade-overlay line {
+  stroke: var(--color-text);
+  stroke-width: 1;
+  opacity: var(--opacity-fade-line);
+}
+
+/* Mixer strip */
+
+.mix-cell,
+.track-mix {
+  border-left: 1px solid var(--color-border);
+}
+
+.track-mix {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: 0 var(--space-5) 0 var(--space-2);
+}
+
+.mix-row {
+  display: grid;
+  grid-template-columns: var(--size-control-sm) 1fr;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mute-button {
+  width: var(--size-control-sm);
+  height: var(--size-control-sm);
+  padding: 0;
+}
+
+.mute-button.muted,
+.mute-button.muted:hover:not(:disabled) {
+  color: var(--color-warning);
+}
+
+/* Where a dragged clip has snapped: a line through every lane at that time. */
+.mix-icon {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-muted);
+}
+
+.snap-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 1px;
+  background: var(--color-accent);
+  pointer-events: none;
+}
+
+.zoom-buttons {
+  display: flex;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+/* Compact, to fit the ruler's row without spilling into the lanes. */
+.zoom-button {
+  padding: var(--space-1);
+}

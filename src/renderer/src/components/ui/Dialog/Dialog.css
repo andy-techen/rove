@@ -1,0 +1,33 @@
+.dialog {
+  max-height: calc(100vh - var(--space-12));
+  overflow-y: auto;
+  width: min(var(--layout-dialog), calc(100vw - var(--space-12)));
+  margin: auto;
+  padding: var(--space-8) var(--space-9) var(--space-9);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-raised-hover);
+}
+
+/* The dialog takes focus only so nothing inside starts focused; it isn't a control. */
+.dialog:focus {
+  outline: none;
+}
+
+.dialog::backdrop {
+  background: var(--color-backdrop);
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.dialog-header h2 {
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-semibold);
+}

@@ -1,0 +1,5 @@
+export { Timeline } from './Timeline'
+export type { ClipRef, LiveRecording } from './Timeline'
+export type { GesturePhase } from './ClipView'
+export type { MixChange } from './TrackMix'
+export { PeakAccumulator } from './timelineMath'

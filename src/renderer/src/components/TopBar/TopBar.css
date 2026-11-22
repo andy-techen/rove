@@ -1,0 +1,166 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  min-height: var(--layout-titlebar);
+  padding: var(--space-1) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: var(--font-size-ui);
+}
+
+/* macOS: the bar is the window's title bar. It drags the window and its controls opt
+   back out of dragging. Outside full screen it leaves room for the window buttons. */
+.topbar.titlebar {
+  -webkit-app-region: drag;
+}
+
+.topbar.window-buttons {
+  padding-left: var(--layout-traffic-lights);
+}
+
+.topbar.titlebar button,
+.topbar.titlebar input,
+.topbar.titlebar .tab {
+  -webkit-app-region: no-drag;
+}
+
+.brand {
+  flex-shrink: 0;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+}
+
+/* Tabs */
+
+.tabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  max-width: var(--layout-tab-max);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+}
+
+/* Dragging a tab: it fades, and a line marks where it will land. The tab is one
+   object to grab, so its name can't be selected as text. */
+.tab {
+  position: relative;
+  user-select: none;
+}
+
+/* A filled tab under the pointer, so the drag picks up a whole tab, not bare text. */
+.tab:hover {
+  background: var(--color-surface-raised);
+}
+
+.tab.dragging {
+  opacity: var(--opacity-disabled);
+}
+
+.tab.drop-before::before,
+.tab.drop-after::after {
+  content: '';
+  position: absolute;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  width: var(--size-drop-marker);
+  border-radius: var(--radius-round);
+  background: var(--color-accent);
+}
+
+.tab.drop-before::before {
+  left: calc(-1 * var(--size-drop-marker));
+}
+
+.tab.drop-after::after {
+  right: calc(-1 * var(--size-drop-marker));
+}
+
+.tab.active {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.tab-name,
+.song-name {
+  min-width: 0;
+  padding: var(--space-2) var(--space-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tab-name:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.song-name {
+  max-width: var(--layout-song-name-max);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Renaming edits the name in place: exactly the name's box (a longer name scrolls
+   inside it), with one thin accent line drawn inside as its only focus mark. */
+.song-name-input {
+  width: var(--song-name-width);
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+  background: transparent;
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.song-name-input:focus-visible {
+  outline: none;
+}
+
+.tab-close {
+  /* Tucked up to the name: the name's own padding already spaces them. */
+  margin-left: calc(-1 * var(--space-2));
+  padding: var(--space-1) var(--space-2);
+  opacity: 0;
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close,
+.tab-close:focus-visible {
+  opacity: 1;
+}
+
+/* Save status and actions */
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.save-status {
+  flex-shrink: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  cursor: default;
+}
+
+.save-status.failed {
+  color: var(--color-danger);
+}

@@ -1,0 +1,19 @@
+.device-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.device-picker-label {
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.device-picker select {
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}

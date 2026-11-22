@@ -19,14 +19,16 @@ A beginner-friendly desktop app for recording vocals over a backing track, layer
 
 ## Roadmap
 
-| Phase           | Goal                                                                                                                           |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1. Foundation   | Record over a backing track from a USB mic, see the waveform, play it back, save it                                            |
-| 2. Multitrack   | Multiple vocal tracks, shared timeline, monitoring, latency compensation                                                       |
-| 3. Editing      | Trim, split, move clips, fades, undo/redo                                                                                      |
-| 4. Polish chain | Clean up, Clarity, Warmth, Smoothness, Space, Soften S sounds                                                                  |
-| 5. Export       | Mixdown to WAV and MP3 with loudness leveling                                                                                  |
-| Later           | Remove vocals (on-device stem separation turns any song into a backing track), pitch correction, code signing and notarization |
+| Phase           | Goal                                                                                                                                                                  |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Foundation   | Record over a backing track from a USB mic, see the waveform, play it back, save it                                                                                   |
+| 2. Multitrack   | Multiple vocal tracks, shared timeline, monitoring, latency compensation                                                                                              |
+| 3. Editing      | Trim, split, move clips, fades, undo/redo                                                                                                                             |
+| 4. Polish chain | Noise reduction, Clarity, Warmth, Evenness, Space, Smoothness                                                                                                         |
+| 5. Export       | Mixdown to WAV and MP3 with loudness leveling                                                                                                                         |
+| 6. Pitch        | Pitch correction: detect each sung note and nudge it toward the song's key, with one Tuning slider from natural to snappy                                             |
+| 7. Lyrics       | Lyrics found online that follow along as you sing; click a line to jump there                                                                                         |
+| Later           | Auto polish (analyse a take and set the polish sliders), remove vocals (on-device stem separation turns any song into a backing track), code signing and notarization |
 
 ## Stack
 

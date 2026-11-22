@@ -1,0 +1,48 @@
+.polish-switch {
+  margin-right: var(--space-2);
+}
+
+.polish-off {
+  opacity: var(--opacity-dimmed);
+}
+
+.advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--layout-advanced-column), 1fr));
+  gap: var(--space-4) var(--space-10);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.advanced-control {
+  display: grid;
+  grid-template-columns: var(--layout-advanced-label) 1fr var(--layout-advanced-value) var(
+      --size-control-sm
+    );
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+/* The name with its "?" centred beside it, on one line. */
+.advanced-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.advanced-control.custom .advanced-label,
+.advanced-control.custom .advanced-value {
+  color: var(--color-text);
+}
+
+.advanced-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.polish-empty {
+  font-size: var(--font-size-ui);
+}

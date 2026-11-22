@@ -21,7 +21,7 @@ beforeAll(async () => {
   g.registerProcessor = (_name: string, cls: new () => Processor) => {
     ProcessorClass = cls
   }
-  await import('./recorder-worklet.js')
+  await import('./recorder-worklet')
 })
 
 beforeEach(() => {

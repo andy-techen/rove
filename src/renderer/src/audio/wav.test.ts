@@ -6,7 +6,7 @@ const ascii = (view: DataView, offset: number, length: number): string =>
 
 describe('encodeWav', () => {
   const samples = new Float32Array([0, 0.5, -0.5, 1, -1, 2, -2])
-  const view = new DataView(encodeWav(samples, 48000))
+  const view = new DataView(encodeWav([samples], 48000))
 
   it('writes a 16-bit mono PCM header for the given sample rate', () => {
     expect(ascii(view, 0, 4)).toBe('RIFF')
@@ -28,6 +28,20 @@ describe('encodeWav', () => {
   it('converts samples to 16-bit integers and clamps out-of-range values', () => {
     const pcm = Array.from({ length: samples.length }, (_, i) => view.getInt16(44 + i * 2, true))
     expect(pcm).toEqual([0, 16383, -16384, 32767, -32768, 32767, -32768])
+  })
+})
+
+describe('encodeWav for export', () => {
+  it('interleaves stereo 24-bit samples', () => {
+    const view = new DataView(
+      encodeWav([new Float32Array([1, 0]), new Float32Array([-1, 0.5])], 48000, 24)
+    )
+    expect(view.getUint16(22, true)).toBe(2)
+    expect(view.getUint16(32, true)).toBe(6)
+    expect(view.getUint16(34, true)).toBe(24)
+    const sample = (i: number) =>
+      (view.getInt8(44 + i * 3 + 2) << 16) | view.getUint16(44 + i * 3, true)
+    expect([0, 1, 2, 3].map(sample)).toEqual([0x7fffff, -0x800000, 0, 0x3fffff])
   })
 })
 

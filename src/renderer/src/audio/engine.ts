@@ -1,10 +1,18 @@
-import recorderWorkletUrl from './worklets/recorder-worklet.js?url'
+// `?worker&url` has Vite compile each processor (and its imports) into its own file.
+import gateWorkletUrl from './worklets/gate-worklet.ts?worker&url'
+import recorderWorkletUrl from './worklets/recorder-worklet.ts?worker&url'
+import { RECORDER_PROCESSOR, RecorderCommand, RecorderEvent } from './worklets/messages'
 import { concatSamples } from './wav'
+
+// 48 kHz: the standard rate for video and most audio interfaces, and plenty for voice.
+export const SAMPLE_RATE = 48000
+// Analyser window for the level meter: ~43 ms at 48 kHz, enough to catch a peak.
+const METER_FFT_SIZE = 2048
 
 let context: AudioContext | null = null
 
 export function getAudioContext(): AudioContext {
-  context ??= new AudioContext({ sampleRate: 48000, latencyHint: 'interactive' })
+  context ??= new AudioContext({ sampleRate: SAMPLE_RATE, latencyHint: 'interactive' })
   return context
 }
 
@@ -37,7 +45,7 @@ export interface Meter {
 
 export function createMeter(source: MediaStreamAudioSourceNode): Meter {
   const analyser = source.context.createAnalyser()
-  analyser.fftSize = 2048
+  analyser.fftSize = METER_FFT_SIZE
   source.connect(analyser)
   const buffer = new Float32Array(analyser.fftSize)
 
@@ -55,25 +63,33 @@ export function createMeter(source: MediaStreamAudioSourceNode): Meter {
 }
 
 export interface Recorder {
-  /** Begin capturing at `atTime` on the AudioContext clock. */
-  start(atTime: number): void
+  /** Begin capturing at `atTime` on the AudioContext clock; `onChunk` sees audio as it arrives. */
+  start(atTime: number, onChunk?: (samples: Float32Array) => void): void
   /** Resolves once the audio thread has flushed every captured sample. */
-  stop(): Promise<Float32Array>
+  stop(): Promise<Float32Array<ArrayBuffer>>
   dispose(): void
 }
 
 const workletModules = new WeakMap<BaseAudioContext, Promise<void>>()
 
-export async function createRecorder(source: MediaStreamAudioSourceNode): Promise<Recorder> {
-  const ctx = source.context
+/** Loads Rove's audio-thread processors into a context (live or offline) once. */
+export function loadWorklets(ctx: BaseAudioContext): Promise<void> {
   let loading = workletModules.get(ctx)
   if (!loading) {
-    loading = ctx.audioWorklet.addModule(recorderWorkletUrl)
+    loading = Promise.all([
+      ctx.audioWorklet.addModule(recorderWorkletUrl),
+      ctx.audioWorklet.addModule(gateWorkletUrl)
+    ]).then(() => undefined)
     workletModules.set(ctx, loading)
   }
-  await loading
+  return loading
+}
 
-  const node = new AudioWorkletNode(ctx, 'recorder-processor', {
+export async function createRecorder(source: MediaStreamAudioSourceNode): Promise<Recorder> {
+  const ctx = source.context
+  await loadWorklets(ctx)
+
+  const node = new AudioWorkletNode(ctx, RECORDER_PROCESSOR, {
     channelCount: 1,
     channelCountMode: 'explicit'
   })
@@ -85,15 +101,20 @@ export async function createRecorder(source: MediaStreamAudioSourceNode): Promis
 
   let chunks: Float32Array[] = []
   let onStopped: (() => void) | null = null
-  node.port.onmessage = (e) => {
-    if (e.data.type === 'chunk') chunks.push(e.data.samples)
-    else if (e.data.type === 'stopped') onStopped?.()
+  let listener: ((samples: Float32Array) => void) | undefined
+  const send = (command: RecorderCommand): void => node.port.postMessage(command)
+  node.port.onmessage = (e: MessageEvent<RecorderEvent>) => {
+    if (e.data.type === 'chunk') {
+      chunks.push(e.data.samples)
+      listener?.(e.data.samples)
+    } else if (e.data.type === 'stopped') onStopped?.()
   }
 
   return {
-    start(atTime) {
+    start(atTime, onChunk) {
       chunks = []
-      node.port.postMessage({ type: 'start', atFrame: Math.round(atTime * ctx.sampleRate) })
+      listener = onChunk
+      send({ type: 'start', atFrame: Math.round(atTime * ctx.sampleRate) })
     },
     stop() {
       return new Promise((resolve) => {
@@ -101,7 +122,7 @@ export async function createRecorder(source: MediaStreamAudioSourceNode): Promis
           onStopped = null
           resolve(concatSamples(chunks))
         }
-        node.port.postMessage({ type: 'stop' })
+        send({ type: 'stop' })
       })
     },
     dispose() {

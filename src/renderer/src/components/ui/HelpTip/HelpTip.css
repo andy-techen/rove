@@ -1,0 +1,14 @@
+.help-tip {
+  display: inline-grid;
+  place-items: center;
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: help;
+}
+
+.help-tip:hover {
+  color: var(--color-text);
+}

@@ -1,0 +1,68 @@
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.meter-label {
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.meter-track {
+  position: relative;
+  height: var(--size-meter);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  overflow: hidden;
+}
+
+.meter-sweet-spot {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--from) * 100%);
+  right: calc((1 - var(--to)) * 100%);
+  background: var(--color-good-wash);
+}
+
+.meter-fill {
+  --level: 0;
+  position: absolute;
+  inset: 0;
+  transform: scaleX(var(--level));
+  transform-origin: left;
+  background: var(--color-quiet);
+}
+
+.meter-fill[data-zone='good'] {
+  background: var(--color-good);
+}
+
+.meter-fill[data-zone='loud'] {
+  background: var(--color-warning);
+}
+
+.meter-fill[data-zone='clip'] {
+  background: var(--color-danger);
+}
+
+.meter-hint {
+  font-size: var(--font-size-ui);
+  min-height: calc(var(--line-height) * 1em);
+}
+
+.meter-hint[data-zone='silent'],
+.meter-hint[data-zone='quiet'] {
+  color: var(--color-text-muted);
+}
+
+.meter-hint[data-zone='loud'] {
+  color: var(--color-warning);
+}
+
+.meter-hint[data-zone='clip'] {
+  color: var(--color-danger);
+  font-weight: var(--font-weight-semibold);
+}

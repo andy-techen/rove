@@ -1,3 +1,8 @@
+import { SongKey, transposeKey } from '../audio/key'
+import { SongLyrics } from './lyrics'
+import { PolishSettings, defaultPolish } from '../audio/polish'
+import { t } from '@shared/copy'
+
 export interface Clip {
   id: string
   file: string
@@ -5,78 +10,543 @@ export interface Clip {
   start: number
   /** Where inside the file playback begins, in seconds (for trimming later). */
   offset: number
-  /** How much of the file plays, in seconds. */
+  /** How much of the file plays, in seconds. 0 means "the whole file" (older projects). */
   duration: number
+  /** Seconds to fade in from silence at the clip's start. */
+  fadeIn?: number
+  /** Seconds to fade out to silence at the clip's end. */
+  fadeOut?: number
 }
+
+export type TrackRole = 'vocal' | 'backing'
+export type VocalPart = 'lead' | 'harmony'
 
 export interface Track {
   id: string
-  role: 'lead' | 'harmony'
+  role: TrackRole
+  /** Vocal tracks only; decides the starting mix. */
+  part?: VocalPart
   name: string
+  /** Original file name, for backing tracks imported from the user's library. */
+  sourceName?: string
   volume: number
   pan: number
   muted: boolean
+  /** Vocal tracks only; older projects fall back to the part's defaults. */
+  polish?: PolishSettings
   clips: Clip[]
 }
 
-export interface BackingTrack {
-  file: string
-  name: string
-  volume: number
-}
-
 export interface Project {
-  version: 1
+  version: 2
   name: string
   sampleRate: number
-  backingTrack: BackingTrack | null
+  /** What tuning pulls notes toward; unset or null means the nearest of any note. */
+  key?: SongKey | null
+  lyrics?: SongLyrics | null
+  /** How the backing music is played: unset means as it was recorded. */
+  music?: Partial<MusicSettings>
   tracks: Track[]
 }
 
+export interface MusicSettings {
+  /** 1 is the original speed; 1.1 is 10% faster. */
+  speed: number
+  /** Whole semitones up (or down, negative) from the original key. */
+  semitones: number
+  /** Tone of the music, in dB: low shelf (bass) and high shelf (brightness). */
+  bassDb: number
+  brightnessDb: number
+  /** The metronome: heard while playing and recording (with a count-in), never exported. */
+  clickOn: boolean
+  /** Its volume, 0 to 1. */
+  click: number
+}
+
+const ROLE_LABEL: Record<TrackRole, string> = { vocal: 'Vocal', backing: 'Backing' }
+
+export function tracksOf(project: Project, role: TrackRole): Track[] {
+  return project.tracks.filter((t) => t.role === role)
+}
+
+/**
+ * Starting mix by role, so a beginner's first playback already sounds balanced:
+ * the lead sits centre, harmonies tuck in quieter and alternate left and right,
+ * and mastered backing tracks start lower so the vocal isn't buried.
+ */
+const MASTERED_MUSIC_VOLUME = 0.5
+const HARMONY_VOLUME = 0.7
+const HARMONY_PAN = 0.35
+
+/** The volume a track starts at, for its role; double-clicking volume returns here. */
+export function startingVolume(role: TrackRole, part?: VocalPart, fromFile = false): number {
+  // Music recorded here isn't mastered, so it starts at full volume like a lead.
+  if (role === 'backing') return fromFile ? MASTERED_MUSIC_VOLUME : 1
+  return part === 'harmony' ? HARMONY_VOLUME : 1
+}
+
+export function defaultMix(
+  project: Project,
+  role: TrackRole,
+  part?: VocalPart,
+  fromFile = false
+): { volume: number; pan: number } {
+  const volume = startingVolume(role, part, fromFile)
+  if (role === 'backing' || part !== 'harmony') return { volume, pan: 0 }
+  const harmonies = project.tracks.filter((t) => t.part === 'harmony').length
+  return { volume, pan: harmonies % 2 === 0 ? -HARMONY_PAN : HARMONY_PAN }
+}
+
+/** Adds an empty track named after the next free number for its role ("Vocal 3"). */
+export function withNewTrack(
+  project: Project,
+  role: TrackRole,
+  opts: { sourceName?: string; part?: VocalPart } = {}
+): { project: Project; track: Track } {
+  const label = ROLE_LABEL[role]
+  const used = tracksOf(project, role).map((t) =>
+    Number(new RegExp(`^${label} (\\d+)$`).exec(t.name)?.[1] ?? 0)
+  )
+  const part = role === 'vocal' ? (opts.part ?? 'lead') : undefined
+  const track: Track = {
+    id: crypto.randomUUID(),
+    role,
+    ...(part ? { part } : {}),
+    name: `${label} ${Math.max(0, ...used) + 1}`,
+    ...(opts.sourceName ? { sourceName: opts.sourceName } : {}),
+    ...defaultMix(project, role, part, !!opts.sourceName),
+    ...(part ? { polish: defaultPolish(part) } : {}),
+    muted: false,
+    clips: []
+  }
+  return { project: { ...project, tracks: [...project.tracks, track] }, track }
+}
+
+/**
+ * Takes a track out of the song. Its recordings stay in the song folder, so undo can
+ * bring it back whole.
+ */
+export function withoutTracks(project: Project, trackIds: string[]): Project {
+  return { ...project, tracks: project.tracks.filter((t) => !trackIds.includes(t.id)) }
+}
+
+export function polishOf(track: Track): PolishSettings {
+  // Songs saved before a control existed get that control's default.
+  return { ...defaultPolish(track.part ?? 'lead'), ...track.polish }
+}
+
+export function withSongKey(project: Project, key: SongKey | null): Project {
+  return { ...project, key }
+}
+
+export function withLyrics(project: Project, lyrics: SongLyrics | null): Project {
+  return { ...project, lyrics }
+}
+
+/** Furthest the lyrics can be nudged either way: more than a long intro. */
+export const LYRICS_OFFSET_MAX_SEC = 60
+
+/** Moves every lyric line `bySec` later (negative: earlier), within a sensible range. */
+export function nudgeLyrics(project: Project, bySec: number): Project {
+  if (!project.lyrics) return project
+  const offsetSec = Math.max(
+    -LYRICS_OFFSET_MAX_SEC,
+    Math.min(LYRICS_OFFSET_MAX_SEC, project.lyrics.offsetSec + bySec)
+  )
+  return { ...project, lyrics: { ...project.lyrics, offsetSec } }
+}
+
+export function withTrackPolish(
+  project: Project,
+  trackId: string,
+  polish: PolishSettings
+): Project {
+  return {
+    ...project,
+    tracks: project.tracks.map((t) => (t.id === trackId ? { ...t, polish } : t))
+  }
+}
+
+export function withTrackChanges(
+  project: Project,
+  trackId: string,
+  changes: Partial<Pick<Track, 'volume' | 'pan' | 'muted' | 'part'>>
+): Project {
+  return {
+    ...project,
+    tracks: project.tracks.map((t) => (t.id === trackId ? { ...t, ...changes } : t))
+  }
+}
+
+const clipEnd = (c: Clip): number => c.start + c.duration
+
+/**
+ * Lays a new clip over a track like punching in on tape: whatever it covers is
+ * trimmed away (or split around it), everything outside it is kept. Source
+ * files are never touched; only the clip windows into them change.
+ */
+export function insertClip(clips: Clip[], added: Clip): Clip[] {
+  const from = added.start
+  const to = clipEnd(added)
+  const kept: Clip[] = []
+  for (const c of clips) {
+    const s = c.start
+    const e = clipEnd(c)
+    if (e <= from || s >= to) {
+      kept.push(c)
+    } else if (s < from && e > to) {
+      kept.push({ ...c, duration: from - s })
+      kept.push({
+        ...c,
+        id: crypto.randomUUID(),
+        start: to,
+        offset: c.offset + (to - s),
+        duration: e - to
+      })
+    } else if (s < from) {
+      kept.push({ ...c, duration: from - s })
+    } else if (e > to) {
+      kept.push({ ...c, start: to, offset: c.offset + (to - s), duration: e - to })
+    }
+    // Otherwise the new clip covers it completely and it drops out.
+  }
+  return [...kept, added].sort((a, b) => a.start - b.start)
+}
+
+export function withRecordedClip(
+  project: Project,
+  trackId: string,
+  take: Omit<Clip, 'id'>
+): Project {
+  const clip: Clip = { id: crypto.randomUUID(), ...take }
+  return {
+    ...project,
+    tracks: project.tracks.map((t) =>
+      t.id === trackId ? { ...t, clips: insertClip(t.clips, clip) } : t
+    )
+  }
+}
+
+/** Replaces a track's audio with one file from the top of the song (backing imports). */
+export function withTrackAudio(
+  project: Project,
+  trackId: string,
+  file: string,
+  duration: number,
+  start = 0
+): Project {
+  const clip: Clip = { id: crypto.randomUUID(), file, start, offset: 0, duration }
+  return {
+    ...project,
+    tracks: project.tracks.map((t) => (t.id === trackId ? { ...t, clips: [clip] } : t))
+  }
+}
+
 export function createProject(name: string, sampleRate: number): Project {
-  return { version: 1, name, sampleRate, backingTrack: null, tracks: [] }
+  return withNewTrack({ version: 2, name, sampleRate, tracks: [] }, 'vocal').project
+}
+
+// --- Clip editing. Every edit changes only clip windows; audio files are untouched.
+
+/** Shortest clip an edit may leave behind, so a clip never vanishes by accident. */
+export const MIN_CLIP_SEC = 0.05
+
+function mapClip(
+  project: Project,
+  trackId: string,
+  clipId: string,
+  change: (clip: Clip, track: Track) => Clip[]
+): Project {
+  return {
+    ...project,
+    tracks: project.tracks.map((t) =>
+      t.id !== trackId
+        ? t
+        : {
+            ...t,
+            clips: t.clips
+              .flatMap((c) => (c.id === clipId ? change(c, t) : [c]))
+              .sort((a, b) => a.start - b.start)
+          }
+    )
+  }
+}
+
+export function findClip(project: Project, trackId: string, clipId: string): Clip | undefined {
+  return project.tracks.find((t) => t.id === trackId)?.clips.find((c) => c.id === clipId)
+}
+
+/** Slides a clip along its track. Whatever it lands on is punched out, as with recording. */
+export function moveClip(
+  project: Project,
+  trackId: string,
+  clipId: string,
+  start: number
+): Project {
+  const clip = findClip(project, trackId, clipId)
+  if (!clip) return project
+  const moved = { ...clip, start: Math.max(0, start) }
+  return {
+    ...project,
+    tracks: project.tracks.map((t) =>
+      t.id === trackId
+        ? {
+            ...t,
+            clips: insertClip(
+              t.clips.filter((c) => c.id !== clipId),
+              moved
+            )
+          }
+        : t
+    )
+  }
+}
+
+/** Moves a clip's left edge, revealing or hiding audio while the rest stays in place. */
+export function trimClipStart(
+  project: Project,
+  trackId: string,
+  clipId: string,
+  start: number
+): Project {
+  return mapClip(project, trackId, clipId, (c) => {
+    const end = c.start + c.duration
+    // Can't reveal audio from before the file begins, or cross the right edge.
+    const earliest = Math.max(0, c.start - c.offset)
+    const s = Math.min(Math.max(start, earliest), end - MIN_CLIP_SEC)
+    const shift = s - c.start
+    return [{ ...c, start: s, offset: c.offset + shift, duration: c.duration - shift }]
+  })
+}
+
+/** Moves a clip's right edge, up to the end of its audio file. */
+export function trimClipEnd(
+  project: Project,
+  trackId: string,
+  clipId: string,
+  end: number,
+  fileDuration: number
+): Project {
+  return mapClip(project, trackId, clipId, (c) => {
+    const latest = c.start + (fileDuration - c.offset)
+    const e = Math.max(Math.min(end, latest), c.start + MIN_CLIP_SEC)
+    return [{ ...c, duration: e - c.start }]
+  })
+}
+
+export function setClipFades(
+  project: Project,
+  trackId: string,
+  clipId: string,
+  fades: { fadeIn?: number; fadeOut?: number }
+): Project {
+  return mapClip(project, trackId, clipId, (c) => {
+    const clamp = (v: number | undefined, fallback: number | undefined): number =>
+      Math.max(0, Math.min(c.duration, v ?? fallback ?? 0))
+    return [
+      { ...c, fadeIn: clamp(fades.fadeIn, c.fadeIn), fadeOut: clamp(fades.fadeOut, c.fadeOut) }
+    ]
+  })
+}
+
+/** Cuts a clip in two at a timeline position. Fades stay on the outer ends. */
+export function splitClip(project: Project, trackId: string, clipId: string, at: number): Project {
+  return mapClip(project, trackId, clipId, (c) => {
+    const into = at - c.start
+    if (into < MIN_CLIP_SEC || c.duration - into < MIN_CLIP_SEC) return [c]
+    return [
+      { ...c, duration: into, fadeOut: 0 },
+      {
+        ...c,
+        id: crypto.randomUUID(),
+        start: at,
+        offset: c.offset + into,
+        duration: c.duration - into,
+        fadeIn: 0
+      }
+    ]
+  })
+}
+
+export function deleteClip(project: Project, trackId: string, clipId: string): Project {
+  return mapClip(project, trackId, clipId, () => [])
+}
+
+/**
+ * Pastes a copy of a clip at a timeline position, punching out whatever it lands on.
+ * The copy points at the same audio file; nothing is duplicated on disk.
+ */
+export function pasteClip(
+  project: Project,
+  trackId: string,
+  clip: Omit<Clip, 'id' | 'start'>,
+  at: number
+): { project: Project; clipId: string } {
+  const pasted: Clip = { ...clip, id: crypto.randomUUID(), start: Math.max(0, at) }
+  return {
+    clipId: pasted.id,
+    project: {
+      ...project,
+      tracks: project.tracks.map((t) =>
+        t.id === trackId ? { ...t, clips: insertClip(t.clips, pasted) } : t
+      )
+    }
+  }
+}
+
+/** Fills in lengths for clips saved before they were known (version 1 backing tracks). */
+export function withKnownDurations(project: Project, durations: Record<string, number>): Project {
+  let changed = false
+  const tracks = project.tracks.map((t) => ({
+    ...t,
+    clips: t.clips.map((c) => {
+      if (c.duration > 0 || !durations[c.file]) return c
+      changed = true
+      return { ...c, duration: Math.max(0, durations[c.file] - c.offset) }
+    })
+  }))
+  return changed ? { ...project, tracks } : project
+}
+
+interface ProjectV1 {
+  version: 1
+  name: string
+  sampleRate: number
+  backingTrack: { file: string; name: string; volume: number } | null
+  tracks: { clips: Clip[] }[]
+}
+
+// Version 1 had a single backing track and stacked every take on one lead track.
+// Each old take becomes its own vocal track so nothing disappears from the timeline.
+function migrateV1(v1: ProjectV1): Project {
+  let project: Project = { version: 2, name: v1.name, sampleRate: v1.sampleRate, tracks: [] }
+  if (v1.backingTrack) {
+    const added = withNewTrack(project, 'backing', { sourceName: v1.backingTrack.name })
+    project = withTrackAudio(added.project, added.track.id, v1.backingTrack.file, 0)
+  }
+  for (const clip of v1.tracks.flatMap((t) => t.clips ?? [])) {
+    const added = withNewTrack(project, 'vocal')
+    project = withTrackAudio(added.project, added.track.id, clip.file, clip.duration)
+  }
+  return tracksOf(project, 'vocal').length ? project : withNewTrack(project, 'vocal').project
 }
 
 export function parseProject(data: unknown): Project {
-  const p = data as Partial<Project> | null
-  if (!p || p.version !== 1 || !Array.isArray(p.tracks) || typeof p.name !== 'string') {
-    throw new Error("This folder's project.json isn't a Rove project file.")
+  const p = data as { version?: unknown; name?: unknown; tracks?: unknown } | null
+  if (!p || typeof p.name !== 'string' || !Array.isArray(p.tracks)) {
+    throw new Error(t('song.notRoveProject'))
   }
-  return { ...p, backingTrack: p.backingTrack ?? null } as Project
-}
-
-export function withBackingTrack(project: Project, file: string, name: string): Project {
-  return { ...project, backingTrack: { file, name, volume: 1 } }
-}
-
-// Phase 1 keeps every take on the lead track at the top of the song; choosing
-// between overlapping takes comes with the multitrack timeline.
-export function withTake(project: Project, file: string, duration: number): Project {
-  const clip: Clip = { id: crypto.randomUUID(), file, start: 0, offset: 0, duration }
-  const lead = project.tracks.find((t) => t.role === 'lead')
-  if (!lead) {
-    const track: Track = {
-      id: crypto.randomUUID(),
-      role: 'lead',
-      name: 'Lead Vocal',
-      volume: 1,
-      pan: 0,
-      muted: false,
-      clips: [clip]
-    }
-    return { ...project, tracks: [...project.tracks, track] }
-  }
-  return {
-    ...project,
-    tracks: project.tracks.map((t) => (t === lead ? { ...t, clips: [...t.clips, clip] } : t))
-  }
-}
-
-export function leadTakes(project: Project): Clip[] {
-  return project.tracks.find((t) => t.role === 'lead')?.clips ?? []
+  if (p.version === 1) return migrateV1(p as ProjectV1)
+  if (p.version === 2) return p as Project
+  throw new Error(t('song.notRoveProject'))
 }
 
 export function formatDuration(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds))
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`
+}
+
+const MS_PER_SEC = 1000
+const MS_DIGITS = 3
+
+/** The milliseconds after `formatDuration`'s seconds: ".345". */
+export function formatMillis(seconds: number): string {
+  // Rounded to a microsecond first, so 0.07 doesn't come out as .069.
+  const ms = Math.floor(Math.round(Math.max(0, seconds) * MS_PER_SEC * MS_PER_SEC) / MS_PER_SEC)
+  return `.${String(ms % MS_PER_SEC).padStart(MS_DIGITS, '0')}`
+}
+
+// --- Music speed and key. These apply to backing tracks only: vocals are sung to
+// the music as it plays, so they keep their own speed and pitch.
+
+/** Beyond about a third faster or slower, stretched music starts to sound processed. */
+export const MUSIC_SPEED_RANGE = { min: 0.7, max: 1.3 }
+/** Half an octave either way covers moving a song into any singer's range. */
+export const MUSIC_SEMITONES_MAX = 6
+
+/** Beyond this either way, a shelf starts to sound like a different recording. */
+export const MUSIC_TONE_MAX_DB = 6
+
+const ORIGINAL_MUSIC: MusicSettings = {
+  speed: 1,
+  semitones: 0,
+  bassDb: 0,
+  brightnessDb: 0,
+  clickOn: false,
+  // Loud enough to hear over the music, not so loud it covers the voice.
+  click: 0.7
+}
+// Clip times are rescaled on every speed change; rounding keeps them from drifting.
+const TIME_PRECISION = 1e6
+const roundTime = (sec: number): number => Math.round(sec * TIME_PRECISION) / TIME_PRECISION
+
+// Songs saved before a setting existed get its default.
+export const musicOf = (project: Project): MusicSettings => ({
+  ...ORIGINAL_MUSIC,
+  ...project.music
+})
+
+const clampTone = (db: number): number =>
+  Math.max(-MUSIC_TONE_MAX_DB, Math.min(MUSIC_TONE_MAX_DB, db))
+
+/** Changes the music's bass or brightness. */
+export function withMusicTone(
+  project: Project,
+  tone: Partial<Pick<MusicSettings, 'bassDb' | 'brightnessDb'>>
+): Project {
+  const music = musicOf(project)
+  return {
+    ...project,
+    music: {
+      ...music,
+      bassDb: clampTone(tone.bassDb ?? music.bassDb),
+      brightnessDb: clampTone(tone.brightnessDb ?? music.brightnessDb)
+    }
+  }
+}
+
+export function withClickOn(project: Project, clickOn: boolean): Project {
+  return { ...project, music: { ...musicOf(project), clickOn } }
+}
+
+export function withClick(project: Project, level: number): Project {
+  return { ...project, music: { ...musicOf(project), click: Math.max(0, Math.min(1, level)) } }
+}
+
+/**
+ * Plays the music faster or slower. Its clips are measured in time as played, so they
+ * shrink or grow with it (their audio is the sped-up copy); vocals stay put.
+ */
+export function withMusicSpeed(project: Project, speed: number): Project {
+  const music = musicOf(project)
+  const next = Math.max(MUSIC_SPEED_RANGE.min, Math.min(MUSIC_SPEED_RANGE.max, speed))
+  const scale = (sec: number): number => roundTime((sec * music.speed) / next)
+  return {
+    ...project,
+    music: { ...music, speed: next },
+    tracks: project.tracks.map((t) =>
+      t.role !== 'backing'
+        ? t
+        : {
+            ...t,
+            clips: t.clips.map((c) => ({
+              ...c,
+              start: scale(c.start),
+              offset: scale(c.offset),
+              duration: scale(c.duration),
+              ...(c.fadeIn ? { fadeIn: scale(c.fadeIn) } : {}),
+              ...(c.fadeOut ? { fadeOut: scale(c.fadeOut) } : {})
+            }))
+          }
+    )
+  }
+}
+
+/** Moves the music to a new key; the song key that tuning pulls toward moves with it. */
+export function withMusicPitch(project: Project, semitones: number): Project {
+  const music = musicOf(project)
+  const next = Math.round(Math.max(-MUSIC_SEMITONES_MAX, Math.min(MUSIC_SEMITONES_MAX, semitones)))
+  const shift = next - music.semitones
+  const key = project.key && transposeKey(project.key, shift)
+  return { ...project, key, music: { ...music, semitones: next } }
 }

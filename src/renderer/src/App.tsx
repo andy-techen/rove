@@ -1,125 +1,91 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { closeInput, getAudioContext, listInputs, openInput } from './audio/engine'
-import { loadSavedDeviceId, pickInputDevice, saveDeviceId } from './audio/devices'
-import { useMicInput } from './audio/useMicInput'
-import { DevicePicker } from './components/DevicePicker'
-import { InputMeter } from './components/InputMeter'
+import { useEffect, useRef, useState } from 'react'
+import { HelpDialog } from './components/HelpDialog'
+import { NewSongDialog } from './components/NewSongDialog'
+import { MicCheck } from './components/MicCheck'
 import { RecordScreen } from './components/RecordScreen'
-import { useSong } from './state/useSong'
+import { Command, onCommand, useShortcutKeys } from './state/commands'
+import { syncKeymap } from './state/keymap'
+import { hasOnboarded, markOnboarded } from './state/onboarding'
+import { useMicrophone } from './state/useMicrophone'
+import { useTabs } from './state/useTabs'
+import './App.css'
 
-type MicAccess = 'requesting' | 'granted' | 'denied'
 type Screen = 'micCheck' | 'record'
 
 function App(): React.JSX.Element {
-  const [access, setAccess] = useState<MicAccess>('requesting')
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
-  const [deviceId, setDeviceId] = useState<string | null>(null)
-  const [checkedDeviceId, setCheckedDeviceId] = useState<string | null>(null)
-  const [screen, setScreen] = useState<Screen>('micCheck')
-  const { source, error: inputError } = useMicInput(access === 'granted' ? deviceId : null)
-  const song = useSong()
-  const levelChecked = deviceId !== null && checkedDeviceId === deviceId
-  const deviceLabel = devices.find((d) => d.deviceId === deviceId)?.label || 'Microphone'
+  const mic = useMicrophone()
+  const [onboarded, setOnboarded] = useState(hasOnboarded)
+  const [screen, setScreen] = useState<Screen>(onboarded ? 'record' : 'micCheck')
+  const [helpOpen, setHelpOpen] = useState(false)
+  const [naming, setNaming] = useState(false)
+  const tabs = useTabs(onboarded)
 
-  const refreshDevices = useCallback(async (preferredId: string | null) => {
-    const inputs = await listInputs()
-    setDevices(inputs)
-    setDeviceId(pickInputDevice(inputs, preferredId))
-  }, [])
+  const showMicCheck = screen === 'micCheck' || mic.access === 'denied'
+  const tabInfo = tabs.tabs.map((tab) => ({
+    id: tab.id,
+    name: tabs.info[tab.id]?.name ?? tab.initial.name
+  }))
 
-  const enableMic = useCallback(async () => {
-    setAccess('requesting')
-    await getAudioContext().resume()
-    if (!(await window.api.requestMicAccess())) return setAccess('denied')
-    try {
-      // Device labels stay blank until a stream has been opened once.
-      closeInput(await openInput())
-    } catch {
-      return setAccess('denied')
+  const finishMicCheck = (): void => {
+    if (!onboarded) {
+      markOnboarded()
+      setOnboarded(true)
     }
-    await refreshDevices(loadSavedDeviceId())
-    setAccess('granted')
-  }, [refreshDevices])
-
-  const started = useRef(false)
-  useEffect(() => {
-    if (started.current) return
-    started.current = true
-    enableMic()
-  }, [enableMic])
-
-  useEffect(() => {
-    if (access !== 'granted') return
-    const onChange = (): void => void refreshDevices(deviceId)
-    navigator.mediaDevices.addEventListener('devicechange', onChange)
-    return () => navigator.mediaDevices.removeEventListener('devicechange', onChange)
-  }, [access, deviceId, refreshDevices])
-
-  const chooseDevice = (id: string): void => {
-    saveDeviceId(id)
-    setDeviceId(id)
+    setScreen('record')
   }
 
-  const markChecked = useCallback(() => setCheckedDeviceId(deviceId), [deviceId])
+  useEffect(syncKeymap, [])
+  useShortcutKeys()
 
-  if (screen === 'record' && access === 'granted') {
-    return (
-      <RecordScreen
-        source={source}
-        inputError={inputError}
-        deviceLabel={deviceLabel}
-        song={song}
-        onBack={() => setScreen('micCheck')}
-      />
-    )
-  }
+  // App-wide commands. Song edits (undo, split…) are handled by the active tab.
+  const menu = useRef<(action: Command) => void>(() => {})
+  useEffect(() => {
+    menu.current = (action) => {
+      if (action === 'help') setHelpOpen(true)
+      else if (action === 'micCheck') setScreen('micCheck')
+      else if (!onboarded) return
+      else if (action === 'newSong') setNaming(true)
+      else if (action === 'open') void tabs.open()
+      else if (action === 'closeSong' && tabs.activeId) tabs.close(tabs.activeId)
+      else if ((action === 'moveSongLeft' || action === 'moveSongRight') && tabs.activeId) {
+        const at = tabs.tabs.findIndex((item) => item.id === tabs.activeId)
+        tabs.move(tabs.activeId, action === 'moveSongLeft' ? at - 1 : at + 1)
+      }
+    }
+  })
+  useEffect(() => onCommand((action) => menu.current(action)), [])
 
   return (
-    <main className="app">
-      <header>
-        <h1>Rove</h1>
-        <p className="subtitle">Let&apos;s get your mic ready.</p>
-      </header>
-
-      <section className="card">
-        {access === 'requesting' && <p className="muted">Asking for microphone access…</p>}
-
-        {access === 'denied' && (
-          <div className="stack">
-            <p>
-              Rove can&apos;t hear your microphone. Turn on access for Rove in System Settings, then
-              try again.
-            </p>
-            <div className="row">
-              <button onClick={() => window.api.openMicSettings()}>Open System Settings</button>
-              <button className="secondary" onClick={enableMic}>
-                Try again
-              </button>
-            </div>
-          </div>
-        )}
-
-        {access === 'granted' && (
-          <div className="stack">
-            {devices.length === 0 ? (
-              <p>No microphone found. Plug one in and it will show up here.</p>
-            ) : (
-              <DevicePicker devices={devices} deviceId={deviceId} onChange={chooseDevice} />
-            )}
-            {inputError && <p className="error">{inputError}</p>}
-            {source && <InputMeter source={source} onInRange={markChecked} />}
-            <div className="row continue-row">
-              <button disabled={!levelChecked} onClick={() => setScreen('record')}>
-                Continue
-              </button>
-              {!levelChecked && source && (
-                <span className="muted">Sing in the green for a moment to continue.</span>
-              )}
-            </div>
-          </div>
-        )}
-      </section>
-    </main>
+    <>
+      {/* Every open song stays mounted so switching tabs keeps its place and undo history. */}
+      {tabs.tabs.map((tab) => (
+        <RecordScreen
+          key={tab.id}
+          tabId={tab.id}
+          initial={tab.initial}
+          active={!showMicCheck && tab.id === tabs.activeId}
+          tabs={tabInfo}
+          mic={mic}
+          onInfo={(info) => tabs.setInfo(tab.id, info)}
+          onSwitch={tabs.switchTo}
+          onMove={tabs.move}
+          onClose={tabs.close}
+          onNew={() => setNaming(true)}
+        />
+      ))}
+      {!showMicCheck && tabs.error && <p className="error app-error">{tabs.error}</p>}
+      {showMicCheck && <MicCheck mic={mic} onboarding={!onboarded} onDone={finishMicCheck} />}
+      {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
+      {naming && (
+        <NewSongDialog
+          onCreate={(name) => {
+            setNaming(false)
+            void tabs.newSong(name)
+          }}
+          onClose={() => setNaming(false)}
+        />
+      )}
+    </>
   )
 }
 

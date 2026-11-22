@@ -1,0 +1,5 @@
+.app-error {
+  position: fixed;
+  bottom: var(--space-6);
+  left: var(--space-7);
+}

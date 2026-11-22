@@ -1,0 +1,48 @@
+.number-field {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.number-field input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Looks like plain text until the pointer or focus shows it can be typed over. */
+.number-field input:hover:not(:disabled) {
+  border-color: var(--color-border);
+}
+
+.number-field input:focus {
+  border-color: var(--color-accent);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  outline: none;
+}
+
+.number-field-unit {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.number-field-start {
+  justify-content: flex-start;
+}
+
+.number-field-start input {
+  /* Beside a label the field hugs its number, so the unit follows straight after. */
+  width: auto;
+  min-width: 1ch;
+  field-sizing: content;
+  text-align: left;
+}

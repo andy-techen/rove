@@ -1,0 +1,28 @@
+.icon-button {
+  display: grid;
+  place-items: center;
+  padding: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.icon-button:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+}
+
+.icon-button:disabled {
+  opacity: var(--opacity-disabled);
+  /* The plain arrow: a no-entry cursor would sit over the tooltip saying why. */
+  cursor: default;
+}
+
+/* Toggles (pressed) and disclosures (expanded) look "on" while active. */
+.icon-button[aria-pressed='true'],
+.icon-button[aria-expanded='true'] {
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+}

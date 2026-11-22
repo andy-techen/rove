@@ -1,0 +1,31 @@
+/* The wrapper adds no box of its own; the control inside lays out as before. */
+.tooltip-anchor {
+  display: contents;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 100;
+  max-width: var(--layout-help-tip);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height);
+  box-shadow: var(--shadow-raised);
+  pointer-events: none;
+  animation: tooltip-in var(--duration-fast) ease;
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip {
+    animation: none;
+  }
+}

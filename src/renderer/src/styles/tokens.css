@@ -1,0 +1,170 @@
+/* Design tokens. Every colour, size and timing in component styles comes from here. */
+
+:root {
+  /* Colour: dark is the default theme. */
+  color-scheme: dark;
+  --color-bg: #16171b;
+  --color-surface: #202228;
+  --color-surface-raised: #2a2d35;
+  --color-border: #353945;
+  --color-text: #ecedf1;
+  --color-text-muted: #9aa0ad;
+  --color-accent: #6d83f2;
+  --color-accent-hover: #8597f5;
+  --color-on-accent: #ffffff;
+  --color-good: #3fbf6a;
+  --color-quiet: #5e7a64;
+  --color-warning: #e6b93c;
+  --color-on-warning: #1b1d22;
+  --color-danger: #e5534b;
+  --color-on-danger: #ffffff;
+  --color-good-wash: rgba(63, 191, 106, 0.14);
+  --color-danger-wash: rgba(229, 83, 75, 0.35);
+  --color-clip-backing: #263046;
+  --color-wave-backing: #8b9bb4;
+  --color-clip-vocal: #2c2a4a;
+  --color-wave-vocal: #9d8cf5;
+  --color-highlight: rgba(255, 255, 255, 0.18);
+  --color-grid: rgba(255, 255, 255, 0.05);
+  --color-backdrop: rgba(0, 0, 0, 0.45);
+  --shadow-raised: 0 2px 10px rgba(0, 0, 0, 0.25);
+  --shadow-raised-hover: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-thumb: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --color-thumb: #ffffff;
+
+  /* Spacing scale. */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 16px;
+  --space-8: 20px;
+  --space-9: 24px;
+  --space-10: 28px;
+  --space-12: 48px;
+
+  /* Radii. */
+  --radius-sm: 5px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-round: 50%;
+
+  /* Type. */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  /* Type scale: each size has one job (see docs/design.md). */
+  --font-size-micro: 11px; /* ruler ticks */
+  --font-size-caption: 12px; /* secondary details, values, tooltips */
+  --font-size-ui: 13px; /* default: controls, names, messages */
+  --font-size-heading: 14px; /* panel headings */
+  --font-size-lead: 15px; /* onboarding text */
+  --font-size-display: 24px; /* the timer */
+  --font-size-title: 28px; /* screen titles */
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 650;
+  --font-weight-heavy: 700;
+  --line-height: 1.5;
+
+  /* Sizes. */
+  --size-icon-sm: 12px;
+  --size-control-xs: 20px;
+  --size-control-sm: 24px;
+  --size-control-md: 30px;
+  --size-handle: 10px;
+  --size-trim-handle: 7px;
+  --size-meter: 18px;
+  --size-slider: 14px;
+  --size-slider-track: 4px;
+  --size-slider-dot: 6px;
+  --size-focus-ring: 2px;
+  --size-splitter: 8px;
+  --size-scrollbar: 10px;
+  --size-drop-marker: 2px;
+  --size-scrollbar-inset: 3px;
+  --size-playhead: 2px;
+  --size-switch-width: 30px;
+  --size-switch-height: 18px;
+  /* Knobs; their strokes are in the drawing's 100-unit box, so they scale with it. */
+  --size-knob-sm: 34px;
+  --size-knob-md: 48px;
+  --size-knob-lg: 64px;
+  --size-knob-stroke: 9;
+  --size-knob-notch: 6;
+  --size-knob-pointer: 7;
+  /* Guitar chord boxes, in the drawing's own units (it scales to --layout-grip). */
+  --size-grip-line: 0.8;
+  --size-grip-nut: 2.4;
+  --size-grip-mark: 1;
+  --size-grip-label: 7px;
+
+  /* Layout. */
+  --layout-narrow-max: 560px;
+  --layout-lane-header: 168px;
+  --layout-mixer: 188px;
+  --layout-ruler: 24px;
+  --layout-lane-add: 40px;
+  --layout-scrollbar: 14px;
+  --layout-tab-max: 220px;
+  --layout-song-name-max: 200px;
+  --layout-mic-button-max: 220px;
+  --layout-meter-min: 220px;
+  --layout-meter-max: 420px;
+  --layout-knob-control: 124px;
+  --layout-advanced-column: 360px;
+  --layout-advanced-label: 164px;
+  --layout-advanced-value: 72px;
+  --layout-help-tip: 260px;
+  --layout-titlebar: 38px;
+  --layout-traffic-lights: 80px;
+  --layout-dialog: 640px;
+  --layout-dialog-narrow: 420px;
+  --layout-shortcut-keys: 56px;
+  --layout-keymap-max: 280px;
+  --layout-lyrics: 320px;
+  --layout-chord: 64px;
+  --layout-grip: 64px;
+  --letter-spacing-caps: 0.04em;
+
+  /* Motion and emphasis. */
+  --duration-fast: 120ms;
+  --opacity-disabled: 0.4;
+  --opacity-dimmed: 0.5;
+  --opacity-muted-clip: 0.4;
+  --opacity-fade-shade: 0.55;
+  --opacity-fade-line: 0.7;
+  --scale-hover: 1.06;
+  --scale-press: 0.95;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --color-bg: #f5f6f8;
+    --color-surface: #ffffff;
+    --color-surface-raised: #eef0f4;
+    --color-border: #d9dce3;
+    --color-grid: rgba(0, 0, 0, 0.05);
+    --color-text: #1b1d22;
+    --color-text-muted: #5f6573;
+    --color-accent: #4f6bed;
+    --color-accent-hover: #3f5ad6;
+    --color-good: #2a9d55;
+    --color-quiet: #9bb8a2;
+    --color-warning: #c9961a;
+    --color-danger: #d23b33;
+    --color-good-wash: rgba(42, 157, 85, 0.12);
+    --color-danger-wash: rgba(210, 59, 51, 0.25);
+    --color-clip-backing: #e3e8f2;
+    --color-wave-backing: #5d6f8f;
+    --color-clip-vocal: #ebe7fd;
+    --color-wave-vocal: #6a55d8;
+    --color-highlight: rgba(0, 0, 0, 0.12);
+    --color-backdrop: rgba(0, 0, 0, 0.25);
+    --shadow-raised: 0 2px 10px rgba(0, 0, 0, 0.15);
+    --shadow-raised-hover: 0 4px 16px rgba(0, 0, 0, 0.2);
+    --shadow-thumb: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+}

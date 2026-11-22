@@ -1,0 +1,51 @@
+/* A thin grab area over the edge it moves; it shows itself on hover and focus. */
+.splitter {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1;
+  touch-action: none;
+}
+
+.splitter-vertical {
+  width: var(--size-splitter);
+  margin: 0 calc(var(--size-splitter) / -2);
+  cursor: col-resize;
+}
+
+.splitter-horizontal {
+  height: var(--size-splitter);
+  margin: calc(var(--size-splitter) / -2) 0;
+  cursor: row-resize;
+}
+
+.splitter::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  background: transparent;
+  transition: background var(--duration-fast) ease;
+}
+
+.splitter-vertical::after {
+  width: var(--size-focus-ring);
+}
+
+.splitter-horizontal::after {
+  height: var(--size-focus-ring);
+}
+
+.splitter:hover::after,
+.splitter:focus-visible::after {
+  background: var(--color-accent);
+}
+
+.splitter:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splitter::after {
+    transition: none;
+  }
+}
