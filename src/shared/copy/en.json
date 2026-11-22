@@ -1,6 +1,9 @@
 {
   "app": {
     "name": "Rove",
+    "tagline": "Sing over the songs you love.",
+    "credits": "Vocal removal uses SCNet (MIT License).",
+    "copyright": "© {year} Andy Chen",
     "openFailed": "Couldn't open your songs.",
     "newSongFailed": "Couldn't create a new song.",
     "openFolderFailed": "Couldn't open that folder."

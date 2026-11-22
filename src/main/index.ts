@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, session, systemPreferences } from '
 import { join } from 'path'
 import { electronApp, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { setUpAbout } from './about'
 import { registerProjectIpc } from './ipc/project'
 import { registerExportIpc } from './ipc/export'
 import { registerLyricsIpc } from './ipc/lyrics'
@@ -56,6 +57,7 @@ function createWindow(): void {
 }
 
 registerAppScheme()
+setUpAbout(icon)
 
 async function requestMicAccess(): Promise<boolean> {
   if (process.platform !== 'darwin') return true
@@ -67,6 +69,9 @@ async function requestMicAccess(): Promise<boolean> {
 
 app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.andytechen.rove')
+  // In development the app runs inside Electron's own bundle; show Rove's icon in the Dock
+  // and the About panel instead of Electron's.
+  if (is.dev) app.dock?.setIcon(icon)
   serveApp(join(__dirname, '../renderer'))
 
   // Grant audio capture only; the app never needs camera or screen access.
