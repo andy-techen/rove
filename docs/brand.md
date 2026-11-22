@@ -79,10 +79,8 @@ Values live in `src/renderer/src/styles/tokens.css`; how to apply them is in
   appears on its own sky tile, never cut out onto a transparent or dark ground. In the
   app the icon and wordmark appear together (`Logo`): in the top bar and heading the
   mic check.
-- **Wordmark (on trial):** lowercase "rove" in heavy, round strokes
-  (`design/logo/wordmark.svg`).
-- The icon's source is `design/logo/icon.svg`. Drafts of other concepts aren't kept in
-  the repo.
+- **Wordmark (on trial):** lowercase "rove" in round strokes, drawn by `Logo`.
+- The icon's source is `build/icon.svg`; the app icons in `build/` are exported from it.
 
 ## Sharing and community (later)
 

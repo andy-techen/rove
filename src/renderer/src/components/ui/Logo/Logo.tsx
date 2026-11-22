@@ -8,7 +8,7 @@ interface Props {
   size?: 'sm' | 'lg'
 }
 
-// The rounded lowercase wordmark (design/logo/wordmark.svg), drawn as strokes in
+// The rounded lowercase wordmark, drawn as strokes in
 // the text colour so it follows the theme.
 const WORDMARK = [
   'M0 140V40',
