@@ -3,7 +3,6 @@ import { t } from '@shared/copy'
 import { Microphone } from '../../state/useMicrophone'
 import { DevicePicker } from '../DevicePicker'
 import { InputMeter } from '../InputMeter'
-import { LatencyPanel } from '../LatencyPanel'
 import { Button } from '../ui/Button'
 import './MicCheck.css'
 
@@ -56,14 +55,6 @@ export function MicCheck({ mic, onboarding, onDone }: Props): React.JSX.Element 
             )}
             {inputError && <p className="error">{inputError}</p>}
             {source && <InputMeter source={source} onInRange={markChecked} />}
-            {!onboarding && deviceId && (
-              <LatencyPanel
-                source={source}
-                measured={mic.measuredLatency}
-                estimate={mic.estimatedLatency}
-                onMeasured={mic.setMeasuredLatency}
-              />
-            )}
             <div className="row mic-check-actions">
               {onboarding ? (
                 <>

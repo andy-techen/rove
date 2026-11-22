@@ -36,17 +36,6 @@
     "busy": "That microphone is busy in another app or was unplugged.",
     "generic": "Couldn't open that microphone."
   },
-  "latency": {
-    "title": "Line up your recordings",
-    "measured": "Measured delay: {ms} ms. New takes are shifted to line up with the music.",
-    "estimated": "Using an estimate ({ms} ms). Measure once for takes that land exactly on the beat.",
-    "measuring": "Listening for clicks… keep the room quiet for a few seconds.",
-    "failed": "Couldn't hear the clicks clearly. Take your headphones off, turn your speakers up, and hold the mic near them, then try again.",
-    "measure": "Measure delay",
-    "measureAgain": "Measure again",
-    "useEstimate": "Use estimate",
-    "explainer": "Rove plays a few clicks and listens with your mic. Unplug headphones first."
-  },
   "topBar": {
     "tabsLabel": "Open songs",
     "newSong": "New song",

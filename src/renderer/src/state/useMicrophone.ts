@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { closeInput, getAudioContext, listInputs, openInput } from '../audio/engine'
 import { loadSavedDeviceId, pickInputDevice, saveDeviceId } from '../audio/devices'
-import { estimatedLatency, loadLatency, saveLatency } from '../audio/latency'
+import { estimatedLatency } from '../audio/latency'
 import { useMicInput } from '../audio/useMicInput'
 
 export type MicAccess = 'requesting' | 'granted' | 'denied'
@@ -14,23 +14,17 @@ export interface Microphone {
   deviceLabel: string
   source: MediaStreamAudioSourceNode | null
   inputError: string | null
-  /** Measured round-trip delay for this mic, or null when only estimated. */
-  measuredLatency: number | null
-  estimatedLatency: number
-  /** The delay to remove from new takes: measured if known, otherwise estimated. */
+  /** The delay to remove from new takes, as the system reports it. */
   latencySec: number
   chooseDevice(deviceId: string): void
   retryAccess(): Promise<void>
-  setMeasuredLatency(seconds: number | null): void
 }
 
-/** Microphone permission, device choice, the live input, and its measured delay. */
+/** Microphone permission, device choice, the live input, and its delay. */
 export function useMicrophone(): Microphone {
   const [access, setAccess] = useState<MicAccess>('requesting')
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
   const [deviceId, setDeviceId] = useState<string | null>(null)
-  // Measured delays this session, layered over what was saved for each mic.
-  const [measuredByDevice, setMeasuredByDevice] = useState<Record<string, number | null>>({})
   const { source, error: inputError } = useMicInput(access === 'granted' ? deviceId : null)
 
   const refreshDevices = useCallback(async (preferredId: string | null) => {
@@ -67,14 +61,6 @@ export function useMicrophone(): Microphone {
     return () => navigator.mediaDevices.removeEventListener('devicechange', onChange)
   }, [access, deviceId, refreshDevices])
 
-  const measuredLatency =
-    deviceId === null
-      ? null
-      : deviceId in measuredByDevice
-        ? measuredByDevice[deviceId]
-        : loadLatency(deviceId)
-  const estimate = estimatedLatency(getAudioContext())
-
   return {
     access,
     devices,
@@ -82,18 +68,11 @@ export function useMicrophone(): Microphone {
     deviceLabel: devices.find((d) => d.deviceId === deviceId)?.label || t('micCheck.microphone'),
     source,
     inputError,
-    measuredLatency,
-    estimatedLatency: estimate,
-    latencySec: measuredLatency ?? estimate,
+    latencySec: estimatedLatency(getAudioContext()),
     chooseDevice: (id) => {
       saveDeviceId(id)
       setDeviceId(id)
     },
-    retryAccess: enable,
-    setMeasuredLatency: (seconds) => {
-      if (!deviceId) return
-      saveLatency(deviceId, seconds)
-      setMeasuredByDevice((prev) => ({ ...prev, [deviceId]: seconds }))
-    }
+    retryAccess: enable
   }
 }

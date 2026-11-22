@@ -14,7 +14,7 @@ is the spec; the code is done when it passes.
   Render the component, click and type with `@testing-library/user-event`, and assert
   on what's on screen and what was saved (`window.api` calls).
 - Unit tests are for pure helpers with real edge cases: audio maths, clip editing,
-  file naming, latency detection, slider mappings.
+  file naming, take alignment, slider mappings.
 - Don't test what the framework guarantees or what a type already proves.
 
 ## Keep them short

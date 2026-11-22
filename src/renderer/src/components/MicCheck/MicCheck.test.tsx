@@ -12,12 +12,9 @@ const mic = (overrides: Partial<Microphone>): Microphone => ({
   deviceLabel: 'Rode NT-USB',
   source: null,
   inputError: null,
-  measuredLatency: null,
-  estimatedLatency: 0.02,
   latencySec: 0.02,
   chooseDevice: vi.fn(),
   retryAccess: vi.fn(async () => {}),
-  setMeasuredLatency: vi.fn(),
   ...overrides
 })
 
@@ -35,10 +32,10 @@ describe('MicCheck', () => {
     expect(screen.getByRole('button', { name: t('micCheck.continue') })).toBeDisabled()
   })
 
-  it('lets a returning singer leave straight away and measure the delay', async () => {
+  it('lets a returning singer leave straight away, with nothing to measure', async () => {
     const onDone = vi.fn()
     render(<MicCheck mic={mic({})} onboarding={false} onDone={onDone} />)
-    expect(screen.getByRole('button', { name: t('latency.measure') })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /measure/i })).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: t('micCheck.done') }))
     expect(onDone).toHaveBeenCalled()
   })

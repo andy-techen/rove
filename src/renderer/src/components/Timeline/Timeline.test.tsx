@@ -69,6 +69,12 @@ describe('Timeline', () => {
     expect(props.onRecordWithoutMusic).toHaveBeenCalled()
   })
 
+  it('notes "No music" under the backing lane name, like a track detail', () => {
+    renderTimeline({ skipBacking: true })
+    const name = screen.getByText(t('timeline.backingTrack'))
+    expect(name.nextElementSibling).toHaveTextContent(t('timeline.noMusic'))
+  })
+
   it('adds another backing track from a file or by recording it', async () => {
     const props = renderTimeline({
       tracks: [lane({ id: 'b1', role: 'backing', name: 'Backing 1', detail: 'Song' })]

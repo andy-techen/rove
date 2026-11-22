@@ -93,6 +93,14 @@
   box-shadow: inset var(--size-focus-ring) 0 0 var(--color-accent);
 }
 
+/* A lane's name and detail without the select button: the empty backing lane. */
+.lane-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
 .lane-name {
   font-size: var(--font-size-ui);
   font-weight: var(--font-weight-semibold);

@@ -314,11 +314,13 @@ export function Timeline({
         ) : (
           <div className="lane">
             <div className="lane-header">
-              <span className="lane-name">{t('timeline.backingTrack')}</span>
+              <div className="lane-heading">
+                <span className="lane-name">{t('timeline.backingTrack')}</span>
+                {skipBacking && <span className="lane-detail">{t('timeline.noMusic')}</span>}
+              </div>
             </div>
             <div className="lane-area seekable" onClick={seekFromClick}>
               <div className="lane-empty row">
-                {skipBacking && <span className="muted">{t('timeline.noMusic')}</span>}
                 <Button
                   size="sm"
                   variant={skipBacking ? 'quiet' : 'primary'}
