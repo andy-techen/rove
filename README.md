@@ -19,11 +19,15 @@ should look, sound and feel.
 
 | Next                   | Goal                                                                                                           |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Video                  | Record camera video with the vocal, in sync with the timeline, and export it with the mix                      |
-| Share as video         | Export the mix as a video for phones: the audio over a photo you import or a background, ready to post         |
+| Songbook               | Browse past takes, and keep a wishlist of songs to try next                                                    |
+| Range check            | Work out your range from a take, suggest a better key, and quietly build a voice profile over time             |
+| Harmony auto-sync      | Line up a harmony take with the lead using one plain "Tightness" slider, non-destructive and per section       |
+| Share as image         | Export the mix as a phone-ready image with a synced lyrics overlay, ready to post                              |
 | Better chords          | A more accurate on-device detector (BTC), run on the music without vocals; edit or type chords when it's wrong |
 | Chord backing          | Play the song's chords as the backing track: strummed guitar, piano or a simple beat                           |
 | Auto polish            | Analyse a take and set the polish knobs                                                                        |
+| Growth profile         | Progress over time: range growth, and old takes next to new ones                                               |
+| More settings          | More to tune in Settings, for singers who want to go a little deeper                                           |
 | Signing and notarizing | Sign with a Developer ID and notarize, so macOS opens the app without asking                                   |
 
 ## Credits
