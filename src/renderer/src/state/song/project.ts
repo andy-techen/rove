@@ -66,6 +66,9 @@ export interface MusicSettings {
   click: number
 }
 
+// Long enough for "Chorus harmony (high)", short enough to fit the lane header.
+export const TRACK_NAME_MAX_LENGTH = 40
+
 const ROLE_LABEL: Record<TrackRole, string> = { vocal: 'Vocal', backing: 'Backing' }
 
 export function tracksOf(project: Project, role: TrackRole): Track[] {
@@ -131,6 +134,16 @@ export function withNewTrack(
  */
 export function withoutTracks(project: Project, trackIds: string[]): Project {
   return { ...project, tracks: project.tracks.filter((t) => !trackIds.includes(t.id)) }
+}
+
+/** The song with a track renamed; a blank name leaves it as it was. */
+export function withTrackName(project: Project, trackId: string, name: string): Project {
+  const trimmed = name.trim().slice(0, TRACK_NAME_MAX_LENGTH)
+  if (!trimmed) return project
+  return {
+    ...project,
+    tracks: project.tracks.map((t) => (t.id === trackId ? { ...t, name: trimmed } : t))
+  }
 }
 
 /**

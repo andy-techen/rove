@@ -76,6 +76,12 @@ interface Props {
   snapAt: number | null
   /** Move a track to place `to` among the tracks of its kind (dragged by its name). */
   onMoveTrack(trackId: string, to: number): void
+  /** The track whose name is being edited, if any. */
+  renamingTrackId: string | null
+  onRenaming(trackId: string | null): void
+  onRenameTrack(trackId: string, name: string): void
+  /** An empty spot in a lane was clicked: that track becomes where a paste lands. */
+  onLaneClick(trackId: string): void
 }
 
 // Small enough for the zoom buttons to sit inside the ruler's row.
@@ -114,7 +120,11 @@ export function Timeline({
   onSelectTrack,
   onClipGesture,
   snapAt,
-  onMoveTrack
+  onMoveTrack,
+  renamingTrackId,
+  onRenaming,
+  onRenameTrack,
+  onLaneClick
 }: Props): React.JSX.Element {
   const shortcuts = useShortcuts()
   const {
@@ -245,6 +255,10 @@ export function Timeline({
             setDrag({ id: track.id, role: track.role, from: index, slot: null })
           }}
           onDragEnd={endDrag}
+          renaming={renamingTrackId === track.id}
+          onStartRename={() => canEdit && onRenaming(track.id)}
+          onRename={(name) => onRenameTrack(track.id, name)}
+          onRenameDone={() => onRenaming(null)}
           name={track.name}
           detail={isRecording ? formatDuration(recording.sec) : track.detail}
           role={track.role}
@@ -255,7 +269,14 @@ export function Timeline({
           onRecord={() => onRecord(track.id)}
           onStop={onStop}
         />
-        <div className="lane-area seekable" onClick={seekFromClick}>
+        <div
+          className="lane-area seekable"
+          onClick={(e) => {
+            seekFromClick(e)
+            const target = e.target as HTMLElement
+            if (!target.closest('.clip, button, .playhead')) onLaneClick(track.id)
+          }}
+        >
           {track.clips.map((c) => (
             <ClipView
               key={c.id}

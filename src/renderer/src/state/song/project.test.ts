@@ -7,6 +7,7 @@ import {
   deleteClip,
   moveClip,
   moveTrack,
+  withTrackName,
   setClipFades,
   splitClip,
   trimClipEnd,
@@ -530,5 +531,14 @@ describe('moveTrack', () => {
     const v1 = tracksOf(p, 'vocal')[0].id
     expect(names(moveTrack(p, v1, 3))).toEqual(names(p))
     expect(names(moveTrack(p, v1, -1))).toEqual(names(p))
+  })
+})
+
+describe('withTrackName', () => {
+  it('renames a track, trimming spaces, and keeps the old name for a blank one', () => {
+    const p = createProject('Song', 48000)
+    const id = p.tracks[0].id
+    expect(withTrackName(p, id, '  Chorus harmony ').tracks[0].name).toBe('Chorus harmony')
+    expect(withTrackName(p, id, '   ').tracks[0].name).toBe('Vocal 1')
   })
 })

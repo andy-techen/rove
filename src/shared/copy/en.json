@@ -90,7 +90,8 @@
     "record": "Record {name}",
     "stop": "Stop recording {name}",
     "stopTitle": "Stop",
-    "selectVocal": "Select {name}",
+    "selectVocal": "Select {name}. Double-click to rename.",
+    "nameLabel": "Track name",
     "mute": "Mute {name}",
     "unmute": "Unmute {name}",
     "muteTitle": "Mute this track",
@@ -107,7 +108,7 @@
     "panLeft": "{percent}% left",
     "panRight": "{percent}% right",
     "volumePercent": "{percent}%",
-    "selectBacking": "{name}: {detail}"
+    "selectBacking": "{name}: {detail}. Double-click to rename."
   },
   "clip": {
     "trim": "Drag to trim",

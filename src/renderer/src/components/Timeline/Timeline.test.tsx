@@ -42,6 +42,10 @@ function renderTimeline(overrides: Partial<Parameters<typeof Timeline>[0]> = {})
     onSelectTrack: vi.fn(),
     onClipGesture: vi.fn(),
     onMoveTrack: vi.fn(),
+    renamingTrackId: null,
+    onRenaming: vi.fn(),
+    onRenameTrack: vi.fn(),
+    onLaneClick: vi.fn(),
     snapAt: null,
     ...overrides
   }
@@ -185,5 +189,34 @@ describe('Timeline', () => {
     fireEvent.dragOver(name('Vocal 3'))
     fireEvent.drop(name('Vocal 3'))
     expect(props.onMoveTrack).toHaveBeenCalledWith('v1', 1)
+  })
+
+  it('asks to rename a track when its name is double-clicked', async () => {
+    const props = renderTimeline()
+    await userEvent.dblClick(screen.getByRole('button', { name: /^Vocal 1/ }))
+    expect(props.onRenaming).toHaveBeenCalledWith('v1')
+  })
+
+  it('saves a new track name on Enter and keeps the old one on Esc', async () => {
+    const props = renderTimeline({ renamingTrackId: 'v1' })
+    const field = screen.getByRole('textbox', { name: t('track.nameLabel') })
+    await userEvent.clear(field)
+    await userEvent.type(field, 'Chorus{Enter}')
+    expect(props.onRenameTrack).toHaveBeenCalledWith('v1', 'Chorus')
+    expect(props.onRenaming).toHaveBeenLastCalledWith(null)
+  })
+
+  it('leaves the name alone when renaming is cancelled with Esc', async () => {
+    const props = renderTimeline({ renamingTrackId: 'v1' })
+    await userEvent.type(screen.getByRole('textbox', { name: t('track.nameLabel') }), 'x{Escape}')
+    expect(props.onRenameTrack).not.toHaveBeenCalled()
+    expect(props.onRenaming).toHaveBeenLastCalledWith(null)
+  })
+
+  it('picks a track by clicking an empty spot in its lane, so a paste lands there', () => {
+    const props = renderTimeline({ tracks: [lane({}), lane({ id: 'v2', name: 'Vocal 2' })] })
+    const lanes = document.querySelectorAll('[data-track] .lane-area')
+    fireEvent.click(lanes[1])
+    expect(props.onLaneClick).toHaveBeenCalledWith('v2')
   })
 })

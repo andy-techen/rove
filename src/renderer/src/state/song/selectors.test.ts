@@ -4,12 +4,21 @@ import {
   deleteClip,
   moveClip,
   pasteClip,
+  withNewTrack,
   withRecordedClip,
   withTrackChanges,
   withoutTracks
 } from './project'
 import { polishParams } from '../../audio/polish/polish'
-import { backingTitle, edgeAfter, edgeBefore, mixdownOf, playbackKey, songEnd } from './selectors'
+import {
+  backingTitle,
+  edgeAfter,
+  edgeBefore,
+  mixdownOf,
+  pasteTarget,
+  playbackKey,
+  songEnd
+} from './selectors'
 
 describe('backingTitle', () => {
   it('shows a backing file the way the singer named it', () => {
@@ -100,5 +109,25 @@ describe('playbackKey', () => {
     const { p, id } = song()
     const mixed = withTrackChanges(p, id, { volume: 0.2, pan: -0.5, muted: true })
     expect(playbackKey(mixed)).toBe(playbackKey(p))
+  })
+})
+
+describe('pasteTarget', () => {
+  const song = () => {
+    const start = createProject('Song', 48000)
+    const vocal = withNewTrack(start, 'vocal')
+    const backing = withNewTrack(vocal.project, 'backing')
+    return { p: backing.project, v1: start.tracks[0].id, v2: vocal.track.id, b1: backing.track.id }
+  }
+
+  it('pastes onto the picked track when it is the same kind as the copy', () => {
+    const { p, v1, v2 } = song()
+    expect(pasteTarget(p, v1, v2)).toBe(v2)
+  })
+
+  it('keeps a copy on its own track rather than mixing vocals and backing', () => {
+    const { p, v1, b1 } = song()
+    expect(pasteTarget(p, v1, b1)).toBe(v1)
+    expect(pasteTarget(p, v1, null)).toBe(v1)
   })
 })

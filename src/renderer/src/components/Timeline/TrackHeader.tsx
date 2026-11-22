@@ -1,9 +1,10 @@
 import { DragEvent } from 'react'
 import { t } from '@shared/copy'
-import { TrackRole } from '../../state/song/project'
+import { TRACK_NAME_MAX_LENGTH, TrackRole } from '../../state/song/project'
 import { SelectMode, selectMode } from '../../state/editing/trackSelection'
 import { cx } from '../ui/cx'
 import { IconButton } from '../ui/IconButton'
+import { NameField } from '../ui/NameField'
 import { Tooltip } from '../ui/Tooltip'
 
 interface Props {
@@ -22,11 +23,19 @@ interface Props {
   draggable: boolean
   onDragStart(e: DragEvent<HTMLDivElement>): void
   onDragEnd(): void
+  /** The name is being edited in place. */
+  renaming: boolean
+  onStartRename(): void
+  onRename(name: string): void
+  onRenameDone(): void
 }
 
 const RECORD_ICON_SIZE = 12
 
-/** Left side of a lane: the track's name (click to select it, drag to move it), and record button. */
+/**
+ * Left side of a lane: the track's name (click to select, double-click to rename, drag to
+ * move) and its record button.
+ */
 export function TrackHeader({
   name,
   detail,
@@ -39,32 +48,48 @@ export function TrackHeader({
   onStop,
   draggable,
   onDragStart,
-  onDragEnd
+  onDragEnd,
+  renaming,
+  onStartRename,
+  onRename,
+  onRenameDone
 }: Props): React.JSX.Element {
   return (
     <div
       className={cx('lane-header', 'track-header', selected && 'track-selected')}
-      draggable={draggable}
+      draggable={draggable && !renaming}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
     >
-      <Tooltip
-        text={
-          role === 'vocal'
-            ? t('track.selectVocal', { name })
-            : t('track.selectBacking', { name, detail })
-        }
-      >
-        <button
-          type="button"
-          className="lane-title"
-          onClick={(e) => onSelect(selectMode(e))}
-          aria-pressed={selected}
+      {renaming ? (
+        <NameField
+          className="lane-name-input"
+          label={t('track.nameLabel')}
+          initial={name}
+          maxLength={TRACK_NAME_MAX_LENGTH}
+          onSave={onRename}
+          onDone={onRenameDone}
+        />
+      ) : (
+        <Tooltip
+          text={
+            role === 'vocal'
+              ? t('track.selectVocal', { name })
+              : t('track.selectBacking', { name, detail })
+          }
         >
-          <span className="lane-name">{name}</span>
-          <span className="lane-detail">{detail}</span>
-        </button>
-      </Tooltip>
+          <button
+            type="button"
+            className="lane-title"
+            onClick={(e) => onSelect(selectMode(e))}
+            onDoubleClick={onStartRename}
+            aria-pressed={selected}
+          >
+            <span className="lane-name">{name}</span>
+            <span className="lane-detail">{detail}</span>
+          </button>
+        </Tooltip>
+      )}
       {recording ? (
         <IconButton
           icon="stop"

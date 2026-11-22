@@ -182,3 +182,18 @@ export const canExportSong = (project: Project | undefined): boolean =>
  */
 export const playbackKey = (project: Project): string =>
   JSON.stringify(project.tracks.map((track) => [track.id, track.role, track.clips]))
+
+/**
+ * Where a paste lands: the picked track if it's the same kind as the copy, else the
+ * copy's own track. Vocals and backing tracks don't mix: backing tracks follow the music's
+ * speed and key, which would change a pasted vocal.
+ */
+export function pasteTarget(
+  project: Project,
+  fromTrackId: string,
+  pickedTrackId: string | null
+): string {
+  const role = (id: string | null): TrackRole | undefined =>
+    project.tracks.find((t) => t.id === id)?.role
+  return pickedTrackId && role(pickedTrackId) === role(fromTrackId) ? pickedTrackId : fromTrackId
+}

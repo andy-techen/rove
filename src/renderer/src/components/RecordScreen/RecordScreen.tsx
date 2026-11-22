@@ -9,6 +9,7 @@ import {
   Clip,
   deleteClip,
   moveTrack,
+  withTrackName,
   findClip,
   pasteClip,
   polishOf,
@@ -31,6 +32,7 @@ import {
   edgeAfter,
   edgeBefore,
   hasMusicChoice,
+  pasteTarget,
   selectLanes,
   songEnd
 } from '../../state/song/selectors'
@@ -125,6 +127,7 @@ export function RecordScreen({
   // Selected tracks, most recently clicked last: polish, paste and navigation follow it.
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([])
   const selectedTrackId = selectedTrackIds.at(-1) ?? null
+  const [renamingTrackId, setRenamingTrackId] = useState<string | null>(null)
   // Whether Delete acts on the clicked clip or the selected tracks.
   const [deleteFocus, setDeleteFocus] = useState<DeleteFocus>(null)
   const exporter = useExport(song)
@@ -198,7 +201,7 @@ export function RecordScreen({
   }
   const paste = (): void => {
     if (!open || !clipboard || !canEdit) return
-    const trackId = selectedTrackId ?? clipboard.trackId
+    const trackId = pasteTarget(open.data, clipboard.trackId, selectedTrackId)
     const { clip } = clipboard
     const pasted = pasteClip(open.data, trackId, clip, position)
     song.edit(pasted.project)
@@ -446,6 +449,15 @@ export function RecordScreen({
             }}
             snapAt={snapAt}
             onMoveTrack={moveTrackTo}
+            renamingTrackId={renamingTrackId}
+            onRenaming={setRenamingTrackId}
+            onRenameTrack={(trackId, name) => {
+              if (open && canEdit) song.edit(withTrackName(open.data, trackId, name))
+            }}
+            onLaneClick={(trackId) => {
+              setSelectedTrackIds([trackId])
+              setDeleteFocus(null)
+            }}
             onClipGesture={(ref, kind, phase, delta, snap) => {
               if (!open) return
               if (phase === 'start') {
