@@ -1,7 +1,7 @@
 // Working with several clips at once: selecting them, grouping them, and moving, deleting,
 // copying or pasting them together. Grouped clips stay separate clips (their audio and
 // windows are untouched); they only share a group id, so they're picked and moved as one.
-import { Clip, Project, insertClip } from '../song/project'
+import { Clip, MIN_CLIP_SEC, Project, insertClip, splitClip } from '../song/project'
 
 export interface ClipRef {
   trackId: string
@@ -135,6 +135,46 @@ export function moveClips(
       }
     })
   }
+}
+
+const cuts = (clip: Clip, at: number): boolean =>
+  at - clip.start >= MIN_CLIP_SEC && clip.start + clip.duration - at >= MIN_CLIP_SEC
+
+/**
+ * Whether Split would change anything: a selected clip runs across the playhead, or a
+ * selected group has clips on both sides of it.
+ */
+export function canSplitClips(project: Project, refs: ClipRef[], at: number): boolean {
+  const picked = clipsOf(project, withGroupmates(project, refs))
+  if (picked.some(({ clip }) => cuts(clip, at))) return true
+  const before = new Set(picked.filter(({ clip }) => clip.start < at).map(({ clip }) => clip.group))
+  return picked.some(({ clip }) => clip.start >= at && clip.group && before.has(clip.group))
+}
+
+/**
+ * Splits the selected clips at the playhead. A group is one clip to the singer, so it
+ * splits too: what's before the playhead and what's after become two groups (a side left
+ * with one clip is just that clip).
+ */
+export function splitClips(project: Project, refs: ClipRef[], at: number): Project {
+  const picked = clipsOf(project, withGroupmates(project, refs))
+  let next = picked.reduce(
+    (p, { trackId, clipId, clip }) => (cuts(clip, at) ? splitClip(p, trackId, clipId, at) : p),
+    project
+  )
+  const groups = new Set(picked.flatMap(({ clip }) => clip.group ?? []))
+  for (const group of groups) {
+    const sides = { before: crypto.randomUUID(), after: crypto.randomUUID() }
+    const members = next.tracks.flatMap((t) => t.clips.filter((c) => c.group === group))
+    const count = (after: boolean): number => members.filter((c) => c.start >= at === after).length
+    const sizes = { before: count(false), after: count(true) }
+    next = withClips(next, (c) => {
+      if (c.group !== group) return c
+      const side = c.start >= at ? 'after' : 'before'
+      return { ...c, group: sizes[side] > 1 ? sides[side] : undefined }
+    })
+  }
+  return next
 }
 
 export function deleteClips(project: Project, refs: ClipRef[]): Project {

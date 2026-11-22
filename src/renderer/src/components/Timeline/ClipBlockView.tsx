@@ -1,3 +1,4 @@
+import { CSSProperties } from 'react'
 import { ClipBlock } from '../../state/song/selectors'
 import { SelectMode } from '../../state/editing/trackSelection'
 import { cx } from '../ui/cx'
@@ -10,6 +11,8 @@ interface Props {
   pxPerSec: number
   scrollX: number
   selected: boolean
+  /** Dragged this far up or down (px) towards another lane; null when not lifted. */
+  liftY: number | null
   editable: boolean
   /** Picks and drags the group through one of its clips. */
   onSelect(mode: SelectMode): void
@@ -26,6 +29,7 @@ export function ClipBlockView({
   pxPerSec,
   scrollX,
   selected,
+  liftY,
   editable,
   onSelect,
   onGesture
@@ -38,13 +42,17 @@ export function ClipBlockView({
         'clip-block',
         `clip-${kind}`,
         selected && 'selected',
+        liftY !== null && 'lifted',
         editable && 'editable'
       )}
       // Runtime geometry: where the group sits in the visible part of the timeline.
-      style={{
-        left: block.start * pxPerSec - scrollX,
-        width: (block.end - block.start) * pxPerSec
-      }}
+      style={
+        {
+          left: block.start * pxPerSec - scrollX,
+          width: (block.end - block.start) * pxPerSec,
+          '--lift-y': `${liftY ?? 0}px`
+        } as CSSProperties
+      }
       onClick={onClick}
       data-clip-id={block.clipIds[0]}
       data-gesture="move"

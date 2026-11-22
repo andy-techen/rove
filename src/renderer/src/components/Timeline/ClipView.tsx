@@ -1,3 +1,4 @@
+import { CSSProperties } from 'react'
 import { t } from '@shared/copy'
 import { ClipGestureKind } from '../../state/editing/clipGestures'
 import { ClipShape } from '../../state/song/selectors'
@@ -19,6 +20,8 @@ export interface Props {
   viewWidth: number
   height: number
   selected: boolean
+  /** Dragged this far up or down (px) towards another lane; null when not lifted. */
+  liftY: number | null
   editable: boolean
   /** Pressed: on its own, or ⌘/⇧ to add it to the selection. */
   onSelect(mode: SelectMode): void
@@ -43,6 +46,7 @@ export function ClipView({
   viewWidth,
   height,
   selected,
+  liftY,
   editable,
   onSelect,
   onGesture
@@ -62,12 +66,13 @@ export function ClipView({
         'clip',
         `clip-${kind}`,
         selected && 'selected',
+        liftY !== null && 'lifted',
         editable && 'editable',
         clip.joinedBefore && 'joined-before',
         clip.joinedAfter && 'joined-after'
       )}
       // Runtime geometry: where the clip sits in the visible part of the timeline.
-      style={{ left, width }}
+      style={{ left, width, '--lift-y': `${liftY ?? 0}px` } as CSSProperties}
       onClick={onClick}
       data-clip-id={clip.id}
       data-gesture="move"

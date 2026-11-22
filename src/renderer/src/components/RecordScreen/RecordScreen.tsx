@@ -13,7 +13,9 @@ import {
   deleteClips,
   groupClips,
   includesClip,
+  canSplitClips,
   isOneGroup,
+  splitClips,
   laneShiftTo,
   moveClips,
   shiftLanes,
@@ -27,7 +29,6 @@ import {
   withTrackName,
   findClip,
   polishOf,
-  splitClip,
   withTrackChanges,
   nudgeLyrics,
   musicOf,
@@ -42,7 +43,6 @@ import {
 } from '../../state/song/project'
 import {
   canExportSong,
-  canSplitAt,
   edgeAfter,
   edgeBefore,
   hasMusicChoice,
@@ -173,7 +173,7 @@ export function RecordScreen({
   const selected = selectedClips.at(-1) ?? null
   const selectedClip =
     selected && open ? findClip(open.data, selected.trackId, selected.clipId) : undefined
-  const canSplit = canEdit && canSplitAt(selectedClip, position)
+  const canSplit = canEdit && !!open && canSplitClips(open.data, selectedClips, position)
   const canRecord =
     hasMusicChoice(open?.data, skipBacking) &&
     transport.recorderReady &&
@@ -191,9 +191,7 @@ export function RecordScreen({
   }
 
   const split = (): void => {
-    if (open && selected && canSplit) {
-      song.edit(splitClip(open.data, selected.trackId, selected.clipId, position))
-    }
+    if (open && canSplit) song.edit(splitClips(open.data, selectedClips, position))
   }
   const removeTracks = (removed: string[]): void => {
     if (!open || !canEdit) return
@@ -585,12 +583,14 @@ export function RecordScreen({
               if (!g.together.length) {
                 song.edit(applyClipGesture(g, kind, snapped.deltaSec), g.key)
               } else {
-                // Over another lane of the same kind, the clips move into it; elsewhere
-                // (a lane of another kind, the ruler) they stay where they last were.
+                // The clips float with the pointer and drop into the lane under it at the
+                // end; over a lane of another kind (or the ruler), into the last that fit.
                 const shift = laneShiftTo(g.base, g.trackId, overTrackId)
                 if (shift !== null && shiftLanes(g.base, g.together, shift)) g.laneShift = shift
-                song.edit(moveClips(g.base, g.together, snapped.deltaSec, g.laneShift), g.key)
-                setSelection(shiftLanes(g.base, g.together, g.laneShift) ?? g.together)
+                const lanes = phase === 'end' ? g.laneShift : 0
+                song.edit(moveClips(g.base, g.together, snapped.deltaSec, lanes), g.key)
+                if (phase === 'end')
+                  setSelection(shiftLanes(g.base, g.together, lanes) ?? g.together)
               }
               setSnapAt(phase === 'end' ? null : snapped.at)
               if (phase === 'end') gesture.current = null

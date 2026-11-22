@@ -176,7 +176,9 @@
 .lane-area {
   position: relative;
   min-width: 0;
-  overflow: hidden;
+  /* Clipped sideways only, so a clip dragged towards another lane can leave its own. */
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .seekable {
@@ -481,4 +483,16 @@
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   pointer-events: none;
+}
+
+/* Clips being dragged to another lane float with the pointer until they're dropped. */
+.clip.lifted {
+  z-index: 4;
+  transform: translateY(var(--lift-y));
+  box-shadow: var(--shadow-raised);
+}
+
+.clip.lifted.joined-before,
+.clip.lifted.joined-after {
+  box-shadow: none;
 }

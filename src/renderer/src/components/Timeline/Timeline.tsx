@@ -77,7 +77,7 @@ interface Props {
     phase: GesturePhase,
     deltaSec: number,
     snap: SnapView,
-    /** The lane under the pointer, for moving clips into another track. */
+    /** The lane under the pointer; moved clips drop into it when the drag ends. */
     overTrackId: string | null
   ): void
   /** Where a dragged clip has snapped, shown as a guide line; null when it hasn't. */
@@ -272,6 +272,38 @@ export function Timeline({
     onPointerCancel: () => setBox(null)
   }
 
+  // While clips are dragged, they follow the pointer up and down (this far, in px) and
+  // drop into the lane under it when let go.
+  const [lift, setLift] = useState<{ y0: number; dy: number } | null>(null)
+  const liftY = lift?.dy ?? null
+  const clipGesture = (
+    clip: ClipRef,
+    kind: ClipGestureKind,
+    phase: GesturePhase,
+    deltaSec: number,
+    free: boolean,
+    clientY: number
+  ): void => {
+    if (kind === 'move') {
+      if (phase === 'start') setLift({ y0: clientY, dy: 0 })
+      else if (phase === 'move') setLift((l) => l && { ...l, dy: clientY - l.y0 })
+      else setLift(null)
+    }
+    onClipGesture(
+      clip,
+      kind,
+      phase,
+      deltaSec,
+      {
+        toleranceSec: SNAP_PX / pxPerSec,
+        gridSec: minorStep(tickStep),
+        playheadSec: position,
+        free
+      },
+      trackAt(clientY)
+    )
+  }
+
   /** The track whose lane spans this height on screen, if any. */
   const trackAt = (clientY: number): string | null => {
     const lanes = [...(lanesRef.current?.querySelectorAll<HTMLElement>('[data-track]') ?? [])]
@@ -369,22 +401,11 @@ export function Timeline({
                 pxPerSec={pxPerSec}
                 scrollX={scrollX}
                 selected={includesClip(selectedClips, first)}
+                liftY={includesClip(selectedClips, first) ? liftY : null}
                 editable={canEdit && !isRecording}
                 onSelect={(mode) => onSelect(first, mode)}
                 onGesture={(kind, phase, delta, free, clientY) =>
-                  onClipGesture(
-                    first,
-                    kind,
-                    phase,
-                    delta,
-                    {
-                      toleranceSec: SNAP_PX / pxPerSec,
-                      gridSec: minorStep(tickStep),
-                      playheadSec: position,
-                      free
-                    },
-                    trackAt(clientY)
-                  )
+                  clipGesture(first, kind, phase, delta, free, clientY)
                 }
               />
             )
@@ -399,22 +420,13 @@ export function Timeline({
               viewWidth={areaWidth}
               height={CLIP_HEIGHT}
               selected={includesClip(selectedClips, { trackId: track.id, clipId: c.id })}
+              liftY={
+                includesClip(selectedClips, { trackId: track.id, clipId: c.id }) ? liftY : null
+              }
               editable={canEdit && !isRecording}
               onSelect={(mode) => onSelect({ trackId: track.id, clipId: c.id }, mode)}
               onGesture={(kind, phase, delta, free, clientY) =>
-                onClipGesture(
-                  { trackId: track.id, clipId: c.id },
-                  kind,
-                  phase,
-                  delta,
-                  {
-                    toleranceSec: SNAP_PX / pxPerSec,
-                    gridSec: minorStep(tickStep),
-                    playheadSec: position,
-                    free
-                  },
-                  trackAt(clientY)
-                )
+                clipGesture({ trackId: track.id, clipId: c.id }, kind, phase, delta, free, clientY)
               }
             />
           ))}

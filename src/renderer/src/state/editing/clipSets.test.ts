@@ -3,6 +3,7 @@ import { Project, createProject, withNewTrack, withRecordedClip } from '../song/
 import {
   ClipRef,
   anyGrouped,
+  canSplitClips,
   clipsInBox,
   copyClips,
   deleteClips,
@@ -13,6 +14,7 @@ import {
   laneShiftTo,
   pickClip,
   shiftLanes,
+  splitClips,
   ungroupClips,
   withGroupmates
 } from './clipSets'
@@ -61,6 +63,33 @@ describe('clip groups', () => {
   it('needs two or more clips to make a group', () => {
     const { p, a } = song()
     expect(anyGrouped(groupClips(p, [a]), [a])).toBe(false)
+  })
+})
+
+describe('splitClips', () => {
+  it('splits a group in two at the playhead, cutting the clip under it', () => {
+    const { p, v1, a, b, c } = song()
+    const split = splitClips(groupClips(p, [a, b, c]), [a], 3.5)
+    expect(startsOf(split, v1)).toEqual([
+      ['a.wav', 2],
+      ['a.wav', 3.5],
+      ['b.wav', 6]
+    ])
+    const [left] = split.tracks[0].clips
+    expect(withGroupmates(split, [{ trackId: v1, clipId: left.id }])).toHaveLength(2)
+    expect(withGroupmates(split, [b])).toHaveLength(3)
+  })
+
+  it('divides a group at a gap, leaving a clip alone on one side ungrouped', () => {
+    const { p, a, b } = song()
+    const grouped = groupClips(p, [a, b])
+    expect(canSplitClips(grouped, [a], 5)).toBe(true)
+    expect(anyGrouped(splitClips(grouped, [a], 5), [a, b])).toBe(false)
+  })
+
+  it('has nothing to split when the playhead misses every selected clip', () => {
+    const { p, a } = song()
+    expect(canSplitClips(p, [a], 5)).toBe(false)
   })
 })
 

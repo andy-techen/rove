@@ -3,7 +3,6 @@ import type { MixdownTrack } from '../../audio/export/exportMix'
 import { TrackMix } from '../../audio/mix/mixer'
 import { polishParams } from '../../audio/polish/polish'
 import {
-  Clip,
   Project,
   TrackRole,
   formatDuration,
@@ -128,11 +127,6 @@ export function joinGroups<C extends { id: string; start: number; duration: numb
     return { ...(clip as unknown as C), joinedBefore, joinedAfter }
   })
   return { clips: joined, blocks }
-}
-
-/** Split needs the playhead strictly inside the selected clip. */
-export function canSplitAt(clip: Clip | undefined, position: number): boolean {
-  return !!clip && position > clip.start && position < clip.start + clip.duration
 }
 
 /** Recording needs a song open and either a backing track or the choice to sing without one. */
