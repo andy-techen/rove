@@ -61,7 +61,6 @@ export function VocalsControl({
     <IconButton
       icon="vocalsOff"
       label={t('music.removeVocals')}
-      title={t('music.removeVocalsHint')}
       disabled={locked}
       onClick={onRemove}
     />

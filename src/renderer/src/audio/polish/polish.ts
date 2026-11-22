@@ -49,7 +49,7 @@ export const POLISH_CONTROLS: PolishControl[] = [
 ]
 
 /**
- * Where most singers like each control. Harmonies sit further back than the
+ * Our suggested setting for each control. Harmonies sit further back than the
  * lead: less presence, more even, a bit more room.
  */
 export function defaultPolish(part: 'lead' | 'harmony' = 'lead'): PolishSettings {

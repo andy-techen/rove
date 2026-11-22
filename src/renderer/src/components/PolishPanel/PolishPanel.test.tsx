@@ -28,7 +28,7 @@ describe('PolishPanel', () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ space: 0.8 }), 'polish:space')
   })
 
-  it('resets every control to where most singers like it', async () => {
+  it('resets every control to our suggested settings', async () => {
     const onChange = renderPanel({ ...defaultPolish('lead'), clarity: 1, space: 0 })
     await userEvent.click(screen.getByRole('button', { name: t('polish.reset') }))
     expect(onChange).toHaveBeenCalledWith(defaultPolish('lead'))

@@ -27,16 +27,16 @@ hears.
 - Every colour token has a light and a dark value; check both themes.
 - Colours have jobs. Pick the token by what it means, not how it looks:
 
-  | Token                 | Means                                                     |
-  | --------------------- | --------------------------------------------------------- |
-  | `--color-accent`      | The singer's main action and focus: Play, primary, knobs  |
-  | `--color-on-accent`   | Text and icons on the accent (warm brown, never white)    |
-  | `--color-thumb`       | Slider thumbs and switch dots (cream)                     |
-  | `--color-accent-text` | Accent-coloured text (deeper amber, readable on cream)    |
-  | `--color-wave-vocal`  | The singer's voice on the timeline                        |
-  | `--color-danger`      | Recording, clipping, errors and the playhead              |
-  | `--color-good`        | A healthy level, and the notch where most singers like it |
-  | `--color-warning`     | Getting too loud; always with words or an icon            |
+  | Token                 | Means                                                        |
+  | --------------------- | ------------------------------------------------------------ |
+  | `--color-accent`      | The singer's main action and focus: Play, primary, knobs     |
+  | `--color-on-accent`   | Text and icons on the accent (warm brown, never white)       |
+  | `--color-thumb`       | Slider thumbs and switch dots (cream)                        |
+  | `--color-accent-text` | Accent-coloured text (deeper amber, readable on cream)       |
+  | `--color-wave-vocal`  | The singer's voice on the timeline                           |
+  | `--color-danger`      | Recording, clipping, errors and the playhead                 |
+  | `--color-good`        | A healthy level, and the notch marking our suggested setting |
+  | `--color-warning`     | Getting too loud; always with words or an icon               |
 
 - Each component has its own stylesheet next to it (`Timeline/Timeline.css`), scoped by
   a class named after the component.

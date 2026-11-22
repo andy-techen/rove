@@ -27,9 +27,7 @@ export function MicCheck({ mic, onboarding, onDone }: Props): React.JSX.Element 
         <h1 className="mic-check-title">
           <Logo size="lg" />
         </h1>
-        <p className="muted">
-          {onboarding ? t('micCheck.subtitleOnboarding') : t('micCheck.subtitleRevisit')}
-        </p>
+        {onboarding && <p className="muted">{t('micCheck.subtitleOnboarding')}</p>}
       </header>
 
       <section className="mic-check-card">

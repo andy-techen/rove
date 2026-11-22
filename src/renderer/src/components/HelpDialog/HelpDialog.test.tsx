@@ -49,4 +49,13 @@ describe('HelpDialog shortcuts', () => {
     await user.click(await screen.findByRole('button', { name: /original shortcut for Split/ }))
     expect(window.api.setKeymap).toHaveBeenLastCalledWith({})
   })
+
+  it('puts every shortcut back from the reset icon in the header', async () => {
+    const user = renderHelp()
+    await user.click(changeButton('Split Clip'))
+    await user.keyboard('{Alt>}k{/Alt}')
+    await screen.findByText('⌥K')
+    await user.click(screen.getByRole('button', { name: t('keymap.resetAll') }))
+    expect(window.api.setKeymap).toHaveBeenLastCalledWith({})
+  })
 })
