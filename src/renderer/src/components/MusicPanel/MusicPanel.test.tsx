@@ -19,7 +19,6 @@ function renderPanel(music: Partial<MusicSettings> = {}, over = {}) {
     },
     bpm: 100,
     songKey: null,
-    hasVocals: false,
     locked: false,
     onSpeed: vi.fn(),
     onSemitones: vi.fn(),
@@ -61,14 +60,10 @@ describe('MusicPanel', () => {
     expect(onSemitones).toHaveBeenCalledWith(2, 'music-key')
   })
 
-  it('names the new key when the song has one', () => {
+  it('names the key beside the Key knob, with no separate note', () => {
     renderPanel({ speed: 1, semitones: 2 }, { songKey: { tonic: 2, mode: 'major' } })
-    expect(screen.getByText(t('music.nowIn', { key: 'D major' }))).toBeInTheDocument()
-  })
-
-  it('warns that vocals already recorded keep their own speed and key', () => {
-    renderPanel({ speed: 1.1, semitones: 0 }, { hasVocals: true })
-    expect(screen.getByText(t('music.vocalsStay'))).toBeInTheDocument()
+    expect(screen.getByText('D major')).toBeInTheDocument()
+    expect(screen.queryByText(/^Now in/)).not.toBeInTheDocument()
   })
 
   it('goes back to the original speed and key', async () => {

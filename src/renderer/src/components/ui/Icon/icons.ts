@@ -23,8 +23,6 @@ export const STROKE_ICONS = {
   search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
   sun: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
   moon: 'M20 13.5A8 8 0 1 1 10.5 4a6.5 6.5 0 0 0 9.5 9.5z',
-  // A screen: follow the computer's own setting.
-  display: 'M4 4h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8 20h8M12 16v4',
   // A side panel with an arrow toward the edge: tuck the panel away.
   hidePanel:
     'M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM15 5v14M8 9l3 3-3 3',
@@ -38,7 +36,10 @@ export const FILLED_ICONS = {
   play: 'M8 5.5v13a.5.5 0 0 0 .76.43l10.4-6.5a.5.5 0 0 0 0-.86L8.76 5.07A.5.5 0 0 0 8 5.5z',
   pause: 'M7 5h3.5v14H7zM13.5 5H17v14h-3.5z',
   record: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z',
-  stop: 'M6 7.5A1.5 1.5 0 0 1 7.5 6h9A1.5 1.5 0 0 1 18 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 16.5z'
+  stop: 'M6 7.5A1.5 1.5 0 0 1 7.5 6h9A1.5 1.5 0 0 1 18 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 16.5z',
+  // Half dark, half light: follow the computer's own setting. The ring runs one way
+  // and the right half the other, so the right half stays open.
+  contrast: 'M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20zM12 20V4a8 8 0 0 1 0 16z'
 } as const
 
 export type IconName = keyof typeof STROKE_ICONS | keyof typeof FILLED_ICONS

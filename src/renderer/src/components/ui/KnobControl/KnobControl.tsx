@@ -20,6 +20,8 @@ interface Props {
   typeLabel?: string
   /** A control before the value, such as an on/off switch. */
   extra?: ReactNode
+  /** A quiet word after the value that puts it in context ("A major"). */
+  note?: string
   /** Shows a ↶ beside the value that puts the control back, when given. */
   reset?: { label: string; onReset(): void } | null
   disabled?: boolean
@@ -36,6 +38,7 @@ export function KnobControl({
   onType,
   typeLabel,
   extra,
+  note,
   reset,
   disabled,
   knob
@@ -57,6 +60,7 @@ export function KnobControl({
           disabled={disabled}
           onCommit={onType}
         />
+        {note && <span className="knob-control-note">{note}</span>}
         {reset && (
           <IconButton
             icon="reset"

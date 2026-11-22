@@ -283,7 +283,6 @@
     "semitones": "semitones",
     "plus": "+{n}",
     "minus": "−{n}",
-    "nowIn": "Now in {key}",
     "bass": "Bass",
     "bassHint": "More or less low end in the music",
     "brightness": "Brightness",
@@ -298,7 +297,6 @@
     "typeClick": "Metronome volume, typed value",
     "clickNoBeat": "No steady beat found in this music",
     "off": "Off",
-    "vocalsStay": "Vocals already recorded keep their own speed and key.",
     "reset": "Back to the original speed and key",
     "resetSpeed": "Back to the original speed",
     "resetKey": "Back to the original key"

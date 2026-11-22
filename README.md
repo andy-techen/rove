@@ -28,6 +28,7 @@ A beginner-friendly desktop app for recording vocals over a backing track, layer
 | 5. Export       | Mixdown to WAV and MP3 with loudness leveling                                                                                                                         |
 | 6. Pitch        | Pitch correction: detect each sung note and nudge it toward the song's key, with one Tuning slider from natural to snappy                                             |
 | 7. Lyrics       | Lyrics found online that follow along as you sing; click a line to jump there                                                                                         |
+| 8. Video        | Record camera video at the same time as the vocal, in sync with the timeline, and export it with the mixed audio                                                      |
 | Later           | Auto polish (analyse a take and set the polish sliders), remove vocals (on-device stem separation turns any song into a backing track), code signing and notarization |
 
 ## Stack

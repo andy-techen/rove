@@ -40,7 +40,7 @@ interface Props {
 
 const TAB_ICON_SIZE = 14
 
-const THEME_ICONS: Record<Theme, IconName> = { system: 'display', light: 'sun', dark: 'moon' }
+const THEME_ICONS: Record<Theme, IconName> = { system: 'contrast', light: 'sun', dark: 'moon' }
 
 /** The open songs as tabs. App-wide actions live in the native menu bar. */
 export function TopBar({

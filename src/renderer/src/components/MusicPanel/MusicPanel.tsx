@@ -13,7 +13,6 @@ import { parseTypedNumber } from '../ui/NumberField'
 import { Panel } from '../ui/Panel'
 import { Switch } from '../ui/Switch'
 import { formatSigned, parseSemitones, parseSpeed, speedPercent, tempoAt } from './musicFormat'
-import './MusicPanel.css'
 
 interface Props {
   trackName: string
@@ -21,8 +20,6 @@ interface Props {
   /** The music's original tempo, once heard. */
   bpm: number | null
   songKey: SongKey | null | undefined
-  /** Vocals are already on the timeline, recorded to the music as it was. */
-  hasVocals: boolean
   locked: boolean
   /** `key` groups a knob turn into one undo step. */
   onSpeed(speed: number, key?: string): void
@@ -47,7 +44,6 @@ export function MusicPanel({
   music,
   bpm,
   songKey,
-  hasVocals,
   locked,
   onSpeed,
   onSemitones,
@@ -141,6 +137,7 @@ export function MusicPanel({
           disabled={locked}
           value={{ number: formatSigned(music.semitones), unit: t('music.semitones') }}
           typeLabel={t('music.typeKey')}
+          note={songKey ? keyName(songKey) : undefined}
           onType={(text) => {
             const semitones = parseSemitones(text)
             if (semitones !== null) onSemitones(semitones)
@@ -190,11 +187,6 @@ export function MusicPanel({
           }}
         />
       </KnobRow>
-
-      <div className="music-notes" aria-live="polite">
-        {songKey && music.semitones !== 0 && <p>{t('music.nowIn', { key: keyName(songKey) })}</p>}
-        {hasVocals && changed && <p className="music-warning">{t('music.vocalsStay')}</p>}
-      </div>
     </Panel>
   )
 }

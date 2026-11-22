@@ -15,7 +15,6 @@ import {
   withTrackChanges,
   nudgeLyrics,
   musicOf,
-  tracksOf,
   withClick,
   withClickOn,
   withMusicPitch,
@@ -452,7 +451,6 @@ export function RecordScreen({
               music={musicOf(open.data)}
               bpm={beat?.bpm ?? null}
               songKey={songKey}
-              hasVocals={tracksOf(open.data, 'vocal').some((t) => t.clips.length > 0)}
               locked={!canEdit}
               onSpeed={(speed, key) => song.edit(withMusicSpeed(open.data, speed), key)}
               onSemitones={(n, key) => song.edit(withMusicPitch(open.data, n), key)}

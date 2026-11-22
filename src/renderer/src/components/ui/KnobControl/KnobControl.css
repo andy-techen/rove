@@ -36,6 +36,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Set a little apart from the number, as context rather than part of the value. */
+.knob-control-note {
+  margin-left: var(--space-2);
+  white-space: nowrap;
+}
+
 .knob-control-reset {
   /* Overhangs the value line instead of growing it, so showing it moves nothing. */
   margin-block: calc(-1 * var(--space-3));
