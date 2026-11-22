@@ -8,14 +8,19 @@ files:
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,vitest.config.ts}'
 asarUnpack:
   - resources/**
+# The interface is English only; Chromium's other ~50 languages add ~50 MB.
+electronLanguages:
+  - en
 mac:
-  # One download for both Apple silicon and Intel Macs.
+  # A download per chip: a universal app carries both copies of Electron, doubling it.
   target:
     - target: dmg
-      arch: universal
+      arch:
+        - arm64
+        - x64
   hardenedRuntime: true
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
@@ -23,7 +28,9 @@ mac:
     NSMicrophoneUsageDescription: Rove needs your microphone to record your vocals.
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${name}-${version}-${arch}.${ext}
+  # LZFSE: smaller than the default zlib and quick to open (macOS 10.11 and later).
+  format: ULFO
 win:
   executableName: rove
 nsis:

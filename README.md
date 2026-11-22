@@ -28,7 +28,7 @@ A beginner-friendly desktop app for recording vocals over a backing track, layer
 
 ## Stack
 
-Electron + electron-vite, React + TypeScript, Web Audio API with an AudioWorklet for raw PCM capture, wavesurfer.js for waveforms, electron-builder for packaging.
+Electron + electron-vite, React + TypeScript, Web Audio API with an AudioWorklet for raw PCM capture, electron-builder for packaging.
 
 ## Development
 
@@ -44,7 +44,8 @@ In dev mode macOS attributes microphone permission to the app that launched `npm
 ## Releases
 
 Push a version tag and GitHub Actions (`.github/workflows/release.yml`) checks the code,
-builds a universal `.dmg` (Apple silicon and Intel) and publishes it as a GitHub release:
+builds a `.dmg` for each kind of Mac and publishes them as a GitHub release: `-arm64` for
+Apple silicon (M1 and later), `-x64` for Intel.
 
 ```bash
 git tag v1.1.0

@@ -1,7 +1,7 @@
 name: Release
 
-# Push a version tag to build the Mac app and publish it as a GitHub release with the
-# .dmg attached:  git tag v1.1.0 && git push origin v1.1.0
+# Push a version tag to build the Mac app and publish it as a GitHub release with a
+# .dmg for Apple silicon and one for Intel attached:  git tag v1.1.0 && git push origin v1.1.0
 on:
   push:
     tags: ['v*']
@@ -39,9 +39,11 @@ jobs:
       - name: Build
         run: npx electron-vite build && npx electron-builder --mac --publish never -c.mac.identity=-
 
+      # Force-pushing a tag rebuilds its release, so an older one for it is replaced.
       - name: Publish release
-        run: >
-          gh release create "$GITHUB_REF_NAME" dist/*.dmg
-          --title "Rove $GITHUB_REF_NAME" --generate-notes
+        run: |
+          gh release delete "$GITHUB_REF_NAME" --yes 2>/dev/null || true
+          gh release create "$GITHUB_REF_NAME" dist/*.dmg \
+            --title "Rove $GITHUB_REF_NAME" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}

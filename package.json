@@ -23,8 +23,7 @@
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",
-    "@electron-toolkit/utils": "^4.0.0",
-    "wavesurfer.js": "^8.1.0"
+    "@electron-toolkit/utils": "^4.0.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.1",
