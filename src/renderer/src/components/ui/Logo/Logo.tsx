@@ -17,7 +17,7 @@ const WORDMARK = [
   'M210 40C228 40 236 140 252 140C268 140 276 40 294 40',
   'M335 90H434A50 50 0 1 0 420 125'
 ]
-const WORDMARK_STROKE = 34
+const WORDMARK_STROKE = 28
 
 /** The app icon and the "rove" wordmark, read by assistive tech as the app's name. */
 export function Logo({ size = 'sm' }: Props): React.JSX.Element {
