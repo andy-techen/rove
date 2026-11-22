@@ -1,4 +1,5 @@
 import { SongKey, transposeKey } from '../../audio/pitch/key'
+import { moveItem } from '../tabs/tabOrder'
 import { SongLyrics } from '../lyrics/lyrics'
 import { PolishSettings, defaultPolish } from '../../audio/polish/polish'
 import { t } from '@shared/copy'
@@ -130,6 +131,22 @@ export function withNewTrack(
  */
 export function withoutTracks(project: Project, trackIds: string[]): Project {
   return { ...project, tracks: project.tracks.filter((t) => !trackIds.includes(t.id)) }
+}
+
+/**
+ * The song with a track moved to place `to` among the tracks of its own kind. Vocals and
+ * backing tracks are listed in separate groups, so each keeps to its own.
+ */
+export function moveTrack(project: Project, trackId: string, to: number): Project {
+  const track = project.tracks.find((t) => t.id === trackId)
+  if (!track) return project
+  const group = tracksOf(project, track.role)
+  const reordered = moveItem(group, group.indexOf(track), to)
+  let next = 0
+  return {
+    ...project,
+    tracks: project.tracks.map((t) => (t.role === track.role ? reordered[next++] : t))
+  }
 }
 
 export function polishOf(track: Track): PolishSettings {

@@ -41,6 +41,7 @@ function renderTimeline(overrides: Partial<Parameters<typeof Timeline>[0]> = {})
     selectedTrackIds: [],
     onSelectTrack: vi.fn(),
     onClipGesture: vi.fn(),
+    onMoveTrack: vi.fn(),
     snapAt: null,
     ...overrides
   }
@@ -163,5 +164,26 @@ describe('Timeline', () => {
     expect(screen.getByRole('button', { name: t('timeline.zoomOut') })).toBeDisabled()
     await userEvent.click(screen.getByRole('button', { name: t('timeline.zoomIn') }))
     expect(screen.getByRole('button', { name: t('timeline.zoomOut') })).toBeEnabled()
+  })
+
+  it('moves a track by dragging its name onto another track of the same kind', () => {
+    const props = renderTimeline({
+      tracks: [
+        lane({}),
+        lane({ id: 'v2', name: 'Vocal 2' }),
+        lane({ id: 'v3', name: 'Vocal 3' }),
+        lane({ id: 'b1', role: 'backing', name: 'Backing 1' })
+      ]
+    })
+    const name = (n: string) => screen.getByRole('button', { name: new RegExp(`^${n}`) })
+    fireEvent.dragStart(name('Vocal 1'))
+    fireEvent.dragOver(name('Backing 1'))
+    fireEvent.drop(name('Backing 1'))
+    expect(props.onMoveTrack).not.toHaveBeenCalled()
+    // Dropped on the top half of Vocal 3: just above it.
+    fireEvent.dragStart(name('Vocal 1'))
+    fireEvent.dragOver(name('Vocal 3'))
+    fireEvent.drop(name('Vocal 3'))
+    expect(props.onMoveTrack).toHaveBeenCalledWith('v1', 1)
   })
 })

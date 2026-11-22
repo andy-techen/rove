@@ -1,7 +1,8 @@
-import { CSSProperties, ReactNode, useRef } from 'react'
+import { CSSProperties, DragEvent, ReactNode, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { ClipGestureKind } from '../../state/editing/clipGestures'
-import { VocalPart, formatDuration } from '../../state/song/project'
+import { TrackRole, VocalPart, formatDuration } from '../../state/song/project'
+import { indexForSlot } from '../../state/tabs/tabOrder'
 import { useShortcuts } from '../../state/commands/shortcuts'
 import { LaneView } from '../../state/song/selectors'
 import { Button } from '../ui/Button'
@@ -73,6 +74,8 @@ interface Props {
   ): void
   /** Where a dragged clip has snapped, shown as a guide line; null when it hasn't. */
   snapAt: number | null
+  /** Move a track to place `to` among the tracks of its kind (dragged by its name). */
+  onMoveTrack(trackId: string, to: number): void
 }
 
 // Small enough for the zoom buttons to sit inside the ruler's row.
@@ -110,7 +113,8 @@ export function Timeline({
   selectedTrackIds,
   onSelectTrack,
   onClipGesture,
-  snapAt
+  snapAt,
+  onMoveTrack
 }: Props): React.JSX.Element {
   const shortcuts = useShortcuts()
   const {
@@ -188,15 +192,59 @@ export function Timeline({
     if (!target.closest('.clip')) onSelect(null)
   }
 
-  const lane = (track: LaneView): ReactNode => {
+  // The track being dragged by its name, and the gap among its kind it would drop into
+  // (0 is above the first). Tracks only move within their own group.
+  const [drag, setDrag] = useState<{
+    id: string
+    role: TrackRole
+    from: number
+    slot: number | null
+  } | null>(null)
+  const endDrag = (): void => setDrag(null)
+  const dropSlot =
+    drag && drag.slot !== null && indexForSlot(drag.from, drag.slot) !== drag.from
+      ? drag.slot
+      : null
+
+  const lane = (track: LaneView, index: number, group: LaneView[]): ReactNode => {
     const isRecording = recording?.trackId === track.id
+    const sameGroup = drag?.role === track.role
+    const dragHandlers = {
+      onDragOver: (e: DragEvent<HTMLDivElement>) => {
+        if (!drag || !sameGroup) return
+        e.preventDefault()
+        const box = e.currentTarget.getBoundingClientRect()
+        const slot = index + (e.clientY > box.top + box.height / 2 ? 1 : 0)
+        if (slot !== drag.slot) setDrag({ ...drag, slot })
+      },
+      onDrop: (e: DragEvent<HTMLDivElement>) => {
+        e.preventDefault()
+        if (drag && sameGroup && drag.slot !== null)
+          onMoveTrack(drag.id, indexForSlot(drag.from, drag.slot))
+        endDrag()
+      }
+    }
     return (
       <div
         key={track.id}
         data-track={track.id}
-        className={cx('lane', isRecording && 'lane-recording', track.muted && 'lane-muted')}
+        className={cx(
+          'lane',
+          isRecording && 'lane-recording',
+          track.muted && 'lane-muted',
+          drag?.id === track.id && 'lane-dragging',
+          sameGroup && dropSlot === index && 'drop-before',
+          sameGroup && dropSlot === group.length && index === group.length - 1 && 'drop-after'
+        )}
+        {...dragHandlers}
       >
         <TrackHeader
+          draggable={canEdit && !recording}
+          onDragStart={(e) => {
+            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
+            setDrag({ id: track.id, role: track.role, from: index, slot: null })
+          }}
+          onDragEnd={endDrag}
           name={track.name}
           detail={isRecording ? formatDuration(recording.sec) : track.detail}
           role={track.role}

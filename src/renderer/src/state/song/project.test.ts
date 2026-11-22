@@ -6,6 +6,7 @@ import {
   MIN_CLIP_SEC,
   deleteClip,
   moveClip,
+  moveTrack,
   setClipFades,
   splitClip,
   trimClipEnd,
@@ -503,5 +504,31 @@ describe('removing vocals', () => {
     const back = withVocalsBack(withoutVocals(p, id, { 'audio/song.mp3': 'audio/x.wav' }), id)
     expect(backing(back).clips[0].file).toBe('audio/song.mp3')
     expect(backing(back).clips[0].withVocals).toBeUndefined()
+  })
+})
+
+describe('moveTrack', () => {
+  // Backing 1, then Vocal 1, Vocal 2, Vocal 3.
+  const song = () => {
+    let p = withNewTrack(createProject('Song', 48000), 'backing').project
+    p = withNewTrack(p, 'vocal').project
+    p = withNewTrack(p, 'vocal').project
+    return p
+  }
+  const names = (p: Project) => p.tracks.map((t) => t.name)
+  const vocals = (p: Project) => tracksOf(p, 'vocal').map((t) => t.name)
+
+  it('moves a track to a new place among tracks of its kind', () => {
+    const p = song()
+    const moved = moveTrack(p, tracksOf(p, 'vocal')[0].id, 2)
+    expect(vocals(moved)).toEqual(['Vocal 2', 'Vocal 3', 'Vocal 1'])
+    expect(tracksOf(moved, 'backing').map((t) => t.name)).toEqual(['Backing 1'])
+  })
+
+  it('leaves the song as it is for a place off either end', () => {
+    const p = song()
+    const v1 = tracksOf(p, 'vocal')[0].id
+    expect(names(moveTrack(p, v1, 3))).toEqual(names(p))
+    expect(names(moveTrack(p, v1, -1))).toEqual(names(p))
   })
 })

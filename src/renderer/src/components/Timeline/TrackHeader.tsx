@@ -1,3 +1,4 @@
+import { DragEvent } from 'react'
 import { t } from '@shared/copy'
 import { TrackRole } from '../../state/song/project'
 import { SelectMode, selectMode } from '../../state/editing/trackSelection'
@@ -17,11 +18,15 @@ interface Props {
   onSelect(mode: SelectMode): void
   onRecord(): void
   onStop(): void
+  /** Whether the track can be dragged to a new place right now. */
+  draggable: boolean
+  onDragStart(e: DragEvent<HTMLDivElement>): void
+  onDragEnd(): void
 }
 
 const RECORD_ICON_SIZE = 12
 
-/** Left side of a lane: the track's name (click to select it), and record button. */
+/** Left side of a lane: the track's name (click to select it, drag to move it), and record button. */
 export function TrackHeader({
   name,
   detail,
@@ -31,10 +36,18 @@ export function TrackHeader({
   selected,
   onSelect,
   onRecord,
-  onStop
+  onStop,
+  draggable,
+  onDragStart,
+  onDragEnd
 }: Props): React.JSX.Element {
   return (
-    <div className={cx('lane-header', 'track-header', selected && 'track-selected')}>
+    <div
+      className={cx('lane-header', 'track-header', selected && 'track-selected')}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+    >
       <Tooltip
         text={
           role === 'vocal'

@@ -8,6 +8,7 @@ const TIPS = [
   'help.tips.punchIn',
   'help.tips.edit',
   'help.tips.selectTracks',
+  'help.tips.moveTracks',
   'help.tips.sweetSpot',
   'help.tips.tuning',
   'help.tips.music',

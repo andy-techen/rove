@@ -8,6 +8,7 @@ import { snapGesture } from '../../state/editing/snapping'
 import {
   Clip,
   deleteClip,
+  moveTrack,
   findClip,
   pasteClip,
   polishOf,
@@ -205,6 +206,16 @@ export function RecordScreen({
     // Landing at the end of the paste means pasting again lays copies end to end.
     transport.seek(position + clip.duration)
   }
+  const moveTrackTo = (trackId: string, to: number): void => {
+    if (open && canEdit) song.edit(moveTrack(open.data, trackId, to))
+  }
+  /** Moves the selected track one place up or down among tracks of its kind. */
+  const nudgeTrack = (by: -1 | 1): void => {
+    const track = open?.data.tracks.find((t) => t.id === selectedTrackId)
+    if (!open || !track) return
+    const at = open.data.tracks.filter((t) => t.role === track.role).indexOf(track)
+    moveTrackTo(track.id, at + by)
+  }
   // Navigation follows the selected clip's track, else the selected track, else every track.
   const navTrack = selected?.trackId ?? selectedTrackId
 
@@ -252,6 +263,12 @@ export function RecordScreen({
         break
       case 'deleteClip':
         remove()
+        break
+      case 'moveTrackUp':
+        nudgeTrack(-1)
+        break
+      case 'moveTrackDown':
+        nudgeTrack(1)
         break
       case 'deselect':
         setSelected(null)
@@ -428,6 +445,7 @@ export function RecordScreen({
               )
             }}
             snapAt={snapAt}
+            onMoveTrack={moveTrackTo}
             onClipGesture={(ref, kind, phase, delta, snap) => {
               if (!open) return
               if (phase === 'start') {

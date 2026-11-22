@@ -21,6 +21,8 @@ export const MENU_ACTIONS = [
   'selectAll',
   'split',
   'deleteClip',
+  'moveTrackUp',
+  'moveTrackDown',
   'playPause',
   'stopPlayback',
   'goToStart',
