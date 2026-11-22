@@ -26,6 +26,8 @@ export interface ClipShape {
   fadeIn: number
   fadeOut: number
   audio: AudioBuffer | null
+  /** Linked with other clips (picked and moved together). */
+  grouped: boolean
 }
 
 /** What the timeline draws for one track lane. */
@@ -83,6 +85,7 @@ export function selectLanes(
         start: c.start,
         offset: c.offset,
         duration: c.duration,
+        grouped: c.group !== undefined,
         fadeIn: c.fadeIn ?? 0,
         fadeOut: c.fadeOut ?? 0,
         audio: bufferFor(audio, processed, track.id, c.file) ?? null

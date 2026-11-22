@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { t } from '@shared/copy'
 import { ClipGestureKind } from '../../state/editing/clipGestures'
 import { ClipShape } from '../../state/song/selectors'
+import { SelectMode, selectMode } from '../../state/editing/trackSelection'
 import { cx } from '../ui/cx'
 import { Tooltip } from '../ui/Tooltip'
 import { Waveform } from './Waveform'
@@ -19,7 +20,8 @@ interface Props {
   height: number
   selected: boolean
   editable: boolean
-  onSelect(): void
+  /** Pressed: on its own, or ⌘/⇧ to add it to the selection. */
+  onSelect(mode: SelectMode): void
   /** `deltaSec` is measured from where the drag began; `free` while ⌥ holds off snapping. */
   onGesture(kind: ClipGestureKind, phase: GesturePhase, deltaSec: number, free: boolean): void
 }
@@ -59,7 +61,7 @@ export function ClipView({
       e.currentTarget.setPointerCapture(e.pointerId)
       const kind = e.currentTarget.dataset.gesture as ClipGestureKind
       drag.current = { kind, x0: e.clientX, moved: false }
-      onSelect()
+      onSelect(selectMode(e))
     },
     onPointerMove: (e) => {
       const d = drag.current
@@ -90,7 +92,13 @@ export function ClipView({
 
   return (
     <div
-      className={cx('clip', `clip-${kind}`, selected && 'selected', editable && 'editable')}
+      className={cx(
+        'clip',
+        `clip-${kind}`,
+        selected && 'selected',
+        editable && 'editable',
+        clip.grouped && 'grouped'
+      )}
       // Runtime geometry: where the clip sits in the visible part of the timeline.
       style={{ left, width }}
       onClick={(e) => {

@@ -19,6 +19,8 @@ export interface Clip {
   fadeOut?: number
   /** Set when the vocals were removed: the song this clip played before (still on disk). */
   withVocals?: string
+  /** Clips sharing a group id are picked, moved, copied and deleted together. */
+  group?: string
 }
 
 export type TrackRole = 'vocal' | 'backing'

@@ -445,3 +445,23 @@
 .zoom-button {
   padding: var(--space-1);
 }
+
+/* Linked clips: a dashed edge says they move together (selected, the accent edge shows). */
+.clip.grouped:not(.selected) {
+  outline: 1px dashed currentColor;
+  outline-offset: calc(-1 * var(--space-1));
+}
+
+/* The box dragged across the timeline to select clips. */
+.select-box {
+  position: fixed;
+  z-index: 3;
+  left: var(--box-left);
+  top: var(--box-top);
+  width: var(--box-width);
+  height: var(--box-height);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  pointer-events: none;
+}

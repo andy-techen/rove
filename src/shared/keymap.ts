@@ -33,6 +33,8 @@ export const KEYMAP = {
   selectAll: { group: 'edit', accelerator: 'CmdOrCtrl+A' },
   split: { group: 'edit', accelerator: 'CmdOrCtrl+T' },
   deleteClip: { group: 'edit', accelerator: 'Backspace' },
+  groupClips: { group: 'edit', accelerator: 'CmdOrCtrl+G' },
+  ungroupClips: { group: 'edit', accelerator: 'CmdOrCtrl+Shift+G' },
   moveTrackUp: { group: 'edit', accelerator: 'CmdOrCtrl+Alt+Up' },
   moveTrackDown: { group: 'edit', accelerator: 'CmdOrCtrl+Alt+Down' },
   deselect: { group: 'edit', accelerator: 'Escape', menu: false },

@@ -7,6 +7,7 @@ const TIPS = [
   'help.tips.headphones',
   'help.tips.punchIn',
   'help.tips.edit',
+  'help.tips.selectClips',
   'help.tips.selectTracks',
   'help.tips.moveTracks',
   'help.tips.sweetSpot',

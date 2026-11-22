@@ -3,6 +3,7 @@ import { t } from '@shared/copy'
 import { ClipGestureKind } from '../../state/editing/clipGestures'
 import { TrackRole, VocalPart, formatDuration } from '../../state/song/project'
 import { indexForSlot } from '../../state/tabs/tabOrder'
+import { ClipRef, clipsInBox, includesClip } from '../../state/editing/clipSets'
 import { useShortcuts } from '../../state/commands/shortcuts'
 import { LaneView } from '../../state/song/selectors'
 import { Button } from '../ui/Button'
@@ -14,7 +15,7 @@ import { TrackHeader } from './TrackHeader'
 import { SnapView } from '../../state/editing/snapping'
 import { formatTick, minorStep } from './timelineMath'
 import { useRevealNewTrack } from './useRevealNewTrack'
-import { SelectMode } from '../../state/editing/trackSelection'
+import { SelectMode, selectMode } from '../../state/editing/trackSelection'
 import { MixChange, TrackMix } from './TrackMix'
 import { LiveWaveform } from './Waveform'
 import { PeakAccumulator } from './timelineMath'
@@ -31,10 +32,7 @@ export interface LiveRecording {
   sampleRate: number
 }
 
-export interface ClipRef {
-  trackId: string
-  clipId: string
-}
+export type { ClipRef }
 
 interface Props {
   tracks: LaneView[]
@@ -60,8 +58,12 @@ interface Props {
   onAddRecordedBacking(): void
   onAddVocal(part: VocalPart): void
   onMix(trackId: string, change: MixChange): void
-  selected: ClipRef | null
-  onSelect(clip: ClipRef | null): void
+  /** Selected clips; the last is the one clicked most recently. */
+  selectedClips: ClipRef[]
+  /** A clip was pressed (null: clicked away); ⌘ or ⇧ adds it to the selection. */
+  onSelect(clip: ClipRef | null, mode: SelectMode): void
+  /** A box was dragged across the timeline: the clips it touches. */
+  onSelectBox(clips: ClipRef[], add: boolean): void
   /** Selected tracks; the last is the one clicked most recently. */
   selectedTrackIds: string[]
   onSelectTrack(trackId: string, mode: SelectMode): void
@@ -87,6 +89,8 @@ interface Props {
 // Small enough for the zoom buttons to sit inside the ruler's row.
 const ZOOM_ICON_SIZE = 14
 const LANE_HEIGHT = 72
+// Pointer travel below this is a click on the timeline, not the start of a box.
+const BOX_THRESHOLD_PX = 4
 // Gap between a clip and the top and bottom of its lane.
 const CLIP_INSET = 6
 const CLIP_HEIGHT = LANE_HEIGHT - CLIP_INSET * 2
@@ -114,8 +118,9 @@ export function Timeline({
   onAddRecordedBacking,
   onAddVocal,
   onMix,
-  selected,
+  selectedClips,
   onSelect,
+  onSelectBox,
   selectedTrackIds,
   onSelectTrack,
   onClipGesture,
@@ -199,7 +204,7 @@ export function Timeline({
     const target = e.target as HTMLElement
     if (target.closest('button, .playhead') || pxPerSec <= 0) return
     onSeek(secAt(e.clientX - e.currentTarget.getBoundingClientRect().left))
-    if (!target.closest('.clip')) onSelect(null)
+    if (!target.closest('.clip')) onSelect(null, 'only')
   }
 
   // The track being dragged by its name, and the gap among its kind it would drop into
@@ -215,6 +220,50 @@ export function Timeline({
     drag && drag.slot !== null && indexForSlot(drag.from, drag.slot) !== drag.from
       ? drag.slot
       : null
+
+  // Dragging across empty timeline space draws a box; the clips it touches are selected.
+  const [box, setBox] = useState<{
+    x0: number
+    y0: number
+    x1: number
+    y1: number
+    areaLeft: number
+    add: boolean
+    moved: boolean
+  } | null>(null)
+  const boxEnded = useRef(false)
+  const boxHandlers = {
+    onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement
+      if (e.button !== 0 || !canEdit || target.closest('.clip, button, .playhead')) return
+      e.currentTarget.setPointerCapture(e.pointerId)
+      const { clientX: x, clientY: y } = e
+      const areaLeft = e.currentTarget.getBoundingClientRect().left
+      setBox({ x0: x, y0: y, x1: x, y1: y, areaLeft, add: selectMode(e) !== 'only', moved: false })
+    },
+    onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!box) return
+      const moved =
+        box.moved || Math.hypot(e.clientX - box.x0, e.clientY - box.y0) >= BOX_THRESHOLD_PX
+      setBox({ ...box, x1: e.clientX, y1: e.clientY, moved })
+    },
+    onPointerUp: () => {
+      if (!box) return
+      setBox(null)
+      if (!box.moved) return
+      boxEnded.current = true
+      const [top, bottom] = [Math.min(box.y0, box.y1), Math.max(box.y0, box.y1)]
+      const lanesUnder = [...(lanesRef.current?.querySelectorAll('[data-track]') ?? [])]
+        .filter((el) => {
+          const r = el.getBoundingClientRect()
+          return r.bottom > top && r.top < bottom
+        })
+        .map((el) => (el as HTMLElement).dataset.track ?? '')
+      const sec = (x: number): number => secAt(x - box.areaLeft)
+      onSelectBox(clipsInBox(tracks, lanesUnder, sec(box.x0), sec(box.x1)), box.add)
+    },
+    onPointerCancel: () => setBox(null)
+  }
 
   const lane = (track: LaneView, index: number, group: LaneView[]): ReactNode => {
     const isRecording = recording?.trackId === track.id
@@ -271,7 +320,13 @@ export function Timeline({
         />
         <div
           className="lane-area seekable"
+          {...boxHandlers}
           onClick={(e) => {
+            // The click that ends a box selection doesn't also seek or pick the lane.
+            if (boxEnded.current) {
+              boxEnded.current = false
+              return
+            }
             seekFromClick(e)
             const target = e.target as HTMLElement
             if (!target.closest('.clip, button, .playhead')) onLaneClick(track.id)
@@ -286,9 +341,9 @@ export function Timeline({
               scrollX={scrollX}
               viewWidth={areaWidth}
               height={CLIP_HEIGHT}
-              selected={selected?.clipId === c.id}
+              selected={includesClip(selectedClips, { trackId: track.id, clipId: c.id })}
               editable={canEdit && !isRecording}
-              onSelect={() => onSelect({ trackId: track.id, clipId: c.id })}
+              onSelect={(mode) => onSelect({ trackId: track.id, clipId: c.id }, mode)}
               onGesture={(kind, phase, delta, free) =>
                 onClipGesture({ trackId: track.id, clipId: c.id }, kind, phase, delta, {
                   toleranceSec: SNAP_PX / pxPerSec,
@@ -371,6 +426,20 @@ export function Timeline({
 
       {/* Only the lanes scroll, so the ruler, scrollbar and polish panel stay put. */}
       <div className="timeline-lanes" ref={lanesRef}>
+        {box?.moved && (
+          <div
+            className="select-box"
+            // Runtime geometry: the box being dragged, in window coordinates.
+            style={
+              {
+                '--box-left': `${Math.min(box.x0, box.x1)}px`,
+                '--box-top': `${Math.min(box.y0, box.y1)}px`,
+                '--box-width': `${Math.abs(box.x1 - box.x0)}px`,
+                '--box-height': `${Math.abs(box.y1 - box.y0)}px`
+              } as CSSProperties
+            }
+          />
+        )}
         {backingTracks.length > 0 ? (
           <>
             {backingTracks.map(lane)}

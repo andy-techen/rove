@@ -83,6 +83,9 @@ export function installMenu(keymap: Keymap): void {
         shortcut('split'),
         shortcut('deleteClip'),
         separator,
+        shortcut('groupClips'),
+        shortcut('ungroupClips'),
+        separator,
         shortcut('moveTrackUp'),
         shortcut('moveTrackDown')
       ]

@@ -6,12 +6,22 @@ import { Command, onCommand, typingIn } from '../../state/commands/commands'
 import { GestureStart, applyClipGesture } from '../../state/editing/clipGestures'
 import { snapGesture } from '../../state/editing/snapping'
 import {
-  Clip,
-  deleteClip,
+  CopiedClips,
+  anyGrouped,
+  copyClips,
+  deleteClips,
+  groupClips,
+  includesClip,
+  moveClips,
+  pasteClips,
+  pickClip,
+  ungroupClips,
+  withGroupmates
+} from '../../state/editing/clipSets'
+import {
   moveTrack,
   withTrackName,
   findClip,
-  pasteClip,
   polishOf,
   splitClip,
   withTrackChanges,
@@ -123,7 +133,8 @@ export function RecordScreen({
     metronome: { grid, level: open && musicOf(open.data).clickOn ? musicOf(open.data).click : 0 }
   })
   const { mode, position, live } = transport
-  const [selected, setSelected] = useState<ClipRef | null>(null)
+  // Selected clips, the most recently clicked last: split and navigation follow it.
+  const [selection, setSelection] = useState<ClipRef[]>([])
   // Selected tracks, most recently clicked last: polish, paste and navigation follow it.
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([])
   const selectedTrackId = selectedTrackIds.at(-1) ?? null
@@ -132,7 +143,7 @@ export function RecordScreen({
   const [deleteFocus, setDeleteFocus] = useState<DeleteFocus>(null)
   const exporter = useExport(song)
   const [exportOpen, setExportOpen] = useState(false)
-  const gesture = useRef<(GestureStart & { key: string }) | null>(null)
+  const gesture = useRef<(GestureStart & { key: string; together: ClipRef[] }) | null>(null)
   const gestureCount = useRef(0)
 
   const name = open?.data.name
@@ -148,8 +159,13 @@ export function RecordScreen({
 
   const idle = mode === 'idle'
   const canEdit = (idle || mode === 'playing') && !busy && !!open
+  // Clips can vanish under the selection (undo, a punch-in); only those still there count.
+  const selectedClips = open
+    ? selection.filter((ref) => findClip(open.data, ref.trackId, ref.clipId))
+    : []
+  const selected = selectedClips.at(-1) ?? null
   const selectedClip =
-    open && selected ? findClip(open.data, selected.trackId, selected.clipId) : undefined
+    selected && open ? findClip(open.data, selected.trackId, selected.clipId) : undefined
   const canSplit = canEdit && canSplitAt(selectedClip, position)
   const canRecord =
     hasMusicChoice(open?.data, skipBacking) &&
@@ -175,7 +191,7 @@ export function RecordScreen({
   const removeTracks = (removed: string[]): void => {
     if (!open || !canEdit) return
     song.edit(withoutTracks(open.data, removed))
-    if (selected && removed.includes(selected.trackId)) setSelected(null)
+    setSelection((refs) => refs.filter((ref) => !removed.includes(ref.trackId)))
     setSelectedTrackIds((ids) => ids.filter((id) => !removed.includes(id)))
     setDeleteFocus(null)
   }
@@ -184,30 +200,34 @@ export function RecordScreen({
     if (!open || !deletion) return
     if (deletion.kind === 'tracks') return removeTracks(deletion.trackIds)
     if (!canEdit) return
-    song.edit(deleteClip(open.data, deletion.clip.trackId, deletion.clip.clipId))
-    setSelected(null)
+    song.edit(deleteClips(open.data, selectedClips))
+    setSelection([])
     setDeleteFocus(null)
   }
 
   // Copied clips stay within this song, whose folder holds the audio they point at.
-  const [clipboard, setClipboard] = useState<{
-    trackId: string
-    clip: Omit<Clip, 'id' | 'start'>
-  } | null>(null)
+  const [clipboard, setClipboard] = useState<CopiedClips | null>(null)
   const copy = (): void => {
-    if (!selected || !selectedClip) return
-    const { file, offset, duration, fadeIn, fadeOut } = selectedClip
-    setClipboard({ trackId: selected.trackId, clip: { file, offset, duration, fadeIn, fadeOut } })
+    if (open && selectedClips.length) setClipboard(copyClips(open.data, selectedClips))
   }
   const paste = (): void => {
     if (!open || !clipboard || !canEdit) return
-    const trackId = pasteTarget(open.data, clipboard.trackId, selectedTrackId)
-    const { clip } = clipboard
-    const pasted = pasteClip(open.data, trackId, clip, position)
-    song.edit(pasted.project)
-    setSelected({ trackId, clipId: pasted.clipId })
+    const from = clipboard.items[0].trackId
+    const target = pasteTarget(open.data, from, selectedTrackId)
+    const { project, pasted } = pasteClips(open.data, clipboard, position, target)
+    song.edit(project)
+    setSelection(pasted)
+    setDeleteFocus('clip')
     // Landing at the end of the paste means pasting again lays copies end to end.
-    transport.seek(position + clip.duration)
+    const span = Math.max(...clipboard.items.map((i) => i.at + i.clip.duration))
+    transport.seek(position + span)
+  }
+  const group = (): void => {
+    if (open && canEdit && selectedClips.length > 1) song.edit(groupClips(open.data, selectedClips))
+  }
+  const ungroup = (): void => {
+    if (open && canEdit && anyGrouped(open.data, selectedClips))
+      song.edit(ungroupClips(open.data, selectedClips))
   }
   const moveTrackTo = (trackId: string, to: number): void => {
     if (open && canEdit) song.edit(moveTrack(open.data, trackId, to))
@@ -267,6 +287,12 @@ export function RecordScreen({
       case 'deleteClip':
         remove()
         break
+      case 'groupClips':
+        group()
+        break
+      case 'ungroupClips':
+        ungroup()
+        break
       case 'moveTrackUp':
         nudgeTrack(-1)
         break
@@ -274,13 +300,13 @@ export function RecordScreen({
         nudgeTrack(1)
         break
       case 'deselect':
-        setSelected(null)
+        setSelection([])
         setSelectedTrackIds([])
         setDeleteFocus(null)
         break
       case 'selectAll':
         if (!open) break
-        setSelected(null)
+        setSelection([])
         setSelectedTrackIds(open.data.tracks.map((track) => track.id))
         setDeleteFocus('tracks')
         break
@@ -425,18 +451,28 @@ export function RecordScreen({
               // A slider drag is one undo step; each mute click is its own.
               song.edit(next, field === 'muted' ? undefined : `mix:${trackId}:${field}`)
             }}
-            selected={selectedClip ? selected : null}
-            onSelect={(clip) => {
-              setSelected(clip)
-              if (!clip) return
+            selectedClips={selectedClips}
+            onSelect={(clip, how) => {
+              if (!clip || !open) return setSelection([])
+              // Pressing a clip that's already selected keeps the selection, so it can be
+              // dragged together; ⌘ or ⇧ adds or removes clips.
+              if (!(how === 'only' && includesClip(selectedClips, clip)))
+                setSelection(pickClip(open.data, selectedClips, clip, how))
               setSelectedTrackIds([clip.trackId])
               setDeleteFocus('clip')
+            }}
+            onSelectBox={(clips, add) => {
+              if (!open) return
+              const picked = withGroupmates(open.data, clips)
+              const kept = add ? selectedClips.filter((r) => !includesClip(picked, r)) : []
+              setSelection([...kept, ...picked])
+              setDeleteFocus(picked.length || kept.length ? 'clip' : null)
             }}
             selectedTrackIds={
               selectedTrackIds.length ? selectedTrackIds : polishTrack ? [polishTrack.id] : []
             }
             onSelectTrack={(trackId, mode) => {
-              setSelected(null)
+              setSelection([])
               setDeleteFocus('tracks')
               setSelectedTrackIds((ids) =>
                 selectTracks(
@@ -463,7 +499,13 @@ export function RecordScreen({
               if (phase === 'start') {
                 const clip = findClip(open.data, ref.trackId, ref.clipId)
                 if (!clip) return
+                // Dragging one of several selected clips moves them all.
+                const together =
+                  kind === 'move' && selectedClips.length > 1 && includesClip(selectedClips, ref)
+                    ? selectedClips
+                    : []
                 gesture.current = {
+                  together,
                   base: open.data,
                   trackId: ref.trackId,
                   clip,
@@ -478,7 +520,10 @@ export function RecordScreen({
               const g = gesture.current
               if (!g) return
               const snapped = snapGesture(g, kind, delta, snap)
-              song.edit(applyClipGesture(g, kind, snapped.deltaSec), g.key)
+              const next = g.together.length
+                ? moveClips(g.base, g.together, snapped.deltaSec)
+                : applyClipGesture(g, kind, snapped.deltaSec)
+              song.edit(next, g.key)
               setSnapAt(phase === 'end' ? null : snapped.at)
               if (phase === 'end') gesture.current = null
             }}
