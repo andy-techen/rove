@@ -485,11 +485,18 @@
   pointer-events: none;
 }
 
-/* Clips being dragged to another lane float with the pointer until they're dropped. */
+/* Clips being dragged to another lane glide into the lane they'd drop into. */
 .clip.lifted {
   z-index: 4;
   transform: translateY(var(--lift-y));
   box-shadow: var(--shadow-raised);
+  transition: transform var(--duration-fast) ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clip.lifted {
+    transition: none;
+  }
 }
 
 .clip.lifted.joined-before,

@@ -3,7 +3,14 @@ import { t } from '@shared/copy'
 import { ClipGestureKind } from '../../state/editing/clipGestures'
 import { TrackRole, VocalPart, formatDuration } from '../../state/song/project'
 import { indexForSlot } from '../../state/tabs/tabOrder'
-import { ClipRef, clipsInBox, includesClip } from '../../state/editing/clipSets'
+import {
+  ClipRef,
+  clipsInBox,
+  includesClip,
+  fittingShift,
+  laneShiftTo,
+  shiftLanes
+} from '../../state/editing/clipSets'
 import { useShortcuts } from '../../state/commands/shortcuts'
 import { LaneView } from '../../state/song/selectors'
 import { MenuTarget } from '../../state/commands/contextMenu'
@@ -272,10 +279,12 @@ export function Timeline({
     onPointerCancel: () => setBox(null)
   }
 
-  // While clips are dragged, they follow the pointer up and down (this far, in px) and
-  // drop into the lane under it when let go.
-  const [lift, setLift] = useState<{ y0: number; dy: number } | null>(null)
-  const liftY = lift?.dy ?? null
+  // Clips dragged up or down lift into the lane they'd drop into, this far away in px.
+  const [liftY, setLiftY] = useState<number | null>(null)
+  const laneTop = (trackId: string): number =>
+    lanesRef.current
+      ?.querySelector(`[data-track="${CSS.escape(trackId)}"]`)
+      ?.getBoundingClientRect().top ?? 0
   const clipGesture = (
     clip: ClipRef,
     kind: ClipGestureKind,
@@ -284,10 +293,18 @@ export function Timeline({
     free: boolean,
     clientY: number
   ): void => {
+    // The lane the clips would drop into: the nearest of their kind to the pointer, as
+    // far as every dragged clip can go.
+    let target = clip.trackId
+    if (kind === 'move' && phase !== 'start') {
+      const wanted = laneShiftTo({ tracks }, clip.trackId, nearestLaneOfKind(clip.trackId, clientY))
+      const shift = fittingShift({ tracks }, selectedClips, wanted ?? 0)
+      target = shiftLanes({ tracks }, [clip], shift)?.[0].trackId ?? clip.trackId
+    }
     if (kind === 'move') {
-      if (phase === 'start') setLift({ y0: clientY, dy: 0 })
-      else if (phase === 'move') setLift((l) => l && { ...l, dy: clientY - l.y0 })
-      else setLift(null)
+      if (phase === 'start') setLiftY(0)
+      else if (phase === 'end') setLiftY(null)
+      else setLiftY(laneTop(target) - laneTop(clip.trackId))
     }
     onClipGesture(
       clip,
@@ -300,18 +317,24 @@ export function Timeline({
         playheadSec: position,
         free
       },
-      trackAt(clientY)
+      target
     )
   }
 
-  /** The track whose lane spans this height on screen, if any. */
-  const trackAt = (clientY: number): string | null => {
-    const lanes = [...(lanesRef.current?.querySelectorAll<HTMLElement>('[data-track]') ?? [])]
-    const over = lanes.find((el) => {
-      const r = el.getBoundingClientRect()
-      return clientY >= r.top && clientY < r.bottom
-    })
-    return over?.dataset.track ?? null
+  /** The lane of the same kind as `trackId` closest to this height on screen. */
+  const nearestLaneOfKind = (trackId: string, clientY: number): string | null => {
+    const role = tracks.find((t) => t.id === trackId)?.role
+    let nearest: string | null = null
+    let best = Infinity
+    for (const track of tracks.filter((t) => t.role === role)) {
+      const r = lanesRef.current
+        ?.querySelector(`[data-track="${CSS.escape(track.id)}"]`)
+        ?.getBoundingClientRect()
+      if (!r) continue
+      const away = Math.max(r.top - clientY, clientY - r.bottom, 0)
+      if (away < best) [nearest, best] = [track.id, away]
+    }
+    return nearest
   }
 
   const lane = (track: LaneView, index: number, group: LaneView[]): ReactNode => {

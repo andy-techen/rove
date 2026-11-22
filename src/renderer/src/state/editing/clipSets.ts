@@ -1,7 +1,10 @@
 // Working with several clips at once: selecting them, grouping them, and moving, deleting,
 // copying or pasting them together. Grouped clips stay separate clips (their audio and
 // windows are untouched); they only share a group id, so they're picked and moved as one.
-import { Clip, MIN_CLIP_SEC, Project, insertClip, splitClip } from '../song/project'
+import { Clip, MIN_CLIP_SEC, Project, TrackRole, insertClip, splitClip } from '../song/project'
+
+/** The tracks in order with their kinds: a project, or the lanes the timeline shows. */
+type Lanes = { tracks: { id: string; role: TrackRole }[] }
 
 export interface ClipRef {
   trackId: string
@@ -70,7 +73,7 @@ export function ungroupClips(project: Project, refs: ClipRef[]): Project {
 
 /** How many lanes apart two tracks of the same kind are; null for another kind or none. */
 export function laneShiftTo(
-  project: Project,
+  project: Lanes,
   fromTrackId: string,
   toTrackId: string | null
 ): number | null {
@@ -85,7 +88,7 @@ export function laneShiftTo(
  * Where each clip lands when dragged `shift` lanes down (up when negative), staying among
  * tracks of its own kind; null when any would go past the last of them.
  */
-export function shiftLanes(project: Project, refs: ClipRef[], shift: number): ClipRef[] | null {
+export function shiftLanes(project: Lanes, refs: ClipRef[], shift: number): ClipRef[] | null {
   if (shift === 0) return refs
   const shifted: ClipRef[] = []
   for (const ref of refs) {
@@ -96,6 +99,13 @@ export function shiftLanes(project: Project, refs: ClipRef[], shift: number): Cl
     shifted.push({ trackId: target.id, clipId: ref.clipId })
   }
   return shifted
+}
+
+/** The shift nearest `wanted` (towards no shift) that keeps every clip on a track of its kind. */
+export function fittingShift(project: Lanes, refs: ClipRef[], wanted: number): number {
+  let shift = wanted
+  while (shift !== 0 && !shiftLanes(project, refs, shift)) shift -= Math.sign(shift)
+  return shift
 }
 
 /**

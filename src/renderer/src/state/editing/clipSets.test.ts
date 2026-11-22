@@ -8,6 +8,7 @@ import {
   copyClips,
   deleteClips,
   groupClips,
+  fittingShift,
   isOneGroup,
   moveClips,
   pasteClips,
@@ -127,6 +128,12 @@ describe('moveClips', () => {
     const backing = withNewTrack(p, 'backing')
     expect(laneShiftTo(p, v1, v2)).toBe(1)
     expect(laneShiftTo(backing.project, v1, backing.track.id)).toBeNull()
+  })
+
+  it('drags only as far as every clip can go', () => {
+    const { p, a, c } = song()
+    expect(fittingShift(p, [a], 3)).toBe(1)
+    expect(fittingShift(p, [a, c], 1)).toBe(0)
   })
 
   it('keeps clips in their lanes when one would go past the last track', () => {

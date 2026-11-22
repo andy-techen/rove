@@ -583,8 +583,8 @@ export function RecordScreen({
               if (!g.together.length) {
                 song.edit(applyClipGesture(g, kind, snapped.deltaSec), g.key)
               } else {
-                // The clips float with the pointer and drop into the lane under it at the
-                // end; over a lane of another kind (or the ruler), into the last that fit.
+                // The timeline shows the clips lifted into the lane they'd drop into;
+                // they move there when the drag ends.
                 const shift = laneShiftTo(g.base, g.trackId, overTrackId)
                 if (shift !== null && shiftLanes(g.base, g.together, shift)) g.laneShift = shift
                 const lanes = phase === 'end' ? g.laneShift : 0

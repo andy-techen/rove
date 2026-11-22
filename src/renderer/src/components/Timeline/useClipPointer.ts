@@ -38,7 +38,8 @@ export function useClipPointer(
       if (!d || d.kind !== e.currentTarget.dataset.gesture) return
       const dx = e.clientX - d.x0
       if (!d.moved) {
-        if (Math.abs(dx) < DRAG_THRESHOLD_PX) return
+        // Up or down counts too: a clip can be dragged straight into another lane.
+        if (Math.hypot(dx, e.clientY - d.y0) < DRAG_THRESHOLD_PX) return
         d.moved = true
         onGesture(d.kind, 'start', 0, e.altKey, e.clientY)
       }
