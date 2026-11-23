@@ -6,12 +6,28 @@ import { hzToMidi } from '../pitch/pitch'
 import { downsampleForAnalysis, nextTick } from '../dsp/resample'
 import { dbToGain } from '../dsp/units'
 
-export type ChordQuality = 'major' | 'minor'
+/** The kinds of chord a chart can hold, in the order the chord picker lists them. */
+export const CHORD_QUALITIES = ['major', 'minor', '7', 'maj7', 'm7', 'sus2', 'sus4', 'dim'] as const
+export type ChordQuality = (typeof CHORD_QUALITIES)[number]
 
 /** A chord by its root (pitch class, 0 = C) and quality. */
 export interface Chord {
   root: number
   quality: ChordQuality
+  /** A slash chord's bass note (pitch class), when it isn't the root: "C/E". */
+  bass?: number
+}
+
+/** Each kind of chord's notes, in semitones above its root. */
+export const CHORD_TONES: Record<ChordQuality, number[]> = {
+  major: [0, 4, 7],
+  minor: [0, 3, 7],
+  '7': [0, 4, 7, 10],
+  maj7: [0, 4, 7, 11],
+  m7: [0, 3, 7, 10],
+  sus2: [0, 2, 7],
+  sus4: [0, 5, 7],
+  dim: [0, 3, 6]
 }
 
 /** A stretch of a recording and the chord heard in it (null: no chord, or silence). */
@@ -37,11 +53,6 @@ const CHANGE_COST = 0.12
 const NO_CHORD_SCORE = 0.55
 const FRAMES_PER_CHUNK = 200
 
-const INTERVALS: Record<ChordQuality, number[]> = {
-  major: [0, 4, 7],
-  minor: [0, 3, 7]
-}
-
 const CHORDS: Chord[] = (['major', 'minor'] as const).flatMap((quality) =>
   Array.from({ length: PITCH_CLASSES }, (_, root) => ({ root, quality }))
 )
@@ -49,8 +60,8 @@ const CHORDS: Chord[] = (['major', 'minor'] as const).flatMap((quality) =>
 /** A chord's notes as a unit-length pitch-class vector. */
 const TEMPLATES = CHORDS.map(({ root, quality }) => {
   const v = new Array<number>(PITCH_CLASSES).fill(0)
-  for (const step of INTERVALS[quality]) v[(root + step) % PITCH_CLASSES] = 1
-  const norm = Math.sqrt(INTERVALS[quality].length)
+  for (const step of CHORD_TONES[quality]) v[(root + step) % PITCH_CLASSES] = 1
+  const norm = Math.sqrt(CHORD_TONES[quality].length)
   return v.map((x) => x / norm)
 })
 

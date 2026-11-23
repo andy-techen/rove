@@ -11,6 +11,7 @@ import { TrackRole, withRecordedClip } from '../song/project'
 import { playbackKey, trackMixes } from '../song/selectors'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
 import { Song } from '../song/useSong'
+import { ChordPart } from '../chords/chart'
 import { ClickGrid, clickTimes, countInSec, countInTicks } from './metronome'
 
 export type Mode = 'idle' | 'playing' | 'recording' | 'saving'
@@ -98,9 +99,17 @@ export function useTransport(
   {
     latencySec,
     processed,
+    parts,
     waiting,
     metronome
-  }: { latencySec: number; processed: ProcessedAudio; waiting: boolean; metronome: Metronome }
+  }: {
+    latencySec: number
+    processed: ProcessedAudio
+    /** What the chords track plays, rendered. */
+    parts: ChordPart[]
+    waiting: boolean
+    metronome: Metronome
+  }
 ): Transport {
   const { song: open, audio } = song
   const [mixer, setMixer] = useState<Mixer | null>(null)
@@ -228,11 +237,28 @@ export function useTransport(
             })
           )
 
+  /** The chords track's sound, as the one clip it plays. */
+  const chordClips = (): ScheduledClip[] =>
+    !mixer
+      ? []
+      : parts.map((part) => ({
+          buffer: part.buffer,
+          output: mixer.input(part.trackId),
+          start: part.start,
+          offset: 0,
+          duration: part.buffer.duration
+        }))
+
   const startPlayback = async (fromSec: number): Promise<void> => {
     const ctx = getAudioContext()
     await ctx.resume()
     const startAt = ctx.currentTime + PLAY_LEAD_SEC
-    const nodes = scheduleClips(ctx, [...clipsOf('backing'), ...clipsOf('vocal')], fromSec, startAt)
+    const nodes = scheduleClips(
+      ctx,
+      [...clipsOf('backing'), ...chordClips(), ...clipsOf('vocal')],
+      fromSec,
+      startAt
+    )
     if (nodes.length === 0) {
       setPosition(fromSec)
       setMode('idle')
@@ -309,7 +335,12 @@ export function useTransport(
     const startAt = ctx.currentTime + START_LEAD_SEC + countIn
     // The singer hears the music plus every other vocal, for layering harmonies; the
     // track being recorded (vocal or backing) stays silent so it isn't sung over twice.
-    const backingNodes = scheduleClips(ctx, clipsOf('backing', trackId), fromSec, startAt)
+    const backingNodes = scheduleClips(
+      ctx,
+      [...clipsOf('backing', trackId), ...chordClips()],
+      fromSec,
+      startAt
+    )
     const vocalNodes = scheduleClips(ctx, clipsOf('vocal', trackId), fromSec, startAt)
     // When the music runs out, so does the take.
     onAllEnded(backingNodes, () => onEndedRef.current())
@@ -361,6 +392,14 @@ export function useTransport(
     restartRef.current()
   }, [processed])
 
+  // New chords (or the chords at a new speed or key) are heard straight away too.
+  const playingChords = useRef(parts)
+  useEffect(() => {
+    if (playingChords.current === parts) return
+    playingChords.current = parts
+    restartRef.current()
+  }, [parts])
+
   // A clip moved, trimmed, split or deleted, or a track removed, while playing: playback
   // picks up from the same spot with the song as it is now.
   const lineUp = project ? playbackKey(project) : ''
@@ -373,7 +412,8 @@ export function useTransport(
     return () => clearTimeout(timer)
   }, [lineUp, mode])
 
-  const hasAudio = (tracks ?? []).some((t) => t.clips.some((c) => audio[c.file]))
+  const hasAudio =
+    parts.length > 0 || (tracks ?? []).some((t) => t.clips.some((c) => audio[c.file]))
 
   return {
     mode,

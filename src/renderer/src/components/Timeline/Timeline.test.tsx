@@ -37,6 +37,7 @@ function timelineProps(overrides: Partial<Parameters<typeof Timeline>[0]> = {}) 
     onRecordWithoutMusic: vi.fn(),
     onAddBacking: vi.fn(),
     onAddRecordedBacking: vi.fn(),
+    onAddChords: vi.fn(),
     onAddVocal: vi.fn(),
     onMix: vi.fn(),
     selectedClips: [],
@@ -311,5 +312,28 @@ describe('Timeline', () => {
     fireEvent.scroll(bar)
     act(() => (window.api as ReturnType<typeof createFakeApi>).fireMenu('toPlayhead'))
     expect(screen.getByText('0:10')).toBeInTheDocument()
+  })
+
+  it('offers to play chords when the song has no music yet', async () => {
+    const props = renderTimeline()
+    await userEvent.click(screen.getByRole('button', { name: t('timeline.playChords') }))
+    expect(props.onAddChords).toHaveBeenCalled()
+  })
+
+  it('shows the chords on a chords lane, which plays rather than records', () => {
+    const chordsLane = lane({
+      id: 'k1',
+      role: 'chords',
+      name: 'Chords',
+      chords: [
+        { start: 0, end: 2, name: 'C' },
+        { start: 2, end: 4, name: 'Am' }
+      ]
+    })
+    renderTimeline({ tracks: [chordsLane, lane({})] })
+    expect(screen.getByText('Am')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: t('track.record', { name: 'Chords' }) })
+    ).toBeDisabled()
   })
 })

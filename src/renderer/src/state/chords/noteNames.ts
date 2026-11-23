@@ -5,13 +5,18 @@ import { SongKey } from '../../audio/pitch/key'
 // One string in the copy file, so translators see the note names together.
 const noteNames = (): string[] => t('tuning.noteNames').split(' ')
 
+/** "C♯", "B♭": a pitch class (0 = C) as Rove spells it. */
+export const noteName = (pitchClass: number): string => noteNames()[pitchClass]
+
 /** "A minor". */
 export function keyName(key: SongKey): string {
   return t('tuning.keyName', { note: noteNames()[key.tonic], mode: t(`tuning.${key.mode}`) })
 }
 
-/** "Am", "F", as chord sheets write them. */
+/** "Am", "F", "G7", "C/E", as chord sheets write them. */
 export function chordName(chord: Chord): string {
-  const root = noteNames()[chord.root]
-  return chord.quality === 'minor' ? t('chords.minorName', { root }) : root
+  const name = t(`chords.kinds.${chord.quality}`, { root: noteName(chord.root) })
+  return chord.bass === undefined || chord.bass === chord.root
+    ? name
+    : t('chords.slash', { chord: name, bass: noteName(chord.bass) })
 }

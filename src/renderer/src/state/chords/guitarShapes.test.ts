@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { CHORD_QUALITIES, CHORD_TONES } from '../../audio/music/chords'
 import { fretsOf, gripOf } from './guitarShapes'
 
 describe('gripOf', () => {
@@ -58,6 +59,24 @@ describe('fretsOf', () => {
         const classes = new Set(notes.map((n) => n % 12))
         const expected = new Set(STEPS[quality].map((step) => (root + step) % 12))
         expect([...classes].sort()).toEqual([...expected].sort())
+        expect(Math.min(...notes) % 12).toBe(root)
+      }
+    }
+  })
+
+  it('plays every other kind of chord on every root, root in the bass', () => {
+    for (const quality of CHORD_QUALITIES) {
+      for (let root = 0; root < 12; root++) {
+        const notes = fretsOf({ root, quality }).flatMap((fret, s) =>
+          fret < 0 ? [] : [OPEN_STRINGS[s] + fret]
+        )
+        const tones = CHORD_TONES[quality].map((step) => (root + step) % 12)
+        const classes = new Set(notes.map((n) => n % 12))
+        // Every note belongs to the chord; only a plain fifth may be left out, as
+        // guitarists do in shapes like C7 (x32310).
+        expect([...classes].every((c) => tones.includes(c))).toBe(true)
+        const fifth = (root + 7) % 12
+        expect(tones.filter((c) => c !== fifth).every((c) => classes.has(c))).toBe(true)
         expect(Math.min(...notes) % 12).toBe(root)
       }
     }

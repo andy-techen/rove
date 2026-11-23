@@ -36,12 +36,15 @@ interface Props {
   /** Back to the original speed, key and tone. */
   onReset(): void
   onHide(): void
-  vocals: VocalsState
-  /** Why removing the vocals last failed, if it did. */
-  vocalsError?: string | null
-  onRemoveVocals(): void
-  onCancelRemoveVocals(): void
-  onPutVocalsBack(): void
+  /** Removing the vocals, for music from a file; the chords track has none to remove. */
+  vocals?: {
+    state: VocalsState
+    /** Why removing the vocals last failed, if it did. */
+    error?: string | null
+    onRemove(): void
+    onCancel(): void
+    onPutBack(): void
+  }
 }
 
 type ToneField = 'bassDb' | 'brightnessDb'
@@ -63,11 +66,7 @@ export function MusicPanel({
   canClick,
   onReset,
   onHide,
-  vocals,
-  vocalsError,
-  onRemoveVocals,
-  onCancelRemoveVocals,
-  onPutVocalsBack
+  vocals
 }: Props): React.JSX.Element {
   const changed =
     music.speed !== 1 || music.semitones !== 0 || music.bassDb !== 0 || music.brightnessDb !== 0
@@ -115,13 +114,15 @@ export function MusicPanel({
       onHide={onHide}
       actions={
         <>
-          <VocalsControl
-            vocals={vocals}
-            locked={locked}
-            onRemove={onRemoveVocals}
-            onCancel={onCancelRemoveVocals}
-            onPutBack={onPutVocalsBack}
-          />
+          {vocals && (
+            <VocalsControl
+              vocals={vocals.state}
+              locked={locked}
+              onRemove={vocals.onRemove}
+              onCancel={vocals.onCancel}
+              onPutBack={vocals.onPutBack}
+            />
+          )}
           <IconButton
             icon="reset"
             label={t('music.reset')}
@@ -218,9 +219,9 @@ export function MusicPanel({
           }}
         />
       </KnobRow>
-      {vocalsError && (
+      {vocals?.error && (
         <p className="music-vocals-error" role="alert">
-          {vocalsError}
+          {vocals.error}
         </p>
       )}
     </Panel>

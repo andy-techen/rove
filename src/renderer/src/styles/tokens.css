@@ -90,6 +90,7 @@
   --size-splitter: 8px;
   --size-scrollbar: 10px;
   --size-drop-marker: 2px;
+  --size-hairline: 1px;
   --size-logo-icon-sm: 16px;
   --size-logo-word-sm: 11px;
   --size-logo-icon-lg: 56px;
@@ -140,6 +141,9 @@
   --layout-lyrics: 320px;
   --layout-chord: 64px;
   --layout-grip: 64px;
+  --layout-chord-chip: 56px;
+  --layout-chart-bar: 44px;
+  --layout-chart-tempo: 72px;
   --letter-spacing-caps: 0.04em;
 
   /* Motion and emphasis. */

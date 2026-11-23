@@ -321,6 +321,22 @@
   color: var(--color-wave-vocal);
 }
 
+.chord-block {
+  background: var(--color-clip-backing);
+  color: var(--color-text);
+  /* A hairline between chords that meet, so each change reads as its own block. */
+  box-shadow: inset calc(-1 * var(--size-hairline)) 0 0 var(--color-bg);
+  padding: 0 var(--space-3);
+}
+
+.chord-block-name {
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .clip-recording {
   background: var(--color-danger-wash);
   color: var(--color-danger);

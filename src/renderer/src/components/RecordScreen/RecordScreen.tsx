@@ -39,7 +39,12 @@ import {
   withMusicTone,
   withLyrics,
   withTrackPolish,
-  withoutTracks
+  withoutTracks,
+  chordsTrackOf,
+  withChartBars,
+  withChartBeats,
+  withChartTempo,
+  withChordBacking
 } from '../../state/song/project'
 import {
   canExportSong,
@@ -64,6 +69,11 @@ import { useVocalRemoval } from '../../state/processing/useVocalRemoval'
 import { useSongKey } from '../../state/processing/songKey'
 import { useBeat } from '../../state/transport/useBeat'
 import { useChords } from '../../state/chords/useChords'
+import { useChordBacking } from '../../state/chords/useChordBacking'
+import { chartClickGrid, chartTimeline, transposeChord } from '../../state/chords/chart'
+import { chordsInKey, keyOfChart } from '../../state/chords/keyChords'
+import { previewChord } from '../../state/chords/preview'
+import { transposeKey } from '../../audio/pitch/key'
 import { PANEL_MIN_HEIGHT, SIDE_WIDTH, useSidePanelSize } from '../../state/ui/sidePanels'
 import { useElementHeight } from '../../state/ui/useElementHeight'
 import { clickGrid } from '../../state/transport/metronome'
@@ -118,12 +128,23 @@ export function RecordScreen({
   const songKey = useSongKey(open?.data, audio)
   const { processed, waiting } = useProcessedAudio(open?.data, audio, songKey)
   const { beat, file: beatFile } = useBeat(open?.data, audio)
-  const grid = open && beatFile ? clickGrid(open.data, beatFile, beat) : null
+  const chordBacking = useChordBacking(open?.data)
+  const chart = open?.data.chart ?? null
+  const chartLine = open ? chartTimeline(open.data) : null
+  const playsChords = !!open && !!chordsTrackOf(open.data)
+  // A chords track keeps time with its chart, which knows where every bar starts.
+  const grid =
+    playsChords && chartLine
+      ? chartClickGrid(chartLine)
+      : open && beatFile
+        ? clickGrid(open.data, beatFile, beat)
+        : null
   // Null until the singer chooses: then lyrics show whenever the song has some.
   const [snapAt, setSnapAt] = useState<number | null>(null)
   const [lyricsChoice, setLyricsChoice] = useState<boolean | null>(null)
   const lyricsOpen = lyricsChoice ?? !!open?.data.lyrics
   const [chordsOpen, setChordsOpen] = useState(false)
+  const [chordsEditing, setChordsEditing] = useState(false)
   const panels = useSidePanelSize()
   const sideRef = useRef<HTMLDivElement>(null)
   const sideHeight = useElementHeight(sideRef)
@@ -136,7 +157,8 @@ export function RecordScreen({
   const transport = useTransport(song, mic.source, {
     latencySec: mic.latencySec,
     processed,
-    waiting,
+    parts: chordBacking.parts,
+    waiting: waiting || chordBacking.waiting,
     metronome: { grid, level: open && musicOf(open.data).clickOn ? musicOf(open.data).click : 0 }
   })
   const { mode, position, live } = transport
@@ -149,7 +171,7 @@ export function RecordScreen({
   const [renamingTrackId, setRenamingTrackId] = useState<string | null>(null)
   // Whether Delete acts on the clicked clip or the selected tracks.
   const [deleteFocus, setDeleteFocus] = useState<DeleteFocus>(null)
-  const exporter = useExport(song)
+  const exporter = useExport(song, chordBacking.parts)
   const [exportOpen, setExportOpen] = useState(false)
   const gesture = useRef<
     (GestureStart & { key: string; together: ClipRef[]; laneShift: number }) | null
@@ -185,13 +207,40 @@ export function RecordScreen({
     !busy &&
     !waiting
 
-  const canExport = canEdit && canExportSong(open?.data)
+  const canExport = canEdit && canExportSong(open?.data) && !chordBacking.waiting
   const openExport = (): void => {
     if (!canExport) return
     // A finished export's result makes way for the next one.
     if (exporter.state.status !== 'working') exporter.reset()
     setExportOpen(true)
   }
+
+  // The key the chart is written in: the music's (before Key moved it), else the key
+  // its chords suggest. Picking chords offers the ones that fit it.
+  const chartKey = open
+    ? songKey
+      ? transposeKey(songKey, -musicOf(open.data).semitones)
+      : keyOfChart(chart?.bars ?? [])
+    : null
+  const suggestions = chartKey
+    ? { label: t('chords.inKey'), chords: chordsInKey(chartKey) }
+    : { label: t('chords.startWith'), chords: chordsInKey({ tonic: 0, mode: 'major' }) }
+
+  /** Starts the chords: a chart to write them in and a track to play them, both shown. */
+  const startChords = (): void => {
+    if (!open || !canEdit) return
+    const next = withChordBacking(open.data, suggestions.chords[0])
+    song.edit(next)
+    const track = chordsTrackOf(next)
+    if (track) setSelectedTrackIds([track.id])
+    setChordsOpen(true)
+    setChordsEditing(true)
+  }
+  const barSec = chartLine ? chartLine.secPerBeat * chartLine.beatsPerBar : 0
+  const playingBar =
+    chartLine && position >= chartLine.startSec && position < chartLine.endSec
+      ? Math.floor((position - chartLine.startSec) / barSec)
+      : -1
 
   const split = (): void => {
     if (open && canSplit) song.edit(splitClips(open.data, selectedClips, position))
@@ -505,6 +554,7 @@ export function RecordScreen({
             onRecordWithoutMusic={song.recordWithoutMusic}
             onAddBacking={song.addBackingTrack}
             onAddRecordedBacking={() => void song.addRecordedBacking()}
+            onAddChords={startChords}
             onAddVocal={song.addVocalTrack}
             onMix={(trackId, change) => {
               if (!open) return
@@ -612,11 +662,11 @@ export function RecordScreen({
             }}
           />
 
-          {panelShown && polishTrack?.role === 'backing' && open && (
+          {panelShown && polishTrack && polishTrack.role !== 'vocal' && open && (
             <MusicPanel
               trackName={polishTrack.name}
               music={musicOf(open.data)}
-              bpm={beat?.bpm ?? null}
+              bpm={polishTrack.role === 'chords' ? (chart?.bpm ?? null) : (beat?.bpm ?? null)}
               songKey={songKey}
               locked={!canEdit}
               onSpeed={(speed, key) => song.edit(withMusicSpeed(open.data, speed), key)}
@@ -625,11 +675,17 @@ export function RecordScreen({
               onClick={(level, key) => song.edit(withClick(open.data, level), key)}
               onClickOn={(on) => song.edit(withClickOn(open.data, on))}
               canClick={grid !== null}
-              vocals={vocalRemoval.vocals}
-              vocalsError={vocalRemoval.error}
-              onRemoveVocals={vocalRemoval.remove}
-              onCancelRemoveVocals={vocalRemoval.cancel}
-              onPutVocalsBack={vocalRemoval.putBack}
+              vocals={
+                polishTrack.role === 'backing'
+                  ? {
+                      state: vocalRemoval.vocals,
+                      error: vocalRemoval.error,
+                      onRemove: vocalRemoval.remove,
+                      onCancel: vocalRemoval.cancel,
+                      onPutBack: vocalRemoval.putBack
+                    }
+                  : undefined
+              }
               onHide={hidePanel}
               onReset={() =>
                 song.edit(
@@ -711,11 +767,30 @@ export function RecordScreen({
             {chordsOpen && (
               <div className="side-panel-slot">
                 <ChordsPanel
-                  chords={songChords.chords}
+                  chords={chart ? (chartLine?.chords ?? []) : songChords.chords}
                   hasMusic={songChords.hasMusic}
+                  fromChart={!!chart}
                   position={position}
                   onSeek={transport.seek}
                   onClose={() => setChordsOpen(false)}
+                  locked={!canEdit}
+                  onWrite={startChords}
+                  editing={chordsEditing}
+                  onEditing={setChordsEditing}
+                  editor={
+                    chart && {
+                      chart,
+                      playingBar,
+                      suggestions,
+                      locked: !canEdit,
+                      onBars: (bars) => song.edit(withChartBars(open.data, bars)),
+                      onTempo: (bpm) => song.edit(withChartTempo(open.data, bpm)),
+                      onBeats: (n) => song.edit(withChartBeats(open.data, n)),
+                      // Heard as it will play: in the key the Key knob moved it to.
+                      onPreview: (chord) =>
+                        void previewChord(transposeChord(chord, musicOf(open.data).semitones))
+                    }
+                  }
                 />
               </div>
             )}

@@ -4,7 +4,7 @@ import { Chord } from '../../audio/music/chords'
 // 0 for open, -1 for not played. Open shapes where there's a common one, else the
 // usual E- or A-shape barre. Indexed by root (C = 0).
 const X = -1
-const SHAPES: Record<Chord['quality'], number[][]> = {
+const TRIADS: Record<'major' | 'minor', number[][]> = {
   major: [
     [X, 3, 2, 0, 1, 0], // C
     [X, 4, 6, 6, 6, 4], // C♯
@@ -51,8 +51,66 @@ export interface Grip {
   barre: { fret: number; from: number; to: number } | null
 }
 
+type OtherQuality = Exclude<Chord['quality'], 'major' | 'minor'>
+
+// The open shapes guitarists reach for first, where the movable shapes below would put
+// the chord up the neck. Keyed by root.
+const OPEN: Record<OtherQuality, Partial<Record<number, number[]>>> = {
+  '7': {
+    0: [X, 3, 2, 3, 1, 0], // C7
+    2: [X, X, 0, 2, 1, 2], // D7
+    7: [3, 2, 0, 0, 0, 1], // G7
+    11: [X, 2, 1, 2, 0, 2] // B7
+  },
+  maj7: {
+    0: [X, 3, 2, 0, 0, 0], // Cmaj7
+    2: [X, X, 0, 2, 2, 2], // Dmaj7
+    5: [X, X, 3, 2, 1, 0], // Fmaj7
+    7: [3, 2, 0, 0, 0, 2] // Gmaj7
+  },
+  m7: { 2: [X, X, 0, 2, 1, 1] }, // Dm7
+  sus2: { 2: [X, X, 0, 2, 3, 0] }, // Dsus2
+  sus4: { 2: [X, X, 0, 2, 3, 3] }, // Dsus4
+  dim: {}
+}
+
+// Movable shapes, as frets above the root's fret: the E shape has its root on the low
+// E string, the A shape on the A string. Every kind of chord has both.
+const E_SHAPE: Record<OtherQuality, number[]> = {
+  '7': [0, 2, 0, 1, 0, 0],
+  maj7: [0, X, 1, 1, 0, X],
+  m7: [0, 2, 0, 0, 0, 0],
+  sus2: [0, 2, 4, 4, 0, 0],
+  sus4: [0, 2, 2, 2, 0, 0],
+  dim: [0, 1, 2, 0, X, X]
+}
+const A_SHAPE: Record<OtherQuality, number[]> = {
+  '7': [X, 0, 2, 0, 2, 0],
+  maj7: [X, 0, 2, 1, 2, 0],
+  m7: [X, 0, 2, 0, 1, 0],
+  sus2: [X, 0, 2, 2, 0, 0],
+  sus4: [X, 0, 2, 2, 3, 0],
+  dim: [X, 0, 1, 2, 1, X]
+}
+// The pitch classes of the low E and A strings.
+const E_ROOT = 4
+const A_ROOT = 9
+
+const fretFor = (root: number, stringRoot: number): number => (root - stringRoot + 12) % 12
+const placed = (shape: number[], fret: number): number[] =>
+  shape.map((f) => (f === X ? X : f + fret))
+
 /** The fret each string is held at for a chord, low E first (0 open, -1 not played). */
-export const fretsOf = (chord: Chord): number[] => SHAPES[chord.quality][chord.root]
+export function fretsOf(chord: Chord): number[] {
+  const { root, quality } = chord
+  if (quality === 'major' || quality === 'minor') return TRIADS[quality][root]
+  const open = OPEN[quality][root]
+  if (open) return open
+  // Whichever movable shape sits lower on the neck is easier to reach.
+  const onE = fretFor(root, E_ROOT)
+  const onA = fretFor(root, A_ROOT)
+  return onA <= onE ? placed(A_SHAPE[quality], onA) : placed(E_SHAPE[quality], onE)
+}
 
 /** How to hold a chord on a guitar, ready to draw as a chord box. */
 export function gripOf(chord: Chord): Grip {

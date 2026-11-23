@@ -1,4 +1,5 @@
 import { SongKey, transposeKey } from '../../audio/pitch/key'
+import type { Chord } from '../../audio/music/chords'
 import { moveItem } from '../tabs/tabOrder'
 import { SongLyrics } from '../lyrics/lyrics'
 import { PolishSettings, defaultPolish } from '../../audio/polish/polish'
@@ -23,7 +24,8 @@ export interface Clip {
   group?: string
 }
 
-export type TrackRole = 'vocal' | 'backing'
+/** Vocals are sung, backing tracks play music files, a chords track plays the chart. */
+export type TrackRole = 'vocal' | 'backing' | 'chords'
 export type VocalPart = 'lead' | 'harmony'
 
 export interface Track {
@@ -53,8 +55,25 @@ export interface Project {
   lyrics?: SongLyrics | null
   /** How the backing music is played: unset means as it was recorded. */
   music?: Partial<MusicSettings>
+  /** The chords the singer wrote, which a chords track plays. */
+  chart?: ChordChart | null
   tracks: Track[]
 }
+
+/**
+ * A song's chords, bar by bar, as written: at the original speed and key. Speed and Key
+ * apply when it plays, as they do to music files.
+ */
+export interface ChordChart {
+  bpm: number
+  beatsPerBar: BeatsPerBar
+  /** Where bar 1 starts on the timeline, in seconds at the original speed. */
+  startSec: number
+  /** Each bar's chords, sharing the bar evenly; an empty bar carries the last chord on. */
+  bars: Chord[][]
+}
+
+export type BeatsPerBar = 3 | 4
 
 export interface MusicSettings {
   /** 1 is the original speed; 1.1 is 10% faster. */
@@ -73,7 +92,11 @@ export interface MusicSettings {
 // Long enough for "Chorus harmony (high)", short enough to fit the lane header.
 export const TRACK_NAME_MAX_LENGTH = 40
 
-const ROLE_LABEL: Record<TrackRole, string> = { vocal: 'Vocal', backing: 'Backing' }
+const ROLE_LABEL: Record<TrackRole, string> = {
+  vocal: 'Vocal',
+  backing: 'Backing',
+  chords: 'Chords'
+}
 
 export function tracksOf(project: Project, role: TrackRole): Track[] {
   return project.tracks.filter((t) => t.role === role)
@@ -92,6 +115,8 @@ const HARMONY_PAN = 0.35
 export function startingVolume(role: TrackRole, part?: VocalPart, fromFile = false): number {
   // Music recorded here isn't mastered, so it starts at full volume like a lead.
   if (role === 'backing') return fromFile ? MASTERED_MUSIC_VOLUME : 1
+  // The chords are rendered at a level that already sits under a voice.
+  if (role === 'chords') return 1
   return part === 'harmony' ? HARMONY_VOLUME : 1
 }
 
@@ -102,7 +127,7 @@ export function defaultMix(
   fromFile = false
 ): { volume: number; pan: number } {
   const volume = startingVolume(role, part, fromFile)
-  if (role === 'backing' || part !== 'harmony') return { volume, pan: 0 }
+  if (role !== 'vocal' || part !== 'harmony') return { volume, pan: 0 }
   const harmonies = project.tracks.filter((t) => t.part === 'harmony').length
   return { volume, pan: harmonies % 2 === 0 ? -HARMONY_PAN : HARMONY_PAN }
 }
@@ -480,6 +505,8 @@ export function parseProject(data: unknown): Project {
     const project = p as Project
     // Only keep an artist field that's actually a non-empty string.
     if (typeof project.artist !== 'string' || !project.artist.trim()) delete project.artist
+    // A chart Rove can't read is dropped rather than played wrong.
+    if (project.chart && !isChart(project.chart)) delete project.chart
     return project
   }
   throw new Error(t('song.notRoveProject'))
@@ -635,3 +662,66 @@ export function withVocalsBack(project: Project, trackId: string): Project {
 /** Every clip of the track plays an instrumental made from its song. */
 export const vocalsRemoved = (track: Track): boolean =>
   track.clips.length > 0 && track.clips.every((clip) => clip.withVocals !== undefined)
+
+// --- The chord chart, and the chords track that plays it.
+
+/** Slow ballads to fast punk: a tempo outside this is almost certainly a typo. */
+export const CHART_BPM_RANGE = { min: 40, max: 240 }
+/** A comfortable middle tempo to start a new chart from. */
+export const DEFAULT_CHART_BPM = 100
+/** Far more than any song needs; keeps a stray paste from making a huge chart. */
+export const CHART_MAX_BARS = 500
+/** A new chart starts with one line of bars, ready to fill in. */
+const NEW_CHART_BARS = 4
+
+function isChart(value: unknown): value is ChordChart {
+  const c = value as Partial<ChordChart>
+  const isChord = (x: unknown): boolean => {
+    const chord = x as Partial<Chord> | null
+    return !!chord && typeof chord.root === 'number' && typeof chord.quality === 'string'
+  }
+  return (
+    typeof c.bpm === 'number' &&
+    (c.beatsPerBar === 3 || c.beatsPerBar === 4) &&
+    typeof c.startSec === 'number' &&
+    Array.isArray(c.bars) &&
+    c.bars.every((bar) => Array.isArray(bar) && bar.every(isChord))
+  )
+}
+
+/** The track that plays the chart, if the song has one (there's at most one). */
+export const chordsTrackOf = (project: Project): Track | undefined =>
+  project.tracks.find((t) => t.role === 'chords')
+
+/**
+ * Starts playing the song's chords: a chart (one bar of `first`, then bars that carry it
+ * on, ready to fill in) unless there is one, and the chords track unless there is one.
+ */
+export function withChordBacking(project: Project, first: Chord): Project {
+  const chart: ChordChart = project.chart ?? {
+    bpm: DEFAULT_CHART_BPM,
+    beatsPerBar: 4,
+    startSec: 0,
+    bars: [[first], ...Array.from({ length: NEW_CHART_BARS - 1 }, () => [])]
+  }
+  const withChart = { ...project, chart }
+  if (chordsTrackOf(withChart)) return withChart
+  const { project: added, track } = withNewTrack(withChart, 'chords')
+  // There's only ever one, so it doesn't need a number.
+  return withTrackName(added, track.id, ROLE_LABEL.chords)
+}
+
+const mapChart = (project: Project, change: (chart: ChordChart) => ChordChart): Project =>
+  project.chart ? { ...project, chart: change(project.chart) } : project
+
+export const withChartBars = (project: Project, bars: Chord[][]): Project =>
+  mapChart(project, (chart) => ({ ...chart, bars: bars.slice(0, CHART_MAX_BARS) }))
+
+export const withChartTempo = (project: Project, bpm: number): Project =>
+  mapChart(project, (chart) => ({
+    ...chart,
+    bpm: Math.round(Math.max(CHART_BPM_RANGE.min, Math.min(CHART_BPM_RANGE.max, bpm)))
+  }))
+
+export const withChartBeats = (project: Project, beatsPerBar: BeatsPerBar): Project =>
+  mapChart(project, (chart) => ({ ...chart, beatsPerBar }))

@@ -15,6 +15,8 @@ export interface ClickGrid {
   periodSec: number
   fromSec: number
   toSec: number
+  /** Beats in a bar, when known (a chord chart says); heard music is taken as 4. */
+  beatsPerBar?: number
 }
 
 // Most songs a beginner sings along to are in 4/4.
@@ -53,12 +55,14 @@ export function clickGrid(project: Project, file: string, beat: Beat | null): Cl
 export const clickTimes = (grid: ClickGrid, fromSec: number, toSec: number): Click[] =>
   grid.clicks.filter((c) => c.time >= fromSec && c.time <= toSec)
 
+const barOf = (grid: ClickGrid): number => grid.beatsPerBar ?? BEATS_PER_BAR
+
 /** One bar of clicks before a take, so the singer comes in on time. */
-export const countInSec = (grid: ClickGrid): number => BEATS_PER_BAR * grid.periodSec
+export const countInSec = (grid: ClickGrid): number => barOf(grid) * grid.periodSec
 
 /** The count-in's ticks, timed from the start of the bar before the take (first accented). */
 export const countInTicks = (grid: ClickGrid): Click[] =>
-  Array.from({ length: BEATS_PER_BAR }, (_, i) => ({
+  Array.from({ length: barOf(grid) }, (_, i) => ({
     time: i * grid.periodSec - countInSec(grid),
     accent: i === 0
   }))

@@ -4,6 +4,7 @@ import { mixdownOf } from './selectors'
 import { processProject } from '../processing/processedAudio'
 import { songKeyOf } from '../processing/songKey'
 import { Song } from './useSong'
+import { ChordPart } from '../chords/chart'
 
 export interface ExportOptions {
   format: ExportFormat
@@ -24,8 +25,8 @@ export interface Exporter {
   reset(): void
 }
 
-/** Exporting one song's mix to a file the person picks. */
-export function useExport(song: Song): Exporter {
+/** Exporting one song's mix to a file the person picks, with the chords as they sound now. */
+export function useExport(song: Song, parts: ChordPart[]): Exporter {
   const [state, setState] = useState<ExportState>({ status: 'idle' })
   return {
     state,
@@ -40,7 +41,7 @@ export function useExport(song: Song): Exporter {
         setState({ status: 'working', stage: { stage: 'tuning' } })
         const key = await songKeyOf(open.data, song.audio)
         const processed = await processProject(open.data, song.audio, key)
-        const { tracks, lengthSec } = mixdownOf(open.data, song.audio, processed)
+        const { tracks, lengthSec } = mixdownOf(open.data, song.audio, processed, parts)
         const bytes = await exportMix(tracks, lengthSec, options, (stage) =>
           setState({ status: 'working', stage })
         )

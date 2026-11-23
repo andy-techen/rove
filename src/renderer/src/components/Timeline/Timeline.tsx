@@ -65,6 +65,8 @@ interface Props {
   onAddBacking(): void
   /** Adds an empty backing track to record music into (an instrument, a beat). */
   onAddRecordedBacking(): void
+  /** Starts the chords track, which plays the chords the singer writes. */
+  onAddChords(): void
   onAddVocal(part: VocalPart): void
   onMix(trackId: string, change: MixChange): void
   /** Selected clips; the last is the one clicked most recently. */
@@ -129,6 +131,7 @@ export function Timeline({
   onRecordWithoutMusic,
   onAddBacking,
   onAddRecordedBacking,
+  onAddChords,
   onAddVocal,
   onMix,
   selectedClips,
@@ -166,18 +169,24 @@ export function Timeline({
     zoomOut,
     onScrollbar
   } = useTimelineView({
-    clipEnds: tracks.flatMap((track) => track.clips.map((c) => c.start + c.duration)),
+    clipEnds: tracks.flatMap((track) => [
+      ...track.clips.map((c) => c.start + c.duration),
+      ...(track.chords ?? []).map((c) => c.end)
+    ]),
     recordingEnd: recording ? recording.startSec + recording.sec : 0,
     position,
     follow,
     keyboard
   })
-  const backingTracks = tracks.filter((track) => track.role === 'backing')
+  // The music group: files and recordings, then the chords.
+  const backingTracks = tracks.filter((track) => track.role !== 'vocal')
   const vocalTracks = tracks.filter((track) => track.role === 'vocal')
+  const hasChords = tracks.some((track) => track.role === 'chords')
   const lanesRef = useRef<HTMLDivElement>(null)
   const backingChoices = [
     { key: 'file', label: t('timeline.fromFile'), onPick: onAddBacking },
-    { key: 'record', label: t('timeline.recordNew'), onPick: onAddRecordedBacking }
+    { key: 'record', label: t('timeline.recordNew'), onPick: onAddRecordedBacking },
+    ...(hasChords ? [] : [{ key: 'chords', label: t('timeline.chords'), onPick: onAddChords }])
   ]
   useRevealNewTrack(
     lanesRef,
@@ -341,6 +350,8 @@ export function Timeline({
 
   const lane = (track: LaneView, index: number, group: LaneView[]): ReactNode => {
     const isRecording = recording?.trackId === track.id
+    const isChords = track.role === 'chords'
+    const clipKind = track.role === 'vocal' ? 'vocal' : 'backing'
     const sameGroup = drag?.role === track.role
     const dragHandlers = {
       onDragOver: (e: DragEvent<HTMLDivElement>) => {
@@ -389,8 +400,15 @@ export function Timeline({
           recording={isRecording}
           // An imported backing track is a single file already laid down: recording
           // on top of it would double what the singer is hearing, so hide the action.
-          recordDisabled={!canRecord || recording !== null || track.imported}
-          recordDisabledReason={track.imported ? t('track.cantRecordImported') : undefined}
+          // The chords play themselves.
+          recordDisabled={!canRecord || recording !== null || track.imported || isChords}
+          recordDisabledReason={
+            isChords
+              ? t('track.cantRecordChords')
+              : track.imported
+                ? t('track.cantRecordImported')
+                : undefined
+          }
           selected={selectedTrackIds.includes(track.id)}
           onSelect={(mode) => onSelectTrack(track.id, mode)}
           onContextMenu={() => onContextMenu('track', track.id, null)}
@@ -426,7 +444,7 @@ export function Timeline({
               <ClipBlockView
                 key={b.clipIds[0]}
                 block={b}
-                kind={track.role}
+                kind={clipKind}
                 pxPerSec={pxPerSec}
                 scrollX={scrollX}
                 selected={includesClip(selectedClips, first)}
@@ -443,7 +461,7 @@ export function Timeline({
             <ClipView
               key={c.id}
               clip={c}
-              kind={track.role}
+              kind={clipKind}
               pxPerSec={pxPerSec}
               scrollX={scrollX}
               viewWidth={areaWidth}
@@ -458,6 +476,16 @@ export function Timeline({
                 clipGesture({ trackId: track.id, clipId: c.id }, kind, phase, delta, free, clientY)
               }
             />
+          ))}
+          {track.chords?.map((c) => (
+            <div
+              key={`${c.start}:${c.name}`}
+              className="clip chord-block"
+              // Runtime geometry: where this chord plays on the timeline.
+              style={{ left: x(c.start), width: (c.end - c.start) * pxPerSec }}
+            >
+              <span className="chord-block-name">{c.name}</span>
+            </div>
           ))}
           {isRecording && (
             <div
@@ -588,6 +616,9 @@ export function Timeline({
                   onClick={onAddRecordedBacking}
                 >
                   {t('timeline.recordBacking')}
+                </Button>
+                <Button size="sm" variant="quiet" disabled={!canEdit} onClick={onAddChords}>
+                  {t('timeline.playChords')}
                 </Button>
                 {!skipBacking && (
                   <Button

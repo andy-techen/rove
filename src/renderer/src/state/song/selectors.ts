@@ -4,7 +4,9 @@ import { TrackMix } from '../../audio/mix/mixer'
 import { polishParams } from '../../audio/polish/polish'
 import {
   Project,
+  Track,
   TrackRole,
+  chordsTrackOf,
   formatDuration,
   musicOf,
   polishOf,
@@ -12,6 +14,8 @@ import {
   tracksOf
 } from './project'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
+import { ChordPart, chartTimeline } from '../chords/chart'
+import { chordName } from '../chords/noteNames'
 
 // Edges this close to the playhead count as "here", so a jump moves on to the next one.
 const EDGE_TOLERANCE_SEC = 0.001
@@ -52,6 +56,15 @@ export interface LaneView {
   muted: boolean
   clips: ClipShape[]
   blocks: ClipBlock[]
+  /** A chords lane shows its chords instead of clips. */
+  chords?: ChordBlock[]
+}
+
+/** One chord on a chords lane, named as it plays. */
+export interface ChordBlock {
+  start: number
+  end: number
+  name: string
 }
 
 // Imported backing files are copied in as "backing-<original name>".
@@ -63,13 +76,43 @@ export function backingTitle(fileName: string): string {
   return fileName.replace(IMPORT_PREFIX, '').replace(EXTENSION, '')
 }
 
-/** Backing tracks first, then vocals, each with the summary its header shows. */
+/** The music first (files, then the chords), then vocals, the order the timeline shows. */
+const laneOrder = (project: Project): Track[] => [
+  ...tracksOf(project, 'backing'),
+  ...tracksOf(project, 'chords'),
+  ...tracksOf(project, 'vocal')
+]
+
+/** The chords a chords lane shows: each change, named as it plays (silence left out). */
+function chordBlocks(project: Project): ChordBlock[] {
+  return (chartTimeline(project)?.chords ?? []).flatMap((s) =>
+    s.chord ? [{ start: s.start, end: s.end, name: chordName(s.chord) }] : []
+  )
+}
+
+/** Music tracks first, then vocals, each with the summary its header shows. */
 export function selectLanes(
   project: Project,
   audio: Record<string, AudioBuffer>,
   processed: ProcessedAudio = {}
 ): LaneView[] {
-  return [...tracksOf(project, 'backing'), ...tracksOf(project, 'vocal')].map((track) => {
+  return laneOrder(project).map((track) => {
+    if (track.role === 'chords') {
+      return {
+        id: track.id,
+        role: track.role,
+        name: track.name,
+        detail: t('timeline.chordsDetail'),
+        imported: false,
+        volume: track.volume,
+        startVolume: startingVolume(track.role),
+        pan: track.pan,
+        muted: track.muted,
+        clips: [],
+        blocks: [],
+        chords: chordBlocks(project)
+      }
+    }
     const part = t(track.part === 'harmony' ? 'timeline.harmony' : 'timeline.lead')
     const sung = track.clips.reduce((sum, c) => sum + c.duration, 0)
     return {
@@ -132,14 +175,22 @@ export function joinGroups<C extends { id: string; start: number; duration: numb
   return { clips: joined, blocks }
 }
 
-/** Recording needs a song open and either a backing track or the choice to sing without one. */
+/** Recording needs a song open and either some music or the choice to sing without it. */
 export function hasMusicChoice(project: Project | undefined, skipBacking: boolean): boolean {
-  return !!project && (tracksOf(project, 'backing').length > 0 || skipBacking)
+  return (
+    !!project &&
+    (tracksOf(project, 'backing').length > 0 || !!chordsTrackOf(project) || skipBacking)
+  )
 }
 
-/** Where the song ends: the end of its last clip. */
+/** Where the song ends: the end of its last clip, or of the chords when they play. */
 export function songEnd(project: Project): number {
-  return Math.max(0, ...project.tracks.flatMap((t) => t.clips.map((c) => c.start + c.duration)))
+  const chords = chordsTrackOf(project) ? (chartTimeline(project)?.endSec ?? 0) : 0
+  return Math.max(
+    0,
+    chords,
+    ...project.tracks.flatMap((t) => t.clips.map((c) => c.start + c.duration))
+  )
 }
 
 function clipEdges(project: Project, trackId: string | null): number[] {
@@ -173,22 +224,38 @@ const MIN_EXPORT_TAIL_SEC = 0.5
 export function mixdownOf(
   project: Project,
   audio: Record<string, AudioBuffer>,
-  processed: ProcessedAudio = {}
+  processed: ProcessedAudio = {},
+  parts: ChordPart[] = []
 ): { tracks: MixdownTrack[]; lengthSec: number } {
   const mixes = trackMixes(project)
   const tracks = project.tracks.map((track, i) => ({
     ...mixes[i],
-    clips: track.clips.flatMap((c) => {
-      const buffer = bufferFor(audio, processed, track.id, c.file)
-      if (!buffer) return []
-      return [{ ...c, buffer, duration: c.duration || buffer.duration }]
-    })
+    clips: [
+      ...track.clips.flatMap((c) => {
+        const buffer = bufferFor(audio, processed, track.id, c.file)
+        if (!buffer) return []
+        return [{ ...c, buffer, duration: c.duration || buffer.duration }]
+      }),
+      ...partClips(parts, track.id)
+    ]
   }))
   const reverbTails = project.tracks
     .filter((t) => t.role === 'vocal' && !t.muted && polishOf(t).enabled)
     .map((t) => polishParams(polishOf(t)).reverbDecaySec)
-  return { tracks, lengthSec: songEnd(project) + Math.max(MIN_EXPORT_TAIL_SEC, ...reverbTails) }
+  const tail = songEnd(project) + Math.max(MIN_EXPORT_TAIL_SEC, ...reverbTails)
+  // The last chord rings on past the chart's end.
+  const ringing = parts.map((p) => p.start + p.buffer.duration)
+  return { tracks, lengthSec: Math.max(tail, ...ringing) }
 }
+
+/** A chords track's rendered sound, as the one clip it plays. */
+export const partClips = (
+  parts: ChordPart[],
+  trackId: string
+): { buffer: AudioBuffer; start: number; offset: number; duration: number }[] =>
+  parts
+    .filter((p) => p.trackId === trackId)
+    .map((p) => ({ buffer: p.buffer, start: p.start, offset: 0, duration: p.buffer.duration }))
 
 /**
  * How each track is mixed, in project order: vocals with their polish, music with the
@@ -198,12 +265,13 @@ export function trackMixes(project: Project): ({ id: string } & TrackMix)[] {
   const { bassDb, brightnessDb } = musicOf(project)
   return project.tracks.map((track) => ({
     id: track.id,
-    role: track.role,
+    // The chords are music: mixed with the music's bass and brightness.
+    role: track.role === 'vocal' ? 'vocal' : 'backing',
     volume: track.volume,
     pan: track.pan,
     muted: track.muted,
     polish: track.role === 'vocal' ? polishOf(track) : undefined,
-    tone: track.role === 'backing' ? { bassDb, brightnessDb } : undefined
+    tone: track.role === 'vocal' ? undefined : { bassDb, brightnessDb }
   }))
 }
 

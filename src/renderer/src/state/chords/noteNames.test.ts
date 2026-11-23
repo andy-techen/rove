@@ -12,3 +12,13 @@ describe('note names', () => {
     expect(chordName({ root: 6, quality: 'major' })).toBe('F♯')
   })
 })
+
+describe('every kind of chord', () => {
+  it('names sevenths, suspended, diminished and slash chords', () => {
+    expect(chordName({ root: 7, quality: '7' })).toBe('G7')
+    expect(chordName({ root: 5, quality: 'maj7' })).toBe('Fmaj7')
+    expect(chordName({ root: 2, quality: 'sus4' })).toBe('Dsus4')
+    expect(chordName({ root: 11, quality: 'dim' })).toBe('Bdim')
+    expect(chordName({ root: 0, quality: 'major', bass: 4 })).toBe('C/E')
+  })
+})

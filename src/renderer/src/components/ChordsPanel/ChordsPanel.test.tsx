@@ -44,4 +44,29 @@ describe('ChordsPanel', () => {
     renderPanel()
     expect(screen.getByRole('img', { name: t('chords.grip', { chord: 'G' }) })).toBeInTheDocument()
   })
+
+  it('offers to write the chords', async () => {
+    const onWrite = vi.fn()
+    renderPanel({ onWrite })
+    await userEvent.click(screen.getByRole('button', { name: t('chords.write') }))
+    expect(onWrite).toHaveBeenCalled()
+  })
+
+  it('follows the chords you wrote, and opens them for editing', async () => {
+    const onEditing = vi.fn()
+    const editor = {
+      chart: { bpm: 100, beatsPerBar: 4 as const, startSec: 0, bars: [] },
+      playingBar: -1,
+      suggestions: { label: '', chords: [] },
+      locked: false,
+      onBars: vi.fn(),
+      onTempo: vi.fn(),
+      onBeats: vi.fn(),
+      onPreview: vi.fn()
+    }
+    renderPanel({ fromChart: true, hasMusic: false, editor, onEditing })
+    expect(screen.getByRole('status')).toHaveTextContent(`${t('chords.now')}G`)
+    await userEvent.click(screen.getByRole('button', { name: t('chords.edit') }))
+    expect(onEditing).toHaveBeenCalledWith(true)
+  })
 })

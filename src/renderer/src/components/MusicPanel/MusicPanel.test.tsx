@@ -6,6 +6,13 @@ import { MusicSettings } from '../../state/song/project'
 import type { VocalsState } from '../../state/processing/useVocalRemoval'
 import { MusicPanel } from '.'
 
+const vocalsIn = (state: VocalsState) => ({
+  state,
+  onRemove: vi.fn(),
+  onCancel: vi.fn(),
+  onPutBack: vi.fn()
+})
+
 function renderPanel(music: Partial<MusicSettings> = {}, over = {}) {
   const props = {
     trackName: 'Backing 1',
@@ -28,10 +35,7 @@ function renderPanel(music: Partial<MusicSettings> = {}, over = {}) {
     onClickOn: vi.fn(),
     canClick: true,
     onReset: vi.fn(),
-    vocals: { state: 'with' } as VocalsState,
-    onRemoveVocals: vi.fn(),
-    onCancelRemoveVocals: vi.fn(),
-    onPutVocalsBack: vi.fn(),
+    vocals: vocalsIn({ state: 'with' }),
     onHide: vi.fn(),
     ...over
   }
@@ -126,27 +130,24 @@ describe('MusicPanel', () => {
   })
 
   it('removes the vocals from the music on request', async () => {
-    const { onRemoveVocals } = renderPanel()
+    const { vocals } = renderPanel()
     await userEvent.click(screen.getByRole('button', { name: t('music.removeVocals') }))
-    expect(onRemoveVocals).toHaveBeenCalled()
+    expect(vocals.onRemove).toHaveBeenCalled()
   })
 
   it('shows how far removing the vocals has got, and can stop it', async () => {
-    const { onCancelRemoveVocals } = renderPanel(
-      {},
-      { vocals: { state: 'removing', progress: 0.4 } }
-    )
+    const { vocals } = renderPanel({}, { vocals: vocalsIn({ state: 'removing', progress: 0.4 }) })
     expect(screen.getByRole('progressbar', { name: t('music.removingVocals') })).toHaveAttribute(
       'aria-valuenow',
       '40'
     )
     await userEvent.click(screen.getByRole('button', { name: t('music.stopRemovingVocals') }))
-    expect(onCancelRemoveVocals).toHaveBeenCalled()
+    expect(vocals.onCancel).toHaveBeenCalled()
   })
 
   it('restores the vocals once they are removed', async () => {
-    const { onPutVocalsBack } = renderPanel({}, { vocals: { state: 'removed' } })
+    const { vocals } = renderPanel({}, { vocals: vocalsIn({ state: 'removed' }) })
     await userEvent.click(screen.getByRole('button', { name: t('music.restoreVocals') }))
-    expect(onPutVocalsBack).toHaveBeenCalled()
+    expect(vocals.onPutBack).toHaveBeenCalled()
   })
 })
