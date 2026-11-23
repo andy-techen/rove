@@ -97,58 +97,60 @@ export function TransportBar(props: Props): React.JSX.Element {
           )}
         </div>
       </div>
-      <div className="edit-tools" role="toolbar" aria-label={t('transport.editToolbar')}>
-        <IconButton
-          icon="undo"
-          label={t('transport.undo')}
-          title={shortcuts.label(t('transport.undo'), 'undo')}
-          disabled={!props.canUndo}
-          onClick={props.onUndo}
-        />
-        <IconButton
-          icon="redo"
-          label={t('transport.redo')}
-          title={shortcuts.label(t('transport.redo'), 'redo')}
-          disabled={!props.canRedo}
-          onClick={props.onRedo}
-        />
-        <IconButton
-          icon="split"
-          label={t('transport.split')}
-          title={shortcuts.label(t('transport.split'), 'split')}
-          disabled={!props.canSplit}
-          onClick={props.onSplit}
-        />
-        <IconButton
-          icon="delete"
-          label={t('transport.delete')}
-          title={shortcuts.label(t('transport.delete'), 'deleteClip')}
-          disabled={!props.canDelete}
-          onClick={props.onDelete}
-        />
-      </div>
-      {/* The side panels, set apart from the edit tools. */}
-      <div className="panel-toggles" role="toolbar" aria-label={t('transport.panelsToolbar')}>
-        <IconButton
-          icon="lyrics"
-          label={t('lyrics.label')}
-          title={shortcuts.label(
-            props.lyricsOpen ? t('lyrics.hide') : t('lyrics.show'),
-            'toggleLyrics'
-          )}
-          aria-pressed={props.lyricsOpen}
-          onClick={props.onToggleLyrics}
-        />
-        <IconButton
-          icon="chords"
-          label={t('chords.label')}
-          title={shortcuts.label(
-            props.chordsOpen ? t('chords.hide') : t('chords.show'),
-            'toggleChords'
-          )}
-          aria-pressed={props.chordsOpen}
-          onClick={props.onToggleChords}
-        />
+      <div className="transport-tools">
+        <div className="edit-tools" role="toolbar" aria-label={t('transport.editToolbar')}>
+          <IconButton
+            icon="undo"
+            label={t('transport.undo')}
+            title={shortcuts.label(t('transport.undo'), 'undo')}
+            disabled={!props.canUndo}
+            onClick={props.onUndo}
+          />
+          <IconButton
+            icon="redo"
+            label={t('transport.redo')}
+            title={shortcuts.label(t('transport.redo'), 'redo')}
+            disabled={!props.canRedo}
+            onClick={props.onRedo}
+          />
+          <IconButton
+            icon="split"
+            label={t('transport.split')}
+            title={shortcuts.label(t('transport.split'), 'split')}
+            disabled={!props.canSplit}
+            onClick={props.onSplit}
+          />
+          <IconButton
+            icon="delete"
+            label={t('transport.delete')}
+            title={shortcuts.label(t('transport.delete'), 'deleteClip')}
+            disabled={!props.canDelete}
+            onClick={props.onDelete}
+          />
+        </div>
+        {/* The side panels, set apart from the edit tools. */}
+        <div className="panel-toggles" role="toolbar" aria-label={t('transport.panelsToolbar')}>
+          <IconButton
+            icon="lyrics"
+            label={t('lyrics.label')}
+            title={shortcuts.label(
+              props.lyricsOpen ? t('lyrics.hide') : t('lyrics.show'),
+              'toggleLyrics'
+            )}
+            aria-pressed={props.lyricsOpen}
+            onClick={props.onToggleLyrics}
+          />
+          <IconButton
+            icon="chords"
+            label={t('chords.label')}
+            title={shortcuts.label(
+              props.chordsOpen ? t('chords.hide') : t('chords.show'),
+              'toggleChords'
+            )}
+            aria-pressed={props.chordsOpen}
+            onClick={props.onToggleChords}
+          />
+        </div>
       </div>
     </section>
   )

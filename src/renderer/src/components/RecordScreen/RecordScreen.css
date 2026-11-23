@@ -26,12 +26,14 @@
   padding: var(--space-8) var(--space-7);
 }
 
-.workspace > :not(.timeline) {
+.workspace > :not(.timeline):not(.panel) {
   flex-shrink: 0;
 }
 
 /* The timeline is only as tall as its tracks (shrinking to scroll when there are many);
-   the panel is pushed to the bottom, leaving plain background between them. */
+   the panel is pushed to the bottom, leaving plain background between them.
+   On short windows the panel yields first — it scrolls its own contents — so the
+   timeline always keeps at least its ruler and one lane. */
 .workspace > .timeline {
   flex: 0 1 auto;
   min-height: 0;
@@ -39,6 +41,8 @@
 
 .workspace > .panel {
   margin-top: auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .transport-messages {
@@ -59,6 +63,61 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-7);
+}
+
+/* The edit/panel icon groups, bundled so they wrap together on their own row. */
+.transport-tools {
+  display: contents;
+}
+
+/* On narrow windows the transport tools (edit + panel icons) drop to a single
+   full-width row below, right-aligned, so they sit just above the timeline instead
+   of stranding squeezed to the left. The master volume and mic meter stay to the
+   right of the timer on the top row. */
+@media (max-width: 900px) {
+  .transport {
+    row-gap: var(--space-4);
+  }
+
+  .transport-tools {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-basis: 100%;
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  /* Inside the wrapped row the dividers between groups stop making sense: the
+     negative margins were there to pull them into the transport's larger gap. */
+  .transport-tools .edit-tools,
+  .transport-tools .panel-toggles {
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .transport-tools .edit-tools::before,
+  .transport-tools .panel-toggles::before {
+    display: none;
+  }
+
+  /* Divider between the two tool groups, sitting at the shared gap. */
+  .transport-tools .panel-toggles {
+    position: relative;
+    padding-left: var(--space-4);
+  }
+
+  .transport-tools .panel-toggles::before {
+    display: block;
+    left: 0;
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 1px;
+    height: var(--size-control-xs);
+    transform: translateY(-50%);
+    background: var(--color-border);
+  }
 }
 
 /* Hearing and singing, side by side: speaker + volume slider, mic + input meter.
