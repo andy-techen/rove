@@ -1,0 +1,2 @@
+# Show catalog changes as SQL rows (npm run catalog:setup configures the driver).
+resources/catalog/catalog.sqlite diff=sqlite

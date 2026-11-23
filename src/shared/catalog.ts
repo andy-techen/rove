@@ -1,7 +1,7 @@
-// A curated "what should I sing?" catalog, read-only and shipped with the app. Today
-// the seed lives in resources/catalog/seed.json; a later version swaps in a bundled
-// SQLite file built from MusicBrainz and Deezer. Either way the renderer only sees
-// what the search call returns, so the storage change stays behind the IPC seam.
+// A curated "what should I sing?" catalog, read-only and shipped with the app as
+// resources/catalog/catalog.sqlite. The main process queries it (src/main/catalog);
+// the curation scripts in scripts/catalog write it. The renderer only sees what the
+// search call returns.
 
 export const CATALOG_LANGUAGES = ['en', 'zh-Hans', 'zh-Hant', 'ja', 'ko', 'es', 'other'] as const
 export type CatalogLanguage = (typeof CATALOG_LANGUAGES)[number]
@@ -65,73 +65,6 @@ export const CATALOG_CHANNELS = {
   search: 'catalog:search'
 } as const
 
-const DEFAULT_LIMIT = 100
-
-/** What the singer typed, matched against name, artist and any script variants, any case. */
-function matchesQuery(song: CatalogSong, q: string): boolean {
-  if (!q) return true
-  const haystack = [song.name, song.artist, ...(song.nameAlts ?? [])]
-  return haystack.some((text) => text.toLocaleLowerCase().includes(q))
-}
-
-/** Pure, so unit tests can drive it directly and the SQLite swap won't change behaviour. */
-export function searchCatalog(
-  items: CatalogSong[],
-  options: CatalogSearchOptions
-): CatalogSearchResult {
-  const q = options.query.trim().toLocaleLowerCase()
-  const limit = options.limit ?? DEFAULT_LIMIT
-  const matched: CatalogSong[] = []
-  for (const song of items) {
-    if (options.languages?.length && !options.languages.includes(song.language)) continue
-    if (options.songTypes?.length && !options.songTypes.includes(song.songType)) continue
-    if (options.genres?.length && (!song.genre || !options.genres.includes(song.genre))) continue
-    if (options.tags?.length && !(song.tags ?? []).some((tag) => options.tags!.includes(tag))) {
-      continue
-    }
-    if (!matchesQuery(song, q)) continue
-    matched.push(song)
-  }
-  return { items: matched.slice(0, limit), total: matched.length }
-}
-
-/** Keeps only well-formed rows; a bad entry shouldn't take the catalog down. */
-export function parseCatalog(raw: unknown): CatalogSong[] {
-  if (!Array.isArray(raw)) return []
-  const songs: CatalogSong[] = []
-  for (const entry of raw) {
-    const e = entry as Partial<CatalogSong> | null
-    if (
-      !e ||
-      typeof e.id !== 'string' ||
-      !e.id ||
-      typeof e.name !== 'string' ||
-      !e.name ||
-      typeof e.artist !== 'string' ||
-      !e.artist ||
-      !isLanguage(e.language) ||
-      !isSongType(e.songType)
-    ) {
-      continue
-    }
-    songs.push({
-      id: e.id,
-      name: e.name,
-      artist: e.artist,
-      language: e.language,
-      songType: e.songType,
-      ...(Array.isArray(e.nameAlts) &&
-        e.nameAlts.every((a) => typeof a === 'string') && { nameAlts: e.nameAlts }),
-      ...(isGenre(e.genre) && { genre: e.genre }),
-      ...(Array.isArray(e.tags) &&
-        e.tags.every((tag) => typeof tag === 'string') && { tags: e.tags }),
-      ...(typeof e.durationSec === 'number' && { durationSec: e.durationSec }),
-      ...(typeof e.hasSyncedLyrics === 'boolean' && { hasSyncedLyrics: e.hasSyncedLyrics })
-    })
-  }
-  return songs
-}
-
 /** The options as they arrive over IPC: anything odd falls back to a safe default. */
 export function parseSearchOptions(raw: unknown): CatalogSearchOptions {
   const r = (raw ?? {}) as Partial<CatalogSearchOptions>
@@ -154,14 +87,14 @@ function pickArray<T>(value: unknown, guard: (v: unknown) => v is T): T[] {
   return Array.isArray(value) ? value.filter(guard) : []
 }
 
-function isLanguage(value: unknown): value is CatalogLanguage {
+export function isLanguage(value: unknown): value is CatalogLanguage {
   return (CATALOG_LANGUAGES as readonly string[]).includes(value as string)
 }
 
-function isSongType(value: unknown): value is CatalogSongType {
+export function isSongType(value: unknown): value is CatalogSongType {
   return (CATALOG_SONG_TYPES as readonly string[]).includes(value as string)
 }
 
-function isGenre(value: unknown): value is CatalogGenre {
+export function isGenre(value: unknown): value is CatalogGenre {
   return (CATALOG_GENRES as readonly string[]).includes(value as string)
 }

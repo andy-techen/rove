@@ -127,6 +127,29 @@ Only the main process goes online, and only with words the singer typed. Results
 checked before they reach the page, and the chosen lyrics are saved in `project.json`,
 so they work offline afterwards.
 
+## Song catalog: a database that ships with the app
+
+Explore in the Songbook searches a curated catalog,
+`resources/catalog/catalog.sqlite`. The main process opens it read-only with Node's
+built-in `node:sqlite` (`ipc/catalog.ts`, queries in `main/catalog/query.ts`), so
+searching never goes online. Songs still waiting for review are hidden.
+
+The database file is the source of truth: there's no seed file to build it from.
+Developers curate it with the scripts in `scripts/catalog/`:
+
+| Command                                         | What it does                                                               |
+| ----------------------------------------------- | -------------------------------------------------------------------------- |
+| `npm run catalog:add -- "<title>" "<artist>" …` | Looks the song up on MusicBrainz and adds it; `--file` adds a list         |
+| `npm run catalog:import -- --artists <list>`    | Adds each listed artist's most played songs (Deezer), pinned by ISRC       |
+| `npm run catalog:review`                        | Songs that couldn't be placed for sure, with why and what to try           |
+| `npm run catalog:remove -- <id>`                | Removes a song                                                             |
+| `npm run catalog:setup` (runs on `npm install`) | Makes `git diff` show catalog changes as SQL rows instead of "binary file" |
+
+The schema is versioned with SQLite's `user_version` (`main/catalog/schema.ts`); the
+app ignores a file newer than it understands. Every song needs an ISRC, so later
+sources (Deezer, LRCLIB) join on it rather than on names. API answers are cached in
+`scripts/catalog/.cache/` (not committed).
+
 ## Chords and tempo: worked out on the device
 
 Nothing is looked up. The backing track's own audio is analysed in the renderer:

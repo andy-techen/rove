@@ -13,3 +13,12 @@ out
 .idea/
 .vscode/
 .claude/
+
+# Planning notes stay local.
+docs/plans/
+
+# API answers cached by the catalog scripts.
+scripts/catalog/.cache/
+
+# Throwaway input lists for catalog:import and catalog:add --file.
+scripts/catalog/lists/

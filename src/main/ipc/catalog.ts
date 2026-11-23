@@ -1,38 +1,35 @@
 import { ipcMain } from 'electron'
-import { promises as fs } from 'node:fs'
-import seedFile from '../../../resources/catalog/seed.json?asset'
-import {
-  CATALOG_CHANNELS,
-  CatalogSearchResult,
-  CatalogSong,
-  parseCatalog,
-  parseSearchOptions,
-  searchCatalog
-} from '@shared/catalog'
+import { DatabaseSync } from 'node:sqlite'
+import catalogFile from '../../../resources/catalog/catalog.sqlite?asset'
+import { CATALOG_CHANNELS, CatalogSearchResult, parseSearchOptions } from '@shared/catalog'
+import { searchCatalog } from '../catalog/query'
+import { CATALOG_SCHEMA_VERSION, schemaVersion } from '../catalog/schema'
 
-// The curated catalog is read-only and shipped with the app. Today it's a small JSON
-// seed, read once and kept in memory; the catalog pipeline (MusicBrainz + Deezer →
-// SQLite) replaces this with a bundled .sqlite file without changing the IPC shape.
-let cache: CatalogSong[] | null = null
+// The curated catalog ships with the app as a read-only SQLite file, written only by
+// the curation scripts (scripts/catalog). Opened once, on the first search.
+let db: DatabaseSync | null | undefined
 
-async function load(): Promise<CatalogSong[]> {
-  if (cache) return cache
+function open(): DatabaseSync | null {
+  if (db !== undefined) return db
   try {
-    cache = parseCatalog(JSON.parse(await fs.readFile(seedFile, 'utf8')))
+    db = new DatabaseSync(catalogFile, { readOnly: true })
+    const version = schemaVersion(db)
+    // A file from a newer build may have columns this code doesn't understand.
+    if (version < 1 || version > CATALOG_SCHEMA_VERSION) {
+      db.close()
+      db = null
+    }
   } catch {
-    // A missing or malformed seed shouldn't take the Songbook down; Explore just
-    // shows "no songs yet" until a proper catalog ships.
-    cache = []
+    // A missing or broken catalog shouldn't take the Songbook down; Explore just shows
+    // its empty state.
+    db = null
   }
-  return cache
+  return db
 }
 
 export function registerCatalogIpc(): void {
-  ipcMain.handle(
-    CATALOG_CHANNELS.search,
-    async (_e, raw: unknown): Promise<CatalogSearchResult> => {
-      const options = parseSearchOptions(raw)
-      return searchCatalog(await load(), options)
-    }
-  )
+  ipcMain.handle(CATALOG_CHANNELS.search, (_e, raw: unknown): CatalogSearchResult => {
+    const catalog = open()
+    return catalog ? searchCatalog(catalog, parseSearchOptions(raw)) : { items: [], total: 0 }
+  })
 }
