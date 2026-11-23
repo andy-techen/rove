@@ -1,10 +1,23 @@
 name: Release
 
-# Push a version tag to build the Mac app and publish it as a GitHub release with a
-# .dmg for Apple silicon and one for Intel attached:  git tag v1.1.0 && git push origin v1.1.0
+# Builds the Mac app and publishes it as a GitHub release with a .dmg for Apple silicon
+# and one for Intel attached. Start it either way:
+#   - On GitHub: Actions > Release > Run workflow, pick the branch, type a version (1.1.0).
+#     The run tags that commit v1.1.0 itself.
+#   - From a terminal: git tag v1.1.0 && git push origin v1.1.0
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, without the v (for example 1.1.0)'
+        required: true
+        type: string
+
+# The tag being released: typed in on GitHub, or the one that was pushed.
+env:
+  TAG: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref_name }}
 
 permissions:
   contents: write
@@ -21,6 +34,16 @@ jobs:
           node-version: 24
           cache: npm
 
+      # A run started on GitHub checks the version is new before spending time on a build.
+      - name: Check the version is new
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Use a version like 1.1.0, not '${TAG#v}'"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "::error::$TAG already exists. Pick a new version, or delete the tag first."
+            exit 1
+          fi
+
       - run: npm ci
 
       - name: Check
@@ -31,7 +54,7 @@ jobs:
 
       # The tag sets the version, so the .dmg name and the About box match the release.
       - name: Set version from tag
-        run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
+        run: npm version "${TAG#v}" --no-git-tag-version --allow-same-version
 
       # No Developer ID certificate yet, so the app is ad-hoc signed (identity "-"): a
       # valid signature, but macOS asks people to allow it once. With a certificate,
@@ -39,11 +62,18 @@ jobs:
       - name: Build
         run: npx electron-vite build && npx electron-builder --mac --publish never -c.mac.identity=-
 
+      # Tagged only once the build has worked, so a failed run leaves no stray tag. Tags
+      # pushed with the workflow's own token don't start this workflow a second time.
+      - name: Tag the release
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git tag "$TAG"
+          git push origin "$TAG"
+
       # Force-pushing a tag rebuilds its release, so an older one for it is replaced.
       - name: Publish release
         run: |
-          gh release delete "$GITHUB_REF_NAME" --yes 2>/dev/null || true
-          gh release create "$GITHUB_REF_NAME" dist/*.dmg \
-            --title "Rove $GITHUB_REF_NAME" --generate-notes
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          gh release create "$TAG" dist/*.dmg --title "Rove $TAG" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}

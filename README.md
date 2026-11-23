@@ -64,9 +64,13 @@ In dev mode macOS attributes microphone permission to the app that launched `npm
 
 ## Releases
 
-Push a version tag and GitHub Actions (`.github/workflows/release.yml`) checks the code,
-builds a `.dmg` for each kind of Mac and publishes them as a GitHub release: `-arm64` for
-Apple silicon (M1 and later), `-x64` for Intel.
+GitHub Actions (`.github/workflows/release.yml`) checks the code, builds a `.dmg` for each
+kind of Mac and publishes them as a GitHub release: `-arm64` for Apple silicon (M1 and
+later), `-x64` for Intel. Start a release either way:
+
+- **On GitHub:** Actions → Release → Run workflow. Pick the branch, type the new version
+  (`1.1.0`) and run it. It tags that commit `v1.1.0` once the build works.
+- **From a terminal:** push a version tag.
 
 ```bash
 git tag v1.1.0
