@@ -1,0 +1,117 @@
+[
+  {
+    "id": "USAT29900609",
+    "name": "Dreams",
+    "artist": "Fleetwood Mac",
+    "language": "en",
+    "songType": "band",
+    "genre": "rock",
+    "tags": ["classic", "mellow"],
+    "durationSec": 257,
+    "hasSyncedLyrics": true
+  },
+  {
+    "id": "USLR30600001",
+    "name": "Shallow",
+    "artist": "Lady Gaga & Bradley Cooper",
+    "language": "en",
+    "songType": "duet",
+    "genre": "pop",
+    "tags": ["movie", "love"],
+    "durationSec": 216,
+    "hasSyncedLyrics": true
+  },
+  {
+    "id": "GBAHS1200347",
+    "name": "Someone Like You",
+    "artist": "Adele",
+    "language": "en",
+    "songType": "solo",
+    "genre": "ballad",
+    "tags": ["heartbreak", "piano"],
+    "durationSec": 285,
+    "hasSyncedLyrics": true
+  },
+  {
+    "id": "USRC19900027",
+    "name": "Vincent",
+    "artist": "Don McLean",
+    "language": "en",
+    "songType": "solo",
+    "genre": "folk",
+    "tags": ["classic", "storytelling"],
+    "durationSec": 236,
+    "hasSyncedLyrics": true
+  },
+  {
+    "id": "USQX91700456",
+    "name": "Perfect",
+    "artist": "Ed Sheeran",
+    "language": "en",
+    "songType": "solo",
+    "genre": "pop",
+    "tags": ["love", "wedding"],
+    "durationSec": 263,
+    "hasSyncedLyrics": true
+  },
+  {
+    "id": "TWA011600101",
+    "name": "月亮代表我的心",
+    "artist": "鄧麗君",
+    "nameAlts": ["月亮代表我的心", "Yue Liang Dai Biao Wo De Xin", "The Moon Represents My Heart"],
+    "language": "zh-Hant",
+    "songType": "solo",
+    "genre": "ballad",
+    "tags": ["classic", "love"],
+    "durationSec": 213,
+    "hasSyncedLyrics": true
+  },
+  {
+    "id": "TWA019400215",
+    "name": "我願意",
+    "artist": "王菲",
+    "nameAlts": ["我愿意", "Wo Yuan Yi", "I'm Willing"],
+    "language": "zh-Hant",
+    "songType": "solo",
+    "genre": "ballad",
+    "tags": ["love"],
+    "durationSec": 253,
+    "hasSyncedLyrics": true
+  },
+  {
+    "id": "TWA110300001",
+    "name": "小幸運",
+    "artist": "田馥甄",
+    "nameAlts": ["小幸运", "Xiao Xing Yun", "A Little Happiness", "Hebe Tien"],
+    "language": "zh-Hant",
+    "songType": "solo",
+    "genre": "pop",
+    "tags": ["movie", "youth"],
+    "durationSec": 267,
+    "hasSyncedLyrics": true
+  },
+  {
+    "id": "CNA200400271",
+    "name": "青花瓷",
+    "artist": "周杰倫",
+    "nameAlts": ["青花瓷", "Qing Hua Ci", "Blue and White Porcelain", "Jay Chou"],
+    "language": "zh-Hant",
+    "songType": "solo",
+    "genre": "pop",
+    "tags": ["classic", "poetic"],
+    "durationSec": 237,
+    "hasSyncedLyrics": true
+  },
+  {
+    "id": "TWA010500042",
+    "name": "朋友",
+    "artist": "周華健",
+    "nameAlts": ["Peng You", "Friends", "Emil Chau"],
+    "language": "zh-Hant",
+    "songType": "solo",
+    "genre": "pop",
+    "tags": ["friendship", "karaoke-classic"],
+    "durationSec": 251,
+    "hasSyncedLyrics": false
+  }
+]

@@ -59,7 +59,13 @@ export function Slider({
 
   const slider = (
     <span
-      className={cx('slider', `slider-${tone}`, disabled && 'slider-disabled', className)}
+      className={cx(
+        'slider',
+        `slider-${tone}`,
+        centre === undefined && 'slider-one-way',
+        disabled && 'slider-disabled',
+        className
+      )}
       style={geometry}
     >
       <span className="slider-track" aria-hidden="true" />

@@ -144,6 +144,7 @@ export function RecordScreen({
   const [selection, setSelection] = useState<ClipRef[]>([])
   // Selected tracks, most recently clicked last: polish, paste and navigation follow it.
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([])
+  const [panelHiddenOn, setPanelHiddenOn] = useState<string[] | null>(null)
   const selectedTrackId = selectedTrackIds.at(-1) ?? null
   const [renamingTrackId, setRenamingTrackId] = useState<string | null>(null)
   // Whether Delete acts on the clicked clip or the selected tracks.
@@ -404,6 +405,10 @@ export function RecordScreen({
   const polishTrack =
     open?.data.tracks.find((track) => track.id === selectedTrackId) ??
     open?.data.tracks.find((track) => track.role === 'vocal')
+  // Hiding the panel remembers the selection it closed on; picking a track or clip
+  // (a new selection) brings it back.
+  const panelShown = panelHiddenOn !== selectedTrackIds
+  const hidePanel = (): void => setPanelHiddenOn(selectedTrackIds)
   const vocalRemoval = useVocalRemoval(
     song,
     polishTrack?.role === 'backing' ? polishTrack.id : null
@@ -438,6 +443,12 @@ export function RecordScreen({
             position={position}
             source={mic.source}
             inputError={mic.inputError}
+            micPaused={mic.paused}
+            onToggleMicPaused={() => mic.setPaused(!mic.paused)}
+            masterVolume={transport.masterVolume}
+            masterMuted={transport.masterMuted}
+            onMasterVolume={transport.setMasterVolume}
+            onToggleMasterMuted={transport.toggleMasterMuted}
             canUndo={canEdit && song.canUndo}
             canRedo={canEdit && song.canRedo}
             canSplit={canSplit}
@@ -601,7 +612,7 @@ export function RecordScreen({
             }}
           />
 
-          {polishTrack?.role === 'backing' && open && (
+          {panelShown && polishTrack?.role === 'backing' && open && (
             <MusicPanel
               trackName={polishTrack.name}
               music={musicOf(open.data)}
@@ -619,6 +630,7 @@ export function RecordScreen({
               onRemoveVocals={vocalRemoval.remove}
               onCancelRemoveVocals={vocalRemoval.cancel}
               onPutVocalsBack={vocalRemoval.putBack}
+              onHide={hidePanel}
               onReset={() =>
                 song.edit(
                   withMusicTone(withMusicPitch(withMusicSpeed(open.data, 1), 0), {
@@ -630,13 +642,14 @@ export function RecordScreen({
             />
           )}
 
-          {polishTrack?.role === 'vocal' && open && (
+          {panelShown && polishTrack?.role === 'vocal' && open && (
             <PolishPanel
               key={polishTrack.id}
               trackName={polishTrack.name}
               part={polishTrack.part ?? 'lead'}
               polish={polishOf(polishTrack)}
               locked={!canEdit}
+              onHide={hidePanel}
               onChange={(next, key) =>
                 song.edit(
                   withTrackPolish(open.data, polishTrack.id, next),

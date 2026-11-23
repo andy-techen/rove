@@ -43,6 +43,8 @@ export interface LaneView {
   role: TrackRole
   name: string
   detail: string
+  /** True when the track came from an imported file rather than a recorded take. */
+  imported: boolean
   volume: number
   /** Where double-clicking the volume returns: the track's starting volume. */
   startVolume: number
@@ -84,6 +86,7 @@ export function selectLanes(
           : track.clips.length
             ? t('timeline.vocalDetail', { part, length: formatDuration(sung) })
             : part,
+      imported: !!track.sourceName,
       volume: track.volume,
       startVolume: startingVolume(track.role, track.part, !!track.sourceName),
       pan: track.pan,

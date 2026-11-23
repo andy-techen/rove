@@ -30,14 +30,18 @@ export const STROKE_ICONS = {
   sparkle:
     'M10 3l1.6 4.4L16 9l-4.4 1.6L10 15l-1.6-4.4L4 9l4.4-1.6zM18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8z',
   search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
+  check: 'M5 12.5l4.5 4.5L19 7.5',
+  // A crosshair: find the playhead again.
+  locate:
+    'M12 19a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM12 2v3M12 19v3M2 12h3M19 12h3M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z',
   sun: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
   moon: 'M20 13.5A8 8 0 1 1 10.5 4a6.5 6.5 0 0 0 9.5 9.5z',
-  // A side panel with an arrow toward the edge: tuck the panel away.
-  hidePanel:
-    'M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM15 5v14M8 9l3 3-3 3',
-  // A chord box: strings and frets with two finger dots (tiny rings that read as dots).
-  chords:
-    'M6 4h12M6 4v16M10 4v16M14 4v16M18 4v16M6 10h12M6 15h12M10 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM14 11.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z',
+  // macOS-style sidebar: a rounded window with a bar along the right, for the side panels.
+  hidePanel: 'M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM16 8v8',
+  // The same window with the bar along the bottom, for the Polish and Music panel.
+  hideBottomPanel: 'M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM8 16h8',
+  // A guitar pick: chords.
+  chords: 'M12 21c-2.6-2.7-7-8.2-7-12.4C5 5.3 8.1 3 12 3s7 2.3 7 5.6c0 4.2-4.4 9.7-7 12.4z',
   lyrics: 'M4 6h14M4 10h14M4 14h6M14 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0M18 18v-6h3',
   // A pencil: change a song's details.
   edit: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4',

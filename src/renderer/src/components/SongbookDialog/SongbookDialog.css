@@ -27,9 +27,20 @@
 /* Scrolling clips whatever reaches past the edge, focus rings included, so the body
    leaves room for a full ring (offset plus width) and pulls back out by as much to
    stay lined up with the search box. */
+.songbook-panel {
+  display: flex;
+  flex-direction: column;
+  height: min(65vh, var(--layout-songbook-panel));
+}
+
+.songbook-panel > :not(.songbook-body) {
+  flex-shrink: 0;
+}
+
 .songbook-body {
   --songbook-ring-room: calc(var(--size-focus-ring) * 2);
-  height: min(50vh, var(--layout-songbook-list));
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--songbook-ring-room);
   margin: calc(-1 * var(--songbook-ring-room));
@@ -125,37 +136,13 @@
 .songbook-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: var(--space-5);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--color-border);
-}
-
-.wishlist-add {
-  display: flex;
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-}
-
-.wishlist-add input {
-  flex: 1;
-  min-width: 0;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-  font-size: var(--font-size-ui);
+  margin-top: var(--space-7);
 }
 
 .songbook-search {
+  display: flex;
   width: 100%;
   margin-bottom: var(--space-5);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-  font-size: var(--font-size-ui);
 }
 
 .remove-song {
@@ -178,4 +165,151 @@
   background: var(--color-danger);
   border-color: var(--color-danger);
   color: var(--color-thumb);
+}
+
+/* Explore keeps its search and filters in place and scrolls only the results, so a
+   filter's popover can also hang over the list instead of being clipped. */
+.songbook-body-explore {
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.songbook-body-explore > :not(.explore-results) {
+  flex-shrink: 0;
+}
+
+.explore-results {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--songbook-ring-room);
+  margin: calc(-1 * var(--songbook-ring-room));
+}
+
+/* Explore: a search box with a funnel icon beside it; clicking the funnel reveals a
+   row of filter dropdowns underneath. Small tags on each catalog row. */
+.explore-search-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.explore-search {
+  margin-bottom: 0;
+}
+
+/* Dropdowns and the active-filter chips share this row. Overflow stays visible so a
+   dropdown's popover can hang below the row; chips wrap only when the dialog is too
+   narrow for a single line. */
+.explore-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  overflow: visible;
+}
+
+.explore-filter-row > * {
+  flex-shrink: 0;
+}
+
+.explore-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+.explore-active-chip svg {
+  color: var(--color-text-muted);
+}
+
+.explore-active-chip:hover {
+  border-color: var(--color-border);
+}
+
+.explore-active-clear {
+  padding: 0 var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+.explore-active-clear:hover {
+  color: var(--color-text);
+}
+
+.explore-filter {
+  position: relative;
+}
+
+.explore-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill, var(--radius-md));
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+.explore-filter.active .explore-filter-toggle {
+  border-color: var(--color-text-muted);
+}
+
+.explore-filter-popover {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: 1;
+  min-width: 11rem;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover, 0 6px 20px rgb(0 0 0 / 0.15));
+}
+
+.explore-filter-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  font-size: var(--font-size-ui);
+  cursor: pointer;
+}
+
+.explore-item {
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+}
+
+.explore-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  margin-right: var(--space-4);
+}
+
+.explore-tag {
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
 }

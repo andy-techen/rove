@@ -35,6 +35,7 @@ interface Props {
   locked: boolean
   /** `key` groups a slider drag into one undo step. */
   onChange(next: PolishSettings, key?: string): void
+  onHide(): void
 }
 
 const PERCENT = 100
@@ -48,7 +49,8 @@ export function PolishPanel({
   part,
   polish,
   locked,
-  onChange
+  onChange,
+  onHide
 }: Props): React.JSX.Element {
   const [advanced, setAdvanced] = useState(false)
   const sweetSpot = defaultPolish(part)
@@ -60,6 +62,7 @@ export function PolishPanel({
       label={t('polish.label', { name: trackName })}
       title={t('polish.title')}
       subject={trackName}
+      onHide={onHide}
       actions={
         <>
           <span className="polish-switch">

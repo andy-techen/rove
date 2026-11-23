@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { EXPORT_CHANNELS } from '@shared/exportFormats'
 import { LYRICS_CHANNELS } from '@shared/lyrics'
 import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/appearance'
+import { CATALOG_CHANNELS } from '@shared/catalog'
 import { SETTINGS_CHANNELS } from '@shared/settings'
 import { WISHLIST_CHANNELS } from '@shared/wishlist'
 import { parseOverrides } from '@shared/keymap'
@@ -67,6 +68,7 @@ const api: RoveApi = {
   listWishlist: () => ipcRenderer.invoke(WISHLIST_CHANNELS.list),
   addToWishlist: (name, artist) => ipcRenderer.invoke(WISHLIST_CHANNELS.add, name, artist),
   removeFromWishlist: (id) => ipcRenderer.invoke(WISHLIST_CHANNELS.remove, id),
+  searchCatalog: (options) => ipcRenderer.invoke(CATALOG_CHANNELS.search, options),
   restoreTabs: () => ipcRenderer.invoke('project:restoreTabs'),
   rememberTabs: (dirs, active) => ipcRenderer.invoke('project:rememberTabs', dirs, active),
   createSong: (name, artist) => ipcRenderer.invoke('project:createNew', name, artist),

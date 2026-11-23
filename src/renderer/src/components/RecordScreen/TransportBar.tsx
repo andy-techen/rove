@@ -1,8 +1,11 @@
 import { t } from '@shared/copy'
 import { formatClock, formatMillis } from '../../state/song/project'
 import { useShortcuts } from '../../state/commands/shortcuts'
+import { gainToSlider, sliderToGain } from '../../audio/mix/mixer'
 import { InputMeter } from '../InputMeter'
 import { IconButton } from '../ui/IconButton'
+import { Slider } from '../ui/Slider'
+import { cx } from '../ui/cx'
 
 interface Props {
   playing: boolean
@@ -12,6 +15,14 @@ interface Props {
   position: number
   source: MediaStreamAudioSourceNode | null
   inputError: string | null
+  /** True when the singer has paused listening; the meter sits silent until resumed. */
+  micPaused: boolean
+  onToggleMicPaused(): void
+  /** Linear gain for the master bus (0..1 unity, up to ~2 for a boost). */
+  masterVolume: number
+  masterMuted: boolean
+  onMasterVolume(value: number): void
+  onToggleMasterMuted(): void
   canUndo: boolean
   canRedo: boolean
   canSplit: boolean
@@ -29,11 +40,21 @@ interface Props {
 }
 
 const PLAY_ICON_SIZE = 14
+const PERCENT = 100
 
 /** Play/pause and stop, the time, the input level, and the edit tools. */
 export function TransportBar(props: Props): React.JSX.Element {
   const shortcuts = useShortcuts()
-  const { playing, source, inputError } = props
+  const { playing, source, inputError, micPaused, masterVolume, masterMuted } = props
+  const masterPercent = Math.round(gainToSlider(masterVolume) * PERCENT)
+  const micToggle = (
+    <IconButton
+      icon={micPaused ? 'vocalsOff' : 'vocals'}
+      label={micPaused ? t('transport.resumeListening') : t('transport.pauseListening')}
+      aria-pressed={micPaused}
+      onClick={props.onToggleMicPaused}
+    />
+  )
   return (
     <section className="transport">
       <IconButton
@@ -58,9 +79,23 @@ export function TransportBar(props: Props): React.JSX.Element {
         {formatClock(props.position)}
         <span className="timer-ms">{formatMillis(props.position)}</span>
       </span>
-      <div className="transport-meter">
-        {source && <InputMeter source={source} showLabel={false} hint="warnings" />}
-        {inputError && <p className="error">{inputError}</p>}
+      {/* What you hear and what you sing, as a matching pair. */}
+      <div className="transport-levels">
+        <MasterVolume
+          percent={masterPercent}
+          muted={masterMuted}
+          onChange={(v) => props.onMasterVolume(sliderToGain(v / PERCENT))}
+          onReset={() => props.onMasterVolume(1)}
+          onToggleMuted={props.onToggleMasterMuted}
+        />
+        <div className="transport-level" title={inputError ?? undefined}>
+          {micToggle}
+          {source ? (
+            <InputMeter source={source} showLabel={false} hint="off" />
+          ) : (
+            <div className="meter-track" aria-hidden="true" />
+          )}
+        </div>
       </div>
       <div className="edit-tools" role="toolbar" aria-label={t('transport.editToolbar')}>
         <IconButton
@@ -116,5 +151,50 @@ export function TransportBar(props: Props): React.JSX.Element {
         />
       </div>
     </section>
+  )
+}
+
+interface MasterVolumeProps {
+  percent: number
+  muted: boolean
+  onChange(percent: number): void
+  onReset(): void
+  onToggleMuted(): void
+}
+
+/** Speaker (click to mute) and the same volume slider each track lane uses. */
+function MasterVolume({
+  percent,
+  muted,
+  onChange,
+  onReset,
+  onToggleMuted
+}: MasterVolumeProps): React.JSX.Element {
+  const title = muted
+    ? t('transport.masterVolumeMutedTitle')
+    : t('transport.masterVolumeTitle', { percent })
+  return (
+    <div className={cx('transport-level', muted && 'muted')}>
+      <IconButton
+        icon={muted ? 'muted' : 'volume'}
+        className="level-toggle"
+        label={muted ? t('transport.resume') : t('transport.mute')}
+        title={title}
+        aria-pressed={muted}
+        onClick={onToggleMuted}
+      />
+      <Slider
+        tone="muted"
+        min={0}
+        max={PERCENT}
+        value={percent}
+        disabled={muted}
+        label={t('transport.masterVolume')}
+        valueText={t('transport.masterVolumeValue', { percent })}
+        title={title}
+        onChange={onChange}
+        onDoubleClick={onReset}
+      />
+    </div>
   )
 }

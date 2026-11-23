@@ -20,8 +20,13 @@ interface Props {
   typeLabel?: string
   /** A control before the value, such as an on/off switch. */
   extra?: ReactNode
-  /** A quiet word after the value that puts it in context ("A major"). */
-  note?: string
+  /**
+   * What to read first, before the value: the result rather than the change (the key
+   * you'll sing in, "B♭ major"). The typed value then sits after it, quieter.
+   */
+  lead?: string
+  /** Leaves out the typed value, e.g. when it's 0 and the lead says it all. */
+  hideValue?: boolean
   /** Shows a ↶ beside the value that puts the control back, when given. */
   reset?: { label: string; onReset(): void } | null
   disabled?: boolean
@@ -38,7 +43,8 @@ export function KnobControl({
   onType,
   typeLabel,
   extra,
-  note,
+  lead,
+  hideValue,
   reset,
   disabled,
   knob
@@ -52,15 +58,17 @@ export function KnobControl({
       </span>
       <span className="knob-control-value">
         {extra}
-        <NumberField
-          align="start"
-          label={typeLabel ?? t('panel.typeValue', { name: label })}
-          value={value.number}
-          unit={value.unit}
-          disabled={disabled}
-          onCommit={onType}
-        />
-        {note && <span className="knob-control-note">{note}</span>}
+        {lead && <span className="knob-control-lead">{lead}</span>}
+        {!hideValue && (
+          <NumberField
+            align="start"
+            label={typeLabel ?? t('panel.typeValue', { name: label })}
+            value={value.number}
+            unit={value.unit}
+            disabled={disabled}
+            onCommit={onType}
+          />
+        )}
         {reset && (
           <IconButton
             icon="reset"

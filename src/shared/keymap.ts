@@ -49,6 +49,7 @@ export const KEYMAP = {
   zoomIn: { group: 'view', accelerator: 'CmdOrCtrl+=' },
   zoomOut: { group: 'view', accelerator: 'CmdOrCtrl+-' },
   zoomFit: { group: 'view', accelerator: 'CmdOrCtrl+0' },
+  toPlayhead: { group: 'view', accelerator: 'CmdOrCtrl+J' },
   toggleLyrics: { group: 'view', accelerator: 'CmdOrCtrl+L' },
   toggleChords: { group: 'view', accelerator: 'CmdOrCtrl+K' },
   zoomGesture: { group: 'view', accelerator: 'CmdOrCtrl+Scroll', gesture: true }

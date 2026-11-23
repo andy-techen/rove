@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { t } from '@shared/copy'
 import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
+import { SearchField } from '../ui/SearchField'
 import { cx } from '../ui/cx'
+import { NewSongDialog } from '../NewSongDialog'
+import { Explore } from './Explore'
 import { SongList } from './SongList'
 import { Wishlist } from './Wishlist'
 import './SongbookDialog.css'
@@ -19,9 +22,9 @@ interface Props {
   onClose(): void
 }
 
-type View = 'songs' | 'wishlist'
+type View = 'songs' | 'wishlist' | 'explore'
 
-const VIEWS: View[] = ['songs', 'wishlist']
+const VIEWS: View[] = ['songs', 'wishlist', 'explore']
 
 /** Your songs (folders that exist) and your wishlist (songs to try later). */
 export function SongbookDialog({
@@ -33,6 +36,21 @@ export function SongbookDialog({
 }: Props): React.JSX.Element {
   const [view, setView] = useState<View>('songs')
   const [query, setQuery] = useState('')
+  const [addingWish, setAddingWish] = useState(false)
+  const [addError, setAddError] = useState<string | null>(null)
+  // Bumped after an add so the wishlist reloads with the new item.
+  const [wishlistVersion, setWishlistVersion] = useState(0)
+
+  const addWish = async (name: string, artist?: string): Promise<void> => {
+    setAddingWish(false)
+    try {
+      await window.api.addToWishlist(name, artist)
+      setAddError(null)
+      setWishlistVersion((v) => v + 1)
+    } catch {
+      setAddError(t('songbook.wishlistError'))
+    }
+  }
   return (
     <Dialog
       title={t('songbook.title')}
@@ -53,28 +71,47 @@ export function SongbookDialog({
           </button>
         ))}
       </div>
-      <input
-        type="search"
-        className="songbook-search"
-        aria-label={t('songbook.searchLabel')}
-        placeholder={t('songbook.searchPlaceholder')}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      {/* A steady height, so the dialog doesn't jump around as a search narrows the list. */}
-      <div className="songbook-body">
-        {view === 'songs' ? (
-          <SongList openFolders={openFolders} query={query} onOpen={onOpen} />
-        ) : (
-          <Wishlist query={query} onStart={onStart} />
+      {/* One height for every tab, so switching tabs doesn't resize the dialog. */}
+      <div className="songbook-panel">
+        {view !== 'explore' && (
+          <SearchField
+            className="songbook-search"
+            label={t('songbook.searchLabel')}
+            placeholder={t('songbook.searchPlaceholder')}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        )}
+        <div className={cx('songbook-body', view === 'explore' && 'songbook-body-explore')}>
+          {view === 'songs' && <SongList openFolders={openFolders} query={query} onOpen={onOpen} />}
+          {view === 'explore' && <Explore />}
+          {view === 'wishlist' && (
+            <Wishlist key={wishlistVersion} query={query} onStart={onStart} />
+          )}
+        </div>
+        {view === 'songs' && (
+          <div className="songbook-footer">
+            <Button icon="plus" onClick={onNew}>
+              {t('songbook.newSong')}
+            </Button>
+          </div>
+        )}
+        {view === 'wishlist' && (
+          <div className="songbook-footer">
+            {addError && <p className="songbook-note songbook-error">{addError}</p>}
+            <Button icon="plus" onClick={() => setAddingWish(true)}>
+              {t('songbook.addToWishlistButton')}
+            </Button>
+          </div>
         )}
       </div>
-      {view === 'songs' && (
-        <div className="songbook-footer">
-          <Button icon="plus" onClick={onNew}>
-            {t('songbook.newSong')}
-          </Button>
-        </div>
+      {addingWish && (
+        <NewSongDialog
+          title={t('songbook.addToWishlistButton')}
+          submitLabel={t('songbook.addToWishlist')}
+          onCreate={(name, artist) => void addWish(name, artist)}
+          onClose={() => setAddingWish(false)}
+        />
       )}
     </Dialog>
   )

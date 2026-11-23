@@ -1,3 +1,4 @@
+import type { CatalogSearchOptions, CatalogSearchResult } from '../shared/catalog'
 import type { ExportFormat } from '../shared/exportFormats'
 import type { KeymapOverrides } from '../shared/keymap'
 import type { LyricsResult } from '../shared/lyrics'
@@ -58,6 +59,8 @@ export interface RoveApi {
   listWishlist(): Promise<WishlistItem[]>
   addToWishlist(name: string, artist?: string): Promise<WishlistItem[]>
   removeFromWishlist(id: string): Promise<WishlistItem[]>
+  /** Searches the curated song catalog that ships with the app. */
+  searchCatalog(options: CatalogSearchOptions): Promise<CatalogSearchResult>
   /** Reopens the songs that were open last time. */
   restoreTabs(): Promise<{ songs: ChosenProject[]; activeSong: string | null }>
   rememberTabs(dirs: string[], active: string | null): Promise<void>

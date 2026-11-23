@@ -14,16 +14,29 @@ export type Command = MenuAction | ShortcutId
 
 const listeners = new Set<(command: Command) => void>()
 
+// One shared menu subscription for the whole app: ipcRenderer caps listeners at 10
+// by default, and each open tab wires up two (RecordScreen and Timeline), so a few
+// tabs would otherwise fire a MaxListenersExceededWarning. Fanning out from a single
+// listener keeps the count flat.
+let stopMenu: (() => void) | null = null
+
+function dispatch(command: Command): void {
+  for (const listener of listeners) listener(command)
+}
+
 /**
  * Listens for commands, whether they came from the menu bar or a key the renderer
  * handles itself. Returns a function that stops listening.
  */
 export function onCommand(listener: (command: Command) => void): () => void {
   listeners.add(listener)
-  const stopMenu = window.api.onMenu(listener)
+  if (!stopMenu) stopMenu = window.api.onMenu(dispatch)
   return () => {
     listeners.delete(listener)
-    stopMenu()
+    if (listeners.size === 0 && stopMenu) {
+      stopMenu()
+      stopMenu = null
+    }
   }
 }
 
@@ -72,7 +85,7 @@ export function useShortcutKeys(): void {
       const id = shortcutForKey(e)
       if (!id) return
       e.preventDefault()
-      listeners.forEach((listener) => listener(id))
+      dispatch(id)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)

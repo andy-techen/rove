@@ -1,6 +1,12 @@
 .meter {
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
+}
+
+.meter-row {
+  display: flex;
+  align-items: center;
   gap: var(--space-4);
 }
 
@@ -12,6 +18,8 @@
 
 .meter-track {
   position: relative;
+  flex: 1;
+  min-width: 0;
   height: var(--size-meter);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
@@ -49,8 +57,18 @@
 }
 
 .meter-hint {
+  flex-basis: 16rem;
+  flex-shrink: 0;
+  margin: 0;
   font-size: var(--font-size-ui);
   min-height: calc(var(--line-height) * 1em);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meter-hint[data-shown='false'] {
+  visibility: hidden;
 }
 
 .meter-hint[data-zone='silent'],

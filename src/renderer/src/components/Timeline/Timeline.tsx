@@ -101,7 +101,7 @@ interface Props {
 
 // Small enough for the zoom buttons to sit inside the ruler's row.
 const ZOOM_ICON_SIZE = 14
-const LANE_HEIGHT = 72
+const LANE_HEIGHT = 88
 // Pointer travel below this is a click on the timeline, not the start of a box.
 const BOX_THRESHOLD_PX = 4
 // Gap between a clip and the top and bottom of its lane.
@@ -161,6 +161,8 @@ export function Timeline({
     x,
     secAt,
     zoomIn,
+    playheadVisible,
+    toPlayhead,
     zoomOut,
     onScrollbar
   } = useTimelineView({
@@ -361,6 +363,7 @@ export function Timeline({
         data-track={track.id}
         className={cx(
           'lane',
+          selectedTrackIds.includes(track.id) && 'lane-selected',
           isRecording && 'lane-recording',
           track.muted && 'lane-muted',
           drag?.id === track.id && 'lane-dragging',
@@ -384,7 +387,10 @@ export function Timeline({
           detail={isRecording ? formatDuration(recording.sec) : track.detail}
           role={track.role}
           recording={isRecording}
-          recordDisabled={!canRecord || recording !== null}
+          // An imported backing track is a single file already laid down: recording
+          // on top of it would double what the singer is hearing, so hide the action.
+          recordDisabled={!canRecord || recording !== null || track.imported}
+          recordDisabledReason={track.imported ? t('track.cantRecordImported') : undefined}
           selected={selectedTrackIds.includes(track.id)}
           onSelect={(mode) => onSelectTrack(track.id, mode)}
           onContextMenu={() => onContextMenu('track', track.id, null)}
@@ -505,6 +511,15 @@ export function Timeline({
               label={t('timeline.zoomIn')}
               title={shortcuts.label(t('timeline.zoomIn'), 'zoomIn')}
               onClick={zoomIn}
+            />
+            <IconButton
+              icon="locate"
+              iconSize={ZOOM_ICON_SIZE}
+              className="zoom-button"
+              label={t('timeline.toPlayhead')}
+              title={shortcuts.label(t('timeline.toPlayhead'), 'toPlayhead')}
+              disabled={playheadVisible}
+              onClick={toPlayhead}
             />
           </span>
         </div>

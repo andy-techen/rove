@@ -14,6 +14,7 @@ function renderPanel(polish = defaultPolish('lead')) {
       polish={polish}
       locked={false}
       onChange={onChange}
+      onHide={vi.fn()}
     />
   )
   return onChange
@@ -22,6 +23,22 @@ function renderPanel(polish = defaultPolish('lead')) {
 const slider = (name: string): HTMLElement => screen.getByRole('slider', { name })
 
 describe('PolishPanel', () => {
+  it('hides itself from the button in its header', async () => {
+    const onHide = vi.fn()
+    render(
+      <PolishPanel
+        trackName="Vocal 1"
+        part="lead"
+        polish={defaultPolish('lead')}
+        locked={false}
+        onChange={vi.fn()}
+        onHide={onHide}
+      />
+    )
+    await userEvent.click(screen.getByRole('button', { name: t('panel.hide') }))
+    expect(onHide).toHaveBeenCalled()
+  })
+
   it('turns a plain-language slider into a setting, grouped as one undo step', () => {
     const onChange = renderPanel()
     fireEvent.change(slider(t('polish.controls.space.label')), { target: { value: '80' } })

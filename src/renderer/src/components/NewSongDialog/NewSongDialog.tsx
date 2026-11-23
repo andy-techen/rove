@@ -10,13 +10,22 @@ interface Props {
   onClose(): void
   /** A song's current details, to change them rather than start a new song. */
   editing?: { name: string; artist?: string }
+  /** For other uses of the same name-and-artist form, like adding to the wishlist. */
+  title?: string
+  submitLabel?: string
 }
 
 /**
  * Names a song: a new one before it's made (the folder, the tab and the lyrics search
  * use the name), or an existing one from the Songbook.
  */
-export function NewSongDialog({ onCreate, onClose, editing }: Props): React.JSX.Element {
+export function NewSongDialog({
+  onCreate,
+  onClose,
+  editing,
+  title,
+  submitLabel
+}: Props): React.JSX.Element {
   const [name, setName] = useState(editing?.name ?? '')
   const [artist, setArtist] = useState(editing?.artist ?? '')
   const field = useRef<HTMLInputElement>(null)
@@ -24,7 +33,7 @@ export function NewSongDialog({ onCreate, onClose, editing }: Props): React.JSX.
   const trimmedArtist = artist.trim()
   return (
     <Dialog
-      title={editing ? t('newSong.editTitle') : t('newSong.title')}
+      title={title ?? (editing ? t('newSong.editTitle') : t('newSong.title'))}
       closeLabel={t('newSong.cancel')}
       onClose={onClose}
       initialFocus={field}
@@ -59,7 +68,7 @@ export function NewSongDialog({ onCreate, onClose, editing }: Props): React.JSX.
             {t('newSong.cancel')}
           </Button>
           <Button type="submit" disabled={!trimmedName}>
-            {editing ? t('newSong.save') : t('newSong.create')}
+            {submitLabel ?? (editing ? t('newSong.save') : t('newSong.create'))}
           </Button>
         </div>
       </form>

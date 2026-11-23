@@ -74,6 +74,7 @@ describe('SongbookDialog', () => {
     vi.mocked(window.api.addToWishlist).mockResolvedValue([dreams])
     renderDialog()
     await showWishlist()
+    await userEvent.click(screen.getByRole('button', { name: t('songbook.addToWishlistButton') }))
     await userEvent.type(screen.getByRole('textbox', { name: t('newSong.nameLabel') }), 'Dreams')
     await userEvent.type(
       screen.getByRole('textbox', { name: t('newSong.artistLabel') }),

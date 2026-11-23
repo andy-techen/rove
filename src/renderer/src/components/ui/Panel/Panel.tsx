@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import { t } from '@shared/copy'
 import { cx } from '../cx'
+import { IconButton } from '../IconButton'
 import './Panel.css'
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
   subject?: string
   /** Controls at the right of the header. */
   actions?: ReactNode
+  /** Shows a hide button at the far right of the header. */
+  onHide?: () => void
   children: ReactNode
   className?: string
 }
@@ -21,6 +24,7 @@ export function Panel({
   title,
   subject,
   actions,
+  onHide,
   children,
   className
 }: Props): React.JSX.Element {
@@ -31,7 +35,14 @@ export function Panel({
           {title}
           {subject && <span className="muted"> {t('panel.subject', { name: subject })}</span>}
         </h2>
-        {actions && <div className="panel-actions">{actions}</div>}
+        {(actions || onHide) && (
+          <div className="panel-actions">
+            {actions}
+            {onHide && (
+              <IconButton icon="hideBottomPanel" label={t('panel.hide')} onClick={onHide} />
+            )}
+          </div>
+        )}
       </header>
       {children}
     </section>

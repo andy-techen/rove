@@ -13,8 +13,10 @@ const mic = (overrides: Partial<Microphone>): Microphone => ({
   source: null,
   inputError: null,
   latencySec: 0.02,
+  paused: false,
   chooseDevice: vi.fn(),
   retryAccess: vi.fn(async () => {}),
+  setPaused: vi.fn(),
   ...overrides
 })
 

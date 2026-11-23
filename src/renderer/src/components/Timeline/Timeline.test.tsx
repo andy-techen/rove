@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { LaneView } from '../../state/song/selectors'
+import { createFakeApi } from '../../test/fakeApi'
 import { Timeline } from '.'
 
 const lane = (overrides: Partial<LaneView>): LaneView => ({
@@ -10,6 +11,7 @@ const lane = (overrides: Partial<LaneView>): LaneView => ({
   role: 'vocal',
   name: 'Vocal 1',
   detail: 'Lead',
+  imported: false,
   volume: 1,
   startVolume: 1,
   pan: 0,
@@ -19,8 +21,8 @@ const lane = (overrides: Partial<LaneView>): LaneView => ({
   ...overrides
 })
 
-function renderTimeline(overrides: Partial<Parameters<typeof Timeline>[0]> = {}) {
-  const props = {
+function timelineProps(overrides: Partial<Parameters<typeof Timeline>[0]> = {}) {
+  return {
     tracks: [lane({})],
     position: 0,
     follow: false,
@@ -52,6 +54,10 @@ function renderTimeline(overrides: Partial<Parameters<typeof Timeline>[0]> = {})
     snapAt: null,
     ...overrides
   }
+}
+
+function renderTimeline(overrides: Partial<Parameters<typeof Timeline>[0]> = {}) {
+  const props = timelineProps(overrides)
   render(<Timeline {...props} />)
   return props
 }
@@ -227,5 +233,83 @@ describe('Timeline', () => {
     const props = renderTimeline()
     fireEvent.contextMenu(screen.getByRole('button', { name: /^Vocal 1/ }))
     expect(props.onContextMenu).toHaveBeenCalledWith('track', 'v1', null)
+  })
+
+  it('lets the singer scroll away from the playhead while the song plays', async () => {
+    const clip = {
+      id: 'c1',
+      start: 0,
+      offset: 0,
+      duration: 300,
+      fadeIn: 0,
+      fadeOut: 0,
+      audio: null,
+      joinedBefore: false,
+      joinedAfter: false
+    }
+    const playing = (position: number) =>
+      timelineProps({ tracks: [lane({ clips: [clip] })], follow: true, position })
+    const { container, rerender } = render(<Timeline {...playing(0)} />)
+    for (let i = 0; i < 3; i++) {
+      await userEvent.click(screen.getByRole('button', { name: t('timeline.zoomIn') }))
+    }
+    // The custom scrollbar has no role to find it by.
+    const bar = container.querySelector<HTMLElement>('.timeline-scrollbar')!
+    bar.scrollLeft = 1000
+    fireEvent.scroll(bar)
+    rerender(<Timeline {...playing(1)} />)
+    // Still where they scrolled, not snapped back to the start.
+    expect(screen.getByText('2:00')).toBeInTheDocument()
+    expect(screen.queryByText('0:10')).not.toBeInTheDocument()
+  })
+
+  it('jumps back to the playhead from the button beside zoom', async () => {
+    const clip = {
+      id: 'c1',
+      start: 0,
+      offset: 0,
+      duration: 300,
+      fadeIn: 0,
+      fadeOut: 0,
+      audio: null,
+      joinedBefore: false,
+      joinedAfter: false
+    }
+    const { container } = render(
+      <Timeline {...timelineProps({ tracks: [lane({ clips: [clip] })], follow: true })} />
+    )
+    for (let i = 0; i < 3; i++) {
+      await userEvent.click(screen.getByRole('button', { name: t('timeline.zoomIn') }))
+    }
+    const bar = container.querySelector<HTMLElement>('.timeline-scrollbar')!
+    bar.scrollLeft = 1000
+    fireEvent.scroll(bar)
+    await userEvent.click(screen.getByRole('button', { name: t('timeline.toPlayhead') }))
+    expect(screen.getByText('0:10')).toBeInTheDocument()
+  })
+
+  it('jumps back to the playhead from the View menu shortcut', async () => {
+    const clip = {
+      id: 'c1',
+      start: 0,
+      offset: 0,
+      duration: 300,
+      fadeIn: 0,
+      fadeOut: 0,
+      audio: null,
+      joinedBefore: false,
+      joinedAfter: false
+    }
+    const { container } = render(
+      <Timeline {...timelineProps({ tracks: [lane({ clips: [clip] })], follow: true })} />
+    )
+    for (let i = 0; i < 3; i++) {
+      await userEvent.click(screen.getByRole('button', { name: t('timeline.zoomIn') }))
+    }
+    const bar = container.querySelector<HTMLElement>('.timeline-scrollbar')!
+    bar.scrollLeft = 1000
+    fireEvent.scroll(bar)
+    act(() => (window.api as ReturnType<typeof createFakeApi>).fireMenu('toPlayhead'))
+    expect(screen.getByText('0:10')).toBeInTheDocument()
   })
 })

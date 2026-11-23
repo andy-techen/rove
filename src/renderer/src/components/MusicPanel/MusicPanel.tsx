@@ -35,6 +35,7 @@ interface Props {
   canClick: boolean
   /** Back to the original speed, key and tone. */
   onReset(): void
+  onHide(): void
   vocals: VocalsState
   /** Why removing the vocals last failed, if it did. */
   vocalsError?: string | null
@@ -61,6 +62,7 @@ export function MusicPanel({
   onClickOn,
   canClick,
   onReset,
+  onHide,
   vocals,
   vocalsError,
   onRemoveVocals,
@@ -110,6 +112,7 @@ export function MusicPanel({
       label={t('music.label', { name: trackName })}
       title={t('music.title')}
       subject={trackName}
+      onHide={onHide}
       actions={
         <>
           <VocalsControl
@@ -158,9 +161,14 @@ export function MusicPanel({
           label={t('music.key')}
           hint={t('music.keyHint')}
           disabled={locked}
-          value={{ number: formatSigned(music.semitones), unit: t('music.semitones') }}
+          value={{
+            number: formatSigned(music.semitones),
+            unit: songKey ? undefined : t('music.semitones')
+          }}
           typeLabel={t('music.typeKey')}
-          note={songKey ? keyName(songKey) : undefined}
+          // The key you'll sing in comes first; the shift only shows once there is one.
+          lead={songKey ? keyName(songKey) : undefined}
+          hideValue={!!songKey && music.semitones === 0}
           onType={(text) => {
             const semitones = parseSemitones(text)
             if (semitones !== null) onSemitones(semitones)

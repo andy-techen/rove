@@ -131,15 +131,9 @@ button.lyric:hover {
   width: 100%;
 }
 
-.lyrics-search input {
+.lyrics-search .search-field {
   flex: 1;
   min-width: 0;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-  font-size: var(--font-size-ui);
 }
 
 .lyrics-results {

@@ -109,6 +109,7 @@ export function installMenu(keymap: Keymap): void {
         shortcut('zoomIn'),
         shortcut('zoomOut'),
         shortcut('zoomFit'),
+        shortcut('toPlayhead'),
         separator,
         shortcut('toggleLyrics'),
         shortcut('toggleChords'),

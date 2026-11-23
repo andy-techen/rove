@@ -16,8 +16,11 @@ export interface Microphone {
   inputError: string | null
   /** The delay to remove from new takes, as the system reports it. */
   latencySec: number
+  /** True when the singer has paused listening; the mic stream is released until resumed. */
+  paused: boolean
   chooseDevice(deviceId: string): void
   retryAccess(): Promise<void>
+  setPaused(paused: boolean): void
 }
 
 /** Microphone permission, device choice, the live input, and its delay. */
@@ -25,7 +28,11 @@ export function useMicrophone(): Microphone {
   const [access, setAccess] = useState<MicAccess>('requesting')
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
   const [deviceId, setDeviceId] = useState<string | null>(null)
-  const { source, error: inputError } = useMicInput(access === 'granted' ? deviceId : null)
+  const [paused, setPaused] = useState(false)
+  // Passing null closes the input: that's how "pause" releases the mic stream
+  // without changing the chosen device or asking for access again.
+  const activeDeviceId = access === 'granted' && !paused ? deviceId : null
+  const { source, error: inputError } = useMicInput(activeDeviceId)
 
   const refreshDevices = useCallback(async (preferredId: string | null) => {
     const inputs = await listInputs()
@@ -69,10 +76,12 @@ export function useMicrophone(): Microphone {
     source,
     inputError,
     latencySec: estimatedLatency(getAudioContext()),
+    paused,
     chooseDevice: (id) => {
       saveDeviceId(id)
       setDeviceId(id)
     },
-    retryAccess: enable
+    retryAccess: enable,
+    setPaused
   }
 }

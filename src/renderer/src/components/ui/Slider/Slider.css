@@ -29,6 +29,13 @@
   width: calc(var(--along) * (var(--fill-to) - var(--fill-from)));
 }
 
+/* One-way sliders fill from the track's very end, not from where the thumb's travel
+   starts, so no sliver of empty track shows before the fill. */
+.slider-one-way .slider-fill {
+  left: 0;
+  width: calc(var(--thumb) / 2 + var(--along) * var(--fill-to));
+}
+
 .slider-accent .slider-fill {
   background: var(--color-accent);
 }
@@ -81,9 +88,9 @@
 .slider input::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: var(--thumb);
-  height: var(--thumb);
-  margin-top: calc((var(--size-control-xs) - var(--thumb)) / 2);
-  border-radius: var(--radius-round);
+  height: var(--size-slider-thumb-height);
+  margin-top: calc((var(--size-control-xs) - var(--size-slider-thumb-height)) / 2);
+  border-radius: var(--size-slider-thumb-radius);
   background: var(--color-thumb);
   box-shadow: var(--shadow-thumb);
 }

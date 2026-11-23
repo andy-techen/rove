@@ -79,6 +79,21 @@
   border-right: 1px solid var(--color-border);
 }
 
+/* The selected track: the whole row is tinted, name to mixer, with a gold bar on the
+   left edge. Recording's red bar (below) wins while a take is going. */
+.lane-selected {
+  background: var(--color-surface-raised);
+}
+
+.lane-selected .lane-header {
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+/* On the tinted row the title's own hover fill would vanish, so it stays clear. */
+.lane-selected .lane-title:hover {
+  background: transparent;
+}
+
 .lane-recording .lane-header {
   box-shadow: inset 3px 0 0 var(--color-danger);
 }
@@ -101,13 +116,8 @@
   cursor: pointer;
 }
 
-.lane-title:hover,
-.track-selected .lane-title {
+.lane-title:hover {
   background: var(--color-surface-raised);
-}
-
-.track-selected .lane-title {
-  box-shadow: inset var(--size-focus-ring) 0 0 var(--color-accent);
 }
 
 /* A lane's name and detail without the select button: the empty backing lane. */
@@ -417,7 +427,7 @@
 
 .mute-button.muted,
 .mute-button.muted:hover:not(:disabled) {
-  color: var(--color-warning);
+  color: var(--color-accent);
 }
 
 /* Where a dragged clip has snapped: a line through every lane at that time. */

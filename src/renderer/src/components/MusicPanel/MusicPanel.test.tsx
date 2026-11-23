@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
@@ -32,6 +32,7 @@ function renderPanel(music: Partial<MusicSettings> = {}, over = {}) {
     onRemoveVocals: vi.fn(),
     onCancelRemoveVocals: vi.fn(),
     onPutVocalsBack: vi.fn(),
+    onHide: vi.fn(),
     ...over
   }
   render(<MusicPanel {...props} />)
@@ -69,6 +70,17 @@ describe('MusicPanel', () => {
     renderPanel({ speed: 1, semitones: 2 }, { songKey: { tonic: 2, mode: 'major' } })
     expect(screen.getByText('D major')).toBeInTheDocument()
     expect(screen.queryByText(/^Now in/)).not.toBeInTheDocument()
+  })
+
+  it('shows just the key when it is unchanged, and the shift once it moves', () => {
+    const key = { tonic: 8, mode: 'major' as const }
+    renderPanel({ speed: 1, semitones: 0 }, { songKey: key })
+    expect(screen.getByText('A♭ major')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: t('music.typeKey') })).not.toBeInTheDocument()
+    cleanup()
+    renderPanel({ speed: 1, semitones: 2 }, { songKey: { tonic: 10, mode: 'major' } })
+    expect(screen.getByText('B♭ major')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: t('music.typeKey') })).toHaveValue('+2')
   })
 
   it('goes back to the original speed and key', async () => {

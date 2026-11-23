@@ -55,6 +55,7 @@
   --radius-lg: 8px;
   --radius-xl: 10px;
   --radius-round: 50%;
+  --radius-pill: 999px;
 
   /* Type. */
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -79,8 +80,10 @@
   --size-control-md: 30px;
   --size-handle: 10px;
   --size-trim-handle: 7px;
-  --size-meter: 18px;
-  --size-slider: 14px;
+  --size-meter: 12px;
+  --size-slider: 10px;
+  --size-slider-thumb-height: var(--size-slider);
+  --size-slider-thumb-radius: var(--radius-round);
   --size-slider-track: 4px;
   --size-slider-dot: 6px;
   --size-focus-ring: 2px;
@@ -112,7 +115,7 @@
 
   /* Layout. */
   --layout-narrow-max: 560px;
-  --layout-lane-header: 168px;
+  --layout-lane-header: 208px;
   --layout-mixer: 188px;
   --layout-ruler: 24px;
   --layout-lane-add: 40px;
@@ -120,9 +123,8 @@
   --layout-tab-max: 220px;
   --layout-song-name-max: 200px;
   --layout-mic-button-max: 220px;
-  --layout-meter-min: 220px;
   --layout-progress-percent: 32px;
-  --layout-meter-max: 420px;
+  --layout-transport-level: 140px;
   --layout-knob-control: 124px;
   --layout-advanced-column: 360px;
   --layout-advanced-label: 164px;
@@ -132,7 +134,7 @@
   --layout-traffic-lights: 80px;
   --layout-dialog: 640px;
   --layout-dialog-narrow: 420px;
-  --layout-songbook-list: 360px;
+  --layout-songbook-panel: 460px;
   --layout-shortcut-keys: 56px;
   --layout-keymap-max: 280px;
   --layout-lyrics: 320px;

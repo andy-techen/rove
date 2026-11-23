@@ -30,15 +30,21 @@
 .knob-control-value {
   display: flex;
   align-items: center;
+  /* Always as tall as the typed value with its padding and border, so the value or the
+     reset button appearing never pushes anything down. */
+  min-height: calc(var(--font-size-caption) * var(--line-height) + 2 * var(--space-1) + 2px);
+  white-space: nowrap;
   gap: var(--space-1);
   font-size: var(--font-size-caption);
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
-/* Set a little apart from the number, as context rather than part of the value. */
-.knob-control-note {
-  margin-left: var(--space-2);
+/* The reading that matters most, in full text colour; the typed value after it stays
+   quiet and set a little apart. */
+.knob-control-lead {
+  margin-right: var(--space-2);
+  color: var(--color-text);
   white-space: nowrap;
 }
 

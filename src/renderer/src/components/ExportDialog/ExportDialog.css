@@ -55,6 +55,12 @@
   min-height: calc(var(--font-size-ui) * var(--line-height));
   margin-top: var(--space-7);
   font-size: var(--font-size-ui);
+  color: var(--color-text-muted);
+}
+
+/* A failure keeps the danger colour; only progress and success are quiet. */
+.export-status.error {
+  color: var(--color-danger);
 }
 
 .export-actions {

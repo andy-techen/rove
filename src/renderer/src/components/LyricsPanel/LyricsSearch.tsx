@@ -5,6 +5,7 @@ import { formatDuration } from '../../state/song/project'
 import { useLyricsSearch } from '../../state/lyrics/useLyricsSearch'
 import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
+import { SearchField } from '../ui/SearchField'
 
 interface Props {
   /** The song's name, to search for to begin with. */
@@ -28,10 +29,9 @@ export function LyricsSearch({ songName, disabled, onPick }: Props): React.JSX.E
           if (query.trim()) void search(query.trim())
         }}
       >
-        <input
-          type="search"
-          aria-label={t('lyrics.searchLabel')}
-          placeholder={t('lyrics.searchLabel')}
+        <SearchField
+          label={t('lyrics.searchLabel')}
+          placeholder={t('lyrics.searchPlaceholder')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

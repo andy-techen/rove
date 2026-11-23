@@ -62,6 +62,12 @@ export interface Transport {
   /** Playing, or paused somewhere past the start. */
   canStop: boolean
   recorderReady: boolean
+  /** Linear gain on the master bus (1 = unity). Not saved: a session-level comfort knob. */
+  masterVolume: number
+  /** When true, the master bus plays silent but the chosen volume is remembered. */
+  masterMuted: boolean
+  setMasterVolume(value: number): void
+  toggleMasterMuted(): void
   togglePlay(): void
   /** Stops playback and goes back to the start of the song. */
   stopPlayback(): void
@@ -105,6 +111,8 @@ export function useTransport(
   const [pending, setPending] = useState<PendingTake | null>(null)
   const [recorder, setRecorder] = useState<Recorder | null>(null)
   const [live, setLive] = useState<LiveTake | null>(null)
+  const [masterVolume, setMasterVolume] = useState(1)
+  const [masterMuted, setMasterMuted] = useState(false)
   const session = useRef<Session | null>(null)
   const onEndedRef = useRef<() => void>(() => {})
   const restartRef = useRef<() => void>(() => {})
@@ -126,6 +134,16 @@ export function useTransport(
   useEffect(() => {
     mixer?.sync(project ? trackMixes(project) : [])
   }, [mixer, project])
+
+  // Mirrors the session-level master volume onto the mixer bus. setTargetAtTime
+  // ramps instead of writing .value directly (which the hook linter flags as mutation),
+  // and also keeps the master steady across export, which writes master.gain itself.
+  useEffect(() => {
+    if (!mixer) return
+    const ctx = getAudioContext()
+    const target = masterMuted ? 0 : masterVolume
+    mixer.master.gain.setTargetAtTime(target, ctx.currentTime, 0.01)
+  }, [mixer, masterVolume, masterMuted, mode])
 
   useEffect(() => {
     if (!source) return
@@ -367,6 +385,10 @@ export function useTransport(
     canPlay: !!mixer && hasAudio && !waiting && (mode === 'idle' || mode === 'playing'),
     canStop: mode === 'playing' || (mode === 'idle' && position > 0),
     recorderReady: recorder !== null && mixer !== null,
+    masterVolume,
+    masterMuted,
+    setMasterVolume,
+    toggleMasterMuted: () => setMasterMuted((v) => !v),
     togglePlay: () => {
       if (mode === 'playing') pause()
       else if (mode === 'idle') void startPlayback(position)

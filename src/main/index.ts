@@ -11,6 +11,7 @@ import { registerKeymapIpc } from './ipc/keymap'
 import { registerSettingsIpc } from './ipc/settings'
 import { registerSeparationIpc } from './ipc/separation'
 import { registerWishlistIpc } from './ipc/wishlist'
+import { registerCatalogIpc } from './ipc/catalog'
 import { APP_ORIGIN, registerAppScheme, serveApp } from './appProtocol'
 import { FULL_SCREEN_CHANNEL, NATIVE_EDIT_CHANNEL, NATIVE_EDITS } from '@shared/menu'
 
@@ -100,6 +101,7 @@ app.whenReady().then(async () => {
   await registerSettingsIpc()
   registerSeparationIpc()
   registerWishlistIpc()
+  registerCatalogIpc()
 
   createWindow()
 

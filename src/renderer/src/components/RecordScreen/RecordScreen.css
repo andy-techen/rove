@@ -13,9 +13,8 @@
 }
 
 /*
- * Exactly the window's height: the timeline gives up room to the transport and polish
- * panel and scrolls its own lanes. The workspace only scrolls as a fallback when the
- * window is too short for even that.
+ * Exactly the window's height. The transport pins to the top and the polish/music panel
+ * to the bottom; the timeline sits under the transport and scrolls its own lanes.
  */
 .workspace {
   flex: 1;
@@ -25,11 +24,21 @@
   gap: var(--space-7);
   min-width: 0;
   padding: var(--space-8) var(--space-7);
-  overflow-y: auto;
 }
 
 .workspace > :not(.timeline) {
   flex-shrink: 0;
+}
+
+/* The timeline is only as tall as its tracks (shrinking to scroll when there are many);
+   the panel is pushed to the bottom, leaving plain background between them. */
+.workspace > .timeline {
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
+.workspace > .panel {
+  margin-top: auto;
 }
 
 .transport-messages {
@@ -52,10 +61,33 @@
   gap: var(--space-7);
 }
 
-.transport-meter {
+/* Hearing and singing, side by side: speaker + volume slider, mic + input meter.
+   Both pairs share one width so they read as twins. */
+.transport-levels {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  margin-left: auto;
+}
+
+.transport-level {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: var(--layout-transport-level);
+}
+
+/* Descendant, not child: a titled slider sits inside a display: contents tooltip
+   anchor, which still makes it a flex item here. */
+.transport-level .slider,
+.transport-level .meter {
   flex: 1;
-  min-width: var(--layout-meter-min);
-  max-width: var(--layout-meter-max);
+  min-width: 0;
+}
+
+.transport-level.muted .level-toggle,
+.transport-level .icon-button[aria-pressed='true'] {
+  color: var(--color-accent);
 }
 
 .timer {
@@ -69,12 +101,7 @@
   color: var(--color-text-muted);
 }
 
-.edit-tools {
-  display: flex;
-  gap: var(--space-1);
-  margin-left: auto;
-}
-
+.edit-tools,
 .panel-toggles {
   position: relative;
   display: flex;
@@ -84,7 +111,15 @@
   padding-left: calc(var(--space-4) + 1px);
 }
 
-/* A short divider between the edit tools and the side-panel toggles. */
+/* After the levels the divider's left neighbour is a bare bar, not an icon button with
+   its own inner padding, so add that padding back to keep both sides looking equal. */
+.transport-levels + .edit-tools {
+  margin-left: calc(var(--space-6) + var(--space-3) - var(--space-7));
+  padding-left: calc(var(--space-6) + 1px);
+}
+
+/* A short divider before each group of tools. */
+.edit-tools::before,
 .panel-toggles::before {
   content: '';
   position: absolute;

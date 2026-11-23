@@ -14,6 +14,12 @@ const renderBar = () => {
       position={12}
       source={null}
       inputError={null}
+      micPaused={false}
+      onToggleMicPaused={vi.fn()}
+      masterVolume={1}
+      masterMuted={false}
+      onMasterVolume={vi.fn()}
+      onToggleMasterMuted={vi.fn()}
       canUndo={false}
       canRedo={false}
       canSplit={false}

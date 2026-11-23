@@ -28,8 +28,14 @@ interface Props {
   /** Called once the singer has held a good level long enough. */
   onInRange?: () => void
   showLabel?: boolean
-  /** 'warnings' keeps the screen quiet: the hint only appears when it's too loud. */
-  hint?: 'always' | 'warnings'
+  /**
+   * How much the meter talks back. 'always' shows a level hint beside the bar
+   * (mic check); 'off' keeps the bar quiet (transport); 'warnings' sticks to loud
+   * and clipping alerts.
+   */
+  hint?: 'always' | 'warnings' | 'off'
+  /** Optional trailing slot: rendered to the right of the meter (e.g. a pause toggle). */
+  trailing?: React.ReactNode
 }
 
 const WARNING_ZONES: LevelZone[] = ['loud', 'clip']
@@ -38,7 +44,8 @@ export function InputMeter({
   source,
   onInRange,
   showLabel = true,
-  hint: hintMode = 'always'
+  hint: hintMode = 'always',
+  trailing
 }: Props): React.JSX.Element {
   const fillRef = useRef<HTMLDivElement>(null)
   const [hintZone, setHintZone] = useState<LevelZone>('silent')
@@ -46,6 +53,9 @@ export function InputMeter({
   useEffect(() => {
     onInRangeRef.current = onInRange
   }, [onInRange])
+
+  // 'off' mode never looks at the zone, so skip the recent-peak work that drives it.
+  const trackHint = hintMode !== 'off'
 
   useEffect(() => {
     const meter = createMeter(source)
@@ -72,7 +82,7 @@ export function InputMeter({
         fill.style.setProperty('--level', String(meterFill(displayDb)))
         fill.dataset.zone = levelZone(displayDb)
       }
-      setHintZone(levelZone(recent.push(now / MS_PER_SEC, peakDb)))
+      if (trackHint) setHintZone(levelZone(recent.push(now / MS_PER_SEC, peakDb)))
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
@@ -81,26 +91,31 @@ export function InputMeter({
       cancelAnimationFrame(raf)
       meter.dispose()
     }
-  }, [source])
+  }, [source, trackHint])
 
   const hint = t(`meter.hints.${hintZone}`)
+  const showHint =
+    hintMode === 'always' || (hintMode === 'warnings' && WARNING_ZONES.includes(hintZone))
   return (
     <div className="meter">
       {showLabel && <span className="meter-label">{t('meter.label')}</span>}
-      <div
-        className="meter-track"
-        role="meter"
-        aria-label={t('meter.ariaLabel')}
-        aria-valuetext={hint}
-      >
-        <div className="meter-sweet-spot" style={SWEET_SPOT_STYLE} />
-        <div ref={fillRef} className="meter-fill" data-zone="silent" />
+      <div className="meter-row">
+        <div
+          className="meter-track"
+          role="meter"
+          aria-label={t('meter.ariaLabel')}
+          aria-valuetext={hint}
+        >
+          <div className="meter-sweet-spot" style={SWEET_SPOT_STYLE} />
+          <div ref={fillRef} className="meter-fill" data-zone="silent" />
+        </div>
+        {hintMode !== 'off' && (
+          <p className="meter-hint" data-zone={hintZone} data-shown={showHint} aria-live="polite">
+            {showHint ? hint : ''}
+          </p>
+        )}
+        {trailing}
       </div>
-      {(hintMode === 'always' || WARNING_ZONES.includes(hintZone)) && (
-        <p className="meter-hint" data-zone={hintZone} aria-live="polite">
-          {hint}
-        </p>
-      )}
     </div>
   )
 }

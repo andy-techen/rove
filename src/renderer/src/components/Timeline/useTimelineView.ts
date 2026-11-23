@@ -37,6 +37,10 @@ export interface TimelineView {
   secAt(viewPx: number): number
   zoomIn(): void
   zoomOut(): void
+  /** The playhead is on screen; when it isn't, toPlayhead brings it back. */
+  playheadVisible: boolean
+  /** Scrolls the playhead back to the middle and resumes following it. */
+  toPlayhead(): void
   onScrollbar(scrollLeft: number): void
 }
 
@@ -96,18 +100,38 @@ export function useTimelineView(opts: {
     )
   }
 
+  // Scrolling by hand during playback lets go of the playhead so the singer can look
+  // elsewhere; following picks up again once the playhead is back in view (it caught
+  // up, or they clicked to seek there) or when playback starts again.
+  const [detached, setDetached] = useState(false)
+  const playheadX = opts.position * pxPerSec - scrollX
+  const playheadVisible = playheadX >= 0 && playheadX <= areaWidth
+  if (detached && (!opts.follow || playheadVisible)) setDetached(false)
+
   // Keep the playhead in view while it moves. Adjusting during render (guarded so it
   // settles) avoids an extra effect-driven render every frame.
-  const followTarget = opts.follow
-    ? followPlayhead(opts.position * pxPerSec, scrollX, areaWidth)
-    : scrollX
+  const followTarget =
+    opts.follow && !detached
+      ? followPlayhead(opts.position * pxPerSec, scrollX, areaWidth)
+      : scrollX
   if (followTarget !== scrollX) setView({ ...view, scrollX: followTarget })
+  const scrolledByHand = (): void => {
+    if (opts.follow) setDetached(true)
+  }
 
   // Mirror the view into the scrollbar without feeding back into it.
   useEffect(() => {
     const bar = scrollbarRef.current
     if (bar && Math.abs(bar.scrollLeft - scrollX) > 1) bar.scrollLeft = scrollX
   }, [scrollX, contentWidth])
+
+  const toPlayhead = (): void => {
+    setDetached(false)
+    setView((v) => ({
+      ...v,
+      scrollX: clampScroll(opts.position * pxPerSec - areaWidth / 2, contentWidth, areaWidth)
+    }))
+  }
 
   // Wheel and menu handlers read the latest render through refs.
   const wheel = useRef<(e: WheelEvent) => void>(() => {})
@@ -125,6 +149,7 @@ export function useTimelineView(opts: {
         // Mostly-vertical scrolls belong to the track list.
         if (dx === 0 || (!e.shiftKey && Math.abs(e.deltaX) < Math.abs(e.deltaY))) return
         e.preventDefault()
+        scrolledByHand()
         setView((v) => ({ ...v, scrollX: clampScroll(scrollX + dx, contentWidth, areaWidth) }))
       }
     }
@@ -134,6 +159,7 @@ export function useTimelineView(opts: {
       if (action === 'zoomIn') zoomBy(ZOOM_STEP, playheadPx)
       else if (action === 'zoomOut') zoomBy(1 / ZOOM_STEP, playheadPx)
       else if (action === 'zoomFit') setView({ zoom: 1, scrollX: 0 })
+      else if (action === 'toPlayhead') toPlayhead()
     }
   })
   useEffect(() => {
@@ -164,7 +190,13 @@ export function useTimelineView(opts: {
     secAt: (viewPx) => (viewPx + scrollX) / pxPerSec,
     zoomIn: () => zoomBy(ZOOM_STEP, playheadPx),
     zoomOut: () => zoomBy(1 / ZOOM_STEP, playheadPx),
-    onScrollbar: (left) =>
-      setView((v) => (Math.abs(v.scrollX - left) > 1 ? { ...v, scrollX: left } : v))
+    playheadVisible,
+    toPlayhead,
+    onScrollbar: (left) => {
+      // The scrollbar echoes our own updates back; only a real drag moves it by more.
+      if (Math.abs(scrollX - left) <= 1) return
+      scrolledByHand()
+      setView((v) => ({ ...v, scrollX: left }))
+    }
   }
 }

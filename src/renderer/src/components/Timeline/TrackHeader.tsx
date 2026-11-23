@@ -2,7 +2,6 @@ import { DragEvent } from 'react'
 import { t } from '@shared/copy'
 import { TRACK_NAME_MAX_LENGTH, TrackRole } from '../../state/song/project'
 import { SelectMode, selectMode } from '../../state/editing/trackSelection'
-import { cx } from '../ui/cx'
 import { IconButton } from '../ui/IconButton'
 import { NameField } from '../ui/NameField'
 import { Tooltip } from '../ui/Tooltip'
@@ -14,6 +13,8 @@ interface Props {
   recording: boolean
   /** Some other track is recording, or recording isn't possible right now. */
   recordDisabled: boolean
+  /** Shown as the record button's tooltip when it's disabled; explains why. */
+  recordDisabledReason?: string
   selected: boolean
   /** Recording, or the song is busy: tracks stay put. */
   onSelect(mode: SelectMode): void
@@ -43,6 +44,7 @@ export function TrackHeader({
   role,
   recording,
   recordDisabled,
+  recordDisabledReason,
   selected,
   onSelect,
   onContextMenu,
@@ -58,7 +60,7 @@ export function TrackHeader({
 }: Props): React.JSX.Element {
   return (
     <div
-      className={cx('lane-header', 'track-header', selected && 'track-selected')}
+      className="lane-header track-header"
       draggable={draggable && !renaming}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
@@ -111,6 +113,7 @@ export function TrackHeader({
           iconSize={RECORD_ICON_SIZE}
           className="track-record"
           label={t('track.record', { name })}
+          title={recordDisabled ? recordDisabledReason : undefined}
           disabled={recordDisabled}
           onClick={onRecord}
         />
