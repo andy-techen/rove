@@ -12,6 +12,9 @@ export const PANEL_MIN_HEIGHT = 140
 // The minimum fits a row of Polish or Music knobs with their names and values; it
 // matches --layout-bottom-panel-min, which holds it on short windows too.
 export const BOTTOM_HEIGHT = { min: 200, max: 640, start: 300 }
+// The Instrumental panel needs more: a line of bars beside the picker with every kind of
+// chord showing. Matches --layout-instrumental-panel-min.
+export const INSTRUMENTAL_MIN_HEIGHT = 300
 
 const WIDTH_KEY = 'rove.sidePanels.width'
 const BOTTOM_KEY = 'rove.bottomPanel.height'

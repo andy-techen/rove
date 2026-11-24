@@ -11,7 +11,6 @@ import { IconButton } from '../ui/IconButton'
 import { KnobControl, KnobRow } from '../ui/KnobControl'
 import { parseTypedNumber } from '../ui/NumberField'
 import { Panel } from '../ui/Panel'
-import { Switch } from '../ui/Switch'
 import type { VocalsState } from '../../state/processing/useVocalRemoval'
 import { VocalsControl } from './VocalsControl'
 import './MusicPanel.css'
@@ -28,11 +27,6 @@ interface Props {
   onSpeed(speed: number, key?: string): void
   onSemitones(semitones: number, key?: string): void
   onTone(tone: Partial<Pick<MusicSettings, 'bassDb' | 'brightnessDb'>>, key?: string): void
-  /** Metronome level, 0 (off) to 1. */
-  onClick(level: number, key?: string): void
-  onClickOn(on: boolean): void
-  /** There's a beat to click along to (the tempo has been heard). */
-  canClick: boolean
   /** Back to the original speed, key and tone. */
   onReset(): void
   onHide(): void
@@ -61,16 +55,12 @@ export function MusicPanel({
   onSpeed,
   onSemitones,
   onTone,
-  onClick,
-  onClickOn,
-  canClick,
   onReset,
   onHide,
   vocals
 }: Props): React.JSX.Element {
   const changed =
     music.speed !== 1 || music.semitones !== 0 || music.bassDb !== 0 || music.brightnessDb !== 0
-  const clickPercent = Math.round(music.click * PERCENT)
 
   const tone = (field: ToneField, name: string, hint: string): React.JSX.Element => {
     const db = music[field]
@@ -190,34 +180,6 @@ export function MusicPanel({
         />
         {tone('bassDb', t('music.bass'), t('music.bassHint'))}
         {tone('brightnessDb', t('music.brightness'), t('music.brightnessHint'))}
-        <KnobControl
-          label={t('music.click')}
-          hint={canClick ? t('music.clickHint') : t('music.clickNoBeat')}
-          disabled={locked || !canClick}
-          extra={
-            <Switch
-              checked={music.clickOn && canClick}
-              disabled={locked || !canClick}
-              label={t('music.clickOn')}
-              hideLabel
-              title={music.clickOn ? t('music.clickOnTitle') : t('music.clickOffTitle')}
-              onChange={onClickOn}
-            />
-          }
-          value={{ number: String(clickPercent), unit: t('music.percent') }}
-          typeLabel={t('music.typeClick')}
-          onType={(typed) => {
-            const n = parseTypedNumber(typed)
-            if (n !== null) onClick(n / PERCENT)
-          }}
-          knob={{
-            min: 0,
-            max: PERCENT,
-            value: clickPercent,
-            valueText: `${clickPercent}${t('music.percent')}`,
-            onChange: (v) => onClick(v / PERCENT, 'music-click')
-          }}
-        />
       </KnobRow>
       {vocals?.error && (
         <p className="music-vocals-error" role="alert">

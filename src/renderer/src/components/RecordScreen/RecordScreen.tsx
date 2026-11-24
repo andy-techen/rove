@@ -42,9 +42,22 @@ import {
   withoutTracks,
   chordsTracksOf,
   withChartBars,
-  withChartBeats,
-  withChartTempo,
-  withChordBacking
+  withSongBeats,
+  withChartFeel,
+  feelsOf,
+  ChordFeel,
+  withSongTempo,
+  withTempoOfMusic,
+  tempoOf,
+  withChordBacking,
+  instrumentOf,
+  withBeatParts,
+  withMyBeat,
+  withPastedBeats,
+  copyBeats,
+  CopiedBeats,
+  withoutMyBeat,
+  withInstrument
 } from '../../state/song/project'
 import {
   canExportSong,
@@ -58,6 +71,7 @@ import {
 import { Microphone } from '../../state/transport/useMicrophone'
 import {
   DeleteFocus,
+  PickedBars,
   SelectMode,
   deletionOf,
   selectTracks,
@@ -70,33 +84,36 @@ import { useSongKey } from '../../state/processing/songKey'
 import { useBeat } from '../../state/transport/useBeat'
 import { useChords } from '../../state/chords/useChords'
 import { useChordBacking } from '../../state/chords/useChordBacking'
+import { barsUntil } from '../../state/chords/beats'
 import {
   ChartPlace,
   barRange,
   chartClickGrid,
-  chartTimeline,
+  barGrid,
+  instrumentalTimeline,
   placeAt,
   transposeChord
 } from '../../state/chords/chart'
 import { chordsInKey, keyOfChart } from '../../state/chords/keyChords'
-import { previewChord } from '../../state/chords/preview'
+import { playBeat, previewChord, previewDrum } from '../../state/chords/preview'
 import { Chord } from '../../audio/music/chords'
-import { clearBars, copyBars, insertBars, swapBars } from '../../state/chords/chartBars'
+import { clearBars, copyBars, insertBars, removeBars, swapBars } from '../../state/chords/chartBars'
 import { transposeKey } from '../../audio/pitch/key'
 import {
   BOTTOM_HEIGHT,
+  INSTRUMENTAL_MIN_HEIGHT,
   PANEL_MIN_HEIGHT,
   SIDE_WIDTH,
   useBottomPanelHeight,
   useSidePanelSize
 } from '../../state/ui/sidePanels'
 import { useElementHeight } from '../../state/ui/useElementHeight'
-import { clickGrid } from '../../state/transport/metronome'
+import { clickGrid, tempoOfMusic } from '../../state/transport/metronome'
 import { useSong } from '../../state/song/useSong'
 import { useAutoPolish } from '../../state/processing/useAutoPolish'
 import { useTransport } from '../../state/transport/useTransport'
 import { ExportDialog } from '../ExportDialog'
-import { ChordBackingPanel } from '../ChordBackingPanel'
+import { BeatsEditor, ChartEditor, ChordBackingPanel } from '../ChordBackingPanel'
 import { ChordsPanel } from '../ChordsPanel'
 import { LyricsPanel } from '../LyricsPanel'
 import { MusicPanel } from '../MusicPanel'
@@ -148,8 +165,10 @@ export function RecordScreen({
   const chordBacking = useChordBacking(open?.data)
   const chordsTracks = open ? chordsTracksOf(open.data) : []
   // The first written chart keeps time for the click; new ones start in step with it.
-  const timeKeeper = chordsTracks.find((track) => track.chart)
-  const timeLine = open ? chartTimeline(open.data, timeKeeper?.chart) : null
+  const timeKeeper = chordsTracks.find((track) => open && instrumentalTimeline(open.data, track))
+  const timeLine = open && timeKeeper ? instrumentalTimeline(open.data, timeKeeper) : null
+  // The music's beat, as a tempo the instrumentals can keep to.
+  const musicTempo = open && beatFile ? tempoOfMusic(open.data, beatFile, beat) : null
   // A chords track keeps time with its chart, which knows where every bar starts.
   const grid = timeLine
     ? chartClickGrid(timeLine)
@@ -185,11 +204,19 @@ export function RecordScreen({
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([])
   const [panelHiddenOn, setPanelHiddenOn] = useState<string[] | null>(null)
   const selectedTrackId = selectedTrackIds.at(-1) ?? null
+  // Polish follows the selected track, or the first vocal until one is picked.
+  const polishTrack =
+    open?.data.tracks.find((track) => track.id === selectedTrackId) ??
+    open?.data.tracks.find((track) => track.role === 'vocal')
   // The chart shown: the selected chords track's, else the first one's.
   const chartTrack = chordsTracks.find((t) => t.id === selectedTrackId) ?? timeKeeper
-  const chart = chartTrack?.chart ?? null
-  const chartLine = open ? chartTimeline(open.data, chart) : null
+  // Drums are set bar by bar like chords, but have no chords of their own.
+  const beats = chartTrack && instrumentOf(chartTrack) === 'beats' ? chartTrack.beats : undefined
+  const chart = (!beats && chartTrack?.chart) || null
+  const chartLine = open && chartTrack ? instrumentalTimeline(open.data, chartTrack) : null
   const [chartPlace, setChartPlace] = useState<ChartPlace>({ bar: 0, slot: 0 })
+  // Stops the beat playing in the Instrumental panel.
+  const beatPlaying = useRef<(() => void) | null>(null)
   const [renamingTrackId, setRenamingTrackId] = useState<string | null>(null)
   // Whether Delete acts on the clicked clip or the selected tracks.
   const [deleteFocus, setDeleteFocus] = useState<DeleteFocus>(null)
@@ -212,6 +239,13 @@ export function RecordScreen({
   }, [active, mode, transport])
 
   const idle = mode === 'idle'
+  // Auto polish listens only when asked, for the vocal the Polish panel shows.
+  const autoPolish = useAutoPolish(
+    open?.data,
+    audio,
+    polishTrack?.role === 'vocal' ? polishTrack.id : undefined,
+    (next) => song.edit(next)
+  )
   const canEdit = (idle || mode === 'playing') && !busy && !!open
   // Clips can vanish under the selection (undo, a punch-in); only those still there count.
   const selectedClips = open
@@ -251,7 +285,7 @@ export function RecordScreen({
   /** Adds an instrumental: a track and its chart, selected so the chart opens below. */
   const startChords = (): void => {
     if (!open || !canEdit) return
-    const { project, track } = withChordBacking(open.data, suggestions.chords[0])
+    const { project, track } = withChordBacking(open.data, suggestions.chords[0], musicTempo)
     song.edit(project)
     setSelectedTrackIds([track.id])
     setChartPlace({ bar: 0, slot: 0 })
@@ -261,8 +295,31 @@ export function RecordScreen({
     setSelectedTrackIds([trackId])
     setSelection([])
     setChartPlace(place)
+    setDeleteFocus('bars')
   }
-  const playingBar = (chartLine && chart && placeAt(chartLine, chart.bars, position)?.bar) ?? -1
+  /** Takes picked bars out of their chart; the bar before them is picked next. */
+  const removePickedBars = ({ trackId, first, last }: PickedBars): void => {
+    const track = open?.data.tracks.find((t) => t.id === trackId)
+    if (open && track?.beats && instrumentOf(track) === 'beats') {
+      song.edit(
+        withBeatParts(open.data, trackId, removeBars(track.beats.parts, first, last, 'main'))
+      )
+      setChartPlace({ bar: Math.max(0, first - 1), slot: 0 })
+      return
+    }
+    const chart = track?.chart
+    if (!open || !chart) return
+    song.edit(
+      withChartBars(
+        open.data,
+        trackId,
+        removeBars(chart.bars, first, last, []),
+        removeBars(feelsOf(chart), first, last, 'strum')
+      )
+    )
+    setChartPlace({ bar: Math.max(0, first - 1), slot: 0 })
+  }
+  const playingBar = (chartLine && placeAt(chartLine, chart?.bars ?? [], position)?.bar) ?? -1
 
   const split = (): void => {
     if (open && canSplit) song.edit(splitClips(open.data, selectedClips, position))
@@ -274,41 +331,63 @@ export function RecordScreen({
     setSelectedTrackIds((ids) => ids.filter((id) => !removed.includes(id)))
     setDeleteFocus(null)
   }
-  const deletion = deletionOf(deleteFocus, selectedClip ? selected : null, selectedTrackIds)
+  const pickedBars =
+    polishTrack?.role === 'chords' && (polishTrack.chart || polishTrack.beats)
+      ? { trackId: polishTrack.id, first: barRange(chartPlace)[0], last: barRange(chartPlace)[1] }
+      : null
+  const deletion = deletionOf(
+    deleteFocus,
+    selectedClip ? selected : null,
+    selectedTrackIds,
+    pickedBars
+  )
   const remove = (): void => {
     if (!open || !deletion) return
     if (deletion.kind === 'tracks') return removeTracks(deletion.trackIds)
     if (!canEdit) return
+    if (deletion.kind === 'bars') return removePickedBars(deletion.bars)
     song.edit(deleteClips(open.data, selectedClips))
     setSelection([])
     setDeleteFocus(null)
   }
 
-  // Polish follows the selected track, or the first vocal until one is picked.
-  const polishTrack =
-    open?.data.tracks.find((track) => track.id === selectedTrackId) ??
-    open?.data.tracks.find((track) => track.role === 'vocal')
-  // Auto polish listens only when asked, for the vocal the Polish panel shows.
-  const autoPolish = useAutoPolish(
-    open?.data,
-    audio,
-    polishTrack?.role === 'vocal' ? polishTrack.id : undefined,
-    (next) => song.edit(next)
-  )
-
   // Copied clips stay within this song, whose folder holds the audio they point at.
   const [clipboard, setClipboard] = useState<CopiedClips | null>(null)
   // Copied bars of chords, kept apart from clips: they paste into any instrumental.
-  const [copiedBars, setCopiedBars] = useState<Chord[][] | null>(null)
+  const [copiedBars, setCopiedBars] = useState<{ bars: Chord[][]; feels: ChordFeel[] } | null>(null)
+  // Copied drum bars, kept apart from chords: they paste only into beats.
+  const [copiedBeats, setCopiedBeats] = useState<CopiedBeats | null>(null)
   // With no clips picked, copy and paste act on the bars open in the Instrumental panel.
+  const drumTarget =
+    !selectedClips.length &&
+    polishTrack?.role === 'chords' &&
+    instrumentOf(polishTrack) === 'beats' &&
+    polishTrack.beats
+      ? { trackId: polishTrack.id, beats: polishTrack.beats, range: barRange(chartPlace) }
+      : null
   const chartTarget =
-    !selectedClips.length && polishTrack?.role === 'chords' && polishTrack.chart
-      ? { trackId: polishTrack.id, bars: polishTrack.chart.bars, range: barRange(chartPlace) }
+    !selectedClips.length &&
+    polishTrack?.role === 'chords' &&
+    instrumentOf(polishTrack) === 'guitar' &&
+    polishTrack.chart
+      ? {
+          trackId: polishTrack.id,
+          bars: polishTrack.chart.bars,
+          feels: feelsOf(polishTrack.chart),
+          range: barRange(chartPlace)
+        }
       : null
   const copy = (): void => {
+    if (drumTarget) {
+      setCopiedBeats(copyBeats(drumTarget.beats, ...drumTarget.range))
+      return
+    }
     if (chartTarget) {
       const [first, last] = chartTarget.range
-      setCopiedBars(copyBars(chartTarget.bars, first, last))
+      setCopiedBars({
+        bars: copyBars(chartTarget.bars, first, last),
+        feels: copyBars(chartTarget.feels, first, last)
+      })
       return
     }
     if (open && selectedClips.length) setClipboard(copyClips(open.data, selectedClips))
@@ -316,20 +395,32 @@ export function RecordScreen({
   const cutBars = (): void => {
     if (!open || !chartTarget || !canEdit) return
     const [first, last] = chartTarget.range
-    setCopiedBars(copyBars(chartTarget.bars, first, last))
+    setCopiedBars({
+      bars: copyBars(chartTarget.bars, first, last),
+      feels: copyBars(chartTarget.feels, first, last)
+    })
     song.edit(
       withChartBars(open.data, chartTarget.trackId, clearBars(chartTarget.bars, first, last))
     )
   }
   const paste = (): void => {
+    if (drumTarget && copiedBeats) {
+      if (!open || !canEdit) return
+      // As with chords: in after the selection, so pasting adds rather than overwrites.
+      const at = drumTarget.range[1] + 1
+      song.edit(withPastedBeats(open.data, drumTarget.trackId, at, copiedBeats))
+      setChartPlace({ bar: at, slot: 0, last: at + copiedBeats.parts.length - 1 })
+      return
+    }
     if (chartTarget && copiedBars) {
       if (!open || !canEdit) return
       // Pasted bars go in after the selection, so pasting adds to the song rather than
       // writing over what's there; pasting again lays the copies end to end.
       const at = chartTarget.range[1] + 1
-      const bars = insertBars(chartTarget.bars, at, copiedBars)
-      song.edit(withChartBars(open.data, chartTarget.trackId, bars))
-      setChartPlace({ bar: at, slot: 0, last: at + copiedBars.length - 1 })
+      const bars = insertBars(chartTarget.bars, at, copiedBars.bars)
+      const feels = insertBars(chartTarget.feels, at, copiedBars.feels)
+      song.edit(withChartBars(open.data, chartTarget.trackId, bars, feels))
+      setChartPlace({ bar: at, slot: 0, last: at + copiedBars.bars.length - 1 })
       return
     }
     if (!open || !clipboard || !canEdit) return
@@ -390,7 +481,10 @@ export function RecordScreen({
           selectedClips: selectedClips.length,
           anyGrouped: anyGrouped(open.data, selectedClips),
           oneGroup: isOneGroup(open.data, selectedClips),
-          canPaste: clipboard !== null || (chartTarget !== null && copiedBars !== null),
+          canPaste:
+            clipboard !== null ||
+            (chartTarget !== null && copiedBars !== null) ||
+            (drumTarget !== null && copiedBeats !== null),
           canSplit,
           canMoveUp: placeOfSelected > 0,
           canMoveDown: placeOfSelected >= 0 && placeOfSelected < (kindOfSelected?.length ?? 0) - 1
@@ -549,6 +643,32 @@ export function RecordScreen({
       <div className="screen-body">
         <main className="workspace">
           <TransportBar
+            beat={
+              open
+                ? {
+                    locked: !canEdit,
+                    click: {
+                      on: musicOf(open.data).clickOn,
+                      level: musicOf(open.data).click,
+                      available: grid !== null,
+                      onOn: (on) => song.edit(withClickOn(open.data, on)),
+                      onLevel: (level, key) => song.edit(withClick(open.data, level), key)
+                    },
+                    tempo:
+                      chordsTracks.length > 0
+                        ? {
+                            value: tempoOf(open.data),
+                            onTempo: (bpm) =>
+                              song.edit(withSongTempo(open.data, bpm), 'song-tempo'),
+                            onBeats: (n) => song.edit(withSongBeats(open.data, n)),
+                            onMatchMusic: musicTempo
+                              ? () => song.edit(withTempoOfMusic(open.data, musicTempo))
+                              : undefined
+                          }
+                        : null
+                  }
+                : null
+            }
             playing={mode === 'playing'}
             canPlay={transport.canPlay}
             canStop={transport.canStop}
@@ -621,9 +741,16 @@ export function RecordScreen({
             onAddChords={startChords}
             onPickChord={pickChord}
             onSwapBars={(trackId, from, to) => {
-              const bars = open?.data.tracks.find((t) => t.id === trackId)?.chart?.bars
-              if (!open || !bars) return
-              song.edit(withChartBars(open.data, trackId, swapBars(bars, from, to)))
+              const track = open?.data.tracks.find((t) => t.id === trackId)
+              if (open && track?.beats && instrumentOf(track) === 'beats') {
+                song.edit(withBeatParts(open.data, trackId, swapBars(track.beats.parts, from, to)))
+                pickChord(trackId, { bar: to, slot: 0 })
+                return
+              }
+              const chart = track?.chart
+              if (!open || !chart) return
+              const feels = swapBars(feelsOf(chart), from, to)
+              song.edit(withChartBars(open.data, trackId, swapBars(chart.bars, from, to), feels))
               pickChord(trackId, { bar: to, slot: 0 })
             }}
             pickedChord={
@@ -740,7 +867,10 @@ export function RecordScreen({
 
           {panelShown && polishTrack && open && (
             <div
-              className="bottom-panel"
+              className={cx(
+                'bottom-panel',
+                polishTrack.role === 'chords' && 'bottom-panel-instrumental'
+              )}
               // Runtime geometry: the height the singer dragged it to.
               style={{ '--bottom-height': `${bottom.height}px` } as CSSProperties}
             >
@@ -749,7 +879,7 @@ export function RecordScreen({
                 label={t('panel.height')}
                 orientation="horizontal"
                 value={bottom.height}
-                min={BOTTOM_HEIGHT.min}
+                min={polishTrack.role === 'chords' ? INSTRUMENTAL_MIN_HEIGHT : BOTTOM_HEIGHT.min}
                 max={BOTTOM_HEIGHT.max}
                 perPixel={-1}
                 onChange={bottom.setHeight}
@@ -764,9 +894,6 @@ export function RecordScreen({
                   onSpeed={(speed, key) => song.edit(withMusicSpeed(open.data, speed), key)}
                   onSemitones={(n, key) => song.edit(withMusicPitch(open.data, n), key)}
                   onTone={(tone, key) => song.edit(withMusicTone(open.data, tone), key)}
-                  onClick={(level, key) => song.edit(withClick(open.data, level), key)}
-                  onClickOn={(on) => song.edit(withClickOn(open.data, on))}
-                  canClick={grid !== null}
                   vocals={{
                     state: vocalRemoval.vocals,
                     error: vocalRemoval.error,
@@ -786,25 +913,94 @@ export function RecordScreen({
                 />
               )}
 
-              {panelShown && polishTrack?.role === 'chords' && open && chart && (
+              {panelShown && polishTrack?.role === 'chords' && open && (chart || beats) && (
                 <ChordBackingPanel
                   key={polishTrack.id}
                   trackName={polishTrack.name}
-                  place={chartPlace}
-                  onPlace={setChartPlace}
-                  chart={chart}
-                  playingBar={playingBar}
-                  suggestions={suggestions}
+                  instrument={instrumentOf(polishTrack)}
                   locked={!canEdit}
-                  onBars={(bars) => song.edit(withChartBars(open.data, polishTrack.id, bars))}
-                  onTempo={(bpm) => song.edit(withChartTempo(open.data, polishTrack.id, bpm))}
-                  onBeats={(n) => song.edit(withChartBeats(open.data, polishTrack.id, n))}
-                  // Heard as it will play: in the key the Key knob moved it to.
-                  onPreview={(chord) =>
-                    void previewChord(transposeChord(chord, musicOf(open.data).semitones))
+                  onInstrument={(instrument) =>
+                    song.edit(
+                      withInstrument(
+                        open.data,
+                        polishTrack.id,
+                        instrument,
+                        // New drums run as long as the song.
+                        barsUntil(open.data, songEnd(open.data))
+                      )
+                    )
                   }
                   onHide={hidePanel}
-                />
+                >
+                  {beats ? (
+                    <BeatsEditor
+                      beats={beats}
+                      beatsPerBar={tempoOf(open.data).beatsPerBar}
+                      secPerBeat={barGrid(open.data, 1)?.secPerBeat ?? 1}
+                      playingBar={playingBar}
+                      locked={!canEdit}
+                      onParts={(parts) =>
+                        song.edit(withBeatParts(open.data, polishTrack.id, parts))
+                      }
+                      onMyBeat={(beat, parts) => {
+                        const made = withMyBeat(open.data, polishTrack.id, beat)
+                        song.edit(parts ? withBeatParts(made, polishTrack.id, parts) : made)
+                      }}
+                      onPreviewDrum={(drum) => void previewDrum(drum)}
+                      onDeleteBeat={(n) => song.edit(withoutMyBeat(open.data, polishTrack.id, n))}
+                      onHear={(part, onEnded) => {
+                        beatPlaying.current?.()
+                        beatPlaying.current = null
+                        if (!part) return
+                        const stop = playBeat(open.data, beats, part, () => {
+                          // A beat stopped to play another ends late: only the latest counts.
+                          if (beatPlaying.current !== stop) return
+                          beatPlaying.current = null
+                          onEnded?.()
+                        })
+                        beatPlaying.current = stop
+                      }}
+                      onRemove={() => {
+                        const [first, last] = barRange(chartPlace)
+                        removePickedBars({ trackId: polishTrack.id, first, last })
+                      }}
+                      place={chartPlace}
+                      onPlace={(place) => {
+                        setChartPlace(place)
+                        setDeleteFocus('bars')
+                      }}
+                    />
+                  ) : (
+                    chart && (
+                      <ChartEditor
+                        onFeel={(first, last, feel) =>
+                          song.edit(withChartFeel(open.data, polishTrack.id, first, last, feel))
+                        }
+                        place={chartPlace}
+                        onPlace={(place) => {
+                          setChartPlace(place)
+                          setDeleteFocus('bars')
+                        }}
+                        onRemove={() => {
+                          const [first, last] = barRange(chartPlace)
+                          removePickedBars({ trackId: polishTrack.id, first, last })
+                        }}
+                        chart={chart}
+                        playingBar={playingBar}
+                        suggestions={suggestions}
+                        locked={!canEdit}
+                        onBars={(bars, feels) =>
+                          song.edit(withChartBars(open.data, polishTrack.id, bars, feels))
+                        }
+                        beatsPerBar={tempoOf(open.data).beatsPerBar}
+                        // Heard as it will play: in the key the Key knob moved it to.
+                        onPreview={(chord) =>
+                          void previewChord(transposeChord(chord, musicOf(open.data).semitones))
+                        }
+                      />
+                    )
+                  )}
+                </ChordBackingPanel>
               )}
 
               {panelShown && polishTrack?.role === 'vocal' && open && (

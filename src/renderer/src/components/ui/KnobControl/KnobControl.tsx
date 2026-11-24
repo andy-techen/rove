@@ -33,8 +33,6 @@ interface Props {
   knob: Omit<KnobProps, 'label' | 'size' | 'disabled'>
 }
 
-const RESET_ICON_SIZE = 14
-
 /** A labelled knob as the panels show it: knob, name with help, value. */
 export function KnobControl({
   label,
@@ -72,7 +70,7 @@ export function KnobControl({
         {reset && (
           <IconButton
             icon="reset"
-            iconSize={RESET_ICON_SIZE}
+            iconSize="secondary"
             className="knob-control-reset"
             label={reset.label}
             disabled={disabled}

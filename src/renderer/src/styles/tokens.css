@@ -76,7 +76,8 @@
   --line-height: 1.5;
 
   /* Sizes. */
-  --size-icon-sm: 12px;
+  --size-icon-primary: 18px; /* toolbars: the transport bar, panel tools */
+  --size-icon-secondary: 14px; /* in text buttons, rows and small inline controls */
   --size-control-xs: 20px;
   --size-control-sm: 24px;
   --size-control-md: 30px;
@@ -124,6 +125,7 @@
   --layout-lane-add: 40px;
   --layout-add-label: 88px;
   --layout-bottom-panel-min: 200px;
+  --layout-instrumental-panel-min: 300px;
   --layout-scrollbar: 14px;
   --layout-tab-max: 220px;
   --layout-song-name-max: 200px;
@@ -134,7 +136,7 @@
   --layout-advanced-column: 360px;
   --layout-advanced-label: 164px;
   --layout-advanced-value: 72px;
-  --layout-help-tip: 260px;
+  --layout-tooltip: 340px; /* wide enough for a one-sentence hint on one line */
   --layout-titlebar: 44px;
   --layout-traffic-lights: 80px;
   --layout-dialog: 640px;
@@ -146,8 +148,14 @@
   --layout-chord: 64px;
   --layout-grip: 64px;
   --layout-chord-chip: 56px;
+  /* Room for all eight kinds of chord in one row (C#maj7 and C#sus2 the widest). */
+  --layout-chord-picker: 580px;
+  --layout-pad-drum: 84px; /* the beat pad's drum names and keys */
+  --size-pad-cell: 22px;
   --layout-chart-bar: 44px;
   --layout-chart-tempo: 72px;
+  --layout-beat-label: 84px;
+  --layout-beat-slider: 120px;
   --letter-spacing-caps: 0.04em;
 
   /* Motion and emphasis. */

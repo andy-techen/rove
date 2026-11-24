@@ -2,8 +2,8 @@ import { DragEvent } from 'react'
 import { t } from '@shared/copy'
 import { TRACK_NAME_MAX_LENGTH, TrackRole } from '../../state/song/project'
 import { SelectMode, selectMode } from '../../state/editing/trackSelection'
-import { IconButton } from '../ui/IconButton'
 import { NameField } from '../ui/NameField'
+import { RecordButton } from '../ui/RecordButton'
 import { Tooltip } from '../ui/Tooltip'
 
 interface Props {
@@ -31,8 +31,6 @@ interface Props {
   onRename(name: string): void
   onRenameDone(): void
 }
-
-const RECORD_ICON_SIZE = 12
 
 /**
  * Left side of a lane: the track's name (click to select, double-click to rename, drag to
@@ -98,26 +96,13 @@ export function TrackHeader({
           </button>
         </Tooltip>
       )}
-      {recording ? (
-        <IconButton
-          icon="stop"
-          iconSize={RECORD_ICON_SIZE}
-          className="track-record recording"
-          label={t('track.stop', { name })}
-          title={t('track.stopTitle')}
-          onClick={onStop}
-        />
-      ) : (
-        <IconButton
-          icon="record"
-          iconSize={RECORD_ICON_SIZE}
-          className="track-record"
-          label={t('track.record', { name })}
-          title={recordDisabled ? recordDisabledReason : undefined}
-          disabled={recordDisabled}
-          onClick={onRecord}
-        />
-      )}
+      <RecordButton
+        recording={recording}
+        label={recording ? t('track.stop', { name }) : t('track.record', { name })}
+        title={recording ? t('track.stopTitle') : recordDisabled ? recordDisabledReason : undefined}
+        disabled={!recording && recordDisabled}
+        onClick={recording ? onStop : onRecord}
+      />
     </div>
   )
 }

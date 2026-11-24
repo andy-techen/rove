@@ -112,7 +112,7 @@
   align-items: flex-start;
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-md);
   background: none;
   color: var(--color-text);

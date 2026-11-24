@@ -17,8 +17,8 @@ interface Props {
   onOpen(folder: string): void
   /** Starts a new song (opens the New Song dialog). */
   onNew(): void
-  /** Makes a real song from a wishlist item. */
-  onStart(name: string, artist?: string): void
+  /** Makes a real song from a wishlist item, keeping its artist and note. */
+  onStart(name: string, artist?: string, note?: string): void
   onClose(): void
 }
 
@@ -41,10 +41,10 @@ export function SongbookDialog({
   // Bumped after an add so the wishlist reloads with the new item.
   const [wishlistVersion, setWishlistVersion] = useState(0)
 
-  const addWish = async (name: string, artist?: string): Promise<void> => {
+  const addWish = async (name: string, artist?: string, note?: string): Promise<void> => {
     setAddingWish(false)
     try {
-      await window.api.addToWishlist(name, artist)
+      await window.api.addToWishlist(name, artist, note)
       setAddError(null)
       setWishlistVersion((v) => v + 1)
     } catch {
@@ -109,7 +109,7 @@ export function SongbookDialog({
         <NewSongDialog
           title={t('songbook.addToWishlistButton')}
           submitLabel={t('songbook.addToWishlist')}
-          onCreate={(name, artist) => void addWish(name, artist)}
+          onCreate={(name, artist, note) => void addWish(name, artist, note)}
           onClose={() => setAddingWish(false)}
         />
       )}

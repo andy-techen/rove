@@ -557,4 +557,9 @@ describe('createProject artist', () => {
     expect(createProject('Song', 48000, '  Sam ').artist).toBe('Sam')
     expect(createProject('Song', 48000, '  ')).not.toHaveProperty('artist')
   })
+
+  it('keeps a note carried over from the wishlist and leaves out a blank one', () => {
+    expect(createProject('Song', 48000, undefined, ' Lower key ').note).toBe('Lower key')
+    expect(createProject('Song', 48000, 'Sam', ' ')).not.toHaveProperty('note')
+  })
 })

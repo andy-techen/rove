@@ -62,16 +62,19 @@ const api: RoveApi = {
   chooseProjectFolder: () => ipcRenderer.invoke('project:choose'),
   listSongs: () => ipcRenderer.invoke('project:list'),
   openSongbookSong: (folder) => ipcRenderer.invoke('project:openByName', folder),
-  updateSongbookSong: (folder, name, artist) =>
-    ipcRenderer.invoke('project:updateDetails', folder, name, artist),
+  updateSongbookSong: (folder, name, artist, note) =>
+    ipcRenderer.invoke('project:updateDetails', folder, name, artist, note),
   removeSongbookSong: (folder) => ipcRenderer.invoke('project:trashByName', folder),
   listWishlist: () => ipcRenderer.invoke(WISHLIST_CHANNELS.list),
-  addToWishlist: (name, artist) => ipcRenderer.invoke(WISHLIST_CHANNELS.add, name, artist),
+  addToWishlist: (name, artist, note) =>
+    ipcRenderer.invoke(WISHLIST_CHANNELS.add, name, artist, note),
   removeFromWishlist: (id) => ipcRenderer.invoke(WISHLIST_CHANNELS.remove, id),
+  updateWishlistItem: (id, name, artist, note) =>
+    ipcRenderer.invoke(WISHLIST_CHANNELS.update, id, name, artist, note),
   searchCatalog: (options) => ipcRenderer.invoke(CATALOG_CHANNELS.search, options),
   restoreTabs: () => ipcRenderer.invoke('project:restoreTabs'),
   rememberTabs: (dirs, active) => ipcRenderer.invoke('project:rememberTabs', dirs, active),
-  createSong: (name, artist) => ipcRenderer.invoke('project:createNew', name, artist),
+  createSong: (name, artist, note) => ipcRenderer.invoke('project:createNew', name, artist, note),
   renameSong: (dir, name) => ipcRenderer.invoke('project:rename', dir, name),
   importBackingTrack: (dir) => ipcRenderer.invoke('project:importBackingTrack', dir),
   saveTake: (dir, wav) => ipcRenderer.invoke('project:saveTake', dir, wav),

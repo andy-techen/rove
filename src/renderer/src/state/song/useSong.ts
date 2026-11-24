@@ -132,7 +132,7 @@ export function useSong(initial: ChosenProject): Song {
     await flushSave()
     const data = chosen.manifest
       ? parseProject(chosen.manifest)
-      : createProject(chosen.name, getAudioContext().sampleRate, chosen.artist)
+      : createProject(chosen.name, getAudioContext().sampleRate, chosen.artist, chosen.note)
     // Persist new songs and upgrades from older project versions right away.
     if ((chosen.manifest as { version?: number } | null)?.version !== data.version) {
       await persist(chosen.dir, data)

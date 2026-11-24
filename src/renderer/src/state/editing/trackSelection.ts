@@ -40,11 +40,19 @@ export function tracksActedOn(selection: string[], trackId: string): string[] {
 }
 
 /** What was clicked last, which ⌫ acts on: a clip, or the selected track names. */
-export type DeleteFocus = 'clip' | 'tracks' | null
+export type DeleteFocus = 'clip' | 'tracks' | 'bars' | null
 
 export type Deletion =
   | { kind: 'clip'; clip: { trackId: string; clipId: string } }
   | { kind: 'tracks'; trackIds: string[] }
+  | { kind: 'bars'; bars: PickedBars }
+
+/** A run of bars picked on an instrumental's lane. */
+export interface PickedBars {
+  trackId: string
+  first: number
+  last: number
+}
 
 /**
  * What Delete removes. Clicking a clip also selects its track, so only a click on the
@@ -54,9 +62,12 @@ export type Deletion =
 export function deletionOf(
   focus: DeleteFocus,
   clip: { trackId: string; clipId: string } | null,
-  trackIds: string[]
+  trackIds: string[],
+  bars: PickedBars | null = null
 ): Deletion | null {
   if (focus === 'clip' && clip) return { kind: 'clip', clip }
+  // Picking bars also selects their track; Delete takes the bars, never the track.
+  if (focus === 'bars') return bars ? { kind: 'bars', bars } : null
   if (focus === 'tracks' && trackIds.length > 0) return { kind: 'tracks', trackIds }
   return null
 }

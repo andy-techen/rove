@@ -38,6 +38,12 @@ describe('deletionOf', () => {
     })
   })
 
+  it('deletes picked bars, never the instrumental they belong to', () => {
+    const bars = { trackId: 'k1', first: 1, last: 2 }
+    expect(deletionOf('bars', null, ['k1'], bars)).toEqual({ kind: 'bars', bars })
+    expect(deletionOf('bars', null, ['k1'])).toBeNull()
+  })
+
   it('deletes nothing more once the clicked clip is gone, not its whole track', () => {
     expect(deletionOf(null, null, ['v1'])).toBeNull()
     expect(deletionOf('clip', null, ['v1'])).toBeNull()

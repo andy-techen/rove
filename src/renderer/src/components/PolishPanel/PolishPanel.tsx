@@ -63,7 +63,6 @@ interface Props {
 const PERCENT = 100
 // Advanced sliders move in 1/200ths of their range: fine enough, not fiddly.
 const ADVANCED_STEPS = 200
-const RESET_ICON_SIZE = 14
 const PARAMS = Object.keys(PARAM_RANGES) as PolishParam[]
 
 export function PolishPanel({
@@ -216,7 +215,7 @@ export function PolishPanel({
                 {custom ? (
                   <IconButton
                     icon="reset"
-                    iconSize={RESET_ICON_SIZE}
+                    iconSize="secondary"
                     label={t('polish.followSlider')}
                     disabled={locked}
                     onClick={() => onChange(withoutOverride(polish, key))}

@@ -17,8 +17,6 @@ interface Props {
 
 type State = { kind: 'loading' } | { kind: 'ready'; songs: SongbookEntry[] } | { kind: 'error' }
 
-const ROW_ICON_SIZE = 16
-
 /** Songs that exist in the songs folder, newest first. */
 export function SongList({ openFolders, query, onOpen }: Props): React.JSX.Element {
   const [state, setState] = useState<State>({ kind: 'loading' })
@@ -53,10 +51,15 @@ export function SongList({ openFolders, query, onOpen }: Props): React.JSX.Eleme
     }
   }
 
-  const edit = async (folder: string, name: string, artist?: string): Promise<void> => {
+  const edit = async (
+    folder: string,
+    name: string,
+    artist?: string,
+    note?: string
+  ): Promise<void> => {
     setEditing(null)
     try {
-      const updated = await window.api.updateSongbookSong(folder, name, artist)
+      const updated = await window.api.updateSongbookSong(folder, name, artist, note)
       setState((prev) =>
         prev.kind === 'ready'
           ? { kind: 'ready', songs: prev.songs.map((s) => (s.folder === folder ? updated : s)) }
@@ -97,6 +100,7 @@ export function SongList({ openFolders, query, onOpen }: Props): React.JSX.Eleme
                 <span className="songbook-title">
                   <span className="songbook-name">{song.name}</span>
                   {song.artist && <span className="songbook-artist">{song.artist}</span>}
+                  {song.note && <span className="songbook-note-text">{song.note}</span>}
                 </span>
                 <span className="songbook-when">
                   {alreadyOpen ? t('songbook.alreadyOpen') : relativeTime(song.modifiedAt)}
@@ -104,7 +108,7 @@ export function SongList({ openFolders, query, onOpen }: Props): React.JSX.Eleme
               </button>
               <IconButton
                 icon="edit"
-                iconSize={ROW_ICON_SIZE}
+                iconSize="secondary"
                 label={t('songbook.editLabel', { name: song.name })}
                 title={alreadyOpen ? t('songbook.cantEditOpen') : undefined}
                 disabled={alreadyOpen}
@@ -112,7 +116,7 @@ export function SongList({ openFolders, query, onOpen }: Props): React.JSX.Eleme
               />
               <IconButton
                 icon="delete"
-                iconSize={ROW_ICON_SIZE}
+                iconSize="secondary"
                 label={t('songbook.removeLabel', { name: song.name })}
                 title={alreadyOpen ? t('songbook.cantRemoveOpen') : undefined}
                 disabled={alreadyOpen}
@@ -126,7 +130,7 @@ export function SongList({ openFolders, query, onOpen }: Props): React.JSX.Eleme
       {editing && (
         <NewSongDialog
           editing={editing}
-          onCreate={(name, artist) => void edit(editing.folder, name, artist)}
+          onCreate={(name, artist, note) => void edit(editing.folder, name, artist, note)}
           onClose={() => setEditing(null)}
         />
       )}

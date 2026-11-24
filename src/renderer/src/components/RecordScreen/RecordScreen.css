@@ -48,6 +48,11 @@
   flex-direction: column;
 }
 
+/* The Instrumental panel needs room for a line of bars and the whole chord picker. */
+.workspace > .bottom-panel-instrumental {
+  min-height: var(--layout-instrumental-panel-min);
+}
+
 /* The panel keeps the height it's given and scrolls inside it. */
 .bottom-panel > .panel {
   flex: 1;
@@ -133,7 +138,7 @@
     content: '';
     position: absolute;
     top: 50%;
-    width: 1px;
+    width: var(--size-hairline);
     height: var(--size-control-xs);
     transform: translateY(-50%);
     background: var(--color-border);
@@ -187,14 +192,7 @@
   gap: var(--space-1);
   /* The divider sits midway: the transport's gap is pulled in to match the padding. */
   margin-left: calc(var(--space-4) - var(--space-7));
-  padding-left: calc(var(--space-4) + 1px);
-}
-
-/* After the levels the divider's left neighbour is a bare bar, not an icon button with
-   its own inner padding, so add that padding back to keep both sides looking equal. */
-.transport-levels + .edit-tools {
-  margin-left: calc(var(--space-6) + var(--space-3) - var(--space-7));
-  padding-left: calc(var(--space-6) + 1px);
+  padding-left: calc(var(--space-4) + var(--size-hairline));
 }
 
 /* A short divider before each group of tools. */
@@ -204,7 +202,7 @@
   position: absolute;
   left: 0;
   top: 50%;
-  width: 1px;
+  width: var(--size-hairline);
   height: var(--size-control-xs);
   transform: translateY(-50%);
   background: var(--color-border);
@@ -219,7 +217,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border-left: 1px solid var(--color-border);
+  border-left: var(--size-hairline) solid var(--color-border);
   background: var(--color-surface);
 }
 
@@ -251,7 +249,7 @@
   left: 0;
   right: 0;
   top: 50%;
-  height: 1px;
+  height: var(--size-hairline);
   transform: translateY(-50%);
   background: var(--color-border);
 }

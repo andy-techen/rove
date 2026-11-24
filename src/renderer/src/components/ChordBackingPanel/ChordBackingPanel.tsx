@@ -1,38 +1,53 @@
+import { ReactNode } from 'react'
 import { t } from '@shared/copy'
+import { Instrument } from '../../state/song/project'
 import { Button } from '../ui/Button'
 import { Panel } from '../ui/Panel'
 import { Tooltip } from '../ui/Tooltip'
-import { ChartEditor } from './ChartEditor'
 import './ChordBackingPanel.css'
 
-type Props = Parameters<typeof ChartEditor>[0] & {
+interface Props {
   /** The track's name, after the title ("Backing 2"). */
   trackName: string
+  instrument: Instrument
+  locked: boolean
+  onInstrument(instrument: Instrument): void
   onHide(): void
+  /** What the instrument plays: its chords, or its drums. */
+  children: ReactNode
 }
 
-// Guitar plays today; piano and beats are on the way (docs/plans/chord-backing.md).
-const INSTRUMENTS = [
+// Guitar and beats play today; piano is on the way (docs/plans/chord-backing.md).
+const CHOICES: { id: Instrument | 'piano'; ready: boolean }[] = [
   { id: 'guitar', ready: true },
   { id: 'piano', ready: false },
-  { id: 'beats', ready: false }
-] as const
+  { id: 'beats', ready: true }
+]
 
 /**
- * An instrumental Rove plays for you from the chords you write, bar by bar. Shown when
- * its track is selected.
+ * An instrumental Rove plays for you, bar by bar: a guitar from the chords you write, or
+ * drums. Shown when its track is selected.
  */
-export function ChordBackingPanel({ trackName, onHide, ...editor }: Props): React.JSX.Element {
+export function ChordBackingPanel({
+  trackName,
+  instrument,
+  locked,
+  onInstrument,
+  onHide,
+  children
+}: Props): React.JSX.Element {
   const instruments = (
     <div className="instrument-choice" role="group" aria-label={t('instrumental.instrument')}>
-      {INSTRUMENTS.map(({ id, ready }) => {
+      {CHOICES.map(({ id, ready }) => {
+        const on = id === instrument
         const button = (
           <Button
             key={id}
             size="sm"
-            variant={id === 'guitar' ? 'secondary' : 'ghost'}
-            aria-pressed={id === 'guitar'}
-            disabled={!ready}
+            variant={on ? 'secondary' : 'ghost'}
+            aria-pressed={on}
+            disabled={!ready || locked}
+            onClick={() => id !== 'piano' && !on && onInstrument(id)}
           >
             {t(`instrumental.${id}`)}
           </Button>
@@ -56,7 +71,7 @@ export function ChordBackingPanel({ trackName, onHide, ...editor }: Props): Reac
       actions={instruments}
       onHide={onHide}
     >
-      <ChartEditor {...editor} />
+      {children}
     </Panel>
   )
 }

@@ -2,7 +2,7 @@
   display: grid;
   place-items: center;
   padding: var(--space-3);
-  border: 1px solid transparent;
+  border: var(--size-hairline) solid transparent;
   border-radius: var(--radius-lg);
   background: transparent;
   color: var(--color-text-muted);
@@ -11,7 +11,8 @@
 
 .icon-button:hover:not(:disabled) {
   color: var(--color-text);
-  background: var(--color-surface-raised);
+  /* A raised surface sets --hover-fill, so the hover still shows on it. */
+  background: var(--hover-fill, var(--color-surface-raised));
 }
 
 .icon-button:disabled {
@@ -24,5 +25,5 @@
 .icon-button[aria-pressed='true'],
 .icon-button[aria-expanded='true'] {
   color: var(--color-text);
-  background: var(--color-surface-raised);
+  background: var(--hover-fill, var(--color-surface-raised));
 }

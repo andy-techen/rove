@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent, shell } from 'electron'
 import { SONG_NAME_MAX_LENGTH } from '@shared/constants'
 import { t } from '@shared/copy'
+import { cleanNote } from '@shared/wishlist'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
@@ -150,7 +151,13 @@ export function registerProjectIpc(): void {
     } catch {
       return []
     }
-    const songs: { folder: string; name: string; artist?: string; modifiedAt: number }[] = []
+    const songs: {
+      folder: string
+      name: string
+      artist?: string
+      note?: string
+      modifiedAt: number
+    }[] = []
     for (const entry of entries) {
       if (!entry.isDirectory()) continue
       const dir = path.join(root, entry.name)
@@ -159,13 +166,15 @@ export function registerProjectIpc(): void {
           readManifest(dir),
           fs.stat(path.join(dir, MANIFEST))
         ])
-        const m = manifest as { name?: unknown; artist?: unknown } | null
+        const m = manifest as { name?: unknown; artist?: unknown; note?: unknown } | null
         const name = m && typeof m.name === 'string' && m.name.trim() ? m.name : entry.name
         const artist = m && typeof m.artist === 'string' && m.artist.trim() ? m.artist : undefined
+        const note = cleanNote(m?.note)
         songs.push({
           folder: entry.name,
           name,
           ...(artist && { artist }),
+          ...(note && { note }),
           modifiedAt: stat.mtimeMs
         })
       } catch {
@@ -193,10 +202,11 @@ export function registerProjectIpc(): void {
     openProjects.delete(dir)
   })
 
-  // Changes a closed song's name and artist from the Songbook; its folder follows the name.
+  // Changes a closed song's name, artist and note from the Songbook; its folder follows
+  // the name.
   ipcMain.handle(
     'project:updateDetails',
-    async (_e, folder: unknown, name: unknown, artist: unknown) => {
+    async (_e, folder: unknown, name: unknown, artist: unknown, note: unknown) => {
       const dir = await songbookSong(folder)
       const songName = cleanText(name)
       if (!songFolderName(songName)) throw new Error(t('dialogs.songNameNeeded'))
@@ -206,6 +216,9 @@ export function registerProjectIpc(): void {
       const artistName = cleanText(artist)
       if (artistName) next.artist = artistName
       else delete next.artist
+      const songNote = cleanNote(note)
+      if (songNote) next.note = songNote
+      else delete next.note
       await writeManifestFile(dir, next)
       const moved = await followName(dir, songName)
       const { mtimeMs } = await fs.stat(path.join(moved, MANIFEST))
@@ -213,6 +226,7 @@ export function registerProjectIpc(): void {
         folder: path.basename(moved),
         name: songName,
         ...(artistName && { artist: artistName }),
+        ...(songNote && { note: songNote }),
         modifiedAt: mtimeMs
       }
     }
@@ -239,7 +253,7 @@ export function registerProjectIpc(): void {
   })
 
   // A named song gets a folder after its name; an unnamed one (the first launch) is untitled.
-  ipcMain.handle('project:createNew', async (_e, name: unknown, artist: unknown) => {
+  ipcMain.handle('project:createNew', async (_e, name: unknown, artist: unknown, note: unknown) => {
     const wanted = typeof name === 'string' ? name.trim().slice(0, SONG_NAME_MAX_LENGTH) : ''
     const artistName =
       typeof artist === 'string' ? artist.trim().slice(0, SONG_NAME_MAX_LENGTH) : ''
@@ -253,7 +267,12 @@ export function registerProjectIpc(): void {
     await fs.mkdir(dir)
     const opened = await openSong(dir)
     const named = folder ? { ...opened, name: wanted } : opened
-    return artistName ? { ...named, artist: artistName } : named
+    const songNote = cleanNote(note)
+    return {
+      ...named,
+      ...(artistName && { artist: artistName }),
+      ...(songNote && { note: songNote })
+    }
   })
 
   ipcMain.handle('project:rename', async (_e, projectDir: string, songName: string) => {

@@ -1,0 +1,96 @@
+.beat {
+  position: relative;
+}
+
+/* The metronome button and its speaker glow while it's clicking. */
+.icon-button.beat-on,
+.icon-button.beat-on[aria-pressed='true'] {
+  color: var(--color-accent);
+}
+
+.beat-popover {
+  /* Raised already, so fills step off it (see docs/design.md). */
+  --hover-fill: var(--color-highlight);
+  --quiet-fill: var(--color-surface);
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  /* Opens leftward: the button sits toward the right of the bar. */
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  /* As wide as its rows, no wider. */
+  width: max-content;
+  padding: var(--space-6);
+  border: var(--size-hairline) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-raised);
+}
+
+.beat-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/*
+ * The rows end together: the widest sets the popover's width, and in the others the
+ * main control (slider, tempo, count) stretches to fill it.
+ */
+.beat-row > .beat-level,
+.beat-row > .number-field,
+.beat-row > .beat-count {
+  flex-grow: 1;
+}
+
+.beat-label {
+  width: var(--layout-beat-label);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.beat-level {
+  width: var(--layout-beat-slider);
+}
+
+.beat-row .number-field {
+  width: var(--layout-chart-tempo);
+}
+
+.beat-note {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+/* Two counts side by side: a small switch, both choices in view. */
+.beat-count {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.beat-count-option {
+  flex: 1;
+  padding: var(--space-1) var(--space-4);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-caption);
+}
+
+.beat-count-option:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.beat-count-on {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}

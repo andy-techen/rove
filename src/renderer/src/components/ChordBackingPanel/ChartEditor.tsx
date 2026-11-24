@@ -1,7 +1,7 @@
-import { CSSProperties, KeyboardEvent, useRef, useState } from 'react'
+import { CSSProperties, KeyboardEvent, MouseEvent, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { Chord } from '../../audio/music/chords'
-import { BeatsPerBar, ChordChart } from '../../state/song/project'
+import { BeatsPerBar, ChordChart, ChordFeel, feelsOf } from '../../state/song/project'
 import { ChartPlace, barRange } from '../../state/chords/chart'
 import {
   MAX_CHORDS_PER_BAR,
@@ -11,34 +11,33 @@ import {
   fillBars,
   keepAt,
   pasteBars,
-  removeBars,
   repeatLine,
   splitBar,
-  tapTempo,
   withChordAt
 } from '../../state/chords/chartBars'
 import { chartFromText, sameChord } from '../../state/chords/chordText'
 import { chordName } from '../../state/chords/noteNames'
-import { parseTypedNumber } from '../ui/NumberField'
 import { Button } from '../ui/Button'
-import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
-import { NumberField } from '../ui/NumberField'
-import { Select } from '../ui/Select'
 import { cx } from '../ui/cx'
 import { ChordPicker, ChordSuggestions } from './ChordPicker'
 
-const MS_PER_SEC = 1000
+const FEELS: ChordFeel[] = ['strum', 'pick']
 
 interface Props {
   chart: ChordChart
+  /** Beats in a bar, from the song's tempo: a line holds as many bars. */
+  beatsPerBar: BeatsPerBar
   /** The bar under the playhead, or -1. */
   playingBar: number
   suggestions: ChordSuggestions
   locked: boolean
-  onBars(bars: Chord[][]): void
-  onTempo(bpm: number): void
-  onBeats(beatsPerBar: BeatsPerBar): void
+  /** New bars; `feels` comes too when bars moved, so each keeps how it's played. */
+  onBars(bars: Chord[][], feels?: ChordFeel[]): void
+  /** Takes the picked bars out, as Delete does on the timeline. */
+  onRemove(): void
+  /** Bars `first` to `last` strummed or fingerpicked. */
+  onFeel(first: number, last: number, feel: ChordFeel): void
   /** Lets the singer hear a chord as it's picked. */
   onPreview(chord: Chord): void
   /** The bar (and half of it) being written; a chord clicked on the timeline moves it. */
@@ -46,26 +45,34 @@ interface Props {
   onPlace(place: ChartPlace): void
 }
 
-/** Writing the song's chords: tempo, beats in a bar, and a chord (or two) for each bar. */
+/** Writing an instrumental's chords: a chord (or two) for each bar, and how it's played. */
 export function ChartEditor({
   chart,
+  beatsPerBar,
   playingBar,
   suggestions,
   locked,
   onBars,
-  onTempo,
-  onBeats,
   onPreview,
+  onFeel,
+  onRemove,
   place,
   onPlace
 }: Props): React.JSX.Element {
   const { bars } = chart
+  const feels = feelsOf(chart)
   // A line holds as many bars as a bar has beats (4 in 4/4, 3 in 3/4), as charts are
   // written, so lines read as phrases.
-  const barsPerLine = chart.beatsPerBar
+  const barsPerLine = beatsPerBar
   const [unread, setUnread] = useState<string[]>([])
-  const taps = useRef<number[]>([])
   const barRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const focusOnDraw = useRef<number | null>(null)
+  useEffect(() => {
+    const bar = focusOnDraw.current
+    if (bar === null || !barRefs.current[bar]) return
+    focusOnDraw.current = null
+    barRefs.current[bar]?.focus()
+  }, [bars.length])
   const clampBar = (bar: number): number => Math.max(0, Math.min(bars.length - 1, bar))
   const selected = clampBar(place.bar)
   const [first, last] = barRange({
@@ -110,14 +117,8 @@ export function ChartEditor({
       select(from + moves[e.key], true, e.shiftKey)
     } else if ((e.key === 'Backspace' || e.key === 'Delete') && !locked) {
       e.preventDefault()
-      onBars(clearBars(bars, first, last))
+      onRemove()
     }
-  }
-
-  const tap = (): void => {
-    taps.current = [...taps.current, performance.now() / MS_PER_SEC]
-    const bpm = tapTempo(taps.current)
-    if (bpm) onTempo(bpm)
   }
 
   // What "keep" makes of the selection: a split bar's half keeps the chord before it.
@@ -150,6 +151,10 @@ export function ChartEditor({
   const halfLabel = (chord: Chord, i: number, k: number): string =>
     t('chords.halfLabel', { n: i + 1, k: k + 1, chord: chordName(chord) })
 
+  // A click on a bar tool leaves focus in the bars, so the next key still edits them and
+  // the tool doesn't sit there outlined. Tab still reaches the tools.
+  const keepFocus = (e: MouseEvent): void => e.preventDefault()
+
   const barLabel = (bar: Chord[], i: number): string =>
     t('chords.barLabel', {
       n: i + 1,
@@ -171,41 +176,23 @@ export function ChartEditor({
     >
       <div className="chart-sheet">
         <div className="chart-settings">
-          <span className="chart-setting">
-            <span className="chart-setting-label">{t('chords.tempo')}</span>
-            <NumberField
-              label={t('chords.tempoLabel')}
-              value={String(chart.bpm)}
-              unit={t('music.bpm')}
-              align="start"
-              disabled={locked}
-              onCommit={(text) => {
-                const bpm = parseTypedNumber(text)
-                if (bpm !== null) onTempo(bpm)
-              }}
-              onStep={(direction) => onTempo(chart.bpm + direction)}
-            />
-            <Button size="sm" variant="quiet" disabled={locked} onClick={tap}>
-              {t('chords.tap')}
-            </Button>
-            <HelpTip text={t('chords.tapHelp')} />
-          </span>
-          <span className="chart-setting">
-            <span className="chart-setting-label">{t('chords.count')}</span>
-            <Select
-              label={t('chords.countLabel')}
-              value={String(chart.beatsPerBar)}
-              options={[
-                { value: '4', label: '4' },
-                { value: '3', label: '3' }
-              ]}
-              disabled={locked}
-              onChange={(v) => onBeats(v === '3' ? 3 : 4)}
-            />
-            <HelpTip text={t('chords.countHelp')} />
-          </span>
           <span className="chart-bar-tools">
+            <span className="feel-choice" role="group" aria-label={t('instrumental.feel')}>
+              {FEELS.map((feel) => (
+                <IconButton
+                  onMouseDown={keepFocus}
+                  key={feel}
+                  icon={feel}
+                  label={t(`instrumental.${feel}`)}
+                  aria-pressed={feels.slice(first, last + 1).every((f) => f === feel)}
+                  disabled={locked}
+                  onClick={() => onFeel(first, last, feel)}
+                />
+              ))}
+            </span>
+            <span className="chart-tools-divider" aria-hidden="true" />
             <IconButton
+              onMouseDown={keepFocus}
               icon="split"
               label={t('chords.split')}
               disabled={
@@ -221,22 +208,18 @@ export function ChartEditor({
               }}
             />
             <IconButton
+              onMouseDown={keepFocus}
               icon="keep"
               label={keepText(keptBefore)}
               disabled={locked || !kept}
               onClick={() => kept && onBars(kept)}
             />
             <IconButton
+              onMouseDown={keepFocus}
               icon="delete"
-              label={t('chords.removeBar', { bars: barsText })}
-              disabled={locked || bars.length <= 1}
-              onClick={() => {
-                onBars(removeBars(bars, first, last))
-                onPlace({
-                  bar: Math.max(0, Math.min(first, bars.length - (last - first) - 2)),
-                  slot: 0
-                })
-              }}
+              label={t('chords.deleteBars')}
+              disabled={locked}
+              onClick={onRemove}
             />
           </span>
         </div>
@@ -325,8 +308,12 @@ export function ChartEditor({
             icon="plus"
             disabled={locked}
             onClick={() => {
-              onBars(addBar(bars))
-              select(bars.length)
+              // A new bar is played like the one before it.
+              onBars(addBar(bars), [...feels, feels.at(-1) ?? 'strum'])
+              // The new bar doesn't exist until the chart comes back: pick it now, and
+              // focus it once it's drawn.
+              onPlace({ bar: bars.length, slot: 0 })
+              focusOnDraw.current = bars.length
             }}
           >
             {t('chords.addBar')}
@@ -338,7 +325,7 @@ export function ChartEditor({
             disabled={locked || !lineIsFull}
             onClick={() => {
               const repeated = repeatLine(bars, selected, barsPerLine)
-              onBars(repeated.bars)
+              onBars(repeated.bars, repeatLine(feels, selected, barsPerLine).bars)
               onPlace({ bar: repeated.copyAt, slot: 0 })
             }}
           >

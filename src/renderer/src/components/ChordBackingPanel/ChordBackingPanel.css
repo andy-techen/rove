@@ -9,12 +9,15 @@ section.panel.chord-backing-panel {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  /* The picker is as wide as a row of chords; the bars take the rest. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--layout-chord-picker));
   grid-template-rows: minmax(0, 1fr);
+  align-items: start;
   gap: var(--space-7);
 }
 
 .chart-sheet {
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
@@ -45,6 +48,20 @@ section.panel.chord-backing-panel {
   gap: var(--space-4) var(--space-7);
 }
 
+/* Strum or fingerpick, for the bars selected below. */
+.feel-choice {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+/* Separates how the bars are played from what's done to them (split, keep, remove). */
+.chart-tools-divider {
+  align-self: stretch;
+  width: var(--size-hairline);
+  margin: var(--space-1) var(--space-2);
+  background: var(--color-border);
+}
+
 /* Split, join and remove act on the bars below, so they sit right above them. */
 .chart-bar-tools {
   display: inline-flex;
@@ -52,20 +69,10 @@ section.panel.chord-backing-panel {
   margin-left: auto;
 }
 
-.chart-setting {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.chart-setting .number-field {
-  width: var(--layout-chart-tempo);
-}
-
-.chart-setting-label,
+/* The picker's headings ("Bar 3", "Your beats") are the size of the buttons they head. */
 .picker-label,
 .picker-bar {
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-ui);
   color: var(--color-text-muted);
 }
 
@@ -90,7 +97,7 @@ section.panel.chord-backing-panel {
   width: 100%;
   min-height: var(--layout-chart-bar);
   padding: var(--space-1) var(--space-3) var(--space-3);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-md);
   background: none;
   color: var(--color-text);
@@ -143,18 +150,22 @@ section.panel.chord-backing-panel {
 
 .chart-unread {
   margin: 0;
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-ui);
   color: var(--color-warning);
 }
 
 .chord-picker {
+  /* Raised already, so fills step off it (see docs/design.md). */
+  --hover-fill: var(--color-highlight);
+  --quiet-fill: var(--color-surface);
   min-height: 0;
+  max-height: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-6);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface-raised);
 }
@@ -172,7 +183,7 @@ section.panel.chord-backing-panel {
   border-radius: var(--radius-sm);
   background: none;
   color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-ui);
 }
 
 .picker-root:hover {
@@ -207,7 +218,7 @@ section.panel.chord-backing-panel {
   background: none;
   color: var(--color-text-muted);
   font: inherit;
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-ui);
 }
 
 .picker-tab:hover {
@@ -234,7 +245,7 @@ section.panel.chord-backing-panel {
 
 .picker-chord {
   padding: var(--space-3) var(--space-2);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
@@ -254,11 +265,213 @@ section.panel.chord-backing-panel {
 
 .picker-none {
   margin: 0;
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-ui);
   color: var(--color-text-muted);
 }
 
 .instrument-choice {
   display: inline-flex;
   gap: var(--space-1);
+}
+
+/* The beat pad: a lane per drum across one bar, its hits where they play. */
+.beat-pad {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.beat-pad-row {
+  display: grid;
+  grid-template-columns: var(--layout-pad-drum) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: stretch;
+}
+
+.beat-pad-drum {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-ui);
+}
+
+.beat-pad-key {
+  min-width: var(--size-control-xs);
+  padding: 0 var(--space-2);
+  border: var(--size-hairline) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: var(--font-size-micro);
+  text-align: center;
+}
+
+.beat-pad-lane {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--pad-ticks), minmax(0, 1fr));
+  height: var(--size-pad-cell);
+  border: var(--size-hairline) solid var(--color-border);
+  /* Its first sixteenth's line is its left edge, so every sixteenth is alike. */
+  border-inline-start: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.beat-pad-lane.editable {
+  cursor: pointer;
+}
+
+/* Faint sixteenths, and a firmer line where each beat starts, to play against. */
+.beat-pad-tick {
+  border-inline-start: var(--size-hairline) solid var(--color-highlight);
+}
+
+.beat-pad-beat {
+  border-inline-start-color: var(--color-border);
+}
+
+/* The sixteenth playing now, lit down every lane like a playhead. */
+.beat-pad-now {
+  background: var(--color-highlight);
+}
+
+.beat-pad-hit {
+  position: absolute;
+  inset-block: var(--space-1);
+  /* Centred in its sixteenth, clear of the line it starts with, so hits side by side
+     stay apart. */
+  left: calc(var(--at) * 100% + var(--size-hairline) + var(--space-1));
+  width: calc(100% / var(--pad-ticks) - var(--size-hairline) - var(--space-2));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  cursor: pointer;
+}
+
+/* A built-in part's hits are only to look at: shown in full, without a hand cursor. */
+.beat-pad-hit:disabled {
+  cursor: default;
+}
+
+.beat-pad-hit:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+/* With the panel to itself, the pad grows to fill it, lanes sharing the height. */
+.beat-pad-large {
+  flex: 1;
+  min-height: 0;
+}
+
+.beat-pad-large .beat-pad-row {
+  flex: 1;
+  min-height: var(--size-pad-cell);
+}
+
+.beat-pad-large .beat-pad-lane {
+  height: auto;
+}
+
+.beats-record {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.beats-record-status {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.beats-pad-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.beats-pad-full {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Room inside the scroll edge, so a focused control's ring isn't cut off. */
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Part names run longer than chord names ("My beat 2"): each chip fits its name. */
+.beats-picker .picker-chords {
+  display: flex;
+  flex-wrap: wrap;
+  /* Buttons beside the chips (New beat, rename) keep their own size, not the chips'. */
+  align-items: center;
+}
+
+.beats-picker .picker-chord {
+  padding-inline: var(--space-6);
+  white-space: nowrap;
+}
+
+.beats-pad-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.beats-name-input {
+  /* As wide as the name being typed, like the chip it stands in for. */
+  field-sizing: content;
+  min-width: var(--layout-chord-chip);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 var(--size-hairline) var(--color-accent);
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* The beat playing in the panel: its play button stays lit, as the metronome's does. */
+.icon-button.beats-hearing,
+.icon-button.beats-hearing[aria-pressed='true'] {
+  color: var(--color-accent);
+}
+
+/* Record keeps its red, on the same square button as the tools beside it. */
+.icon-button.beats-record-button,
+.icon-button.beats-record-button:hover:not(:disabled),
+.icon-button.beats-record-button[aria-pressed='true'] {
+  color: var(--color-danger);
+}
+
+/* "Your beats", with what acts on them (delete, New beat, find) along the right. */
+.beats-mine-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.beats-mine-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.beats-mine-tools .icon-button {
+  padding: var(--space-2);
+}
+
+/* One line of beats until opened out: those that don't fit wrap out of sight, whole. */
+.beats-picker .beats-mine-one-row {
+  flex-shrink: 0;
+  max-height: var(--mine-line);
+  overflow: hidden;
 }

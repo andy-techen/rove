@@ -86,9 +86,9 @@ function App(): React.JSX.Element {
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
       {naming && (
         <NewSongDialog
-          onCreate={(name, artist) => {
+          onCreate={(name, artist, note) => {
             setNaming(false)
-            void tabs.newSong(name, artist)
+            void tabs.newSong(name, artist, note)
           }}
           onClose={() => setNaming(false)}
         />
@@ -109,9 +109,9 @@ function App(): React.JSX.Element {
             setSongbookOpen(false)
             setNaming(true)
           }}
-          onStart={(name, artist) => {
+          onStart={(name, artist, note) => {
             setSongbookOpen(false)
-            void tabs.newSong(name, artist)
+            void tabs.newSong(name, artist, note)
           }}
           onClose={() => setSongbookOpen(false)}
         />

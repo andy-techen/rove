@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ChordSegment } from '../../audio/music/chords'
-import { guitarNotes, strumEvents } from './strum'
+import { eventsFor, guitarNotes, strumEvents } from './strum'
 
 const C = { root: 0, quality: 'major' } as const
 const G = { root: 7, quality: 'major' } as const
@@ -66,5 +66,37 @@ describe('guitarNotes', () => {
     const notes = guitarNotes({ root: 0, quality: 'major', bass: 4 })
     expect(notes[0]).toEqual({ string: 0, midi: 40 })
     expect(notes.slice(1).every((n) => [0, 4, 7].includes(n.midi % 12))).toBe(true)
+  })
+})
+
+describe('fingerpicking', () => {
+  const picked = () => eventsFor(twoBars(), ['pick', 'pick'])
+
+  it('picks one string at a time on every half beat, the bass on the beat', () => {
+    const events = picked()
+    expect(events).toHaveLength(16)
+    expect(events.every((e) => e.notes.length === 1)).toBe(true)
+    expect(events.slice(0, 4).map((e) => e.time)).toEqual([0, 0.5, 1, 1.5])
+    expect(events[0].notes[0]).toEqual(guitarNotes(C)[0])
+  })
+
+  it('plays T 1 2 1 3 1 2 1 over the top three strings', () => {
+    const [one, two, three] = guitarNotes(C)
+      .slice(-3)
+      .map((n) => n.string)
+    const strings = picked()
+      .slice(1, 8)
+      .map((e) => e.notes[0].string)
+    expect(strings).toEqual([one, two, one, three, one, two, one])
+  })
+
+  it('starts a new chord on its bass', () => {
+    expect(picked()[8].notes[0]).toEqual(guitarNotes(G)[0])
+  })
+
+  it('plays each bar its own way', () => {
+    const mixed = eventsFor(twoBars(), ['strum', 'pick'])
+    expect(mixed.filter((e) => e.time < 4)).toEqual(strumEvents(twoBars()).slice(0, 6))
+    expect(mixed.filter((e) => e.time >= 4).every((e) => e.notes.length === 1)).toBe(true)
   })
 })

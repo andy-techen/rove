@@ -42,15 +42,17 @@ describe('pluck', () => {
 describe('renderStrums', () => {
   const chord = [40, 47, 52, 56, 59, 64].map((midi, string) => ({ string, midi }))
 
-  it('places a strum where it falls, measured from the render’s start', async () => {
+  it('aims a strum so it lands on its beat, measured from the render’s start', async () => {
     const out = await renderStrums(
       [{ time: 1.5, notes: chord, velocity: 1, direction: 'down' }],
       1,
       2,
       RATE
     )
-    const firstSound = out.findIndex((v) => Math.abs(v) > 1e-4)
-    expect(firstSound / RATE).toBeCloseTo(0.5, 2)
+    const firstSound = out.findIndex((v) => Math.abs(v) > 1e-4) / RATE
+    // The pick sets off a moment early, so the strum's middle falls on the beat.
+    expect(firstSound).toBeLessThan(0.5)
+    expect(firstSound).toBeGreaterThan(0.45)
   })
 
   it('stays under full scale with every string struck hard and often', async () => {

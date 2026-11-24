@@ -10,7 +10,7 @@
 
 .songbook-view {
   padding: var(--space-2) var(--space-5);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-muted);
@@ -71,7 +71,7 @@
   align-items: center;
   gap: var(--space-3);
   padding-right: var(--space-3);
-  border: 1px solid transparent;
+  border: var(--size-hairline) solid transparent;
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: var(--color-text);
@@ -131,6 +131,16 @@
 
 .songbook-when {
   flex-shrink: 0;
+}
+
+/* The singer's own reminder, quiet under the name and artist. */
+.songbook-note-text {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .songbook-footer {
@@ -221,7 +231,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
-  border: 1px solid transparent;
+  border: var(--size-hairline) solid transparent;
   border-radius: var(--radius-pill);
   background: var(--color-surface-raised);
   color: var(--color-text);
@@ -259,7 +269,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-pill, var(--radius-md));
   background: transparent;
   color: var(--color-text);
@@ -278,7 +288,7 @@
   z-index: 1;
   min-width: 11rem;
   padding: var(--space-3);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: var(--color-text);

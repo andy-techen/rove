@@ -57,7 +57,12 @@ describe('SongbookDialog', () => {
     )
     const artist = screen.getByRole('textbox', { name: t('newSong.artistLabel') })
     await userEvent.type(artist, 'Mira Ko{Enter}')
-    expect(window.api.updateSongbookSong).toHaveBeenCalledWith('Sunset', 'Sunset', 'Mira Ko')
+    expect(window.api.updateSongbookSong).toHaveBeenCalledWith(
+      'Sunset',
+      'Sunset',
+      'Mira Ko',
+      undefined
+    )
     expect(await screen.findByText('Mira Ko')).toBeInTheDocument()
   })
 
@@ -80,17 +85,63 @@ describe('SongbookDialog', () => {
       screen.getByRole('textbox', { name: t('newSong.artistLabel') }),
       'Fleetwood Mac{Enter}'
     )
-    expect(window.api.addToWishlist).toHaveBeenCalledWith('Dreams', 'Fleetwood Mac')
+    expect(window.api.addToWishlist).toHaveBeenCalledWith('Dreams', 'Fleetwood Mac', undefined)
   })
 
   it('starts a real song from a wishlist item and takes it off the list', async () => {
+    vi.mocked(window.api.listWishlist).mockResolvedValue([{ ...dreams, note: 'Lower key' }])
     const { onStart } = renderDialog()
     await showWishlist()
     await userEvent.click(
       await screen.findByRole('button', { name: t('songbook.startLabel', { name: 'Dreams' }) })
     )
     expect(window.api.removeFromWishlist).toHaveBeenCalledWith('w1')
-    expect(onStart).toHaveBeenCalledWith('Dreams', 'Fleetwood Mac')
+    expect(onStart).toHaveBeenCalledWith('Dreams', 'Fleetwood Mac', 'Lower key')
+  })
+
+  it('adds a note to a wishlist song from its edit dialog and shows it', async () => {
+    vi.mocked(window.api.updateWishlistItem).mockResolvedValue([{ ...dreams, note: 'Lower key' }])
+    renderDialog()
+    await showWishlist()
+    await userEvent.click(
+      await screen.findByRole('button', { name: t('songbook.editLabel', { name: 'Dreams' }) })
+    )
+    await userEvent.type(
+      screen.getByRole('textbox', { name: t('newSong.noteLabel') }),
+      'Lower key{Enter}'
+    )
+    expect(window.api.updateWishlistItem).toHaveBeenCalledWith(
+      'w1',
+      'Dreams',
+      'Fleetwood Mac',
+      'Lower key'
+    )
+    expect(await screen.findByText('Lower key')).toBeInTheDocument()
+  })
+
+  it('adds a note to one of your songs from its edit dialog', async () => {
+    vi.mocked(window.api.updateSongbookSong).mockResolvedValue({
+      folder: 'Sunset',
+      name: 'Sunset',
+      note: 'For Mum',
+      modifiedAt: NOW
+    })
+    renderDialog()
+    await songButton('Sunset')
+    await userEvent.click(
+      screen.getByRole('button', { name: t('songbook.editLabel', { name: 'Sunset' }) })
+    )
+    await userEvent.type(
+      screen.getByRole('textbox', { name: t('newSong.noteLabel') }),
+      'For Mum{Enter}'
+    )
+    expect(window.api.updateSongbookSong).toHaveBeenCalledWith(
+      'Sunset',
+      'Sunset',
+      undefined,
+      'For Mum'
+    )
+    expect(await screen.findByText('For Mum')).toBeInTheDocument()
   })
 })
 

@@ -8,13 +8,11 @@ interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'si
   label: string
 }
 
-const ICON_SIZE = 16
-
 /** A search input with a leading magnifying glass. */
 export function SearchField({ label, className, ...rest }: Props): React.JSX.Element {
   return (
     <span className={cx('search-field', className)}>
-      <Icon name="search" size={ICON_SIZE} />
+      <Icon name="search" size="secondary" />
       <input type="search" aria-label={label} {...rest} />
     </span>
   )

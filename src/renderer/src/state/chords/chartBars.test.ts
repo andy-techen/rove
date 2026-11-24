@@ -39,8 +39,8 @@ describe('editing bars', () => {
     const chart = bars('| C | F Am | Dm | E |')
     expect(names(fillBars(chart, 1, 2, G))).toEqual(['C', 'G', 'G', 'E'])
     expect(names(clearBars(chart, 1, 2))).toEqual(['C', '', '', 'E'])
-    expect(names(removeBars(chart, 1, 2))).toEqual(['C', 'E'])
-    expect(removeBars(chart, 0, 3)).toEqual([[]])
+    expect(names(removeBars(chart, 1, 2, []))).toEqual(['C', 'E'])
+    expect(removeBars(chart, 0, 3, [])).toEqual([[]])
   })
 
   it('copies a run of bars and pastes it over the chart from another bar', () => {

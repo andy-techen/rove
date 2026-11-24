@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Clip, Project, createProject, withMusicSpeed, withNewTrack } from '../song/project'
-import { clickGrid, clickTimes, countInSec } from './metronome'
+import { clickGrid, clickTimes, countInSec, tempoOfMusic } from './metronome'
 
 const clip = (start: number, offset: number, duration: number): Clip => ({
   id: 'm',
@@ -73,5 +73,27 @@ describe('clickTimes', () => {
     const drifting = { ...beat, times: [0.25, 0.76, 1.29, 1.84, 2.41] }
     const grid = clickGrid(withMusic(), 'music.wav', drifting)!
     expect(clickTimes(grid, 0, 10).map((c) => c.time)).toEqual([1.26, 1.79, 2.34, 2.91])
+  })
+})
+
+describe('tempoOfMusic', () => {
+  // Bar lines for a tempo, as the chart lays them out at the song's speed.
+  const beatsOf = (p: Project) => {
+    const t = tempoOfMusic(p, 'music.wav', beat)!
+    const speed = p.music?.speed ?? 1
+    return [0, 1, 2].map((k) => +((t.startSec + (k * 60) / t.bpm) / speed).toFixed(6))
+  }
+  const clicksOf = (p: Project) =>
+    clickGrid(p, 'music.wav', beat)!.clicks.map((c) => +c.time.toFixed(6))
+
+  it('puts an instrumental’s beats on the music’s', () => {
+    const p = withMusic()
+    expect(clicksOf(p)).toEqual(expect.arrayContaining(beatsOf(p).filter((t) => t >= 1)))
+    expect(tempoOfMusic(p, 'music.wav', beat)?.bpm).toBe(120)
+  })
+
+  it('stays on the music’s beats when the music plays faster', () => {
+    const p = withMusicSpeed(withMusic(), 1.25)
+    expect(clicksOf(p)).toEqual(expect.arrayContaining(beatsOf(p).filter((t) => t >= 1)))
   })
 })

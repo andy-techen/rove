@@ -23,7 +23,6 @@ interface Props {
 
 // A quarter second is small enough to line words up by ear, big enough to hear.
 const NUDGE_SEC = 0.25
-const SMALL_ICON = 16
 
 /** The song’s words beside the timeline, found online and following the playhead. */
 export function LyricsPanel({
@@ -79,7 +78,7 @@ export function LyricsPanel({
             <div className="lyrics-timing">
               <IconButton
                 icon="minus"
-                iconSize={SMALL_ICON}
+                iconSize="secondary"
                 label={t('lyrics.earlier')}
                 disabled={locked}
                 onClick={() => onNudge(-NUDGE_SEC)}
@@ -87,7 +86,7 @@ export function LyricsPanel({
               <span className="lyrics-offset">{formatOffset(shown.offsetSec)}</span>
               <IconButton
                 icon="plus"
-                iconSize={SMALL_ICON}
+                iconSize="secondary"
                 label={t('lyrics.later')}
                 disabled={locked}
                 onClick={() => onNudge(NUDGE_SEC)}

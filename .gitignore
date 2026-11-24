@@ -22,3 +22,4 @@ scripts/catalog/.cache/
 
 # Throwaway input lists for catalog:import and catalog:add --file.
 scripts/catalog/lists/
+*.tsbuildinfo

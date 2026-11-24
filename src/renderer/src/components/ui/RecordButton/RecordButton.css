@@ -1,0 +1,22 @@
+.record-button {
+  flex-shrink: 0;
+  width: var(--size-control-md);
+  height: var(--size-control-md);
+  padding: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+  color: var(--color-danger);
+}
+
+.record-button:hover:not(:disabled) {
+  color: var(--color-danger);
+  background: var(--color-border);
+}
+
+.record-button.recording,
+.record-button.recording:hover:not(:disabled) {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-on-danger);
+}

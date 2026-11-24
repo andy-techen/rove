@@ -9,7 +9,7 @@
   appearance: none;
   height: var(--size-control-md);
   padding: 0 calc(var(--space-4) + var(--size-control-xs)) 0 var(--space-4);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: inherit;

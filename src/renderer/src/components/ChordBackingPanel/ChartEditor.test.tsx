@@ -4,40 +4,41 @@ import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { Chord } from '../../audio/music/chords'
-import { ChordChart } from '../../state/song/project'
+import { ChordChart, ChordFeel, feelsOf } from '../../state/song/project'
 import { chartFromText } from '../../state/chords/chordText'
 import { chordsInKey } from '../../state/chords/keyChords'
 import { chordName } from '../../state/chords/noteNames'
 import { ChartEditor } from './ChartEditor'
 
-const chartOf = (text: string): ChordChart => ({
-  bpm: 100,
-  beatsPerBar: 4,
-  startSec: 0,
-  bars: chartFromText(text).bars
-})
+const chartOf = (text: string): ChordChart => ({ bars: chartFromText(text).bars })
 
 /** The editor with its chart kept in state, as the song would keep it. */
 function renderEditor(text = '| C | % | % | % |', beatsPerBar: 3 | 4 = 4) {
   const onBars = vi.fn()
-  const onTempo = vi.fn()
   const onPreview = vi.fn()
+  const onRemove = vi.fn()
   function Harness() {
-    const [chart, setChart] = useState({ ...chartOf(text), beatsPerBar })
+    const [chart, setChart] = useState<ChordChart>(chartOf(text))
     const [place, setPlace] = useState({ bar: 0, slot: 0 })
     return (
       <ChartEditor
         chart={chart}
+        beatsPerBar={beatsPerBar}
         playingBar={-1}
         suggestions={{ label: t('chords.inKey'), chords: chordsInKey({ tonic: 0, mode: 'major' }) }}
         locked={false}
-        onBars={(bars: Chord[][]) => {
+        onBars={(bars: Chord[][], feels?: ChordFeel[]) => {
           onBars(bars)
-          setChart({ ...chart, bars })
+          setChart({ ...chart, bars, feels: feels ?? chart.feels })
         }}
-        onTempo={onTempo}
-        onBeats={vi.fn()}
+        onFeel={(first, last, feel) =>
+          setChart({
+            ...chart,
+            feels: feelsOf(chart).map((f, i) => (i >= first && i <= last ? feel : f))
+          })
+        }
         onPreview={onPreview}
+        onRemove={onRemove}
         place={place}
         onPlace={setPlace}
       />
@@ -46,7 +47,7 @@ function renderEditor(text = '| C | % | % | % |', beatsPerBar: 3 | 4 = 4) {
   render(<Harness />)
   const lastBars = () =>
     onBars.mock.lastCall![0].map((bar: Chord[]) => bar.map(chordName).join(' '))
-  return { onTempo, onPreview, lastBars }
+  return { onPreview, onRemove, lastBars }
 }
 
 const picker = () => within(screen.getByRole('region', { name: /^Chord for / }))
@@ -149,20 +150,34 @@ describe('ChartEditor', () => {
     expect(lastBars()).toEqual(['C', 'G', 'F', 'C', 'G', 'F', 'D'])
   })
 
-  it('nudges the tempo by scrolling over it', () => {
-    const { onTempo } = renderEditor()
-    const tempo = screen.getByRole('textbox', { name: t('chords.tempoLabel') })
-    fireEvent.wheel(tempo, { deltaY: -40 })
-    expect(onTempo).toHaveBeenLastCalledWith(101)
-    fireEvent.wheel(tempo, { deltaY: 40 })
-    expect(onTempo).toHaveBeenLastCalledWith(99)
+  it('fingerpicks just the bars you pick', async () => {
+    renderEditor('| C | G | Am | F |')
+    await userEvent.click(bar(2))
+    await userEvent.click(screen.getByRole('button', { name: t('instrumental.pick') }))
+    expect(screen.getByRole('button', { name: t('instrumental.pick') })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
   })
 
-  it('takes a typed tempo', async () => {
-    const { onTempo } = renderEditor()
-    const tempo = screen.getByRole('textbox', { name: t('chords.tempoLabel') })
-    await userEvent.clear(tempo)
-    await userEvent.type(tempo, '72{Enter}')
-    expect(onTempo).toHaveBeenCalledWith(72)
+  it('takes the picked bars out with the bin above them', async () => {
+    const { onRemove } = renderEditor('| C | G | Am | F |')
+    await userEvent.click(bar(3))
+    await userEvent.click(screen.getByRole('button', { name: t('chords.deleteBars') }))
+    expect(onRemove).toHaveBeenCalled()
+  })
+
+  it('takes the picked bars out with Delete', async () => {
+    const { onRemove } = renderEditor('| C | G | Am | F |')
+    await userEvent.click(bar(2))
+    await userEvent.keyboard('{Backspace}')
+    expect(onRemove).toHaveBeenCalled()
+  })
+
+  it('picks and focuses a newly added bar', async () => {
+    renderEditor('| C | G |')
+    await userEvent.click(screen.getByRole('button', { name: t('chords.addBar') }))
+    expect(bar(3)).toHaveAttribute('aria-pressed', 'true')
+    expect(bar(3)).toHaveFocus()
   })
 })

@@ -108,8 +108,6 @@ interface Props {
   onLaneClick(trackId: string): void
 }
 
-// Small enough for the zoom buttons to sit inside the ruler's row.
-const ZOOM_ICON_SIZE = 14
 const LANE_HEIGHT = 88
 // Pointer travel below this is a click on the timeline, not the start of a box.
 const BOX_THRESHOLD_PX = 4
@@ -615,7 +613,7 @@ export function Timeline({
           <span className="zoom-buttons">
             <IconButton
               icon="zoomOut"
-              iconSize={ZOOM_ICON_SIZE}
+              iconSize="secondary"
               className="zoom-button"
               label={t('timeline.zoomOut')}
               title={shortcuts.label(t('timeline.zoomOut'), 'zoomOut')}
@@ -624,7 +622,7 @@ export function Timeline({
             />
             <IconButton
               icon="zoomIn"
-              iconSize={ZOOM_ICON_SIZE}
+              iconSize="secondary"
               className="zoom-button"
               label={t('timeline.zoomIn')}
               title={shortcuts.label(t('timeline.zoomIn'), 'zoomIn')}
@@ -632,7 +630,7 @@ export function Timeline({
             />
             <IconButton
               icon="locate"
-              iconSize={ZOOM_ICON_SIZE}
+              iconSize="secondary"
               className="zoom-button"
               label={t('timeline.toPlayhead')}
               title={shortcuts.label(t('timeline.toPlayhead'), 'toPlayhead')}

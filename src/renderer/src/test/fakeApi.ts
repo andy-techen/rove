@@ -41,6 +41,7 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
     listWishlist: vi.fn(async () => []),
     addToWishlist: vi.fn(async () => []),
     removeFromWishlist: vi.fn(async () => []),
+    updateWishlistItem: vi.fn(async () => []),
     searchCatalog: vi.fn(async () => ({ items: [], total: 0 })),
     restoreTabs: vi.fn(async () => ({ songs: [], activeSong: null })),
     rememberTabs: vi.fn(async () => {}),

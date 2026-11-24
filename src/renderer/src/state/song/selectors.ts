@@ -8,13 +8,15 @@ import {
   TrackRole,
   chordsTracksOf,
   formatDuration,
+  instrumentOf,
   musicOf,
   polishOf,
   startingVolume,
   tracksOf
 } from './project'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
-import { ChartPlace, ChordPart, chartCells, chartTimeline } from '../chords/chart'
+import { beatCells, beatName } from '../chords/beats'
+import { ChartPlace, ChordPart, chartCells, instrumentalTimeline } from '../chords/chart'
 import { chordName } from '../chords/noteNames'
 
 // Edges this close to the playhead count as "here", so a jump moves on to the next one.
@@ -99,6 +101,7 @@ const laneOrder = (project: Project): Track[] => [
  * keep it ringing, with every bar inside it still there to click.
  */
 function chordBlocks(project: Project, track: Track): ChordBlock[] {
+  if (instrumentOf(track) === 'beats') return beatBlocks(project, track)
   if (!track.chart) return []
   const blocks: ChordBlock[] = []
   for (const cell of chartCells(project, track.chart)) {
@@ -110,6 +113,30 @@ function chordBlocks(project: Project, track: Track): ChordBlock[] {
     } else {
       const name = cell.chord ? chordName(cell.chord) : ''
       blocks.push({ start: cell.start, end: cell.end, name, cells: [view] })
+    }
+  }
+  return blocks
+}
+
+/** What a beats lane shows: each run of bars playing the same part as one block. */
+function beatBlocks(project: Project, track: Track): ChordBlock[] {
+  const parts = track.beats?.parts ?? []
+  const blocks: ChordBlock[] = []
+  for (const cell of track.beats ? beatCells(project, track.beats) : []) {
+    const same = cell.place.bar > 0 && parts[cell.place.bar - 1] === cell.part
+    // Each bar plays its part afresh, so none is "kept" even inside a longer block.
+    const view = { start: cell.start, end: cell.end, carried: false, place: cell.place }
+    const last = blocks.at(-1)
+    if (last && same) {
+      last.end = cell.end
+      last.cells.push(view)
+    } else {
+      blocks.push({
+        start: cell.start,
+        end: cell.end,
+        name: beatName(track.beats!, cell.part),
+        cells: [view]
+      })
     }
   }
   return blocks
@@ -127,7 +154,9 @@ export function selectLanes(
         id: track.id,
         role: track.role,
         name: track.name,
-        detail: t('timeline.chordsDetail'),
+        detail: t(
+          instrumentOf(track) === 'beats' ? 'timeline.detailBeats' : 'timeline.detailGuitar'
+        ),
         imported: false,
         volume: track.volume,
         startVolume: startingVolume(track.role),
@@ -210,7 +239,7 @@ export function hasMusicChoice(project: Project | undefined, skipBacking: boolea
 
 /** Where the song ends: the end of its last clip, or of the chords when they play. */
 export function songEnd(project: Project): number {
-  const chords = chordsTracksOf(project).map((t) => chartTimeline(project, t.chart)?.endSec ?? 0)
+  const chords = chordsTracksOf(project).map((t) => instrumentalTimeline(project, t)?.endSec ?? 0)
   return Math.max(
     0,
     ...chords,

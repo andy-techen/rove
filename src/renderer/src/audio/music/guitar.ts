@@ -35,8 +35,10 @@ const PICK_SMOOTHING = 0.93
 const PRNG_SEED = 2718
 const PRNG_MULT = 16807
 const PRNG_MOD = 2147483647
+// A doubled note gets its own noise burst, so the two voices don't sound like one.
+const SEED_STEPS = 100
 
-/** One string plucked at `midi`, peak 1, ringing for PLUCK_SEC. */
+/** One string plucked at `midi` (a fraction is a little sharp), peak 1, ringing for PLUCK_SEC. */
 function synthPluck(midi: number, sampleRate: number): Float32Array {
   const hz = midiToHz(midi)
   const out = new Float32Array(Math.round(PLUCK_SEC * sampleRate))
@@ -50,7 +52,7 @@ function synthPluck(midi: number, sampleRate: number): Float32Array {
   const loss = 10 ** (-DECAY_60DB / (ringSec * hz))
 
   const loop = new Float32Array(period)
-  let seed = PRNG_SEED + midi
+  let seed = PRNG_SEED + Math.round(midi * SEED_STEPS)
   let prev = 0
   for (let i = 0; i < period; i++) {
     seed = (seed * PRNG_MULT) % PRNG_MOD
@@ -94,8 +96,18 @@ export function pluck(midi: number, sampleRate: number): Float32Array {
 // A strum isn't instant: the pick crosses the strings one after another.
 const DOWN_SPREAD_SEC = 0.012
 const UP_SPREAD_SEC = 0.008
-// Each string's level in the mix. Six strings struck at once stay under full scale.
-const NOTE_LEVEL = 0.14
+// Each voice's level in the mix: six strings, each doubled, stay under full scale.
+const NOTE_LEVEL = 0.16
+// Every note is played twice, the second a touch sharp and a moment late, as when a part
+// is double-tracked: the two beat gently against each other and the guitar sounds full
+// rather than thin.
+const DOUBLE_CENTS = 7
+const DOUBLE_DELAY_SEC = 0.009
+const DOUBLE_LEVEL = 0.75
+const CENTS_PER_SEMITONE = 100
+// A guitar body's warmth: the low end, under about 250 Hz, lifted by half again.
+const WARMTH_HZ = 250
+const WARMTH = 0.5
 // A string struck again stops its last note; a short fade keeps that from clicking.
 const DAMP_SEC = 0.01
 // Takes the top off, like a guitar's body does.
@@ -103,6 +115,8 @@ const BODY_SMOOTHING = 0.35
 /** How long the last chord rings after the chart ends. */
 export const RING_OUT_SEC = 2
 const EVENTS_PER_CHUNK = 64
+// The doubled voice of a string is held under its own key, beside the string's.
+const DOUBLE_VOICE = 0.5
 
 interface Sounding {
   start: number
@@ -138,24 +152,40 @@ export async function renderStrums(
   for (let e = 0; e < events.length; e++) {
     const event = events[e]
     const spread = event.direction === 'down' ? DOWN_SPREAD_SEC : UP_SPREAD_SEC
+    // A strum is aimed so its middle lands on the beat, as a player's is: started on the
+    // beat, a six-string barre's top strings would sound a beat-feel late.
+    const lead = ((event.notes.length - 1) * spread + DOUBLE_DELAY_SEC) / 2
     event.notes.forEach((note, i) => {
-      const start = Math.round((event.time - fromSec + i * spread) * sampleRate)
-      const ringing = strings.get(note.string)
-      if (ringing) play(ringing, start)
-      strings.set(note.string, {
-        start,
-        sample: pluck(note.midi, sampleRate),
-        gain: NOTE_LEVEL * event.velocity
-      })
+      const start = Math.max(0, Math.round((event.time - fromSec - lead + i * spread) * sampleRate))
+      const gain = NOTE_LEVEL * event.velocity
+      const voices: [number, Sounding][] = [
+        [note.string, { start, sample: pluck(note.midi, sampleRate), gain }],
+        [
+          note.string + DOUBLE_VOICE,
+          {
+            start: start + Math.round(DOUBLE_DELAY_SEC * sampleRate),
+            sample: pluck(note.midi + DOUBLE_CENTS / CENTS_PER_SEMITONE, sampleRate),
+            gain: gain * DOUBLE_LEVEL
+          }
+        ]
+      ]
+      for (const [voice, sounding] of voices) {
+        const ringing = strings.get(voice)
+        if (ringing) play(ringing, sounding.start)
+        strings.set(voice, sounding)
+      }
     })
     if ((e + 1) % EVENTS_PER_CHUNK === 0) await nextTick()
   }
   for (const ringing of strings.values()) play(ringing, out.length)
 
   let body = 0
+  let low = 0
+  const lowPole = Math.exp((-2 * Math.PI * WARMTH_HZ) / sampleRate)
   for (let n = 0; n < out.length; n++) {
     body = body * BODY_SMOOTHING + out[n] * (1 - BODY_SMOOTHING)
-    out[n] = body
+    low = low * lowPole + body * (1 - lowPole)
+    out[n] = body + low * WARMTH
   }
   return out
 }

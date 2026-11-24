@@ -20,7 +20,7 @@ export interface Tabs {
   /** Moves a tab to a new place in the bar (remembered for next launch). */
   move(tabId: string, toIndex: number): void
   close(tabId: string): void
-  newSong(name?: string, artist?: string): Promise<void>
+  newSong(name?: string, artist?: string, note?: string): Promise<void>
   open(): Promise<void>
   /** Opens a song from the Songbook by its folder name. */
   openByName(folder: string): Promise<void>
@@ -100,9 +100,9 @@ export function useTabs(enabled: boolean): Tabs {
       setTabs(remaining)
       if (tabId === activeId) setActiveId(remaining[Math.max(0, index - 1)].id)
     },
-    newSong: async (name, artist) => {
+    newSong: async (name, artist, note) => {
       try {
-        add(await window.api.createSong(name, artist))
+        add(await window.api.createSong(name, artist, note))
       } catch {
         setError(t('app.newSongFailed'))
       }

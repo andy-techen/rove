@@ -14,7 +14,6 @@ interface Props {
 }
 
 const PERCENT = 100
-const STOP_ICON_SIZE = 12
 
 /** The Music panel's header control for taking the singing out of the song. */
 export function VocalsControl({
@@ -43,7 +42,7 @@ export function VocalsControl({
         <span className="vocals-percent">{t('music.removingPercent', { percent })}</span>
         <IconButton
           icon="stop"
-          iconSize={STOP_ICON_SIZE}
+          iconSize="secondary"
           label={t('music.stopRemovingVocals')}
           onClick={onCancel}
         />

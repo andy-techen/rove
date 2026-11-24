@@ -24,6 +24,30 @@ const BEATS_PER_BAR = 4
 const SEC_PER_MIN = 60
 
 /**
+ * The music's beat as an instrumental's tempo: its average bpm, and where its first beat
+ * falls, in the tempo's own terms (seconds at the original speed, see `SongTempo`).
+ * Null until the beat is heard.
+ */
+export function tempoOfMusic(
+  project: Project,
+  file: string,
+  beat: Beat | null
+): { bpm: number; startSec: number } | null {
+  const clip = tracksOf(project, 'backing')
+    .flatMap((t) => t.clips)
+    .find((c) => c.file === file)
+  if (!beat || !clip || beat.bpm <= 0) return null
+  const { speed } = musicOf(project)
+  // On the timeline the first beat plays at start + (firstBeat / speed − offset); the
+  // chart puts bar 1 at startSec / speed.
+  const firstBeat = speed * (clip.start - clip.offset) + beat.firstBeatSec
+  // A first beat before the timeline starts moves on by whole beats, staying on the grid.
+  const period = SEC_PER_MIN / beat.bpm
+  const startSec = ((firstBeat % period) + period) % period
+  return { bpm: beat.bpm, startSec }
+}
+
+/**
  * The metronome for a song, from the beats heard in one of its music recordings.
  * Clicks land on the music's own beats (so they follow it when it speeds up or drags),
  * moved and stretched with every clip that plays that recording.

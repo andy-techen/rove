@@ -66,15 +66,18 @@ export const fillBars = (bars: Chord[][], first: number, last: number, chord: Ch
 export const clearBars = (bars: Chord[][], first: number, last: number): Chord[][] =>
   bars.map((b, i) => (inRange(i, first, last) ? [] : b))
 
-/** Takes bars `first` to `last` out; a chart always keeps at least one bar. */
-export function removeBars(bars: Chord[][], first: number, last: number): Chord[][] {
+// The structural edits below take any per-bar list (the chords, or how each bar is
+// played), so a chart's lists move together.
+
+/** Takes bars `first` to `last` out; a chart keeps at least one bar, `fallback`. */
+export function removeBars<T>(bars: T[], first: number, last: number, fallback: T): T[] {
   const kept = bars.filter((_, i) => !inRange(i, first, last))
-  return kept.length ? kept : [[]]
+  return kept.length ? kept : [fallback]
 }
 
 /** Bars `a` and `b` trade places. */
-export function swapBars(bars: Chord[][], a: number, b: number): Chord[][] {
-  if (a === b || !bars[a] || !bars[b]) return bars
+export function swapBars<T>(bars: T[], a: number, b: number): T[] {
+  if (a === b || a >= bars.length || b >= bars.length) return bars
   return bars.map((bar, i) => (i === a ? bars[b] : i === b ? bars[a] : bar))
 }
 
@@ -82,21 +85,21 @@ export function swapBars(bars: Chord[][], a: number, b: number): Chord[][] {
  * The line of bars holding bar `at` (charts are written `perLine` to a line), copied in
  * right after it: verses and choruses repeat. Returns where the copy starts.
  */
-export function repeatLine(
-  bars: Chord[][],
+export function repeatLine<T>(
+  bars: T[],
   at: number,
   perLine: number
-): { bars: Chord[][]; copyAt: number } {
+): { bars: T[]; copyAt: number } {
   const lineStart = Math.floor(at / perLine) * perLine
-  const line = bars.slice(lineStart, lineStart + perLine).map((bar) => [...bar])
+  const line = bars.slice(lineStart, lineStart + perLine)
   const copyAt = lineStart + line.length
   return { bars: insertBars(bars, copyAt, line), copyAt }
 }
 
 /** Bars put in before bar `at`, moving the ones after along. */
-export const insertBars = (bars: Chord[][], at: number, added: Chord[][]): Chord[][] => [
+export const insertBars = <T>(bars: T[], at: number, added: T[]): T[] => [
   ...bars.slice(0, at),
-  ...added.map((bar) => [...bar]),
+  ...added,
   ...bars.slice(at)
 ]
 
@@ -104,8 +107,8 @@ export const insertBars = (bars: Chord[][], at: number, added: Chord[][]): Chord
 export const addBar = (bars: Chord[][]): Chord[][] => [...bars, []]
 
 /** Bars `first` to `last`, to paste elsewhere. */
-export const copyBars = (bars: Chord[][], first: number, last: number): Chord[][] =>
-  bars.slice(first, last + 1).map((bar) => [...bar])
+export const copyBars = <T>(bars: T[], first: number, last: number): T[] =>
+  bars.slice(first, last + 1)
 
 /** Pasted bars written over the chart from bar `at`, growing it as needed. */
 export function pasteBars(bars: Chord[][], at: number, pasted: Chord[][]): Chord[][] {

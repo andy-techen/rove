@@ -40,8 +40,6 @@ interface Props {
   onExport(): void
 }
 
-const TAB_ICON_SIZE = 14
-
 const THEME_ICONS: Record<Theme, IconName> = { system: 'contrast', light: 'sun', dark: 'moon' }
 
 /** The open songs as tabs. App-wide actions live in the native menu bar. */
@@ -145,7 +143,7 @@ export function TopBar({
               {closable && (
                 <IconButton
                   icon="close"
-                  iconSize={TAB_ICON_SIZE}
+                  iconSize="secondary"
                   className="tab-close"
                   label={t('topBar.close', { name: tab.name })}
                   title={t('topBar.closeTitle')}
@@ -158,14 +156,14 @@ export function TopBar({
         })}
         <IconButton
           icon="plus"
-          iconSize={TAB_ICON_SIZE}
+          iconSize="secondary"
           label={t('topBar.newSong')}
           disabled={disabled}
           onClick={onNew}
         />
         <IconButton
           icon="songbook"
-          iconSize={TAB_ICON_SIZE}
+          iconSize="secondary"
           label={t('topBar.songbook')}
           title={shortcuts.label(t('topBar.songbook'), 'songbook')}
           disabled={disabled}
@@ -177,13 +175,13 @@ export function TopBar({
         <div className="topbar-actions">
           <IconButton
             icon={THEME_ICONS[theme]}
-            iconSize={TAB_ICON_SIZE}
+            iconSize="secondary"
             label={t('appearance.label', { theme: t(`menu.themes.${theme}`) })}
             onClick={() => setTheme(nextTheme(theme))}
           />
           <IconButton
             icon="export"
-            iconSize={TAB_ICON_SIZE}
+            iconSize="secondary"
             label={t('export.open')}
             title={canExport ? shortcuts.label(t('export.open'), 'export') : t('export.nothing')}
             disabled={!canExport}
@@ -191,7 +189,7 @@ export function TopBar({
           />
           <IconButton
             icon="save"
-            iconSize={TAB_ICON_SIZE}
+            iconSize="secondary"
             label={t('keymap.save')}
             title={shortcuts.label(t('keymap.save'), 'save')}
             onClick={onSave}

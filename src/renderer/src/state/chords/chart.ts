@@ -1,7 +1,7 @@
 import { Chord, ChordSegment } from '../../audio/music/chords'
 import { PITCH_CLASSES } from '../../audio/pitch/key'
 import { ClickGrid } from '../transport/metronome'
-import { ChordChart, Project, musicOf } from '../song/project'
+import { ChordChart, Project, Track, instrumentOf, musicOf, tempoOf } from '../song/project'
 import { sameChord } from './chordText'
 
 const SEC_PER_MIN = 60
@@ -40,22 +40,44 @@ export function transposeChord(chord: Chord, semitones: number): Chord {
 }
 
 /**
- * Where the chart's bars, beats and chords fall on the timeline. Speed scales it like a
- * music clip (so a chart lined up with a recording stays lined up), and Key moves every
- * chord. Null without a chart or without any bars.
+ * Where `barCount` bars and their beats fall on the timeline at the song's tempo. Speed
+ * scales it like a music clip, so bars lined up with a recording stay lined up. Null
+ * without any bars.
+ */
+export function barGrid(project: Project, barCount: number): ChartTimeline | null {
+  if (barCount <= 0) return null
+  const { speed } = musicOf(project)
+  const { bpm, beatsPerBar, startSec: writtenStart } = tempoOf(project)
+  const secPerBeat = SEC_PER_MIN / (bpm * speed)
+  const startSec = writtenStart / speed
+  return {
+    beats: Array.from({ length: barCount * beatsPerBar }, (_, k) => ({
+      time: tidy(startSec + k * secPerBeat),
+      downbeat: k % beatsPerBar === 0
+    })),
+    chords: [],
+    secPerBeat,
+    beatsPerBar,
+    startSec: tidy(startSec),
+    endSec: tidy(startSec + barCount * beatsPerBar * secPerBeat)
+  }
+}
+
+/**
+ * Where the chart's bars, beats and chords fall on the timeline, with every chord moved
+ * by Key. Null without a chart or without any bars.
  */
 export function chartTimeline(
   project: Project,
   chart: ChordChart | undefined | null
 ): ChartTimeline | null {
-  if (!chart || chart.bars.length === 0) return null
-  const { speed, semitones } = musicOf(project)
-  const secPerBeat = SEC_PER_MIN / (chart.bpm * speed)
-  const barSec = secPerBeat * chart.beatsPerBar
-  const startSec = chart.startSec / speed
+  const grid = chart && barGrid(project, chart.bars.length)
+  if (!chart || !grid) return null
+  const { semitones } = musicOf(project)
+  const barSec = grid.secPerBeat * grid.beatsPerBar
   const chords: ChordSegment[] = []
   chart.bars.forEach((bar, b) => {
-    const barStart = startSec + b * barSec
+    const barStart = grid.startSec + b * barSec
     const barEnd = tidy(barStart + barSec)
     if (bar.length === 0) {
       // An empty bar carries the last chord on (or the silence before the first one).
@@ -73,18 +95,14 @@ export function chartTimeline(
       else chords.push({ start, end, chord })
     })
   })
-  const beatCount = chart.bars.length * chart.beatsPerBar
-  return {
-    beats: Array.from({ length: beatCount }, (_, k) => ({
-      time: tidy(startSec + k * secPerBeat),
-      downbeat: k % chart.beatsPerBar === 0
-    })),
-    chords,
-    secPerBeat,
-    beatsPerBar: chart.beatsPerBar,
-    startSec: tidy(startSec),
-    endSec: tidy(startSec + chart.bars.length * barSec)
-  }
+  return { ...grid, chords }
+}
+
+/** The bars an instrumental plays, whichever instrument plays them. */
+export function instrumentalTimeline(project: Project, track: Track): ChartTimeline | null {
+  return instrumentOf(track) === 'beats'
+    ? barGrid(project, track.beats?.parts.length ?? 0)
+    : chartTimeline(project, track.chart)
 }
 
 /**
@@ -109,6 +127,7 @@ const EDGE_SEC = 1e-6
 /** Which bar, and which half of it, plays at `sec`; null outside the chart. */
 export function placeAt(
   timeline: ChartTimeline,
+  /** A chart's bars, so a split bar's half can be found; drums have none. */
   bars: unknown[][],
   sec: number
 ): ChartPlace | null {

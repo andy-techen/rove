@@ -31,9 +31,6 @@ function renderPanel(music: Partial<MusicSettings> = {}, over = {}) {
     onSpeed: vi.fn(),
     onSemitones: vi.fn(),
     onTone: vi.fn(),
-    onClick: vi.fn(),
-    onClickOn: vi.fn(),
-    canClick: true,
     onReset: vi.fn(),
     vocals: vocalsIn({ state: 'with' }),
     onHide: vi.fn(),
@@ -112,21 +109,6 @@ describe('MusicPanel', () => {
       target: { value: '-3' }
     })
     expect(onTone).toHaveBeenCalledWith({ bassDb: -3 }, 'music-bassDb')
-  })
-
-  it('switches the metronome on, and sets how loud it is', async () => {
-    const { onClickOn, onClick } = renderPanel()
-    await userEvent.click(screen.getByRole('switch', { name: t('music.clickOn') }))
-    expect(onClickOn).toHaveBeenCalledWith(true)
-    fireEvent.change(screen.getByRole('slider', { name: t('music.click') }), {
-      target: { value: '40' }
-    })
-    expect(onClick).toHaveBeenCalledWith(0.4, 'music-click')
-  })
-
-  it('offers no click when there is no beat to follow', () => {
-    renderPanel({}, { canClick: false })
-    expect(screen.getByRole('slider', { name: t('music.click') })).toBeDisabled()
   })
 
   it('removes the vocals from the music on request', async () => {

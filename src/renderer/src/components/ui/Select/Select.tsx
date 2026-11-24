@@ -17,8 +17,6 @@ interface Props {
   className?: string
 }
 
-const CHEVRON_SIZE = 14
-
 /** A native drop-down (keyboard and screen readers work as usual), styled to match. */
 export function Select({
   label,
@@ -43,7 +41,7 @@ export function Select({
           </option>
         ))}
       </select>
-      <Icon name="chevronDown" size={CHEVRON_SIZE} />
+      <Icon name="chevronDown" size="secondary" />
     </span>
   )
 }

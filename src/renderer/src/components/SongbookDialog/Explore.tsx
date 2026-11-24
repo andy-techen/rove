@@ -3,11 +3,10 @@ import type { CatalogGenre, CatalogLanguage, CatalogSong } from '@shared/catalog
 import { t } from '@shared/copy'
 import type { WishlistItem } from '@shared/wishlist'
 import { Icon } from '../ui/Icon'
+import { useOutsideClose } from '../ui/useOutsideClose'
 import { IconButton } from '../ui/IconButton'
 import { SearchField } from '../ui/SearchField'
 import { cx } from '../ui/cx'
-
-const ROW_ICON_SIZE = 16
 
 type State =
   { kind: 'loading' } | { kind: 'ready'; items: CatalogSong[]; total: number } | { kind: 'error' }
@@ -180,7 +179,7 @@ export function Explore(): React.JSX.Element {
                   <span>
                     {t(group.labelKey)}: {valueLabel}
                   </span>
-                  <Icon name="close" size={12} />
+                  <Icon name="close" size="secondary" />
                 </button>
               )
             })
@@ -229,7 +228,7 @@ export function Explore(): React.JSX.Element {
                   </span>
                   <IconButton
                     icon={already ? 'check' : 'plus'}
-                    iconSize={ROW_ICON_SIZE}
+                    iconSize="secondary"
                     className="songbook-row-action"
                     disabled={already || busy}
                     label={
@@ -285,7 +284,7 @@ function FilterDropdown({
         onClick={() => setOpen((v) => !v)}
       >
         <span>{label}</span>
-        <Icon name="chevronDown" size={14} />
+        <Icon name="chevronDown" size="secondary" />
       </button>
       {open && (
         <div className="explore-filter-popover" role="group" aria-label={t(group.labelKey)}>
@@ -310,29 +309,6 @@ function FilterDropdown({
       )}
     </div>
   )
-}
-
-/** Close `open` state on Escape or a click outside the wrapper. */
-function useOutsideClose(
-  wrapper: React.RefObject<HTMLElement | null>,
-  open: boolean,
-  close: () => void
-): void {
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') close()
-    }
-    const onClick = (e: MouseEvent): void => {
-      if (!wrapper.current?.contains(e.target as Node)) close()
-    }
-    document.addEventListener('keydown', onKey)
-    document.addEventListener('mousedown', onClick)
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.removeEventListener('mousedown', onClick)
-    }
-  }, [open, close, wrapper])
 }
 
 function toSearchOptions(

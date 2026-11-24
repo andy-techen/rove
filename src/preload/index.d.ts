@@ -12,12 +12,16 @@ export interface ChosenProject {
   manifest: unknown
   /** Set only when the user named a artist as they created the song. */
   artist?: string
+  /** Set only when a new song carries a note over from the wishlist. */
+  note?: string
 }
 
 export interface SongbookEntry {
   folder: string
   name: string
   artist?: string
+  /** The singer's own reminder: what to practise, the key, who it's for. */
+  note?: string
   modifiedAt: number
 }
 
@@ -52,20 +56,32 @@ export interface RoveApi {
   /** Opens a song by its folder name under the songs folder. */
   openSongbookSong(folder: string): Promise<ChosenProject>
   /** Changes a closed song's name and artist; resolves to its entry, folder renamed to match. */
-  updateSongbookSong(folder: string, name: string, artist?: string): Promise<SongbookEntry>
+  updateSongbookSong(
+    folder: string,
+    name: string,
+    artist?: string,
+    note?: string
+  ): Promise<SongbookEntry>
   /** Moves a song folder to the Trash. The Songbook only offers this for closed songs. */
   removeSongbookSong(folder: string): Promise<void>
   /** Songs to try later, newest first. Add and remove resolve to the updated list. */
   listWishlist(): Promise<WishlistItem[]>
-  addToWishlist(name: string, artist?: string): Promise<WishlistItem[]>
+  addToWishlist(name: string, artist?: string, note?: string): Promise<WishlistItem[]>
   removeFromWishlist(id: string): Promise<WishlistItem[]>
+  /** Changes a wishlist song's name, artist and note; a missing artist or note removes it. */
+  updateWishlistItem(
+    id: string,
+    name: string,
+    artist?: string,
+    note?: string
+  ): Promise<WishlistItem[]>
   /** Searches the curated song catalog that ships with the app. */
   searchCatalog(options: CatalogSearchOptions): Promise<CatalogSearchResult>
   /** Reopens the songs that were open last time. */
   restoreTabs(): Promise<{ songs: ChosenProject[]; activeSong: string | null }>
   rememberTabs(dirs: string[], active: string | null): Promise<void>
   /** Makes a song folder under ~/Music/Rove, named after the song (untitled without a name). */
-  createSong(name?: string, artist?: string): Promise<ChosenProject>
+  createSong(name?: string, artist?: string, note?: string): Promise<ChosenProject>
   /** Resolves to the song's folder, which moves when Rove manages it. */
   renameSong(projectDir: string, name: string): Promise<string>
   importBackingTrack(projectDir: string): Promise<ImportedBackingTrack | null>

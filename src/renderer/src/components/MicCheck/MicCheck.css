@@ -18,7 +18,7 @@
 
 .mic-check-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-9);
 }

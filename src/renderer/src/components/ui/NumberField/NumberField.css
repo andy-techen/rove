@@ -10,7 +10,7 @@
   width: 100%;
   min-width: 0;
   padding: var(--space-1);
-  border: 1px solid transparent;
+  border: var(--size-hairline) solid transparent;
   border-radius: var(--radius-sm);
   background: transparent;
   color: inherit;

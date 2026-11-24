@@ -12,8 +12,6 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: IconName
 }
 
-const ICON_SIZE = { md: 16, sm: 14 }
-
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -29,7 +27,8 @@ export function Button({
       className={cx('btn', `btn-${variant}`, `btn-${size}`, icon && 'btn-with-icon', className)}
       {...rest}
     >
-      {icon && <Icon name={icon} size={ICON_SIZE[size]} />}
+      {/* An icon beside words is a secondary icon, at any button size. */}
+      {icon && <Icon name={icon} size="secondary" />}
       {children}
     </button>
   )

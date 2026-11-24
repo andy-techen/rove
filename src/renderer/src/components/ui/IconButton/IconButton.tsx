@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes } from 'react'
 import { cx } from '../cx'
-import { Icon, IconName } from '../Icon'
+import { Icon, IconName, IconSize } from '../Icon'
 import { Tooltip } from '../Tooltip'
 import './IconButton.css'
 
@@ -10,7 +10,8 @@ interface Props extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'
   label: string
   /** Tooltip text, when it should say more than the name (e.g. a shortcut). */
   title?: string
-  iconSize?: number
+  /** Primary (the default) in toolbars; secondary beside text and in rows. */
+  iconSize?: IconSize
 }
 
 /** A button that shows only an icon. Always has an accessible name. */

@@ -27,7 +27,6 @@ const PERCENT = 100
 const PAN_STEP_PERCENT = 5
 // Pans within this distance of the middle read as "Centre".
 const CENTRE_TOLERANCE = 0.05
-const MIX_ICON_SIZE = 14
 
 const panLabel = (pan: number): string => {
   if (Math.abs(pan) < CENTRE_TOLERANCE) return t('track.centre')
@@ -51,7 +50,7 @@ export function TrackMix({
       <div className="mix-row">
         <IconButton
           icon={muted ? 'muted' : 'volume'}
-          iconSize={MIX_ICON_SIZE}
+          iconSize="secondary"
           className={cx('mute-button', muted && 'muted')}
           aria-pressed={muted}
           label={muted ? t('track.unmute', { name }) : t('track.mute', { name })}
@@ -75,7 +74,7 @@ export function TrackMix({
       <div className="mix-row">
         <Tooltip text={t('track.positionIcon')}>
           <span className="mix-icon" aria-hidden="true">
-            <Icon name="pan" size={MIX_ICON_SIZE} />
+            <Icon name="pan" size="secondary" />
           </span>
         </Tooltip>
         <Slider

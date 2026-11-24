@@ -3,6 +3,7 @@ import { formatClock, formatMillis } from '../../state/song/project'
 import { useShortcuts } from '../../state/commands/shortcuts'
 import { gainToSlider, sliderToGain } from '../../audio/mix/mixer'
 import { InputMeter } from '../InputMeter'
+import { Beat } from '../Beat'
 import { IconButton } from '../ui/IconButton'
 import { Slider } from '../ui/Slider'
 import { cx } from '../ui/cx'
@@ -37,9 +38,10 @@ interface Props {
   onToggleLyrics(): void
   chordsOpen: boolean
   onToggleChords(): void
+  /** The metronome and the song's tempo, behind one button after the levels. */
+  beat?: React.ComponentProps<typeof Beat> | null
 }
 
-const PLAY_ICON_SIZE = 14
 const PERCENT = 100
 
 /** Play/pause and stop, the time, the input level, and the edit tools. */
@@ -59,7 +61,7 @@ export function TransportBar(props: Props): React.JSX.Element {
     <section className="transport">
       <IconButton
         icon={playing ? 'pause' : 'play'}
-        iconSize={PLAY_ICON_SIZE}
+        iconSize="secondary"
         className="play-button"
         label={playing ? t('transport.pause') : t('transport.play')}
         title={shortcuts.label(playing ? t('transport.pause') : t('transport.play'), 'playPause')}
@@ -68,7 +70,7 @@ export function TransportBar(props: Props): React.JSX.Element {
       />
       <IconButton
         icon="stop"
-        iconSize={PLAY_ICON_SIZE}
+        iconSize="secondary"
         className="stop-button"
         label={t('transport.stopPlayback')}
         title={shortcuts.label(t('transport.stopPlaybackTitle'), 'stopPlayback')}
@@ -96,6 +98,7 @@ export function TransportBar(props: Props): React.JSX.Element {
             <div className="meter-track" aria-hidden="true" />
           )}
         </div>
+        {props.beat && <Beat {...props.beat} />}
       </div>
       <div className="transport-tools">
         <div className="edit-tools" role="toolbar" aria-label={t('transport.editToolbar')}>
@@ -141,7 +144,7 @@ export function TransportBar(props: Props): React.JSX.Element {
             onClick={props.onToggleLyrics}
           />
           <IconButton
-            icon="chords"
+            icon="chordSheet"
             label={t('chords.label')}
             title={shortcuts.label(
               props.chordsOpen ? t('chords.hide') : t('chords.show'),

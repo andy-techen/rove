@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { SAMPLE_RATE } from '../../audio/engine/engine'
+import { DRUM_TAIL_SEC, renderDrums } from '../../audio/music/drums'
 import { RING_OUT_SEC, renderStrums } from '../../audio/music/guitar'
-import { Project, Track, chordsTracksOf, musicOf } from '../song/project'
-import { ChordPart, chartTimeline } from './chart'
-import { strumEvents } from './strum'
+import { Project, Track, chordsTracksOf, instrumentOf, musicOf, tempoOf } from '../song/project'
+import { beatHits } from './beats'
+import { ChordPart, instrumentalTimeline } from './chart'
+import { eventsFor } from './strum'
 
 // Waits for edits to settle before rendering, so picking chords quickly or turning
 // Speed doesn't queue up renders.
@@ -20,9 +22,14 @@ export interface ChordBacking {
 
 /** Everything a chords track's rendered sound depends on. */
 function signatureOf(project: Project, track: Track): string | null {
-  if (!track.chart) return null
   const { speed, semitones } = musicOf(project)
-  return JSON.stringify([track.id, track.chart, speed, semitones])
+  const tempo = tempoOf(project)
+  if (instrumentOf(track) === 'beats') {
+    // Drums don't change with Key.
+    return track.beats ? JSON.stringify([track.id, 'beats', track.beats, speed, tempo]) : null
+  }
+  if (!track.chart) return null
+  return JSON.stringify([track.id, track.chart, speed, semitones, tempo])
 }
 
 const cache = new Map<string, ChordPart | null>()
@@ -33,11 +40,23 @@ function remember(signature: string, part: ChordPart | null): void {
 }
 
 async function render(project: Project, track: Track): Promise<ChordPart | null> {
-  const timeline = chartTimeline(project, track.chart)
+  const timeline = instrumentalTimeline(project, track)
   if (!timeline) return null
-  const events = strumEvents(timeline)
-  const lengthSec = timeline.endSec - timeline.startSec + RING_OUT_SEC
-  const samples = await renderStrums(events, timeline.startSec, lengthSec, SAMPLE_RATE)
+  const span = timeline.endSec - timeline.startSec
+  const samples =
+    instrumentOf(track) === 'beats' && track.beats
+      ? renderDrums(
+          beatHits(timeline, track.beats),
+          timeline.startSec,
+          span + DRUM_TAIL_SEC,
+          SAMPLE_RATE
+        )
+      : await renderStrums(
+          eventsFor(timeline, track.chart?.feels),
+          timeline.startSec,
+          span + RING_OUT_SEC,
+          SAMPLE_RATE
+        )
   const buffer = new AudioBuffer({
     length: samples.length,
     numberOfChannels: 1,
@@ -48,7 +67,7 @@ async function render(project: Project, track: Track): Promise<ChordPart | null>
 }
 
 /**
- * Every chords track's sound, kept in step with its chart, Speed and Key. Rendered in
+ * Every instrumental's sound, kept in step with what's written for it, Speed and Key. Rendered in
  * memory, never saved: the project only holds the charts.
  */
 export function useChordBacking(project: Project | undefined): ChordBacking {

@@ -6,7 +6,7 @@
 .tooltip {
   position: fixed;
   z-index: 100;
-  max-width: var(--layout-help-tip);
+  max-width: var(--layout-tooltip);
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--color-text);

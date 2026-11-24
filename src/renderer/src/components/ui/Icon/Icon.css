@@ -1,0 +1,14 @@
+/* Icons draw on a 24px grid and show at one of two sizes, from the tokens. */
+.icon {
+  flex-shrink: 0;
+}
+
+.icon-primary {
+  width: var(--size-icon-primary);
+  height: var(--size-icon-primary);
+}
+
+.icon-secondary {
+  width: var(--size-icon-secondary);
+  height: var(--size-icon-secondary);
+}

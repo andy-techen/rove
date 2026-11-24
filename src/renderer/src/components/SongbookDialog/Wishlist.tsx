@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { t } from '@shared/copy'
 import type { WishlistItem } from '@shared/wishlist'
+import { NewSongDialog } from '../NewSongDialog'
 import { IconButton } from '../ui/IconButton'
 import { matchesSearch } from './search'
 
@@ -8,15 +9,14 @@ interface Props {
   /** What's typed in the Songbook's search box. */
   query: string
   /** Turns a wishlist item into a real song; the item has already left the list. */
-  onStart(name: string, artist?: string): void
+  onStart(name: string, artist?: string, note?: string): void
 }
-
-const REMOVE_ICON_SIZE = 16
 
 /** Songs to try later: just a name and maybe a artist, no folder until started. */
 export function Wishlist({ query, onStart }: Props): React.JSX.Element {
   const [items, setItems] = useState<WishlistItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [editing, setEditing] = useState<WishlistItem | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -57,20 +57,27 @@ export function Wishlist({ query, onStart }: Props): React.JSX.Element {
               <span className="songbook-title">
                 <span className="songbook-name">{item.name}</span>
                 {item.artist && <span className="songbook-artist">{item.artist}</span>}
+                {item.note && <span className="songbook-note-text">{item.note}</span>}
               </span>
               <IconButton
+                icon="edit"
+                iconSize="secondary"
+                label={t('songbook.editLabel', { name: item.name })}
+                onClick={() => setEditing(item)}
+              />
+              <IconButton
                 icon="mic"
-                iconSize={REMOVE_ICON_SIZE}
+                iconSize="secondary"
                 label={t('songbook.startLabel', { name: item.name })}
                 onClick={async () => {
                   if (await update(window.api.removeFromWishlist(item.id))) {
-                    onStart(item.name, item.artist)
+                    onStart(item.name, item.artist, item.note)
                   }
                 }}
               />
               <IconButton
                 icon="delete"
-                iconSize={REMOVE_ICON_SIZE}
+                iconSize="secondary"
                 label={t('songbook.removeLabel', { name: item.name })}
                 onClick={() => void update(window.api.removeFromWishlist(item.id))}
               />
@@ -79,6 +86,16 @@ export function Wishlist({ query, onStart }: Props): React.JSX.Element {
         </ul>
       )}
       {error && <p className="songbook-note songbook-error">{error}</p>}
+      {editing && (
+        <NewSongDialog
+          editing={editing}
+          onCreate={(name, artist, note) => {
+            setEditing(null)
+            void update(window.api.updateWishlistItem(editing.id, name, artist, note))
+          }}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </>
   )
 }

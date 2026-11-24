@@ -4,7 +4,7 @@
   flex: 0 1 auto;
   /* Always room for the ruler and one whole lane. */
   min-height: calc(var(--layout-ruler) + var(--lane-height));
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-xl);
   background: var(--color-surface);
   overflow: hidden;
@@ -25,7 +25,7 @@
   display: grid;
   grid-template-columns: var(--layout-lane-header) 1fr var(--layout-mixer);
   height: var(--lane-height);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--size-hairline) solid var(--color-border);
 }
 
 .lane.lane-dragging {
@@ -87,7 +87,7 @@
   gap: var(--space-4);
   min-width: 0;
   padding: 0 var(--space-4) 0 var(--space-6);
-  border-right: 1px solid var(--color-border);
+  border-right: var(--size-hairline) solid var(--color-border);
 }
 
 /* The selected track: the whole row is tinted, name to mixer, with a gold bar on the
@@ -146,7 +146,7 @@
   padding: var(--space-2) var(--space-3);
   border: none;
   border-radius: var(--radius-md);
-  box-shadow: inset 0 0 0 1px var(--color-accent);
+  box-shadow: inset 0 0 0 var(--size-hairline) var(--color-accent);
   background: transparent;
   color: var(--color-text);
   font-size: var(--font-size-ui);
@@ -169,29 +169,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.track-record {
-  flex-shrink: 0;
-  width: var(--size-control-md);
-  height: var(--size-control-md);
-  padding: 0;
-  border-radius: var(--radius-round);
-  background: var(--color-surface-raised);
-  border-color: var(--color-border);
-  color: var(--color-danger);
-}
-
-.track-record:hover:not(:disabled) {
-  color: var(--color-danger);
-  background: var(--color-border);
-}
-
-.track-record.recording,
-.track-record.recording:hover:not(:disabled) {
-  background: var(--color-danger);
-  border-color: var(--color-danger);
-  color: var(--color-on-danger);
 }
 
 .lane-area {
@@ -230,7 +207,7 @@
   top: var(--space-2);
   bottom: 0;
   padding-left: var(--space-2);
-  border-left: 1px solid var(--color-text-muted);
+  border-left: var(--size-hairline) solid var(--color-text-muted);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
@@ -239,7 +216,7 @@
   position: absolute;
   bottom: 0;
   height: var(--space-3);
-  border-left: 1px solid var(--color-border);
+  border-left: var(--size-hairline) solid var(--color-border);
   pointer-events: none;
 }
 
@@ -247,8 +224,8 @@
 .timeline-lanes .lane-area {
   background-image: repeating-linear-gradient(
     to right,
-    var(--color-grid) 0 1px,
-    transparent 1px var(--grid-px)
+    var(--color-grid) 0 var(--size-hairline),
+    transparent var(--size-hairline) var(--grid-px)
   );
   background-position-x: var(--grid-offset);
 }
@@ -315,7 +292,7 @@
 
 .clip.selected {
   outline: var(--size-focus-ring) solid var(--color-accent);
-  outline-offset: -1px;
+  outline-offset: calc(-1 * var(--size-hairline));
 }
 
 .lane-muted .clip {
@@ -475,7 +452,7 @@
 
 .mix-cell,
 .track-mix {
-  border-left: 1px solid var(--color-border);
+  border-left: var(--size-hairline) solid var(--color-border);
 }
 
 .track-mix {
@@ -517,7 +494,7 @@
   top: 0;
   bottom: 0;
   z-index: 1;
-  width: 1px;
+  width: var(--size-hairline);
   background: var(--color-accent);
   pointer-events: none;
 }
@@ -564,7 +541,7 @@
   top: var(--box-top);
   width: var(--box-width);
   height: var(--box-height);
-  border: 1px solid var(--color-accent);
+  border: var(--size-hairline) solid var(--color-accent);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   pointer-events: none;

@@ -47,11 +47,23 @@ export const STROKE_ICONS = {
   hidePanel: 'M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM16 8v8',
   // The same window with the bar along the bottom, for the Polish and Music panel.
   hideBottomPanel: 'M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM8 16h8',
+  // Two corners pulled outward: open something bigger; pulled in: back to its size.
+  expand: 'M14 4h6v6M10 20H4v-6M20 4l-6 6M4 20l6-6',
+  collapse: 'M20 10h-6V4M4 14h6v6M14 10l6-6M10 14l-6 6',
   // Two beamed notes: an instrumental Rove plays for you.
   instrumental:
     'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM9 9l12-2',
-  // A guitar pick: chords.
-  chords: 'M12 21c-2.6-2.7-7-8.2-7-12.4C5 5.3 8.1 3 12 3s7 2.3 7 5.6c0 4.2-4.4 9.7-7 12.4z',
+  // A metronome: its body, and the arm swinging over the scale.
+  metronome: 'M9.5 3h5L19 21H5zM12 16l5-9M7.5 16h9',
+  // A sound wave: the music the tempo is taken from.
+  matchMusic: 'M1 12c1.8-5 3.7-5 5.5 0s3.7 5 5.5 0 3.7-5 5.5 0 3.7 5 5.5 0',
+  // A chord sheet: a page with a note on it. The Chords panel.
+  chordSheet:
+    'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 16v-5l2 1M10 16a1 1 0 1 0 2 0 1 1 0 1 0-2 0',
+  // A pointing finger: fingerpicked, a string at a time.
+  pick: 'M8 13V4.5a1.5 1.5 0 0 1 3 0V12M11 11.5v-2a1.5 1.5 0 1 1 3 0V12M14 10.5a1.5 1.5 0 0 1 3 0V12M17 11.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-2 .2a6 6 0 0 1-5-2.7l-.2-.3c-.3-.5-1.4-2.4-3.3-5.7a1.5 1.5 0 0 1 .5-2 1.9 1.9 0 0 1 2.3.3L8 13',
+  // A guitar pick: strummed.
+  strum: 'M12 21c-2.6-2.7-7-8.2-7-12.4C5 5.3 8.1 3 12 3s7 2.3 7 5.6c0 4.2-4.4 9.7-7 12.4z',
   lyrics: 'M4 6h14M4 10h14M4 14h6M14 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0M18 18v-6h3',
   // One singer, and two: a lead vocal and a harmony.
   lead: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
@@ -68,6 +80,10 @@ export const FILLED_ICONS = {
   play: 'M8 5.5v13a.5.5 0 0 0 .76.43l10.4-6.5a.5.5 0 0 0 0-.86L8.76 5.07A.5.5 0 0 0 8 5.5z',
   pause: 'M7 5h3.5v14H7zM13.5 5H17v14h-3.5z',
   record: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z',
+  // A dot in a ring: record, on a square button like the tools beside it. The ring runs
+  // one way and the gap inside it the other, so the gap stays open.
+  recordRing:
+    'M12 3a9 9 0 1 1 0 18 9 9 0 1 1 0-18zM12 5a7 7 0 1 0 0 14 7 7 0 1 0 0-14zM12 8a4 4 0 1 1 0 8 4 4 0 1 1 0-8z',
   stop: 'M6 7.5A1.5 1.5 0 0 1 7.5 6h9A1.5 1.5 0 0 1 18 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 16.5z',
   // Half dark, half light: follow the computer's own setting. The ring runs one way
   // and the right half the other, so the right half stays open.

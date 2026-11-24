@@ -49,6 +49,10 @@ export interface Track {
   polishSuggestion?: PolishSuggestion
   /** Chords tracks only: the chords it plays. */
   chart?: ChordChart
+  /** Chords tracks only: what plays them; unset is guitar. */
+  instrument?: Instrument
+  /** Chords tracks only: the drums, once the track has played Beats. */
+  beats?: BeatChart
   clips: Clip[]
 }
 
@@ -57,29 +61,102 @@ export interface Project {
   name: string
   /** Who's singing it. Optional; shown in the Songbook and used by later voice features. */
   artist?: string | null
+  /** The singer's own reminder, set from the Songbook ("learn the bridge"). */
+  note?: string | null
   sampleRate: number
   /** What tuning pulls notes toward; unset or null means the nearest of any note. */
   key?: SongKey | null
   lyrics?: SongLyrics | null
   /** How the backing music is played: unset means as it was recorded. */
   music?: Partial<MusicSettings>
+  /** Set once the song has an instrumental; see `tempoOf`. */
+  tempo?: SongTempo
   tracks: Track[]
 }
 
 /**
- * A song's chords, bar by bar, as written: at the original speed and key. Speed and Key
- * apply when it plays, as they do to music files.
+ * The song's beat, shared by every instrumental and the metronome so they stay in step:
+ * at the original speed. Speed applies when it plays, as it does to music files.
  */
-export interface ChordChart {
+export interface SongTempo {
   bpm: number
   beatsPerBar: BeatsPerBar
   /** Where bar 1 starts on the timeline, in seconds at the original speed. */
   startSec: number
+}
+
+/**
+ * An instrumental's chords, bar by bar, as written: in the original key, which Key moves
+ * when it plays. It keeps time with the song's tempo.
+ */
+export interface ChordChart {
   /** Each bar's chords, sharing the bar evenly; an empty bar carries the last chord on. */
   bars: Chord[][]
+  /** How the guitar plays each bar, alongside `bars`; a bar without one is strummed. */
+  feels?: ChordFeel[]
 }
 
 export type BeatsPerBar = 3 | 4
+/** Strummed across the strings, or fingerpicked a string at a time. */
+export type ChordFeel = 'strum' | 'pick'
+
+/** What an instrumental plays: a guitar from its chords, or drums. */
+export type Instrument = 'guitar' | 'beats'
+export const INSTRUMENTS: readonly Instrument[] = ['guitar', 'beats']
+
+/** The drums' style for the whole song. Pop first; more grooves come later. */
+export type GrooveId = 'pop'
+export const GROOVE_IDS: readonly GrooveId[] = ['pop']
+
+/** How busy the drums are in a bar, within the groove. */
+export type BeatPart = 'main' | 'quiet' | 'big' | 'fill' | 'rest'
+export const BEAT_PARTS: readonly BeatPart[] = ['main', 'quiet', 'big', 'fill', 'rest']
+
+/** The drums on the beat pad, in the order the home row plays them. */
+export type PadDrum = 'kick' | 'snare' | 'clap' | 'rim' | 'hat' | 'openHat' | 'tom' | 'crash'
+export const PAD_DRUMS: readonly PadDrum[] = [
+  'kick',
+  'snare',
+  'clap',
+  'rim',
+  'hat',
+  'openHat',
+  'tom',
+  'crash'
+]
+
+/** A drum struck in a beat of your own, `at` beats into the bar (0 is the first beat). */
+export interface PadHit {
+  drum: PadDrum
+  at: number
+}
+
+/**
+ * A beat the singer made on the pad: every hit in its bar. Numbered as they're made, so
+ * "My beat 2" keeps its name.
+ */
+export interface MyBeat {
+  n: number
+  /** What the singer called it; unset is "My beat {n}". */
+  name?: string
+  hits: PadHit[]
+}
+
+/** Long enough for "Chorus, double time", short enough to sit on a bar. */
+export const BEAT_NAME_MAX_LENGTH = 30
+
+/** What a bar of drums plays: one of the groove's parts, or a beat of your own. */
+export type BarBeat = BeatPart | `mine-${number}`
+
+/** The part a bar plays to hear `beat`. */
+export const mineOf = (beat: MyBeat): BarBeat => `mine-${beat.n}`
+
+/** A beats track's drums: one groove, what each bar plays, and the beats made for it. */
+export interface BeatChart {
+  groove: GrooveId
+  parts: BarBeat[]
+  mine?: MyBeat[]
+}
 
 export interface MusicSettings {
   /** 1 is the original speed; 1.1 is 10% faster. */
@@ -321,10 +398,17 @@ export function withTrackAudio(
   }
 }
 
-export function createProject(name: string, sampleRate: number, artist?: string): Project {
+export function createProject(
+  name: string,
+  sampleRate: number,
+  artist?: string,
+  note?: string
+): Project {
   const trimmed = artist?.trim()
+  const trimmedNote = note?.trim()
   const base: Project = { version: 2, name, sampleRate, tracks: [] }
   if (trimmed) base.artist = trimmed
+  if (trimmedNote) base.note = trimmedNote
   return withNewTrack(base, 'vocal').project
 }
 
@@ -698,34 +782,107 @@ function isChart(value: unknown): value is ChordChart {
     return !!chord && typeof chord.root === 'number' && typeof chord.quality === 'string'
   }
   return (
-    typeof c.bpm === 'number' &&
-    (c.beatsPerBar === 3 || c.beatsPerBar === 4) &&
-    typeof c.startSec === 'number' &&
     Array.isArray(c.bars) &&
-    c.bars.every((bar) => Array.isArray(bar) && bar.every(isChord))
+    c.bars.every((bar) => Array.isArray(bar) && bar.every(isChord)) &&
+    (c.feels === undefined ||
+      (Array.isArray(c.feels) && c.feels.every((f) => f === 'strum' || f === 'pick')))
+  )
+}
+
+const isPadHit = (value: unknown): value is PadHit => {
+  const hit = value as Partial<PadHit> | null
+  return (
+    !!hit &&
+    PAD_DRUMS.includes(hit.drum as PadDrum) &&
+    typeof hit.at === 'number' &&
+    Number.isFinite(hit.at) &&
+    hit.at >= 0
   )
 }
 
 /**
- * Songs from before each chords track had its own chart kept one for the song: it moves to
- * the first chords track. A chart Rove can't read is dropped rather than played wrong.
+ * A beat of your own as saved, brought up to date: beats first made on an eighth-note
+ * grid kept each drum's eighths, which become hits on those eighths.
+ */
+function readMyBeat(value: unknown): MyBeat | null {
+  const beat = value as (Partial<MyBeat> & { pads?: Record<string, unknown> }) | null
+  if (!beat || !Number.isInteger(beat.n)) return null
+  if (beat.name !== undefined && typeof beat.name !== 'string') return null
+  const named = beat.name === undefined ? {} : { name: beat.name }
+  if (Array.isArray(beat.hits))
+    return beat.hits.every(isPadHit) ? { n: beat.n!, ...named, hits: beat.hits } : null
+  if (!beat.pads || typeof beat.pads !== 'object') return null
+  const hits: PadHit[] = []
+  for (const [drum, eighths] of Object.entries(beat.pads)) {
+    if (!PAD_DRUMS.includes(drum as PadDrum) || !Array.isArray(eighths)) return null
+    for (const i of eighths) {
+      if (!Number.isInteger(i)) return null
+      hits.push({ drum: drum as PadDrum, at: (i as number) / 2 })
+    }
+  }
+  return { n: beat.n!, ...named, hits }
+}
+
+/** Drums as saved, or null when they can't be read. */
+function readBeatChart(value: unknown): BeatChart | null {
+  const b = value as Partial<BeatChart> | null
+  if (!b || !GROOVE_IDS.includes(b.groove as GrooveId) || !Array.isArray(b.parts)) return null
+  if (b.mine !== undefined && !Array.isArray(b.mine)) return null
+  const mine = (b.mine ?? []).map(readMyBeat)
+  if (mine.some((m) => m === null)) return null
+  const known = new Set((mine as MyBeat[]).map(mineOf))
+  if (!b.parts.every((p) => BEAT_PARTS.includes(p as BeatPart) || known.has(p))) return null
+  const chart: BeatChart = { groove: b.groove!, parts: b.parts }
+  return b.mine === undefined ? chart : { ...chart, mine: mine as MyBeat[] }
+}
+
+function isTempo(value: unknown): value is SongTempo {
+  const t = value as Partial<SongTempo> | null
+  return (
+    !!t &&
+    typeof t.bpm === 'number' &&
+    (t.beatsPerBar === 3 || t.beatsPerBar === 4) &&
+    typeof t.startSec === 'number'
+  )
+}
+
+/**
+ * Brings older songs up to date. Songs from before each chords track had its own chart
+ * kept one for the song: it moves to the first chords track. Charts once kept their own
+ * tempo: the first one's becomes the song's. A chart Rove can't read is dropped rather
+ * than played wrong.
  */
 function withChartsOnTracks(project: Project): Project {
   const { chart: legacy, ...rest } = project as Project & { chart?: unknown }
   let unclaimed = isChart(legacy) ? legacy : undefined
+  const oldTempo = [legacy, ...rest.tracks.map((t) => t.chart)].find(isTempo)
+  const tempo = isTempo(rest.tempo) ? rest.tempo : oldTempo && tempoFrom(oldTempo)
+  const chartOnly = (chart: ChordChart): ChordChart =>
+    chart.feels ? { bars: chart.bars, feels: chart.feels } : { bars: chart.bars }
   const label = ROLE_LABEL.chords
   let lastNumber = Math.max(
     0,
     ...rest.tracks.map((t) => Number(new RegExp(`^${label} (\\d+)$`).exec(t.name)?.[1] ?? 0))
   )
+  const updated: Project = { ...rest }
+  if (tempo) updated.tempo = tempo
+  else delete updated.tempo
   return {
-    ...rest,
+    ...updated,
     tracks: rest.tracks.map((track) => {
       if (track.role !== 'chords') return track
-      const chart = isChart(track.chart) ? track.chart : unclaimed
+      const found = isChart(track.chart) ? track.chart : unclaimed
+      const chart = found && chartOnly(found)
       unclaimed = undefined
       const plain = { ...track }
       delete plain.chart
+      if (!INSTRUMENTS.includes(plain.instrument as Instrument) || plain.instrument === 'guitar')
+        delete plain.instrument
+      const beats = readBeatChart(plain.beats)
+      if (beats) plain.beats = beats
+      else delete plain.beats
+      // Drums without bars to play fall back to the guitar.
+      if (plain.instrument === 'beats' && !plain.beats) delete plain.instrument
       // The one chords track was once called "Chords"; it's numbered with the music now.
       if (plain.name === OLD_CHORDS_NAME) plain.name = `${label} ${++lastNumber}`
       return chart ? { ...plain, chart } : plain
@@ -745,16 +902,17 @@ export const chordsTracksOf = (project: Project): Track[] => tracksOf(project, '
  */
 export function withChordBacking(
   project: Project,
-  first: Chord
+  first: Chord,
+  /** The music's beat, when Rove has heard it: a first instrumental starts in step. */
+  heard?: { bpm: number; startSec: number } | null
 ): { project: Project; track: Track } {
-  const other = chordsTracksOf(project).find((t) => t.chart)?.chart
   const chart: ChordChart = {
-    bpm: other?.bpm ?? DEFAULT_CHART_BPM,
-    beatsPerBar: other?.beatsPerBar ?? 4,
-    startSec: other?.startSec ?? 0,
     bars: [[first], ...Array.from({ length: NEW_CHART_BARS - 1 }, () => [])]
   }
-  const { project: added, track } = withNewTrack(project, 'chords')
+  const timed = project.tempo
+    ? project
+    : { ...project, tempo: tempoFrom({ ...DEFAULT_TEMPO, ...heard }) }
+  const { project: added, track } = withNewTrack(timed, 'chords')
   const withChart = { ...track, chart }
   return {
     project: { ...added, tracks: added.tracks.map((t) => (t.id === track.id ? withChart : t)) },
@@ -773,17 +931,201 @@ const mapChart = (
   )
 })
 
-export const withChartBars = (project: Project, trackId: string, bars: Chord[][]): Project =>
-  mapChart(project, trackId, (chart) => ({ ...chart, bars: bars.slice(0, CHART_MAX_BARS) }))
+/** What plays a chords track's part. */
+export const instrumentOf = (track: Track): Instrument => track.instrument ?? 'guitar'
 
-export const withChartTempo = (project: Project, trackId: string, bpm: number): Project =>
-  mapChart(project, trackId, (chart) => ({
-    ...chart,
-    bpm: Math.round(Math.max(CHART_BPM_RANGE.min, Math.min(CHART_BPM_RANGE.max, bpm)))
-  }))
-
-export const withChartBeats = (
+/**
+ * The track played by `instrument`. Each keeps what was written for it, so switching
+ * back loses nothing. Drums played for the first time start on the main groove for
+ * `bars` bars, enough to run with the song.
+ */
+export function withInstrument(
   project: Project,
   trackId: string,
-  beatsPerBar: BeatsPerBar
-): Project => mapChart(project, trackId, (chart) => ({ ...chart, beatsPerBar }))
+  instrument: Instrument,
+  bars: number
+): Project {
+  return {
+    ...project,
+    tracks: project.tracks.map((t) => {
+      if (t.id !== trackId) return t
+      const next = { ...t }
+      if (instrument === 'guitar') delete next.instrument
+      else next.instrument = instrument
+      if (instrument === 'beats' && !next.beats) {
+        const count = Math.max(NEW_CHART_BARS, Math.min(CHART_MAX_BARS, bars))
+        next.beats = { groove: 'pop', parts: Array<BarBeat>(count).fill('main') }
+      }
+      return next
+    })
+  }
+}
+
+const mapBeats = (
+  project: Project,
+  trackId: string,
+  change: (beats: BeatChart) => BeatChart
+): Project => ({
+  ...project,
+  tracks: project.tracks.map((t) =>
+    t.id === trackId && t.beats ? { ...t, beats: change(t.beats) } : t
+  )
+})
+
+/** The drums with a new part for each bar. */
+export const withBeatParts = (project: Project, trackId: string, parts: BarBeat[]): Project =>
+  mapBeats(project, trackId, (beats) => ({ ...beats, parts: parts.slice(0, CHART_MAX_BARS) }))
+
+/** A beat of your own, added, or changed when it's already there. */
+export const withMyBeat = (project: Project, trackId: string, beat: MyBeat): Project =>
+  mapBeats(project, trackId, (beats) => {
+    const mine = beats.mine ?? []
+    const known = mine.some((b) => b.n === beat.n)
+    return {
+      ...beats,
+      mine: known ? mine.map((b) => (b.n === beat.n ? beat : b)) : [...mine, beat]
+    }
+  })
+
+/**
+ * A beat of your own taken away. The bars that played it move to the beat made before it
+ * (or the next one, if it was the first), and to the main groove only when none is left.
+ */
+export const withoutMyBeat = (project: Project, trackId: string, n: number): Project =>
+  mapBeats(project, trackId, (beats) => {
+    const mine = beats.mine ?? []
+    const at = mine.findIndex((b) => b.n === n)
+    const instead = mine[at - 1] ?? mine[at + 1]
+    const next: BarBeat = instead ? mineOf(instead) : 'main'
+    return {
+      ...beats,
+      parts: beats.parts.map((p) => (p === `mine-${n}` ? next : p)),
+      mine: mine.filter((b) => b.n !== n)
+    }
+  })
+
+/** Drum bars copied from a track: what each plays, and the beats of your own they use. */
+export interface CopiedBeats {
+  parts: BarBeat[]
+  mine: MyBeat[]
+}
+
+/** Bars `first` to `last` of a beats track, ready to paste anywhere. */
+export function copyBeats(beats: BeatChart, first: number, last: number): CopiedBeats {
+  const parts = beats.parts.slice(first, last + 1)
+  return { parts, mine: (beats.mine ?? []).filter((b) => parts.includes(mineOf(b))) }
+}
+
+/**
+ * Copied drum bars put in at bar `at`. Beats of your own they use come along: one the
+ * track already has (same number, same hits) is used as it is, and any other is added as
+ * a new beat, so pasting into another track never plays the wrong one.
+ */
+export const withPastedBeats = (
+  project: Project,
+  trackId: string,
+  at: number,
+  copied: CopiedBeats
+): Project =>
+  mapBeats(project, trackId, (beats) => {
+    let mine = beats.mine ?? []
+    const renamed = new Map<BarBeat, BarBeat>()
+    for (const beat of copied.mine) {
+      const same = mine.find(
+        (b) => b.n === beat.n && JSON.stringify(b.hits) === JSON.stringify(beat.hits)
+      )
+      if (same) continue
+      const added = { ...beat, n: nextBeatNumber({ ...beats, mine }) }
+      mine = [...mine, added]
+      renamed.set(mineOf(beat), mineOf(added))
+    }
+    const parts = copied.parts.map((p) => renamed.get(p) ?? p)
+    return {
+      ...beats,
+      mine,
+      parts: [...beats.parts.slice(0, at), ...parts, ...beats.parts.slice(at)].slice(
+        0,
+        CHART_MAX_BARS
+      )
+    }
+  })
+
+/** The number the next beat you make is called by. */
+export const nextBeatNumber = (beats: BeatChart): number =>
+  Math.max(0, ...(beats.mine ?? []).map((b) => b.n)) + 1
+
+/** How each bar is played, one per bar: unset ones are strummed. */
+export const feelsOf = (chart: ChordChart): ChordFeel[] =>
+  chart.bars.map((_, i) => chart.feels?.[i] ?? 'strum')
+
+/**
+ * The chart with new bars. A change that moves bars around passes how they're played,
+ * moved the same way; otherwise each bar keeps its own.
+ */
+export function withChartBars(
+  project: Project,
+  trackId: string,
+  bars: Chord[][],
+  feels?: ChordFeel[]
+): Project {
+  return mapChart(project, trackId, (chart) => {
+    const kept = bars.slice(0, CHART_MAX_BARS)
+    const played = kept.map((_, i) => (feels ?? chart.feels)?.[i] ?? 'strum')
+    const next: ChordChart = { ...chart, bars: kept }
+    // Only kept when some bar is fingerpicked, so all-strummed charts stay as they were.
+    if (played.includes('pick')) next.feels = played
+    else delete next.feels
+    return next
+  })
+}
+
+const DEFAULT_TEMPO: SongTempo = { bpm: DEFAULT_CHART_BPM, beatsPerBar: 4, startSec: 0 }
+
+// A tempo heard in music is rarely a whole number, and rounding it off lets the chords
+// drift from the music: 92.4 played as 92 is a second behind after three minutes.
+const BPM_PRECISION = 100
+
+/** A tempo with its bpm kept in the sensible range, to a hundredth. */
+const tempoFrom = (tempo: SongTempo): SongTempo => ({
+  bpm:
+    Math.round(
+      Math.max(CHART_BPM_RANGE.min, Math.min(CHART_BPM_RANGE.max, tempo.bpm)) * BPM_PRECISION
+    ) / BPM_PRECISION,
+  beatsPerBar: tempo.beatsPerBar,
+  startSec: tempo.startSec
+})
+
+/** The song's beat: what its instrumentals and their click keep time with. */
+export const tempoOf = (project: Project): SongTempo => project.tempo ?? DEFAULT_TEMPO
+
+/** Every instrumental faster or slower together. */
+export const withSongTempo = (project: Project, bpm: number): Project => ({
+  ...project,
+  tempo: tempoFrom({ ...tempoOf(project), bpm })
+})
+
+/** Every instrumental on the music's beat: its tempo, with bar 1 on its first beat. */
+export const withTempoOfMusic = (
+  project: Project,
+  heard: { bpm: number; startSec: number }
+): Project => ({ ...project, tempo: tempoFrom({ ...tempoOf(project), ...heard }) })
+
+/** Every instrumental in threes or fours together. */
+export const withSongBeats = (project: Project, beatsPerBar: BeatsPerBar): Project => ({
+  ...project,
+  tempo: { ...tempoOf(project), beatsPerBar }
+})
+
+/** Bars `first` to `last` played with `feel`. */
+export const withChartFeel = (
+  project: Project,
+  trackId: string,
+  first: number,
+  last: number,
+  feel: ChordFeel
+): Project => {
+  const chart = project.tracks.find((t) => t.id === trackId)?.chart
+  if (!chart) return project
+  const feels = feelsOf(chart).map((f, i) => (i >= first && i <= last ? feel : f))
+  return withChartBars(project, trackId, chart.bars, feels)
+}

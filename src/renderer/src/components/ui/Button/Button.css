@@ -1,6 +1,6 @@
 .btn {
   white-space: nowrap;
-  border: 1px solid transparent;
+  border: var(--size-hairline) solid transparent;
   border-radius: var(--radius-lg);
   cursor: pointer;
   color: var(--color-text);
@@ -54,14 +54,15 @@
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--color-surface-raised);
+  background: var(--hover-fill, var(--color-surface-raised));
   color: var(--color-text);
 }
 
 /* Secondary actions that shouldn't draw the eye: a soft fill and muted text, still
    plainly a button. */
 .btn-quiet {
-  background: var(--color-surface-raised);
+  /* A raised surface sets --quiet-fill, so the button still stands out on it. */
+  background: var(--quiet-fill, var(--color-surface-raised));
   color: var(--color-text-muted);
 }
 

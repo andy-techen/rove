@@ -17,7 +17,7 @@
   mask: radial-gradient(
     farthest-side,
     transparent calc(100% - var(--size-progress-ring-width)),
-    var(--color-text) calc(100% - var(--size-progress-ring-width) + 1px)
+    var(--color-text) calc(100% - var(--size-progress-ring-width) + var(--size-hairline))
   );
 }
 

@@ -16,9 +16,6 @@ interface Props {
   disabled: boolean
 }
 
-// Matches the icons in the track headers above.
-const CHOICE_ICON_SIZE = 16
-
 /**
  * The row under a group of lanes that adds another track. Every kind is right there, so
  * adding one is a single click.
@@ -33,7 +30,7 @@ export function AddTrackRow({ label, choices, disabled }: Props): React.JSX.Elem
             <IconButton
               key={choice.key}
               icon={choice.icon}
-              iconSize={CHOICE_ICON_SIZE}
+              iconSize="secondary"
               className="add-choice"
               label={choice.label}
               disabled={disabled}

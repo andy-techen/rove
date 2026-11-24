@@ -10,7 +10,7 @@
 
 .new-song-form input {
   padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--color-border);
+  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: var(--color-text);
