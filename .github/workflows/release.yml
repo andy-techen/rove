@@ -27,7 +27,10 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
+      # Full history and tags, so the release notes can list commits since the last release.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v5
         with:
@@ -70,10 +73,29 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
+      # Commits go straight to main, so GitHub's PR-based notes would be empty. Instead,
+      # list each commit subject since the previous release (they're written as plain
+      # sentences), oldest first, each with its short hash (GitHub links it to the commit)
+      # and a link to the full diff.
+      - name: Write release notes
+        run: |
+          PREV=$(git describe --tags --abbrev=0 --exclude "$TAG" HEAD 2>/dev/null || true)
+          RANGE=${PREV:+$PREV..}HEAD
+          {
+            echo "## What's new"
+            echo
+            git log --no-merges --reverse --format='- %s (%h)' "$RANGE"
+            if [ -n "$PREV" ]; then
+              echo
+              echo "**Full changes:** https://github.com/$GITHUB_REPOSITORY/compare/$PREV...$TAG"
+            fi
+          } > release-notes.md
+          cat release-notes.md
+
       # Force-pushing a tag rebuilds its release, so an older one for it is replaced.
       - name: Publish release
         run: |
           gh release delete "$TAG" --yes 2>/dev/null || true
-          gh release create "$TAG" dist/*.dmg --title "Rove $TAG" --generate-notes
+          gh release create "$TAG" dist/*.dmg --title "Rove $TAG" --notes-file release-notes.md
         env:
           GH_TOKEN: ${{ github.token }}
