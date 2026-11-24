@@ -5,7 +5,16 @@ export const SIDE_WIDTH = { min: 240, max: 560, start: 320 }
 /** Neither stacked panel may be squeezed below this, so its header and a few lines show. */
 export const PANEL_MIN_HEIGHT = 140
 
+/**
+ * The panel under the timeline (Polish, Music, Instrumental) keeps one height, whatever
+ * it holds, so writing more chords scrolls inside it rather than squeezing the timeline.
+ */
+// The minimum fits a row of Polish or Music knobs with their names and values; it
+// matches --layout-bottom-panel-min, which holds it on short windows too.
+export const BOTTOM_HEIGHT = { min: 200, max: 640, start: 300 }
+
 const WIDTH_KEY = 'rove.sidePanels.width'
+const BOTTOM_KEY = 'rove.bottomPanel.height'
 const SPLIT_KEY = 'rove.sidePanels.lyricsHeight'
 
 // Panel sizes are a preference for this computer, not part of a song.
@@ -43,4 +52,14 @@ export function useSidePanelSize(): {
     if (lyricsHeight !== null) remember(SPLIT_KEY, lyricsHeight)
   }, [lyricsHeight])
   return { width, setWidth, lyricsHeight, setLyricsHeight }
+}
+
+export const clampBottom = (px: number): number =>
+  Math.max(BOTTOM_HEIGHT.min, Math.min(BOTTOM_HEIGHT.max, px))
+
+/** The height of the panel under the timeline, as the singer last dragged it. */
+export function useBottomPanelHeight(): { height: number; setHeight(px: number): void } {
+  const [height, setHeight] = useState(() => clampBottom(recall(BOTTOM_KEY) ?? BOTTOM_HEIGHT.start))
+  useEffect(() => remember(BOTTOM_KEY, height), [height])
+  return { height, setHeight }
 }

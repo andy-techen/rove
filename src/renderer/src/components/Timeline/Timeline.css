@@ -333,26 +333,67 @@
 }
 
 .chord-block {
-  border: none;
-  font: inherit;
-  text-align: left;
-  background: var(--color-clip-backing);
+  position: absolute;
+  padding: 0;
+  background: var(--color-clip-chords);
   color: var(--color-text);
   /* A hairline between chords that meet, so each change reads as its own block. */
   box-shadow: inset calc(-1 * var(--size-hairline)) 0 0 var(--color-bg);
-  padding: 0 var(--space-3);
 }
 
-.chord-block:hover {
-  background: var(--color-surface-raised);
-}
-
+/* The chord's name, centred over the whole block; the bars underneath take the clicks. */
 .chord-block-name {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-3);
   font-size: var(--font-size-ui);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.chord-cell {
+  align-self: stretch;
+  flex-basis: 0;
+  min-width: 0;
+  border: none;
+  background: none;
+  font: inherit;
+}
+
+.chord-cell.editable {
+  cursor: grab;
+}
+
+.chord-cell:hover {
+  background: var(--color-highlight);
+}
+
+/* A kept chord reads as one block; pointing at it shows where its bars begin, so one
+   can be picked or dropped on. */
+.chord-block:hover .chord-cell-kept {
+  box-shadow: inset var(--size-hairline) 0 0 var(--color-highlight);
+}
+
+/* The bar open in the Instrumental panel. */
+.chord-cell-picked {
+  /* Drawn just inside the bar, with its own corners, so the block's edge can't clip it. */
+  border-radius: var(--radius-md);
+  outline: var(--size-focus-ring) solid var(--color-accent);
+  outline-offset: calc(-1 * var(--size-focus-ring));
+}
+
+/* Where a dragged bar would land. */
+.chord-cell-drop {
+  /* Drawn just inside the bar, with its own corners, so the block's edge can't clip it. */
+  border-radius: var(--radius-md);
+  outline: var(--size-focus-ring) dashed var(--color-accent);
+  outline-offset: calc(-1 * var(--size-focus-ring));
 }
 
 .clip-recording {

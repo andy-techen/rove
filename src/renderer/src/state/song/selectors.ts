@@ -14,7 +14,7 @@ import {
   tracksOf
 } from './project'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
-import { ChartPlace, ChordPart, chartTimeline, placeAt } from '../chords/chart'
+import { ChartPlace, ChordPart, chartCells, chartTimeline } from '../chords/chart'
 import { chordName } from '../chords/noteNames'
 
 // Edges this close to the playhead count as "here", so a jump moves on to the next one.
@@ -60,15 +60,25 @@ export interface LaneView {
   chords?: ChordBlock[]
 }
 
-/** One chord on a chords lane, named as it plays. */
+/** One chord on a chords lane, named as it plays, over every bar it rings through. */
 export interface ChordBlock {
   start: number
   end: number
+  /** Empty before the first chord. */
   name: string
+  /** The bars (or split halves) it covers: the one it's written in, then any kept. */
+  cells: ChordCellView[]
+}
+
+/** A bar inside a chord block, which can be clicked or dragged on its own. */
+export interface ChordCellView {
+  start: number
+  end: number
+  /** A bar left empty, keeping the chord before it ringing. */
+  carried: boolean
   /** Where in the chart it's written, for opening it there. */
   place: ChartPlace
 }
-
 // Imported backing files are copied in as "backing-<original name>".
 const IMPORT_PREFIX = /^backing-/
 const EXTENSION = /\.[^.]+$/
@@ -84,15 +94,25 @@ const laneOrder = (project: Project): Track[] => [
   ...tracksOf(project, 'vocal')
 ]
 
-/** The chords a chords lane shows: each change, named as it plays (silence left out). */
+/**
+ * What a chords lane shows: each chord as one block, running on through the bars that
+ * keep it ringing, with every bar inside it still there to click.
+ */
 function chordBlocks(project: Project, track: Track): ChordBlock[] {
-  const timeline = chartTimeline(project, track.chart)
-  if (!timeline || !track.chart) return []
-  const bars = track.chart.bars
-  return timeline.chords.flatMap((s) => {
-    const place = placeAt(timeline, bars, s.start)
-    return s.chord && place ? [{ start: s.start, end: s.end, name: chordName(s.chord), place }] : []
-  })
+  if (!track.chart) return []
+  const blocks: ChordBlock[] = []
+  for (const cell of chartCells(project, track.chart)) {
+    const view = { start: cell.start, end: cell.end, carried: cell.carried, place: cell.place }
+    const last = blocks.at(-1)
+    if (cell.carried && last) {
+      last.end = cell.end
+      last.cells.push(view)
+    } else {
+      const name = cell.chord ? chordName(cell.chord) : ''
+      blocks.push({ start: cell.start, end: cell.end, name, cells: [view] })
+    }
+  }
+  return blocks
 }
 
 /** Music tracks first, then vocals, each with the summary its header shows. */

@@ -1,8 +1,8 @@
-import { CSSProperties, DragEvent, ReactNode, useRef, useState } from 'react'
+import { CSSProperties, DragEvent, ReactNode, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { ClipGestureKind } from '../../state/editing/clipGestures'
 import { TrackRole, VocalPart, formatDuration, sameGroup } from '../../state/song/project'
-import { ChartPlace } from '../../state/chords/chart'
+import { ChartPlace, barRange } from '../../state/chords/chart'
 import { indexForSlot } from '../../state/tabs/tabOrder'
 import {
   ClipRef,
@@ -13,7 +13,7 @@ import {
   shiftLanes
 } from '../../state/editing/clipSets'
 import { useShortcuts } from '../../state/commands/shortcuts'
-import { LaneView } from '../../state/song/selectors'
+import { ChordCellView, LaneView } from '../../state/song/selectors'
 import { MenuTarget } from '../../state/commands/contextMenu'
 import { Button } from '../ui/Button'
 import { IconButton } from '../ui/IconButton'
@@ -70,6 +70,10 @@ interface Props {
   onAddChords(): void
   /** A chord on a chords lane was clicked: open its bar to change it. */
   onPickChord(trackId: string, place: ChartPlace): void
+  /** A bar was dragged onto another on a chords lane: they trade places. */
+  onSwapBars(trackId: string, from: number, to: number): void
+  /** The bar open in the Instrumental panel, outlined on its lane. */
+  pickedChord?: { trackId: string; place: ChartPlace } | null
   onAddVocal(part: VocalPart): void
   onMix(trackId: string, change: MixChange): void
   /** Selected clips; the last is the one clicked most recently. */
@@ -136,6 +140,8 @@ export function Timeline({
   onAddRecordedBacking,
   onAddChords,
   onPickChord,
+  pickedChord = null,
+  onSwapBars,
   onAddVocal,
   onMix,
   selectedClips,
@@ -194,7 +200,12 @@ export function Timeline({
       icon: 'mic',
       onPick: onAddRecordedBacking
     },
-    { key: 'chords', label: t('timeline.addInstrumental'), icon: 'chords', onPick: onAddChords }
+    {
+      key: 'chords',
+      label: t('timeline.addInstrumental'),
+      icon: 'instrumental',
+      onPick: onAddChords
+    }
   ]
   useRevealNewTrack(
     lanesRef,
@@ -265,6 +276,20 @@ export function Timeline({
     moved: boolean
   } | null>(null)
   const boxEnded = useRef(false)
+  // Dragging a bar on a chords lane onto another swaps the two; `over` is where it'd land.
+  const chordDrag = useRef<{ trackId: string; bar: number } | null>(null)
+  const [chordDrop, setChordDrop] = useState<{ trackId: string; bar: number } | null>(null)
+  useEffect(() => {
+    // Cleared after the click that ends the drag has been handled.
+    const end = (): void => {
+      setTimeout(() => {
+        chordDrag.current = null
+        setChordDrop(null)
+      })
+    }
+    window.addEventListener('pointerup', end)
+    return () => window.removeEventListener('pointerup', end)
+  }, [])
   const boxHandlers = {
     onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement
@@ -356,6 +381,61 @@ export function Timeline({
     return nearest
   }
 
+  /** One bar inside a chord block: click to open it, drag onto another bar to swap. */
+  const chordCell = (trackId: string, name: string, c: ChordCellView): ReactNode => {
+    const label = t('timeline.changeChord', {
+      chord: !name ? t('chords.noChordHere') : c.carried ? t('chords.keep', { chord: name }) : name,
+      bar: c.place.bar + 1
+    })
+    const [first, last] = pickedChord ? barRange(pickedChord.place) : [-1, -1]
+    const picked =
+      pickedChord?.trackId === trackId &&
+      c.place.bar >= first &&
+      c.place.bar <= last &&
+      (last > first || pickedChord.place.slot === c.place.slot)
+    return (
+      <button
+        type="button"
+        key={`${c.place.bar}:${c.place.slot}`}
+        className={cx(
+          'chord-cell',
+          canEdit && 'editable',
+          c.carried && 'chord-cell-kept',
+          picked && 'chord-cell-picked',
+          chordDrop?.trackId === trackId && chordDrop.bar === c.place.bar && 'chord-cell-drop'
+        )}
+        aria-label={label}
+        aria-pressed={picked}
+        title={label}
+        // Runtime geometry: its share of the block, by how long it plays.
+        style={{ flexGrow: c.end - c.start }}
+        onClick={(e) => {
+          // Shift-click picks every bar from the open one to this one.
+          if (e.shiftKey && pickedChord?.trackId === trackId) {
+            onPickChord(trackId, { bar: pickedChord.place.bar, slot: 0, last: c.place.bar })
+            return
+          }
+          // Straight to the bar, so you hear what you're about to change.
+          onSeek(c.start)
+          onPickChord(trackId, c.place)
+        }}
+        onPointerDown={(e) => {
+          if (e.button === 0 && canEdit) chordDrag.current = { trackId, bar: c.place.bar }
+        }}
+        onPointerEnter={(e) => {
+          const drag = chordDrag.current
+          if (!drag || drag.trackId !== trackId || e.buttons !== 1) return
+          setChordDrop(c.place.bar === drag.bar ? null : { trackId, bar: c.place.bar })
+        }}
+        onPointerUp={() => {
+          const drag = chordDrag.current
+          if (drag?.trackId === trackId && drag.bar !== c.place.bar)
+            onSwapBars(trackId, drag.bar, c.place.bar)
+        }}
+      />
+    )
+  }
+
   const lane = (track: LaneView, index: number, group: LaneView[]): ReactNode => {
     const isRecording = recording?.trackId === track.id
     const isChords = track.role === 'chords'
@@ -432,6 +512,7 @@ export function Timeline({
               boxEnded.current = false
               return
             }
+            if (chordDrop) return
             seekFromClick(e)
             const target = e.target as HTMLElement
             if (!target.closest('.clip, button, .playhead')) onLaneClick(track.id)
@@ -485,20 +566,16 @@ export function Timeline({
               }
             />
           ))}
-          {track.chords?.map((c) => (
-            <button
-              type="button"
-              key={`${c.start}:${c.name}`}
+          {track.chords?.map((block) => (
+            <div
+              key={`${block.cells[0].place.bar}:${block.cells[0].place.slot}`}
               className="clip chord-block"
-              aria-label={t('timeline.changeChord', { chord: c.name, bar: c.place.bar + 1 })}
-              title={t('timeline.changeChord', { chord: c.name, bar: c.place.bar + 1 })}
               // Runtime geometry: where this chord plays on the timeline.
-              style={{ left: x(c.start), width: (c.end - c.start) * pxPerSec }}
-              // The lane's own click still moves the playhead here.
-              onClick={() => onPickChord(track.id, c.place)}
+              style={{ left: x(block.start), width: (block.end - block.start) * pxPerSec }}
             >
-              <span className="chord-block-name">{c.name}</span>
-            </button>
+              {block.cells.map((c) => chordCell(track.id, block.name, c))}
+              <span className="chord-block-name">{block.name}</span>
+            </div>
           ))}
           {isRecording && (
             <div

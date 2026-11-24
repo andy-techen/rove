@@ -704,6 +704,11 @@ function isChart(value: unknown): value is ChordChart {
 function withChartsOnTracks(project: Project): Project {
   const { chart: legacy, ...rest } = project as Project & { chart?: unknown }
   let unclaimed = isChart(legacy) ? legacy : undefined
+  const label = ROLE_LABEL.chords
+  let lastNumber = Math.max(
+    0,
+    ...rest.tracks.map((t) => Number(new RegExp(`^${label} (\\d+)$`).exec(t.name)?.[1] ?? 0))
+  )
   return {
     ...rest,
     tracks: rest.tracks.map((track) => {
@@ -712,10 +717,15 @@ function withChartsOnTracks(project: Project): Project {
       unclaimed = undefined
       const plain = { ...track }
       delete plain.chart
+      // The one chords track was once called "Chords"; it's numbered with the music now.
+      if (plain.name === OLD_CHORDS_NAME) plain.name = `${label} ${++lastNumber}`
       return chart ? { ...plain, chart } : plain
     })
   }
 }
+
+/** What songs named their chords track before it was numbered with the music. */
+const OLD_CHORDS_NAME = 'Chords'
 
 /** The tracks that play chords the singer wrote. */
 export const chordsTracksOf = (project: Project): Track[] => tracksOf(project, 'chords')

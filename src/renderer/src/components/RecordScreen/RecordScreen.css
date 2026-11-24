@@ -26,23 +26,43 @@
   padding: var(--space-8) var(--space-7);
 }
 
-.workspace > :not(.timeline):not(.panel) {
+.workspace > :not(.timeline):not(.bottom-panel) {
   flex-shrink: 0;
 }
 
 /* The timeline is only as tall as its tracks (shrinking to scroll when there are many);
    the panel is pushed to the bottom, leaving plain background between them.
-   On short windows the panel yields first — it scrolls its own contents — so the
-   timeline always keeps at least its ruler and one lane. */
+   On short windows the panel shrinks to its minimum, then the timeline scrolls. */
 .workspace > .timeline {
   flex: 0 1 auto;
   min-height: 0;
 }
 
-.workspace > .panel {
+.workspace > .bottom-panel {
+  position: relative;
+  flex: 0 1 var(--bottom-height);
   margin-top: auto;
+  /* Never squeezed past its knobs; on a short window the timeline scrolls instead. */
+  min-height: var(--layout-bottom-panel-min);
+  display: flex;
+  flex-direction: column;
+}
+
+/* The panel keeps the height it's given and scrolls inside it. */
+.bottom-panel > .panel {
+  flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* Drag the panel's top edge to make it taller or shorter. */
+.bottom-panel-edge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  transform: translateY(-50%);
 }
 
 .transport-messages {

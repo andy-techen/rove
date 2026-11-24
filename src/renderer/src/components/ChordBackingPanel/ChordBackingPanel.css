@@ -1,9 +1,16 @@
-/* Writing the chart: the bars on the left, the picker for the chosen bar beside them,
-   so the panel stays short under the timeline. Narrow windows stack them. */
+/* The panel keeps its height: the bars and the picker each scroll on their own inside
+   it. Narrow windows stack them, and the whole panel scrolls instead. */
+section.panel.chord-backing-panel {
+  overflow: hidden;
+}
+
+/* Writing the chart: the bars on the left, the picker for the chosen bar beside them. */
 .chart-editor {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: start;
+  grid-template-rows: minmax(0, 1fr);
   gap: var(--space-7);
 }
 
@@ -11,11 +18,24 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+  min-height: 0;
+  overflow-y: auto;
 }
 
 @media (max-width: 900px) {
+  section.panel.chord-backing-panel {
+    overflow-y: auto;
+  }
+
   .chart-editor {
+    flex: none;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .chart-sheet,
+  .chord-picker {
+    overflow: visible;
   }
 }
 
@@ -23,6 +43,13 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-4) var(--space-7);
+}
+
+/* Split, join and remove act on the bars below, so they sit right above them. */
+.chart-bar-tools {
+  display: inline-flex;
+  gap: var(--space-1);
+  margin-left: auto;
 }
 
 .chart-setting {
@@ -49,7 +76,7 @@
 
 .chart-bars {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--bars-per-line), minmax(0, 1fr));
   gap: var(--space-2);
   margin: 0;
   padding: 0;
@@ -68,6 +95,12 @@
   background: none;
   color: var(--color-text);
   text-align: left;
+}
+
+.chart-bar-halves {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
 }
 
 .chart-bar:hover {
@@ -115,6 +148,8 @@
 }
 
 .chord-picker {
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -131,12 +166,6 @@
   gap: var(--space-4);
 }
 
-.picker-halves {
-  display: inline-flex;
-  gap: var(--space-1);
-}
-
-.picker-half,
 .picker-root {
   padding: var(--space-1) var(--space-3);
   border: none;
@@ -146,14 +175,47 @@
   font-size: var(--font-size-caption);
 }
 
-.picker-half:hover,
 .picker-root:hover {
   color: var(--color-text);
 }
 
-.picker-half-on,
+/* The key's notes, where the chords most songs need start. */
+.picker-root-key {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
 .picker-root-on {
   background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* In this key / All chords: a small two-way switch, either a click away. */
+.picker-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.picker-tab {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-caption);
+}
+
+.picker-tab:hover {
+  color: var(--color-text);
+}
+
+.picker-tab-on {
+  background: var(--color-surface-raised);
   color: var(--color-text);
   font-weight: var(--font-weight-semibold);
 }
@@ -194,12 +256,6 @@
   margin: 0;
   font-size: var(--font-size-caption);
   color: var(--color-text-muted);
-}
-
-.picker-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
 }
 
 .instrument-choice {

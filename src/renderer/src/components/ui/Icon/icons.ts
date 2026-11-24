@@ -3,6 +3,13 @@ export const STROKE_ICONS = {
   undo: 'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',
   redo: 'M15 14l5-5-5-5M20 9H10a6 6 0 0 0 0 12h3',
   split: 'M12 3v18M7 8l-4 4 4 4M17 8l4 4-4 4',
+  // A line held on into an arrow: keep the chord before playing through this bar.
+  keep: 'M4 8v8M4 12h15M15 8l4 4-4 4',
+  // Two overlapping sheets: make a copy.
+  duplicate:
+    'M9 9h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1zM16 9V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3',
+  // Split's arrows turned inward: two halves back into one.
+  join: 'M12 3v18M3 12h6M6 9l3 3-3 3M21 12h-6M18 9l-3 3 3 3',
   delete: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',
@@ -40,6 +47,9 @@ export const STROKE_ICONS = {
   hidePanel: 'M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM16 8v8',
   // The same window with the bar along the bottom, for the Polish and Music panel.
   hideBottomPanel: 'M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM8 16h8',
+  // Two beamed notes: an instrumental Rove plays for you.
+  instrumental:
+    'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM9 9l12-2',
   // A guitar pick: chords.
   chords: 'M12 21c-2.6-2.7-7-8.2-7-12.4C5 5.3 8.1 3 12 3s7 2.3 7 5.6c0 4.2-4.4 9.7-7 12.4z',
   lyrics: 'M4 6h14M4 10h14M4 14h6M14 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0M18 18v-6h3',

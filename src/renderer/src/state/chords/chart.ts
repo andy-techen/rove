@@ -87,10 +87,20 @@ export function chartTimeline(
   }
 }
 
-/** A spot in a chart: a bar, and which of its chords (0, or 1 for a split bar's second). */
+/**
+ * A spot in a chart: a bar, and which of its chords (0, or 1 for a split bar's second).
+ * With `last`, a run of bars from `bar` (where the selection started) to `last`.
+ */
 export interface ChartPlace {
   bar: number
   slot: number
+  last?: number
+}
+
+/** The first and last bar a place covers, in order. */
+export function barRange(place: ChartPlace): [number, number] {
+  const last = place.last ?? place.bar
+  return [Math.min(place.bar, last), Math.max(place.bar, last)]
 }
 
 // Absorbs rounding in times, so a chord starting exactly on a bar line lands in that bar.
@@ -108,6 +118,48 @@ export function placeAt(
   const bar = Math.floor(inBars)
   const count = Math.max(1, bars[bar]?.length ?? 1)
   return { bar, slot: Math.min(count - 1, Math.floor((inBars - bar) * count)) }
+}
+
+/** One bar, or half of a split bar, as the timeline shows it. */
+export interface ChartCell {
+  start: number
+  end: number
+  /** As it plays (Key applied); for an empty bar, the chord it carries on, if any. */
+  chord: Chord | null
+  /** An empty bar, carrying the chord before it on. */
+  carried: boolean
+  place: ChartPlace
+}
+
+/** Every bar of the chart where it falls on the timeline, so each can be picked. */
+export function chartCells(project: Project, chart: ChordChart): ChartCell[] {
+  const timeline = chartTimeline(project, chart)
+  if (!timeline) return []
+  const { semitones } = musicOf(project)
+  const barSec = timeline.secPerBeat * timeline.beatsPerBar
+  let last: Chord | null = null
+  return chart.bars.flatMap((bar, b): ChartCell[] => {
+    const barStart = timeline.startSec + b * barSec
+    if (bar.length === 0) {
+      const end = tidy(barStart + barSec)
+      return [
+        { start: tidy(barStart), end, chord: last, carried: true, place: { bar: b, slot: 0 } }
+      ]
+    }
+    return bar.map((written, i) => {
+      const chord = transposeChord(written, semitones)
+      // A second half that's still the first chord just keeps it ringing.
+      const carried = i > 0 && sameChord(chord, last)
+      last = chord
+      return {
+        start: tidy(barStart + (i * barSec) / bar.length),
+        end: tidy(barStart + ((i + 1) * barSec) / bar.length),
+        chord,
+        carried,
+        place: { bar: b, slot: i }
+      }
+    })
+  })
 }
 
 /** The metronome for a chart: every beat, with real bar ones. */

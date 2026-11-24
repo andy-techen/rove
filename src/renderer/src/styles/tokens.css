@@ -24,6 +24,8 @@
   --color-good-wash: rgba(63, 191, 106, 0.14);
   --color-danger-wash: rgba(229, 83, 75, 0.35);
   --color-clip-backing: #2c2b29;
+  /* Deeper than a selected lane, so an instrumental's blocks never fade into it. */
+  --color-clip-chords: #3d3a36;
   --color-wave-backing: #a29d96;
   --color-clip-vocal: #372e20;
   --color-wave-vocal: #f5b754;
@@ -121,6 +123,7 @@
   --layout-ruler: 24px;
   --layout-lane-add: 40px;
   --layout-add-label: 88px;
+  --layout-bottom-panel-min: 200px;
   --layout-scrollbar: 14px;
   --layout-tab-max: 220px;
   --layout-song-name-max: 200px;
@@ -180,6 +183,7 @@
     --color-good-wash: rgba(42, 157, 85, 0.12);
     --color-danger-wash: rgba(210, 59, 51, 0.25);
     --color-clip-backing: #efe6da;
+    --color-clip-chords: #e3d4c0;
     --color-wave-backing: #8f7f70;
     --color-clip-vocal: #fdebcc;
     --color-wave-vocal: #c47a14;

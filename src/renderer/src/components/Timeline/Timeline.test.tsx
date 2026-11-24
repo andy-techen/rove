@@ -39,6 +39,7 @@ function timelineProps(overrides: Partial<Parameters<typeof Timeline>[0]> = {}) 
     onAddRecordedBacking: vi.fn(),
     onAddChords: vi.fn(),
     onPickChord: vi.fn(),
+    onSwapBars: vi.fn(),
     onAddVocal: vi.fn(),
     onMix: vi.fn(),
     selectedClips: [],
@@ -64,14 +65,21 @@ function renderTimeline(overrides: Partial<Parameters<typeof Timeline>[0]> = {})
   return props
 }
 
+const cell = (bar: number, carried = false) => ({
+  start: bar * 2,
+  end: bar * 2 + 2,
+  carried,
+  place: { bar, slot: 0 }
+})
+
 const chordsLane = () =>
   lane({
     id: 'k1',
     role: 'chords',
     name: 'Backing 1',
     chords: [
-      { start: 0, end: 2, name: 'C', place: { bar: 0, slot: 0 } },
-      { start: 2, end: 4, name: 'Am', place: { bar: 1, slot: 0 } }
+      { start: 0, end: 2, name: 'C', cells: [cell(0)] },
+      { start: 2, end: 6, name: 'Am', cells: [cell(1), cell(2, true)] }
     ]
   })
 
@@ -338,12 +346,45 @@ describe('Timeline', () => {
     ).toBeDisabled()
   })
 
-  it('opens a chord in its chart when it is clicked', async () => {
+  it('opens a chord in its chart, and plays from there, when it is clicked', async () => {
     const props = renderTimeline({ tracks: [chordsLane(), lane({})] })
     await userEvent.click(
       screen.getByRole('button', { name: t('timeline.changeChord', { chord: 'Am', bar: 2 }) })
     )
     expect(props.onPickChord).toHaveBeenCalledWith('k1', { bar: 1, slot: 0 })
+    expect(props.onSeek).toHaveBeenCalledWith(2)
+  })
+
+  it('lets a bar that carries the chord on be picked too, and marks the open one', async () => {
+    const picked = { trackId: 'k1', place: { bar: 2, slot: 0 } }
+    renderTimeline({ tracks: [chordsLane(), lane({})], pickedChord: picked })
+    const carried = screen.getByRole('button', {
+      name: t('timeline.changeChord', { chord: t('chords.keep', { chord: 'Am' }), bar: 3 })
+    })
+    expect(carried).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('swaps two bars when one is dragged onto the other', () => {
+    const props = renderTimeline({ tracks: [chordsLane(), lane({})] })
+    const named = (chord: string, bar: number) =>
+      screen.getByRole('button', { name: t('timeline.changeChord', { chord, bar }) })
+    fireEvent.pointerDown(named('C', 1), { button: 0 })
+    fireEvent.pointerEnter(named(t('chords.keep', { chord: 'Am' }), 3), { buttons: 1 })
+    fireEvent.pointerUp(named(t('chords.keep', { chord: 'Am' }), 3))
+    expect(props.onSwapBars).toHaveBeenCalledWith('k1', 0, 2)
+  })
+
+  it('picks a run of bars with shift-click', async () => {
+    const picked = { trackId: 'k1', place: { bar: 0, slot: 0 } }
+    const props = renderTimeline({ tracks: [chordsLane(), lane({})], pickedChord: picked })
+    const user = userEvent.setup()
+    await user.keyboard('{Shift>}')
+    await user.click(
+      screen.getByRole('button', {
+        name: t('timeline.changeChord', { chord: t('chords.keep', { chord: 'Am' }), bar: 3 })
+      })
+    )
+    expect(props.onPickChord).toHaveBeenLastCalledWith('k1', { bar: 0, slot: 0, last: 2 })
   })
 
   it('keeps offering instrumentals once the song has one', () => {

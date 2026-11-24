@@ -4,7 +4,6 @@ import { CHORD_QUALITIES, Chord } from '../../audio/music/chords'
 import { PITCH_CLASSES } from '../../audio/pitch/key'
 import { chordsMatching, sameChord } from '../../state/chords/chordText'
 import { chordName, noteName } from '../../state/chords/noteNames'
-import { Button } from '../ui/Button'
 import { SearchField } from '../ui/SearchField'
 import { cx } from '../ui/cx'
 
@@ -19,41 +18,41 @@ export interface ChordSuggestions {
 }
 
 interface Props {
-  /** The bar being filled, counted from 1. */
-  barNumber: number
+  /** The bar (or bars) being filled: "Bar 3", "Bars 2–4". */
+  barsText: string
   /** The bar's chords: none (carrying on), one, or two sharing it. */
   chords: Chord[]
-  /** Which half of a shared bar a pick goes into. */
+  /** Which half of a split bar is being filled. */
   slot: number
-  onSlot(slot: number): void
   suggestions: ChordSuggestions
   locked: boolean
   onPick(chord: Chord): void
-  /** There's a chord to share the bar with (in it, or carried on into it). */
-  canSplit: boolean
-  onSplit(): void
-  onJoin(): void
-  onClear(): void
 }
 
-/** Choose a bar's chord from a list: the ones that fit the key, or any chord at all. */
+type Tab = 'key' | 'all'
+
+/**
+ * Choose a bar's chord: the ones in the key, or any chord at all (a root note, then
+ * its kind). Two tabs, so either is a click away; search finds anything.
+ */
 export function ChordPicker({
-  barNumber,
+  barsText,
   chords,
   slot,
-  onSlot,
   suggestions,
   locked,
-  onPick,
-  canSplit,
-  onSplit,
-  onJoin,
-  onClear
+  onPick
 }: Props): React.JSX.Element {
   const current = chords[slot]
-  const [root, setRoot] = useState(current?.root ?? suggestions.chords[0]?.root ?? 0)
   const [typed, setTyped] = useState('')
   const matches = chordsMatching(typed, MATCHES_SHOWN)
+  const keyRoots = new Set(suggestions.chords.map((c) => c.root))
+  const inKey = !!current && suggestions.chords.some((c) => sameChord(c, current))
+  // Opens on the key's chords, unless the bar already holds one from outside it.
+  const [tab, setTab] = useState<Tab>(
+    suggestions.chords.length === 0 || (current && !inKey) ? 'all' : 'key'
+  )
+  const [root, setRoot] = useState(current?.root ?? suggestions.chords[0]?.root ?? 0)
 
   const chordButton = (chord: Chord): React.JSX.Element => (
     <button
@@ -72,25 +71,15 @@ export function ChordPicker({
     </button>
   )
 
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'key', label: suggestions.label },
+    { id: 'all', label: t('chords.every') }
+  ]
+
   return (
-    <section className="chord-picker" aria-label={t('chords.pickerLabel', { n: barNumber })}>
+    <section className="chord-picker" aria-label={t('chords.pickerLabel', { bars: barsText })}>
       <div className="picker-head">
-        <span className="picker-bar">{t('chords.barNumber', { n: barNumber })}</span>
-        {chords.length > 1 && (
-          <span className="picker-halves" role="group" aria-label={t('chords.halves')}>
-            {[0, 1].map((half) => (
-              <button
-                key={half}
-                type="button"
-                className={cx('picker-half', slot === half && 'picker-half-on')}
-                aria-pressed={slot === half}
-                onClick={() => onSlot(half)}
-              >
-                {t(half === 0 ? 'chords.firstHalf' : 'chords.secondHalf')}
-              </button>
-            ))}
-          </span>
-        )}
+        <span className="picker-bar">{barsText}</span>
       </div>
 
       <SearchField
@@ -118,57 +107,52 @@ export function ChordPicker({
       ) : (
         <>
           {suggestions.chords.length > 0 && (
+            <div className="picker-tabs" role="group" aria-label={t('chords.pickerTabs')}>
+              {tabs.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={cx('picker-tab', tab === id && 'picker-tab-on')}
+                  aria-pressed={tab === id}
+                  onClick={() => setTab(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+          {tab === 'key' ? (
+            <div className="picker-row picker-chords" role="group" aria-label={suggestions.label}>
+              {suggestions.chords.map(chordButton)}
+            </div>
+          ) : (
             <>
-              <h3 className="picker-label">{suggestions.label}</h3>
-              <div className="picker-row picker-chords">{suggestions.chords.map(chordButton)}</div>
+              <div className="picker-roots" role="group" aria-label={t('chords.roots')}>
+                {ROOTS.map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    // The key's notes stand out: the chords most songs need start there.
+                    className={cx(
+                      'picker-root',
+                      keyRoots.has(r) && 'picker-root-key',
+                      r === root && 'picker-root-on'
+                    )}
+                    aria-pressed={r === root}
+                    aria-label={t('chords.onRoot', { note: noteName(r) })}
+                    onClick={() => setRoot(r)}
+                  >
+                    {noteName(r)}
+                  </button>
+                ))}
+              </div>
+              <div className="picker-row picker-chords">
+                {CHORD_QUALITIES.map((quality) => chordButton({ root, quality }))}
+              </div>
             </>
           )}
-          <h3 className="picker-label">{t('chords.every')}</h3>
-          <div className="picker-roots" role="group" aria-label={t('chords.roots')}>
-            {ROOTS.map((r) => (
-              <button
-                key={r}
-                type="button"
-                className={cx('picker-root', r === root && 'picker-root-on')}
-                aria-pressed={r === root}
-                aria-label={t('chords.onRoot', { note: noteName(r) })}
-                onClick={() => setRoot(r)}
-              >
-                {noteName(r)}
-              </button>
-            ))}
-          </div>
-          <div className="picker-row picker-chords picker-kinds">
-            {CHORD_QUALITIES.map((quality) => chordButton({ root, quality }))}
-          </div>
         </>
       )}
-
-      <div className="picker-actions">
-        {chords.length > 1 ? (
-          <Button size="sm" variant="quiet" icon="minus" disabled={locked} onClick={onJoin}>
-            {t('chords.join')}
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            variant="quiet"
-            icon="split"
-            disabled={locked || !canSplit}
-            onClick={onSplit}
-          >
-            {t('chords.split')}
-          </Button>
-        )}
-        <Button
-          size="sm"
-          variant="quiet"
-          disabled={locked || chords.length === 0}
-          onClick={onClear}
-        >
-          {t('chords.carryOn')}
-        </Button>
-      </div>
     </section>
   )
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   CHART_BPM_RANGE,
   Project,
+  Track,
   chordsTracksOf,
   createProject,
   parseProject,
@@ -55,6 +56,16 @@ describe('withChordBacking', () => {
     const p = song('C')
     const broken = { ...chordsTracksOf(p)[0], chart: { bpm: 'fast', bars: 'C G' } }
     expect(chartOf(parseProject({ ...p, tracks: [broken] }))).toBeUndefined()
+  })
+
+  it('numbers an older song’s “Chords” track with its music', () => {
+    const p = withNewTrack(song('C'), 'backing').project
+    const named = (t: Track) => (t.role === 'chords' ? { ...t, name: 'Chords' } : t)
+    const opened = parseProject({ ...p, tracks: p.tracks.map(named) })
+    expect(opened.tracks.filter((t) => t.role !== 'vocal').map((t) => t.name)).toEqual([
+      'Backing 3',
+      'Backing 2'
+    ])
   })
 
   it('moves a song-wide chart from an older song onto its chords track', () => {
@@ -112,9 +123,19 @@ describe('a song with only chords', () => {
   it('shows the chords on their own lane, with the music and before vocals', () => {
     const lanes = selectLanes(song('C G'), {})
     expect(lanes.map((l) => l.role)).toEqual(['chords', 'vocal'])
-    expect(lanes[0].chords?.map((c) => [c.name, c.place.bar])).toEqual([
-      ['C', 0],
-      ['G', 1]
+    expect(lanes[0].chords?.map((c) => c.name)).toEqual(['C', 'G'])
+  })
+
+  it('shows a kept chord as one block, with each bar inside it still there to pick', () => {
+    const [lane] = selectLanes(song('| C | % | G A |'), {})
+    expect(lane.chords?.map((c) => [c.name, c.start, c.end])).toEqual([
+      ['C', 0, 8],
+      ['G', 8, 10],
+      ['A', 10, 12]
+    ])
+    expect(lane.chords?.[0].cells.map((c) => [c.place.bar, c.carried])).toEqual([
+      [0, false],
+      [1, true]
     ])
   })
 

@@ -72,6 +72,7 @@ import { useChords } from '../../state/chords/useChords'
 import { useChordBacking } from '../../state/chords/useChordBacking'
 import {
   ChartPlace,
+  barRange,
   chartClickGrid,
   chartTimeline,
   placeAt,
@@ -79,8 +80,16 @@ import {
 } from '../../state/chords/chart'
 import { chordsInKey, keyOfChart } from '../../state/chords/keyChords'
 import { previewChord } from '../../state/chords/preview'
+import { Chord } from '../../audio/music/chords'
+import { clearBars, copyBars, insertBars, swapBars } from '../../state/chords/chartBars'
 import { transposeKey } from '../../audio/pitch/key'
-import { PANEL_MIN_HEIGHT, SIDE_WIDTH, useSidePanelSize } from '../../state/ui/sidePanels'
+import {
+  BOTTOM_HEIGHT,
+  PANEL_MIN_HEIGHT,
+  SIDE_WIDTH,
+  useBottomPanelHeight,
+  useSidePanelSize
+} from '../../state/ui/sidePanels'
 import { useElementHeight } from '../../state/ui/useElementHeight'
 import { clickGrid } from '../../state/transport/metronome'
 import { useSong } from '../../state/song/useSong'
@@ -152,6 +161,7 @@ export function RecordScreen({
   const lyricsOpen = lyricsChoice ?? !!open?.data.lyrics
   const [chordsOpen, setChordsOpen] = useState(false)
   const panels = useSidePanelSize()
+  const bottom = useBottomPanelHeight()
   const sideRef = useRef<HTMLDivElement>(null)
   const sideHeight = useElementHeight(sideRef)
   // Lyrics take half the column until the divider is moved, and always leave chords room.
@@ -273,12 +283,47 @@ export function RecordScreen({
     setDeleteFocus(null)
   }
 
+  // Polish follows the selected track, or the first vocal until one is picked.
+  const polishTrack =
+    open?.data.tracks.find((track) => track.id === selectedTrackId) ??
+    open?.data.tracks.find((track) => track.role === 'vocal')
+
   // Copied clips stay within this song, whose folder holds the audio they point at.
   const [clipboard, setClipboard] = useState<CopiedClips | null>(null)
+  // Copied bars of chords, kept apart from clips: they paste into any instrumental.
+  const [copiedBars, setCopiedBars] = useState<Chord[][] | null>(null)
+  // With no clips picked, copy and paste act on the bars open in the Instrumental panel.
+  const chartTarget =
+    !selectedClips.length && polishTrack?.role === 'chords' && polishTrack.chart
+      ? { trackId: polishTrack.id, bars: polishTrack.chart.bars, range: barRange(chartPlace) }
+      : null
   const copy = (): void => {
+    if (chartTarget) {
+      const [first, last] = chartTarget.range
+      setCopiedBars(copyBars(chartTarget.bars, first, last))
+      return
+    }
     if (open && selectedClips.length) setClipboard(copyClips(open.data, selectedClips))
   }
+  const cutBars = (): void => {
+    if (!open || !chartTarget || !canEdit) return
+    const [first, last] = chartTarget.range
+    setCopiedBars(copyBars(chartTarget.bars, first, last))
+    song.edit(
+      withChartBars(open.data, chartTarget.trackId, clearBars(chartTarget.bars, first, last))
+    )
+  }
   const paste = (): void => {
+    if (chartTarget && copiedBars) {
+      if (!open || !canEdit) return
+      // Pasted bars go in after the selection, so pasting adds to the song rather than
+      // writing over what's there; pasting again lays the copies end to end.
+      const at = chartTarget.range[1] + 1
+      const bars = insertBars(chartTarget.bars, at, copiedBars)
+      song.edit(withChartBars(open.data, chartTarget.trackId, bars))
+      setChartPlace({ bar: at, slot: 0, last: at + copiedBars.length - 1 })
+      return
+    }
     if (!open || !clipboard || !canEdit) return
     const from = clipboard.items[0].trackId
     const target = pasteTarget(open.data, from, selectedTrackId)
@@ -337,7 +382,7 @@ export function RecordScreen({
           selectedClips: selectedClips.length,
           anyGrouped: anyGrouped(open.data, selectedClips),
           oneGroup: isOneGroup(open.data, selectedClips),
-          canPaste: clipboard !== null,
+          canPaste: clipboard !== null || (chartTarget !== null && copiedBars !== null),
           canSplit,
           canMoveUp: placeOfSelected > 0,
           canMoveDown: placeOfSelected >= 0 && placeOfSelected < (kindOfSelected?.length ?? 0) - 1
@@ -383,6 +428,10 @@ export function RecordScreen({
         copy()
         break
       case 'cut':
+        if (chartTarget) {
+          cutBars()
+          break
+        }
         copy()
         remove()
         break
@@ -461,10 +510,6 @@ export function RecordScreen({
   useEffect(() => onCommand((action) => command.current(action)), [])
 
   const lanes = open ? selectLanes(open.data, audio, processed) : []
-  // Polish follows the selected track, or the first vocal until one is picked.
-  const polishTrack =
-    open?.data.tracks.find((track) => track.id === selectedTrackId) ??
-    open?.data.tracks.find((track) => track.role === 'vocal')
   // Hiding the panel remembers the selection it closed on; picking a track or clip
   // (a new selection) brings it back.
   const panelShown = panelHiddenOn !== selectedTrackIds
@@ -567,6 +612,17 @@ export function RecordScreen({
             onAddRecordedBacking={() => void song.addRecordedBacking()}
             onAddChords={startChords}
             onPickChord={pickChord}
+            onSwapBars={(trackId, from, to) => {
+              const bars = open?.data.tracks.find((t) => t.id === trackId)?.chart?.bars
+              if (!open || !bars) return
+              song.edit(withChartBars(open.data, trackId, swapBars(bars, from, to)))
+              pickChord(trackId, { bar: to, slot: 0 })
+            }}
+            pickedChord={
+              panelShown && polishTrack?.role === 'chords'
+                ? { trackId: polishTrack.id, place: chartPlace }
+                : null
+            }
             onAddVocal={song.addVocalTrack}
             onMix={(trackId, change) => {
               if (!open) return
@@ -674,74 +730,92 @@ export function RecordScreen({
             }}
           />
 
-          {panelShown && polishTrack?.role === 'backing' && open && (
-            <MusicPanel
-              trackName={polishTrack.name}
-              music={musicOf(open.data)}
-              bpm={beat?.bpm ?? null}
-              songKey={songKey}
-              locked={!canEdit}
-              onSpeed={(speed, key) => song.edit(withMusicSpeed(open.data, speed), key)}
-              onSemitones={(n, key) => song.edit(withMusicPitch(open.data, n), key)}
-              onTone={(tone, key) => song.edit(withMusicTone(open.data, tone), key)}
-              onClick={(level, key) => song.edit(withClick(open.data, level), key)}
-              onClickOn={(on) => song.edit(withClickOn(open.data, on))}
-              canClick={grid !== null}
-              vocals={{
-                state: vocalRemoval.vocals,
-                error: vocalRemoval.error,
-                onRemove: vocalRemoval.remove,
-                onCancel: vocalRemoval.cancel,
-                onPutBack: vocalRemoval.putBack
-              }}
-              onHide={hidePanel}
-              onReset={() =>
-                song.edit(
-                  withMusicTone(withMusicPitch(withMusicSpeed(open.data, 1), 0), {
-                    bassDb: 0,
-                    brightnessDb: 0
-                  })
-                )
-              }
-            />
-          )}
+          {panelShown && polishTrack && open && (
+            <div
+              className="bottom-panel"
+              // Runtime geometry: the height the singer dragged it to.
+              style={{ '--bottom-height': `${bottom.height}px` } as CSSProperties}
+            >
+              <Splitter
+                className="bottom-panel-edge"
+                label={t('panel.height')}
+                orientation="horizontal"
+                value={bottom.height}
+                min={BOTTOM_HEIGHT.min}
+                max={BOTTOM_HEIGHT.max}
+                perPixel={-1}
+                onChange={bottom.setHeight}
+              />
+              {panelShown && polishTrack?.role === 'backing' && open && (
+                <MusicPanel
+                  trackName={polishTrack.name}
+                  music={musicOf(open.data)}
+                  bpm={beat?.bpm ?? null}
+                  songKey={songKey}
+                  locked={!canEdit}
+                  onSpeed={(speed, key) => song.edit(withMusicSpeed(open.data, speed), key)}
+                  onSemitones={(n, key) => song.edit(withMusicPitch(open.data, n), key)}
+                  onTone={(tone, key) => song.edit(withMusicTone(open.data, tone), key)}
+                  onClick={(level, key) => song.edit(withClick(open.data, level), key)}
+                  onClickOn={(on) => song.edit(withClickOn(open.data, on))}
+                  canClick={grid !== null}
+                  vocals={{
+                    state: vocalRemoval.vocals,
+                    error: vocalRemoval.error,
+                    onRemove: vocalRemoval.remove,
+                    onCancel: vocalRemoval.cancel,
+                    onPutBack: vocalRemoval.putBack
+                  }}
+                  onHide={hidePanel}
+                  onReset={() =>
+                    song.edit(
+                      withMusicTone(withMusicPitch(withMusicSpeed(open.data, 1), 0), {
+                        bassDb: 0,
+                        brightnessDb: 0
+                      })
+                    )
+                  }
+                />
+              )}
 
-          {panelShown && polishTrack?.role === 'chords' && open && chart && (
-            <ChordBackingPanel
-              key={polishTrack.id}
-              trackName={polishTrack.name}
-              place={chartPlace}
-              onPlace={setChartPlace}
-              chart={chart}
-              playingBar={playingBar}
-              suggestions={suggestions}
-              locked={!canEdit}
-              onBars={(bars) => song.edit(withChartBars(open.data, polishTrack.id, bars))}
-              onTempo={(bpm) => song.edit(withChartTempo(open.data, polishTrack.id, bpm))}
-              onBeats={(n) => song.edit(withChartBeats(open.data, polishTrack.id, n))}
-              // Heard as it will play: in the key the Key knob moved it to.
-              onPreview={(chord) =>
-                void previewChord(transposeChord(chord, musicOf(open.data).semitones))
-              }
-              onHide={hidePanel}
-            />
-          )}
+              {panelShown && polishTrack?.role === 'chords' && open && chart && (
+                <ChordBackingPanel
+                  key={polishTrack.id}
+                  trackName={polishTrack.name}
+                  place={chartPlace}
+                  onPlace={setChartPlace}
+                  chart={chart}
+                  playingBar={playingBar}
+                  suggestions={suggestions}
+                  locked={!canEdit}
+                  onBars={(bars) => song.edit(withChartBars(open.data, polishTrack.id, bars))}
+                  onTempo={(bpm) => song.edit(withChartTempo(open.data, polishTrack.id, bpm))}
+                  onBeats={(n) => song.edit(withChartBeats(open.data, polishTrack.id, n))}
+                  // Heard as it will play: in the key the Key knob moved it to.
+                  onPreview={(chord) =>
+                    void previewChord(transposeChord(chord, musicOf(open.data).semitones))
+                  }
+                  onHide={hidePanel}
+                />
+              )}
 
-          {panelShown && polishTrack?.role === 'vocal' && open && (
-            <PolishPanel
-              key={polishTrack.id}
-              trackName={polishTrack.name}
-              part={polishTrack.part ?? 'lead'}
-              polish={polishOf(polishTrack)}
-              locked={!canEdit}
-              onHide={hidePanel}
-              onChange={(next, key) =>
-                song.edit(
-                  withTrackPolish(open.data, polishTrack.id, next),
-                  key ? `${key}:${polishTrack.id}` : undefined
-                )
-              }
-            />
+              {panelShown && polishTrack?.role === 'vocal' && open && (
+                <PolishPanel
+                  key={polishTrack.id}
+                  trackName={polishTrack.name}
+                  part={polishTrack.part ?? 'lead'}
+                  polish={polishOf(polishTrack)}
+                  locked={!canEdit}
+                  onHide={hidePanel}
+                  onChange={(next, key) =>
+                    song.edit(
+                      withTrackPolish(open.data, polishTrack.id, next),
+                      key ? `${key}:${polishTrack.id}` : undefined
+                    )
+                  }
+                />
+              )}
+            </div>
           )}
         </main>
 
