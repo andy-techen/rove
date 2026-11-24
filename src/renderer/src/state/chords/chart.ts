@@ -1,7 +1,7 @@
 import { Chord, ChordSegment } from '../../audio/music/chords'
 import { PITCH_CLASSES } from '../../audio/pitch/key'
 import { ClickGrid } from '../transport/metronome'
-import { Project, musicOf } from '../song/project'
+import { ChordChart, Project, musicOf } from '../song/project'
 import { sameChord } from './chordText'
 
 const SEC_PER_MIN = 60
@@ -44,8 +44,10 @@ export function transposeChord(chord: Chord, semitones: number): Chord {
  * music clip (so a chart lined up with a recording stays lined up), and Key moves every
  * chord. Null without a chart or without any bars.
  */
-export function chartTimeline(project: Project): ChartTimeline | null {
-  const chart = project.chart
+export function chartTimeline(
+  project: Project,
+  chart: ChordChart | undefined | null
+): ChartTimeline | null {
   if (!chart || chart.bars.length === 0) return null
   const { speed, semitones } = musicOf(project)
   const secPerBeat = SEC_PER_MIN / (chart.bpm * speed)
@@ -83,6 +85,29 @@ export function chartTimeline(project: Project): ChartTimeline | null {
     startSec: tidy(startSec),
     endSec: tidy(startSec + chart.bars.length * barSec)
   }
+}
+
+/** A spot in a chart: a bar, and which of its chords (0, or 1 for a split bar's second). */
+export interface ChartPlace {
+  bar: number
+  slot: number
+}
+
+// Absorbs rounding in times, so a chord starting exactly on a bar line lands in that bar.
+const EDGE_SEC = 1e-6
+
+/** Which bar, and which half of it, plays at `sec`; null outside the chart. */
+export function placeAt(
+  timeline: ChartTimeline,
+  bars: unknown[][],
+  sec: number
+): ChartPlace | null {
+  if (sec < timeline.startSec - EDGE_SEC || sec >= timeline.endSec - EDGE_SEC) return null
+  const barSec = timeline.secPerBeat * timeline.beatsPerBar
+  const inBars = (sec - timeline.startSec + EDGE_SEC) / barSec
+  const bar = Math.floor(inBars)
+  const count = Math.max(1, bars[bar]?.length ?? 1)
+  return { bar, slot: Math.min(count - 1, Math.floor((inBars - bar) * count)) }
 }
 
 /** The metronome for a chart: every beat, with real bar ones. */

@@ -1,7 +1,8 @@
 import { CSSProperties, DragEvent, ReactNode, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { ClipGestureKind } from '../../state/editing/clipGestures'
-import { TrackRole, VocalPart, formatDuration } from '../../state/song/project'
+import { TrackRole, VocalPart, formatDuration, sameGroup } from '../../state/song/project'
+import { ChartPlace } from '../../state/chords/chart'
 import { indexForSlot } from '../../state/tabs/tabOrder'
 import {
   ClipRef,
@@ -19,7 +20,7 @@ import { IconButton } from '../ui/IconButton'
 import { cx } from '../ui/cx'
 import { ClipView, GesturePhase } from './ClipView'
 import { ClipBlockView } from './ClipBlockView'
-import { AddTrackRow } from './AddTrackRow'
+import { AddChoice, AddTrackRow } from './AddTrackRow'
 import { TrackHeader } from './TrackHeader'
 import { SnapView } from '../../state/editing/snapping'
 import { formatTick, minorStep } from './timelineMath'
@@ -65,8 +66,10 @@ interface Props {
   onAddBacking(): void
   /** Adds an empty backing track to record music into (an instrument, a beat). */
   onAddRecordedBacking(): void
-  /** Starts the chords track, which plays the chords the singer writes. */
+  /** Adds a chords track, which plays the chords the singer writes. */
   onAddChords(): void
+  /** A chord on a chords lane was clicked: open its bar to change it. */
+  onPickChord(trackId: string, place: ChartPlace): void
   onAddVocal(part: VocalPart): void
   onMix(trackId: string, change: MixChange): void
   /** Selected clips; the last is the one clicked most recently. */
@@ -132,6 +135,7 @@ export function Timeline({
   onAddBacking,
   onAddRecordedBacking,
   onAddChords,
+  onPickChord,
   onAddVocal,
   onMix,
   selectedClips,
@@ -178,15 +182,19 @@ export function Timeline({
     follow,
     keyboard
   })
-  // The music group: files and recordings, then the chords.
+  // The music group: files, recordings and chords, in the singer's order.
   const backingTracks = tracks.filter((track) => track.role !== 'vocal')
   const vocalTracks = tracks.filter((track) => track.role === 'vocal')
-  const hasChords = tracks.some((track) => track.role === 'chords')
   const lanesRef = useRef<HTMLDivElement>(null)
-  const backingChoices = [
-    { key: 'file', label: t('timeline.fromFile'), onPick: onAddBacking },
-    { key: 'record', label: t('timeline.recordNew'), onPick: onAddRecordedBacking },
-    ...(hasChords ? [] : [{ key: 'chords', label: t('timeline.chords'), onPick: onAddChords }])
+  const backingChoices: AddChoice[] = [
+    { key: 'file', label: t('timeline.addBacking'), icon: 'folder', onPick: onAddBacking },
+    {
+      key: 'record',
+      label: t('timeline.recordBacking'),
+      icon: 'mic',
+      onPick: onAddRecordedBacking
+    },
+    { key: 'chords', label: t('timeline.addInstrumental'), icon: 'chords', onPick: onAddChords }
   ]
   useRevealNewTrack(
     lanesRef,
@@ -352,10 +360,10 @@ export function Timeline({
     const isRecording = recording?.trackId === track.id
     const isChords = track.role === 'chords'
     const clipKind = track.role === 'vocal' ? 'vocal' : 'backing'
-    const sameGroup = drag?.role === track.role
+    const inDragGroup = !!drag && sameGroup(drag.role, track.role)
     const dragHandlers = {
       onDragOver: (e: DragEvent<HTMLDivElement>) => {
-        if (!drag || !sameGroup) return
+        if (!drag || !inDragGroup) return
         e.preventDefault()
         const box = e.currentTarget.getBoundingClientRect()
         const slot = index + (e.clientY > box.top + box.height / 2 ? 1 : 0)
@@ -363,7 +371,7 @@ export function Timeline({
       },
       onDrop: (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
-        if (drag && sameGroup && drag.slot !== null)
+        if (drag && inDragGroup && drag.slot !== null)
           onMoveTrack(drag.id, indexForSlot(drag.from, drag.slot))
         endDrag()
       }
@@ -378,8 +386,8 @@ export function Timeline({
           isRecording && 'lane-recording',
           track.muted && 'lane-muted',
           drag?.id === track.id && 'lane-dragging',
-          sameGroup && dropSlot === index && 'drop-before',
-          sameGroup && dropSlot === group.length && index === group.length - 1 && 'drop-after'
+          inDragGroup && dropSlot === index && 'drop-before',
+          inDragGroup && dropSlot === group.length && index === group.length - 1 && 'drop-after'
         )}
         {...dragHandlers}
       >
@@ -478,14 +486,19 @@ export function Timeline({
             />
           ))}
           {track.chords?.map((c) => (
-            <div
+            <button
+              type="button"
               key={`${c.start}:${c.name}`}
               className="clip chord-block"
+              aria-label={t('timeline.changeChord', { chord: c.name, bar: c.place.bar + 1 })}
+              title={t('timeline.changeChord', { chord: c.name, bar: c.place.bar + 1 })}
               // Runtime geometry: where this chord plays on the timeline.
               style={{ left: x(c.start), width: (c.end - c.start) * pxPerSec }}
+              // The lane's own click still moves the playhead here.
+              onClick={() => onPickChord(track.id, c.place)}
             >
               <span className="chord-block-name">{c.name}</span>
-            </div>
+            </button>
           ))}
           {isRecording && (
             <div
@@ -618,7 +631,7 @@ export function Timeline({
                   {t('timeline.recordBacking')}
                 </Button>
                 <Button size="sm" variant="quiet" disabled={!canEdit} onClick={onAddChords}>
-                  {t('timeline.playChords')}
+                  {t('timeline.addInstrumental')}
                 </Button>
                 {!skipBacking && (
                   <Button
@@ -639,11 +652,12 @@ export function Timeline({
 
         {vocalTracks.map(lane)}
         <AddTrackRow
-          label={t('timeline.addVocalRow')}
+          label={t('timeline.addVocal')}
           disabled={!canEdit}
           choices={(['lead', 'harmony'] as const).map((part) => ({
             key: part,
-            label: t(`timeline.${part}`),
+            label: t(part === 'lead' ? 'timeline.addLead' : 'timeline.addHarmony'),
+            icon: part,
             onPick: () => onAddVocal(part)
           }))}
         />

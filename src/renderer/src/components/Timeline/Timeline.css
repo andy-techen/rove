@@ -62,7 +62,18 @@
   margin-left: calc(var(--space-4) * -1);
 }
 
-.add-cancel {
+/* One width for every row's label, so the add icons line up from row to row. */
+.add-row-label {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: var(--layout-add-label);
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.add-choice {
   color: var(--color-text-muted);
 }
 
@@ -322,11 +333,18 @@
 }
 
 .chord-block {
+  border: none;
+  font: inherit;
+  text-align: left;
   background: var(--color-clip-backing);
   color: var(--color-text);
   /* A hairline between chords that meet, so each change reads as its own block. */
   box-shadow: inset calc(-1 * var(--size-hairline)) 0 0 var(--color-bg);
   padding: 0 var(--space-3);
+}
+
+.chord-block:hover {
+  background: var(--color-surface-raised);
 }
 
 .chord-block-name {

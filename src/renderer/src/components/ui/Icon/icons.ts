@@ -43,6 +43,10 @@ export const STROKE_ICONS = {
   // A guitar pick: chords.
   chords: 'M12 21c-2.6-2.7-7-8.2-7-12.4C5 5.3 8.1 3 12 3s7 2.3 7 5.6c0 4.2-4.4 9.7-7 12.4z',
   lyrics: 'M4 6h14M4 10h14M4 14h6M14 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0M18 18v-6h3',
+  // One singer, and two: a lead vocal and a harmony.
+  lead: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  harmony:
+    'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M16 3.1a4 4 0 0 1 0 7.8M18 14.3a7 7 0 0 1 4 6.7',
   // A pencil: change a song's details.
   edit: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4',
   // A closed book: the Songbook. A note on the cover is lost at top-bar size.

@@ -526,6 +526,15 @@ describe('moveTrack', () => {
     expect(tracksOf(moved, 'backing').map((t) => t.name)).toEqual(['Backing 1'])
   })
 
+  it('moves an instrumental among the music files, not into the vocals', () => {
+    const p = withNewTrack(song(), 'chords').project
+    const chords = tracksOf(p, 'chords')[0]
+    const moved = moveTrack(p, chords.id, 0)
+    const music = moved.tracks.filter((t) => t.role !== 'vocal').map((t) => t.name)
+    expect(music).toEqual(['Backing 2', 'Backing 1'])
+    expect(vocals(moved)).toEqual(vocals(p))
+  })
+
   it('leaves the song as it is for a place off either end', () => {
     const p = song()
     const v1 = tracksOf(p, 'vocal')[0].id

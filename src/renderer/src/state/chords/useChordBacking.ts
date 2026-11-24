@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { SAMPLE_RATE } from '../../audio/engine/engine'
 import { RING_OUT_SEC, renderStrums } from '../../audio/music/guitar'
-import { Project, chordsTrackOf, musicOf } from '../song/project'
+import { Project, Track, chordsTracksOf, musicOf } from '../song/project'
 import { ChordPart, chartTimeline } from './chart'
 import { strumEvents } from './strum'
 
@@ -18,26 +18,23 @@ export interface ChordBacking {
   waiting: boolean
 }
 
-/** Everything the rendered sound depends on. */
-function signatureOf(project: Project | undefined): string | null {
-  if (!project) return null
-  const track = chordsTrackOf(project)
-  if (!track || !project.chart) return null
+/** Everything a chords track's rendered sound depends on. */
+function signatureOf(project: Project, track: Track): string | null {
+  if (!track.chart) return null
   const { speed, semitones } = musicOf(project)
-  return JSON.stringify([track.id, project.chart, speed, semitones])
+  return JSON.stringify([track.id, track.chart, speed, semitones])
 }
 
-const cache = new Map<string, ChordPart>()
+const cache = new Map<string, ChordPart | null>()
 
-function remember(signature: string, part: ChordPart): void {
+function remember(signature: string, part: ChordPart | null): void {
   cache.set(signature, part)
   if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value as string)
 }
 
-async function render(project: Project): Promise<ChordPart | null> {
-  const track = chordsTrackOf(project)
-  const timeline = chartTimeline(project)
-  if (!track || !timeline) return null
+async function render(project: Project, track: Track): Promise<ChordPart | null> {
+  const timeline = chartTimeline(project, track.chart)
+  if (!timeline) return null
   const events = strumEvents(timeline)
   const lengthSec = timeline.endSec - timeline.startSec + RING_OUT_SEC
   const samples = await renderStrums(events, timeline.startSec, lengthSec, SAMPLE_RATE)
@@ -51,41 +48,50 @@ async function render(project: Project): Promise<ChordPart | null> {
 }
 
 /**
- * The chords track's sound, kept in step with the chart, Speed and Key. Rendered in
- * memory, never saved: the project only holds the chart.
+ * Every chords track's sound, kept in step with its chart, Speed and Key. Rendered in
+ * memory, never saved: the project only holds the charts.
  */
 export function useChordBacking(project: Project | undefined): ChordBacking {
-  const signature = signatureOf(project)
-  const [rendered, setRendered] = useState<{ signature: string; part: ChordPart | null } | null>(
-    null
-  )
+  const wanted = project
+    ? chordsTracksOf(project).flatMap((track) => {
+        const signature = signatureOf(project, track)
+        return signature ? [{ track, signature }] : []
+      })
+    : []
+  const key = wanted.map((w) => w.signature).join('\n')
+  // Bumped when a render lands, so the parts are read from the cache again.
+  const [, setRendered] = useState(0)
 
   useEffect(() => {
-    if (!project || !signature || cache.has(signature)) return
+    const missing = wanted.filter((w) => !cache.has(w.signature))
+    if (!project || !missing.length) return
     let cancelled = false
     const timer = setTimeout(() => {
-      render(project)
-        .then((part) => {
-          if (part) remember(signature, part)
-          if (!cancelled) setRendered({ signature, part })
-        })
-        .catch(() => {
-          // Stays silent; the next edit tries again.
-          if (!cancelled) setRendered({ signature, part: null })
-        })
+      void Promise.all(
+        missing.map(({ track, signature }) =>
+          render(project, track)
+            .then((part) => remember(signature, part))
+            // Stays silent; the next edit tries again.
+            .catch(() => remember(signature, null))
+        )
+      ).then(() => {
+        if (!cancelled) setRendered((n) => n + 1)
+      })
     }, RENDER_DEBOUNCE_MS)
     return () => {
       cancelled = true
       clearTimeout(timer)
     }
-    // `signature` captures everything about the project rendering depends on.
+    // `key` captures everything about the project rendering depends on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signature])
+  }, [key])
 
-  const part = signature
-    ? (cache.get(signature) ?? (rendered?.signature === signature ? rendered.part : null))
-    : null
-  const ready = !signature || cache.has(signature) || rendered?.signature === signature
-  const parts = useMemo(() => (part ? [part] : []), [part])
+  const ready = wanted.every((w) => cache.has(w.signature))
+  const parts = useMemo(
+    () => wanted.flatMap((w) => cache.get(w.signature) ?? []),
+    // The cache only changes when a render lands, which re-renders with a new key or count.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [key, ready]
+  )
   return { parts, waiting: !ready }
 }

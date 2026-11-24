@@ -38,6 +38,7 @@ function timelineProps(overrides: Partial<Parameters<typeof Timeline>[0]> = {}) 
     onAddBacking: vi.fn(),
     onAddRecordedBacking: vi.fn(),
     onAddChords: vi.fn(),
+    onPickChord: vi.fn(),
     onAddVocal: vi.fn(),
     onMix: vi.fn(),
     selectedClips: [],
@@ -62,6 +63,17 @@ function renderTimeline(overrides: Partial<Parameters<typeof Timeline>[0]> = {})
   render(<Timeline {...props} />)
   return props
 }
+
+const chordsLane = () =>
+  lane({
+    id: 'k1',
+    role: 'chords',
+    name: 'Backing 1',
+    chords: [
+      { start: 0, end: 2, name: 'C', place: { bar: 0, slot: 0 } },
+      { start: 2, end: 4, name: 'Am', place: { bar: 1, slot: 0 } }
+    ]
+  })
 
 describe('Timeline', () => {
   it('adds a track to the selection with ⌘-click', async () => {
@@ -90,12 +102,11 @@ describe('Timeline', () => {
     expect(name.nextElementSibling).toHaveTextContent(t('timeline.noMusic'))
   })
 
-  it('adds another backing track from a file or by recording it', async () => {
+  it('adds another backing track by recording it, in one click', async () => {
     const props = renderTimeline({
       tracks: [lane({ id: 'b1', role: 'backing', name: 'Backing 1', detail: 'Song' })]
     })
-    await userEvent.click(screen.getByRole('button', { name: t('timeline.addBackingRow') }))
-    await userEvent.click(screen.getByRole('button', { name: t('timeline.recordNew') }))
+    await userEvent.click(screen.getByRole('button', { name: t('timeline.recordBacking') }))
     expect(props.onAddRecordedBacking).toHaveBeenCalled()
     expect(
       screen.getByRole('button', { name: t('track.record', { name: 'Backing 1' }) })
@@ -111,10 +122,9 @@ describe('Timeline', () => {
     expect(second).toBeGreaterThan(first)
   })
 
-  it('adds a harmony vocal after choosing the part', async () => {
+  it('adds a harmony vocal in one click', async () => {
     const props = renderTimeline()
-    await userEvent.click(screen.getByRole('button', { name: t('timeline.addVocalRow') }))
-    await userEvent.click(screen.getByRole('button', { name: t('timeline.harmony') }))
+    await userEvent.click(screen.getByRole('button', { name: t('timeline.addHarmony') }))
     expect(props.onAddVocal).toHaveBeenCalledWith('harmony')
   })
 
@@ -316,24 +326,28 @@ describe('Timeline', () => {
 
   it('offers to play chords when the song has no music yet', async () => {
     const props = renderTimeline()
-    await userEvent.click(screen.getByRole('button', { name: t('timeline.playChords') }))
+    await userEvent.click(screen.getByRole('button', { name: t('timeline.addInstrumental') }))
     expect(props.onAddChords).toHaveBeenCalled()
   })
 
   it('shows the chords on a chords lane, which plays rather than records', () => {
-    const chordsLane = lane({
-      id: 'k1',
-      role: 'chords',
-      name: 'Chords',
-      chords: [
-        { start: 0, end: 2, name: 'C' },
-        { start: 2, end: 4, name: 'Am' }
-      ]
-    })
-    renderTimeline({ tracks: [chordsLane, lane({})] })
+    renderTimeline({ tracks: [chordsLane(), lane({})] })
     expect(screen.getByText('Am')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: t('track.record', { name: 'Chords' }) })
+      screen.getByRole('button', { name: t('track.record', { name: 'Backing 1' }) })
     ).toBeDisabled()
+  })
+
+  it('opens a chord in its chart when it is clicked', async () => {
+    const props = renderTimeline({ tracks: [chordsLane(), lane({})] })
+    await userEvent.click(
+      screen.getByRole('button', { name: t('timeline.changeChord', { chord: 'Am', bar: 2 }) })
+    )
+    expect(props.onPickChord).toHaveBeenCalledWith('k1', { bar: 1, slot: 0 })
+  })
+
+  it('keeps offering instrumentals once the song has one', () => {
+    renderTimeline({ tracks: [chordsLane(), lane({})] })
+    expect(screen.getByRole('button', { name: t('timeline.addInstrumental') })).toBeEnabled()
   })
 })

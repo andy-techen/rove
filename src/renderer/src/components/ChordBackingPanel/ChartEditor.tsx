@@ -2,6 +2,7 @@ import { KeyboardEvent, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { Chord } from '../../audio/music/chords'
 import { BeatsPerBar, ChordChart } from '../../state/song/project'
+import { ChartPlace } from '../../state/chords/chart'
 import {
   MAX_CHORDS_PER_BAR,
   addBar,
@@ -40,6 +41,9 @@ interface Props {
   onBeats(beatsPerBar: BeatsPerBar): void
   /** Lets the singer hear a chord as it's picked. */
   onPreview(chord: Chord): void
+  /** The bar (and half of it) being written; a chord clicked on the timeline moves it. */
+  place: ChartPlace
+  onPlace(place: ChartPlace): void
 }
 
 /** Writing the song's chords: tempo, beats in a bar, and a chord (or two) for each bar. */
@@ -51,20 +55,21 @@ export function ChartEditor({
   onBars,
   onTempo,
   onBeats,
-  onPreview
+  onPreview,
+  place,
+  onPlace
 }: Props): React.JSX.Element {
   const { bars } = chart
-  const [picked, setPicked] = useState(0)
-  const [slot, setSlot] = useState(0)
   const [unread, setUnread] = useState<string[]>([])
   const taps = useRef<number[]>([])
   const barRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const selected = Math.min(picked, bars.length - 1)
+  const selected = Math.max(0, Math.min(place.bar, bars.length - 1))
+  const slot = place.slot
+  const setSlot = (next: number): void => onPlace({ bar: selected, slot: next })
 
   const select = (bar: number, focus = false): void => {
     const next = Math.max(0, Math.min(bars.length - 1, bar))
-    setPicked(next)
-    setSlot(0)
+    onPlace({ bar: next, slot: 0 })
     if (focus) barRefs.current[next]?.focus()
   }
 
@@ -117,101 +122,103 @@ export function ChartEditor({
         setUnread(pasted.unread)
       }}
     >
-      <div className="chart-settings">
-        <span className="chart-setting">
-          <span className="chart-setting-label">{t('chords.tempo')}</span>
-          <NumberField
-            label={t('chords.tempoLabel')}
-            value={String(chart.bpm)}
-            unit={t('music.bpm')}
-            align="start"
+      <div className="chart-sheet">
+        <div className="chart-settings">
+          <span className="chart-setting">
+            <span className="chart-setting-label">{t('chords.tempo')}</span>
+            <NumberField
+              label={t('chords.tempoLabel')}
+              value={String(chart.bpm)}
+              unit={t('music.bpm')}
+              align="start"
+              disabled={locked}
+              onCommit={(text) => {
+                const bpm = parseTypedNumber(text)
+                if (bpm !== null) onTempo(bpm)
+              }}
+            />
+            <Button size="sm" variant="quiet" disabled={locked} onClick={tap}>
+              {t('chords.tap')}
+            </Button>
+            <HelpTip text={t('chords.tapHelp')} />
+          </span>
+          <span className="chart-setting">
+            <span className="chart-setting-label">{t('chords.count')}</span>
+            <Select
+              label={t('chords.countLabel')}
+              value={String(chart.beatsPerBar)}
+              options={[
+                { value: '4', label: '4' },
+                { value: '3', label: '3' }
+              ]}
+              disabled={locked}
+              onChange={(v) => onBeats(v === '3' ? 3 : 4)}
+            />
+            <HelpTip text={t('chords.countHelp')} />
+          </span>
+        </div>
+
+        <ol className="chart-bars" aria-label={t('chords.bars')} onKeyDown={onGridKey}>
+          {bars.map((bar, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                ref={(el) => {
+                  barRefs.current[i] = el
+                }}
+                className={cx(
+                  'chart-bar',
+                  i === selected && 'chart-bar-selected',
+                  i === playingBar && 'chart-bar-playing'
+                )}
+                aria-pressed={i === selected}
+                aria-label={barLabel(bar, i)}
+                tabIndex={i === selected ? 0 : -1}
+                onClick={() => select(i)}
+              >
+                <span className="chart-bar-number">{i + 1}</span>
+                <span className="chart-bar-chords">
+                  {bar.length ? (
+                    bar
+                      .slice(0, MAX_CHORDS_PER_BAR)
+                      .map((c, k) => <span key={k}>{chordName(c)}</span>)
+                  ) : (
+                    <span className="chart-bar-carry">·</span>
+                  )}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+        <div className="chart-bar-actions">
+          <Button
+            size="sm"
+            variant="ghost"
+            icon="plus"
             disabled={locked}
-            onCommit={(text) => {
-              const bpm = parseTypedNumber(text)
-              if (bpm !== null) onTempo(bpm)
+            onClick={() => {
+              onBars(addBar(bars))
+              select(bars.length)
+            }}
+          >
+            {t('chords.addBar')}
+          </Button>
+          <IconButton
+            icon="delete"
+            label={t('chords.removeBar', { n: selected + 1 })}
+            disabled={locked || bars.length <= 1}
+            onClick={() => {
+              onBars(removeBar(bars, selected))
+              select(selected - (selected === bars.length - 1 ? 1 : 0))
             }}
           />
-          <Button size="sm" variant="quiet" disabled={locked} onClick={tap}>
-            {t('chords.tap')}
-          </Button>
-          <HelpTip text={t('chords.tapHelp')} />
-        </span>
-        <span className="chart-setting">
-          <span className="chart-setting-label">{t('chords.count')}</span>
-          <Select
-            label={t('chords.countLabel')}
-            value={String(chart.beatsPerBar)}
-            options={[
-              { value: '4', label: '4' },
-              { value: '3', label: '3' }
-            ]}
-            disabled={locked}
-            onChange={(v) => onBeats(v === '3' ? 3 : 4)}
-          />
-          <HelpTip text={t('chords.countHelp')} />
-        </span>
+        </div>
+        {unread.length > 0 && (
+          <p className="chart-unread" role="status">
+            {t('chords.unread', { names: unread.join(', ') })}
+          </p>
+        )}
       </div>
-
-      <ol className="chart-bars" aria-label={t('chords.bars')} onKeyDown={onGridKey}>
-        {bars.map((bar, i) => (
-          <li key={i}>
-            <button
-              type="button"
-              ref={(el) => {
-                barRefs.current[i] = el
-              }}
-              className={cx(
-                'chart-bar',
-                i === selected && 'chart-bar-selected',
-                i === playingBar && 'chart-bar-playing'
-              )}
-              aria-pressed={i === selected}
-              aria-label={barLabel(bar, i)}
-              tabIndex={i === selected ? 0 : -1}
-              onClick={() => select(i)}
-            >
-              <span className="chart-bar-number">{i + 1}</span>
-              <span className="chart-bar-chords">
-                {bar.length ? (
-                  bar
-                    .slice(0, MAX_CHORDS_PER_BAR)
-                    .map((c, k) => <span key={k}>{chordName(c)}</span>)
-                ) : (
-                  <span className="chart-bar-carry">·</span>
-                )}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ol>
-      <div className="chart-bar-actions">
-        <Button
-          size="sm"
-          variant="ghost"
-          icon="plus"
-          disabled={locked}
-          onClick={() => {
-            onBars(addBar(bars))
-            select(bars.length)
-          }}
-        >
-          {t('chords.addBar')}
-        </Button>
-        <IconButton
-          icon="delete"
-          label={t('chords.removeBar', { n: selected + 1 })}
-          disabled={locked || bars.length <= 1}
-          onClick={() => {
-            onBars(removeBar(bars, selected))
-            select(selected - (selected === bars.length - 1 ? 1 : 0))
-          }}
-        />
-      </div>
-      {unread.length > 0 && (
-        <p className="chart-unread" role="status">
-          {t('chords.unread', { names: unread.join(', ') })}
-        </p>
-      )}
 
       <ChordPicker
         key={selected}

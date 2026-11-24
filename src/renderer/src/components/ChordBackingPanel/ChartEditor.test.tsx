@@ -24,6 +24,7 @@ function renderEditor(text = '| C | % | % | % |') {
   const onPreview = vi.fn()
   function Harness() {
     const [chart, setChart] = useState(chartOf(text))
+    const [place, setPlace] = useState({ bar: 0, slot: 0 })
     return (
       <ChartEditor
         chart={chart}
@@ -37,6 +38,8 @@ function renderEditor(text = '| C | % | % | % |') {
         onTempo={onTempo}
         onBeats={vi.fn()}
         onPreview={onPreview}
+        place={place}
+        onPlace={setPlace}
       />
     )
   }

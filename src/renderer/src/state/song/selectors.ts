@@ -6,7 +6,7 @@ import {
   Project,
   Track,
   TrackRole,
-  chordsTrackOf,
+  chordsTracksOf,
   formatDuration,
   musicOf,
   polishOf,
@@ -14,7 +14,7 @@ import {
   tracksOf
 } from './project'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
-import { ChordPart, chartTimeline } from '../chords/chart'
+import { ChartPlace, ChordPart, chartTimeline, placeAt } from '../chords/chart'
 import { chordName } from '../chords/noteNames'
 
 // Edges this close to the playhead count as "here", so a jump moves on to the next one.
@@ -65,6 +65,8 @@ export interface ChordBlock {
   start: number
   end: number
   name: string
+  /** Where in the chart it's written, for opening it there. */
+  place: ChartPlace
 }
 
 // Imported backing files are copied in as "backing-<original name>".
@@ -76,18 +78,21 @@ export function backingTitle(fileName: string): string {
   return fileName.replace(IMPORT_PREFIX, '').replace(EXTENSION, '')
 }
 
-/** The music first (files, then the chords), then vocals, the order the timeline shows. */
+/** The music first (files and chords, in the singer's order), then vocals. */
 const laneOrder = (project: Project): Track[] => [
-  ...tracksOf(project, 'backing'),
-  ...tracksOf(project, 'chords'),
+  ...project.tracks.filter((t) => t.role !== 'vocal'),
   ...tracksOf(project, 'vocal')
 ]
 
 /** The chords a chords lane shows: each change, named as it plays (silence left out). */
-function chordBlocks(project: Project): ChordBlock[] {
-  return (chartTimeline(project)?.chords ?? []).flatMap((s) =>
-    s.chord ? [{ start: s.start, end: s.end, name: chordName(s.chord) }] : []
-  )
+function chordBlocks(project: Project, track: Track): ChordBlock[] {
+  const timeline = chartTimeline(project, track.chart)
+  if (!timeline || !track.chart) return []
+  const bars = track.chart.bars
+  return timeline.chords.flatMap((s) => {
+    const place = placeAt(timeline, bars, s.start)
+    return s.chord && place ? [{ start: s.start, end: s.end, name: chordName(s.chord), place }] : []
+  })
 }
 
 /** Music tracks first, then vocals, each with the summary its header shows. */
@@ -110,7 +115,7 @@ export function selectLanes(
         muted: track.muted,
         clips: [],
         blocks: [],
-        chords: chordBlocks(project)
+        chords: chordBlocks(project, track)
       }
     }
     const part = t(track.part === 'harmony' ? 'timeline.harmony' : 'timeline.lead')
@@ -179,16 +184,16 @@ export function joinGroups<C extends { id: string; start: number; duration: numb
 export function hasMusicChoice(project: Project | undefined, skipBacking: boolean): boolean {
   return (
     !!project &&
-    (tracksOf(project, 'backing').length > 0 || !!chordsTrackOf(project) || skipBacking)
+    (tracksOf(project, 'backing').length > 0 || chordsTracksOf(project).length > 0 || skipBacking)
   )
 }
 
 /** Where the song ends: the end of its last clip, or of the chords when they play. */
 export function songEnd(project: Project): number {
-  const chords = chordsTrackOf(project) ? (chartTimeline(project)?.endSec ?? 0) : 0
+  const chords = chordsTracksOf(project).map((t) => chartTimeline(project, t.chart)?.endSec ?? 0)
   return Math.max(
     0,
-    chords,
+    ...chords,
     ...project.tracks.flatMap((t) => t.clips.map((c) => c.start + c.duration))
   )
 }

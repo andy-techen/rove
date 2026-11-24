@@ -24,7 +24,10 @@ export interface Clip {
   group?: string
 }
 
-/** Vocals are sung, backing tracks play music files, a chords track plays the chart. */
+/**
+ * Vocals are sung; backing tracks play music files; a chords track plays the chords the
+ * singer wrote. Both kinds of music are "Backing" to the singer.
+ */
 export type TrackRole = 'vocal' | 'backing' | 'chords'
 export type VocalPart = 'lead' | 'harmony'
 
@@ -41,6 +44,8 @@ export interface Track {
   muted: boolean
   /** Vocal tracks only; older projects fall back to the part's defaults. */
   polish?: PolishSettings
+  /** Chords tracks only: the chords it plays. */
+  chart?: ChordChart
   clips: Clip[]
 }
 
@@ -55,8 +60,6 @@ export interface Project {
   lyrics?: SongLyrics | null
   /** How the backing music is played: unset means as it was recorded. */
   music?: Partial<MusicSettings>
-  /** The chords the singer wrote, which a chords track plays. */
-  chart?: ChordChart | null
   tracks: Track[]
 }
 
@@ -95,12 +98,17 @@ export const TRACK_NAME_MAX_LENGTH = 40
 const ROLE_LABEL: Record<TrackRole, string> = {
   vocal: 'Vocal',
   backing: 'Backing',
-  chords: 'Chords'
+  // Guitar, piano or beats: to the singer it's all backing, numbered together.
+  chords: 'Backing'
 }
 
 export function tracksOf(project: Project, role: TrackRole): Track[] {
   return project.tracks.filter((t) => t.role === role)
 }
+
+/** Whether two tracks sit together: vocals with vocals, music (files or chords) with music. */
+export const sameGroup = (a: TrackRole, b: TrackRole): boolean =>
+  (a === 'vocal') === (b === 'vocal')
 
 /**
  * Starting mix by role, so a beginner's first playback already sounds balanced:
@@ -139,7 +147,7 @@ export function withNewTrack(
   opts: { sourceName?: string; part?: VocalPart } = {}
 ): { project: Project; track: Track } {
   const label = ROLE_LABEL[role]
-  const used = tracksOf(project, role).map((t) =>
+  const used = project.tracks.map((t) =>
     Number(new RegExp(`^${label} (\\d+)$`).exec(t.name)?.[1] ?? 0)
   )
   const part = role === 'vocal' ? (opts.part ?? 'lead') : undefined
@@ -182,12 +190,13 @@ export function withTrackName(project: Project, trackId: string, name: string): 
 export function moveTrack(project: Project, trackId: string, to: number): Project {
   const track = project.tracks.find((t) => t.id === trackId)
   if (!track) return project
-  const group = tracksOf(project, track.role)
+  const inGroup = (t: Track): boolean => sameGroup(t.role, track.role)
+  const group = project.tracks.filter(inGroup)
   const reordered = moveItem(group, group.indexOf(track), to)
   let next = 0
   return {
     ...project,
-    tracks: project.tracks.map((t) => (t.role === track.role ? reordered[next++] : t))
+    tracks: project.tracks.map((t) => (inGroup(t) ? reordered[next++] : t))
   }
 }
 
@@ -505,9 +514,7 @@ export function parseProject(data: unknown): Project {
     const project = p as Project
     // Only keep an artist field that's actually a non-empty string.
     if (typeof project.artist !== 'string' || !project.artist.trim()) delete project.artist
-    // A chart Rove can't read is dropped rather than played wrong.
-    if (project.chart && !isChart(project.chart)) delete project.chart
-    return project
+    return withChartsOnTracks(project)
   }
   throw new Error(t('song.notRoveProject'))
 }
@@ -675,6 +682,7 @@ export const CHART_MAX_BARS = 500
 const NEW_CHART_BARS = 4
 
 function isChart(value: unknown): value is ChordChart {
+  if (!value || typeof value !== 'object') return false
   const c = value as Partial<ChordChart>
   const isChord = (x: unknown): boolean => {
     const chord = x as Partial<Chord> | null
@@ -689,39 +697,74 @@ function isChart(value: unknown): value is ChordChart {
   )
 }
 
-/** The track that plays the chart, if the song has one (there's at most one). */
-export const chordsTrackOf = (project: Project): Track | undefined =>
-  project.tracks.find((t) => t.role === 'chords')
-
 /**
- * Starts playing the song's chords: a chart (one bar of `first`, then bars that carry it
- * on, ready to fill in) unless there is one, and the chords track unless there is one.
+ * Songs from before each chords track had its own chart kept one for the song: it moves to
+ * the first chords track. A chart Rove can't read is dropped rather than played wrong.
  */
-export function withChordBacking(project: Project, first: Chord): Project {
-  const chart: ChordChart = project.chart ?? {
-    bpm: DEFAULT_CHART_BPM,
-    beatsPerBar: 4,
-    startSec: 0,
-    bars: [[first], ...Array.from({ length: NEW_CHART_BARS - 1 }, () => [])]
+function withChartsOnTracks(project: Project): Project {
+  const { chart: legacy, ...rest } = project as Project & { chart?: unknown }
+  let unclaimed = isChart(legacy) ? legacy : undefined
+  return {
+    ...rest,
+    tracks: rest.tracks.map((track) => {
+      if (track.role !== 'chords') return track
+      const chart = isChart(track.chart) ? track.chart : unclaimed
+      unclaimed = undefined
+      const plain = { ...track }
+      delete plain.chart
+      return chart ? { ...plain, chart } : plain
+    })
   }
-  const withChart = { ...project, chart }
-  if (chordsTrackOf(withChart)) return withChart
-  const { project: added, track } = withNewTrack(withChart, 'chords')
-  // There's only ever one, so it doesn't need a number.
-  return withTrackName(added, track.id, ROLE_LABEL.chords)
 }
 
-const mapChart = (project: Project, change: (chart: ChordChart) => ChordChart): Project =>
-  project.chart ? { ...project, chart: change(project.chart) } : project
+/** The tracks that play chords the singer wrote. */
+export const chordsTracksOf = (project: Project): Track[] => tracksOf(project, 'chords')
 
-export const withChartBars = (project: Project, bars: Chord[][]): Project =>
-  mapChart(project, (chart) => ({ ...chart, bars: bars.slice(0, CHART_MAX_BARS) }))
+/**
+ * Adds a chords track with a chart to fill in: one bar of `first`, then bars that carry
+ * it on. It keeps time with the song's other chords, so new parts line up with them.
+ */
+export function withChordBacking(
+  project: Project,
+  first: Chord
+): { project: Project; track: Track } {
+  const other = chordsTracksOf(project).find((t) => t.chart)?.chart
+  const chart: ChordChart = {
+    bpm: other?.bpm ?? DEFAULT_CHART_BPM,
+    beatsPerBar: other?.beatsPerBar ?? 4,
+    startSec: other?.startSec ?? 0,
+    bars: [[first], ...Array.from({ length: NEW_CHART_BARS - 1 }, () => [])]
+  }
+  const { project: added, track } = withNewTrack(project, 'chords')
+  const withChart = { ...track, chart }
+  return {
+    project: { ...added, tracks: added.tracks.map((t) => (t.id === track.id ? withChart : t)) },
+    track: withChart
+  }
+}
 
-export const withChartTempo = (project: Project, bpm: number): Project =>
-  mapChart(project, (chart) => ({
+const mapChart = (
+  project: Project,
+  trackId: string,
+  change: (chart: ChordChart) => ChordChart
+): Project => ({
+  ...project,
+  tracks: project.tracks.map((t) =>
+    t.id === trackId && t.chart ? { ...t, chart: change(t.chart) } : t
+  )
+})
+
+export const withChartBars = (project: Project, trackId: string, bars: Chord[][]): Project =>
+  mapChart(project, trackId, (chart) => ({ ...chart, bars: bars.slice(0, CHART_MAX_BARS) }))
+
+export const withChartTempo = (project: Project, trackId: string, bpm: number): Project =>
+  mapChart(project, trackId, (chart) => ({
     ...chart,
     bpm: Math.round(Math.max(CHART_BPM_RANGE.min, Math.min(CHART_BPM_RANGE.max, bpm)))
   }))
 
-export const withChartBeats = (project: Project, beatsPerBar: BeatsPerBar): Project =>
-  mapChart(project, (chart) => ({ ...chart, beatsPerBar }))
+export const withChartBeats = (
+  project: Project,
+  trackId: string,
+  beatsPerBar: BeatsPerBar
+): Project => mapChart(project, trackId, (chart) => ({ ...chart, beatsPerBar }))
