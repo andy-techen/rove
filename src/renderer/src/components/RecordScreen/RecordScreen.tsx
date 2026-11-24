@@ -93,6 +93,7 @@ import {
 import { useElementHeight } from '../../state/ui/useElementHeight'
 import { clickGrid } from '../../state/transport/metronome'
 import { useSong } from '../../state/song/useSong'
+import { useAutoPolish } from '../../state/processing/useAutoPolish'
 import { useTransport } from '../../state/transport/useTransport'
 import { ExportDialog } from '../ExportDialog'
 import { ChordBackingPanel } from '../ChordBackingPanel'
@@ -287,6 +288,13 @@ export function RecordScreen({
   const polishTrack =
     open?.data.tracks.find((track) => track.id === selectedTrackId) ??
     open?.data.tracks.find((track) => track.role === 'vocal')
+  // Auto polish listens only when asked, for the vocal the Polish panel shows.
+  const autoPolish = useAutoPolish(
+    open?.data,
+    audio,
+    polishTrack?.role === 'vocal' ? polishTrack.id : undefined,
+    (next) => song.edit(next)
+  )
 
   // Copied clips stay within this song, whose folder holds the audio they point at.
   const [clipboard, setClipboard] = useState<CopiedClips | null>(null)
@@ -805,6 +813,12 @@ export function RecordScreen({
                   trackName={polishTrack.name}
                   part={polishTrack.part ?? 'lead'}
                   polish={polishOf(polishTrack)}
+                  auto={{
+                    ...autoPolish,
+                    reasons: polishTrack.polishSuggestion?.reasons ?? null,
+                    disabled: !idle,
+                    onListen: autoPolish.listen
+                  }}
                   locked={!canEdit}
                   onHide={hidePanel}
                   onChange={(next, key) =>

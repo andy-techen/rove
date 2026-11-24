@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { t } from '@shared/copy'
+import { CopyKey, t } from '@shared/copy'
 import {
   PARAM_RANGES,
   POLISH_CONTROLS,
@@ -8,6 +8,8 @@ import {
   defaultPolish,
   polishParams
 } from '../../audio/polish/polish'
+import type { AutoPolishReason } from '../../audio/polish/autoPolish'
+import type { AutoPolishMessage, AutoPolishStatus } from '../../state/processing/useAutoPolish'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
 import { KnobControl, KnobRow } from '../ui/KnobControl'
@@ -28,10 +30,30 @@ import {
 } from './polishFormat'
 import './PolishPanel.css'
 
+/** The auto-polish button and what it last did. */
+export interface AutoPolishControl {
+  status: AutoPolishStatus
+  message: AutoPolishMessage | null
+  clipped: boolean
+  /** What Rove heard last time it listened; null before it has. */
+  reasons: AutoPolishReason[] | null
+  /** Listening waits while the song plays or records. */
+  disabled: boolean
+  onListen(): void
+}
+
+const AUTO_TITLE: Record<AutoPolishStatus, CopyKey> = {
+  ready: 'polish.auto.title',
+  stale: 'polish.auto.titleStale',
+  noTakes: 'polish.auto.titleNoTakes',
+  listening: 'polish.auto.listening'
+}
+
 interface Props {
   trackName: string
   part: 'lead' | 'harmony'
   polish: PolishSettings
+  auto?: AutoPolishControl
   locked: boolean
   /** `key` groups a slider drag into one undo step. */
   onChange(next: PolishSettings, key?: string): void
@@ -48,11 +70,13 @@ export function PolishPanel({
   trackName,
   part,
   polish,
+  auto,
   locked,
   onChange,
   onHide
 }: Props): React.JSX.Element {
   const [advanced, setAdvanced] = useState(false)
+  // Reset and the notches always mean the part's defaults, even after auto-polish.
   const sweetSpot = defaultPolish(part)
   const params = polishParams(polish)
   const overrides = polish.advanced ?? {}
@@ -75,6 +99,26 @@ export function PolishPanel({
               onChange={(enabled) => onChange({ ...polish, enabled })}
             />
           </span>
+          {auto && (
+            <>
+              <IconButton
+                icon="sparkle"
+                label={t('polish.auto.label')}
+                title={t(AUTO_TITLE[auto.status])}
+                aria-busy={auto.status === 'listening'}
+                disabled={
+                  locked ||
+                  auto.disabled ||
+                  auto.status === 'noTakes' ||
+                  auto.status === 'listening'
+                }
+                onClick={auto.onListen}
+              />
+              {auto.reasons && (
+                <HelpTip text={auto.reasons.map((r) => t(`polish.auto.reasons.${r}`)).join(' ')} />
+              )}
+            </>
+          )}
           <IconButton
             icon="reset"
             label={t('polish.reset')}
@@ -92,6 +136,11 @@ export function PolishPanel({
         </>
       }
     >
+      {auto?.message && (
+        <p className={cx('polish-status', auto.clipped && 'warning')} role="status">
+          {auto.clipped ? t('polish.auto.clipped') : t(`polish.auto.${auto.message}`)}
+        </p>
+      )}
       <KnobRow dimmed={!polish.enabled}>
         {POLISH_CONTROLS.map((key) => {
           const name = t(`polish.controls.${key}.label`)

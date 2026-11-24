@@ -132,6 +132,15 @@ const lerp = (a: number, b: number, t: number): number => a + (b - a) * Math.max
 export const clampParam = (key: PolishParam, value: number): number =>
   Math.max(PARAM_RANGES[key].min, Math.min(PARAM_RANGES[key].max, value))
 
+/**
+ * The slider position that gives a real parameter this value: the inverse of the
+ * slider's straight line, stopping at the slider's ends.
+ */
+export function amountFor(param: Exclude<PolishParam, 'makeupDb'>, value: number): number {
+  const { at0, at1 } = SLIDER_MAP[param]
+  return Math.max(0, Math.min(1, (value - at0) / (at1 - at0)))
+}
+
 /** Turns the plain-language sliders (and any Advanced overrides) into real DSP settings. */
 export function polishParams(settings: PolishSettings): PolishParams {
   const mapped = Object.fromEntries(

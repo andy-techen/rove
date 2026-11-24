@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { PARAM_RANGES, PolishParams, builtInMakeupDb, defaultPolish, polishParams } from './polish'
+import {
+  PARAM_RANGES,
+  PolishParams,
+  amountFor,
+  builtInMakeupDb,
+  defaultPolish,
+  polishParams
+} from './polish'
 
 const zero = {
   enabled: true,
@@ -103,5 +110,33 @@ describe('builtInMakeupDb', () => {
 
   it('is zero when the compressor does nothing', () => {
     expect(builtInMakeupDb(-20, 1)).toBe(0)
+  })
+})
+
+describe('amountFor', () => {
+  // Each slider-driven parameter, and the control that moves it.
+  const driven = [
+    ['gateThresholdDb', 'cleanup'],
+    ['lowCutHz', 'warmth'],
+    ['presenceDb', 'clarity'],
+    ['compThresholdDb', 'smoothness'],
+    ['deEssThresholdDb', 'deEss'],
+    ['reverbMix', 'space'],
+    ['retuneMs', 'tuning']
+  ] as const
+
+  it('finds the slider position that gives a parameter value', () => {
+    for (const [param, control] of driven) {
+      for (const amount of [0, 0.3, 0.75, 1]) {
+        const value = polishParams({ ...defaultPolish(), [control]: amount })[param]
+        expect(amountFor(param, value)).toBeCloseTo(amount)
+      }
+    }
+  })
+
+  it('stops at the ends of the slider for values it cannot reach', () => {
+    expect(amountFor('gateThresholdDb', -100)).toBe(0)
+    expect(amountFor('gateThresholdDb', 0)).toBe(1)
+    expect(amountFor('compThresholdDb', -60)).toBe(1)
   })
 })

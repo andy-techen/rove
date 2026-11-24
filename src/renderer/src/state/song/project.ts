@@ -3,6 +3,7 @@ import type { Chord } from '../../audio/music/chords'
 import { moveItem } from '../tabs/tabOrder'
 import { SongLyrics } from '../lyrics/lyrics'
 import { PolishSettings, defaultPolish } from '../../audio/polish/polish'
+import type { PolishSuggestion } from '../../audio/polish/autoPolish'
 import { t } from '@shared/copy'
 
 export interface Clip {
@@ -44,6 +45,8 @@ export interface Track {
   muted: boolean
   /** Vocal tracks only; older projects fall back to the part's defaults. */
   polish?: PolishSettings
+  /** Vocal tracks only: what auto polish suggested, set when the singer asked for it. */
+  polishSuggestion?: PolishSuggestion
   /** Chords tracks only: the chords it plays. */
   chart?: ChordChart
   clips: Clip[]
@@ -244,7 +247,13 @@ export function withTrackChanges(
 ): Project {
   return {
     ...project,
-    tracks: project.tracks.map((t) => (t.id === trackId ? { ...t, ...changes } : t))
+    tracks: project.tracks.map((t) => {
+      if (t.id !== trackId) return t
+      const next = { ...t, ...changes }
+      // A suggestion was made for one part; the other part sits differently in the mix.
+      if (changes.part && changes.part !== (t.part ?? 'lead')) delete next.polishSuggestion
+      return next
+    })
   }
 }
 

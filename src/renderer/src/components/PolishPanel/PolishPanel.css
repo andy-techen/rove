@@ -58,3 +58,14 @@
 .polish-empty {
   font-size: var(--font-size-ui);
 }
+
+/* What the last auto-polish did, in a line under the header. */
+.polish-status {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.polish-status.warning {
+  color: var(--color-warning);
+}
