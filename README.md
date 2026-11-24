@@ -17,26 +17,9 @@ should look, sound and feel.
 
 ## Roadmap
 
-| Next                   | Goal                                                                                                             |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Songbook               | Browse past takes, and keep a wishlist of songs to try next                                                      |
-| Range check            | Work out your range from a take, suggest a better key, and quietly build a voice profile over time               |
-| Explore songs          | A curated "what should I sing?" catalog built into the Songbook: search it, try one, add it to your wishlist     |
-| Songs that fit you     | Premium: match catalog songs to the range check and surface the ones your voice can reach                        |
-| Catalog in Mandarin    | First-class Mandarin coverage: MusicBrainz + Deezer, ISRC joins, simplified/traditional/pinyin variants          |
-| First-run setup        | A friendly walk-through of mic, headphones and latency for people who've never set these up                      |
-| App in your language   | Translate the interface into English, Traditional Chinese and Simplified Chinese; lyrics stay as written         |
-| Harmony auto-sync      | Line up a harmony take with the lead using one plain "Tightness" slider, non-destructive and per section         |
-| Share as image         | Export the mix as a phone-ready image with a synced lyrics overlay, ready to post                                |
-| Share as audio         | A polished audio clip sized for social, beyond the image share                                                   |
-| Clip for social        | Drag a 30- or 60-second window over the song, hear a preview, export just that part — pairs with the image share |
-| Better chords          | A more accurate on-device detector (BTC), run on the music without vocals; edit or type chords when it's wrong   |
-| Chord backing          | Play the song's chords as the backing track: strummed guitar, piano or a simple beat                             |
-| Auto polish            | Analyse a take and set the polish knobs                                                                          |
-| Growth profile         | Progress over time: range growth, and old takes next to new ones                                                 |
-| Come back tomorrow     | Gentle nudges that bring singers back between sessions                                                           |
-| More settings          | More to tune in Settings, for singers who want to go a little deeper                                             |
-| Signing and notarizing | Sign with a Developer ID and notarize, so macOS opens the app without asking                                     |
+Next up: helping singers find songs that suit them, understanding their voice, sounding
+better with less effort, and sharing what they make. The roadmap itself is tracked on a
+GitHub Project board.
 
 ## Credits
 
