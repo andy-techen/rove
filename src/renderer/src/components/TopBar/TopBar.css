@@ -33,24 +33,27 @@
 
 /* Tabs */
 
+/* The tabs fill the bar down to its bottom edge and touch, so they sit on the song
+   below like folder tabs. */
 .tabs {
   flex: 1;
+  align-self: stretch;
   min-width: 0;
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
+  align-items: stretch;
+  padding-top: var(--space-2);
+  margin-bottom: calc(-1 * var(--space-1));
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-/* Each song is a soft chip with a gap between, so where one ends and the next begins
-   is clear without a border; the open song's chip is the strongest. */
+/* Each song is a soft fill, rounded only at the top; the open song's is the strongest. */
 .tab {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   max-width: var(--layout-tab-max);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   background: var(--color-surface-raised);
   color: var(--color-text-muted);
 }
