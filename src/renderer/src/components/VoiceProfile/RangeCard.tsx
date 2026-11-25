@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { t } from '@shared/copy'
 import type { VoiceProfile } from '../../audio/voice'
 import { noteWithOctave } from '../../state/chords/noteNames'
@@ -18,6 +18,9 @@ const ROW_BAR = 10
 const KEYBOARD_GAP = 6
 // Enough songs to compare at a glance; the rest wait behind Show all.
 const SONGS_SHOWN = 6
+// Song names sit in a column beside their bars, cut short with an ellipsis past this.
+const SONG_NAME_WIDTH = 120
+const SONG_NAME_GAP = 12
 
 const note = (n: number | null): string => (n === null ? '–' : noteWithOctave(n))
 
@@ -129,7 +132,7 @@ function SongRow({
 }
 
 /**
- * One row per song on a shared keyboard, each named above its range, newest first. A
+ * One row per song on a shared keyboard, its name beside its range, newest first. A
  * long list shows its first few, with the rest behind Show all.
  */
 function SongRanges({
@@ -144,9 +147,20 @@ function SongRanges({
   const [all, setAll] = useState(false)
   const shown = all ? songs : songs.slice(0, SONGS_SHOWN)
   return (
-    <div className="voice-songs" role="list" aria-label={t('voice.songsChart')}>
+    <div
+      className="voice-songs"
+      role="list"
+      aria-label={t('voice.songsChart')}
+      style={
+        {
+          '--song-name-width': `${SONG_NAME_WIDTH}px`,
+          '--song-name-gap': `${SONG_NAME_GAP}px`
+        } as CSSProperties
+      }
+    >
       <Measured>
-        {(width) => {
+        {(full) => {
+          const width = full - SONG_NAME_WIDTH - SONG_NAME_GAP
           const scale = keyScale(keys, width)
           return (
             <>
@@ -167,14 +181,17 @@ function SongRanges({
                   <SongRow profile={profile} overall={overall} scale={scale} />
                 </div>
               ))}
-              <svg
-                className="voice-chart"
-                width={width}
-                height={KEYBOARD_HEIGHT}
-                viewBox={`0 0 ${width} ${KEYBOARD_HEIGHT}`}
-              >
-                <Keyboard scale={scale} y={0} />
-              </svg>
+              <div className="voice-song" aria-hidden="true">
+                <span />
+                <svg
+                  className="voice-chart"
+                  width={width}
+                  height={KEYBOARD_HEIGHT}
+                  viewBox={`0 0 ${width} ${KEYBOARD_HEIGHT}`}
+                >
+                  <Keyboard scale={scale} y={0} />
+                </svg>
+              </div>
             </>
           )
         }}

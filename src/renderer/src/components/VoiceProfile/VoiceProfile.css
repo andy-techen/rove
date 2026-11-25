@@ -174,8 +174,7 @@
   fill: var(--color-key-black);
 }
 
-/* By song: each song named above its range, all on one keyboard. Names sit above
-   rather than beside, so every row spans the keyboard's full width. */
+/* By song: each song's name beside its range, centred on it, all over one keyboard. */
 .voice-songs {
   display: flex;
   flex-direction: column;
@@ -188,9 +187,10 @@
 }
 
 .voice-song {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  display: grid;
+  grid-template-columns: var(--song-name-width) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--song-name-gap);
 }
 
 /* Behind each song's row, the singer's overall comfort zone, so it lines up down the list. */
