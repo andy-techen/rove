@@ -153,7 +153,11 @@
   /* Dragged no smaller than room for the sidebar beside a readable section. */
   --layout-app-dialog-min-width: 560px;
   --layout-app-dialog-min-height: 360px;
-  --layout-songbook-panel: 460px;
+  /* The Songbook opens at this size until it's dragged; no smaller than room for the
+     search box and a few songs. */
+  --layout-songbook-height: 588px;
+  --layout-songbook-min-width: 480px;
+  --layout-songbook-min-height: 360px;
   --layout-shortcut-keys: 56px;
   --layout-lyrics: 320px;
   --layout-chord: 64px;

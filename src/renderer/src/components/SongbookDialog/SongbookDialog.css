@@ -1,5 +1,19 @@
+/* Drag the corner to resize (as the settings dialog does); the size comes back next
+   time as --songbook-width and --songbook-height. The list fills whatever's left. */
 .songbook {
-  width: min(var(--layout-dialog), calc(100vw - var(--space-12)));
+  width: var(--songbook-width, var(--layout-dialog));
+  height: var(--songbook-height, var(--layout-songbook-height));
+  min-width: var(--layout-songbook-min-width);
+  min-height: var(--layout-songbook-min-height);
+  max-width: calc(100vw - var(--space-12));
+  resize: both;
+  overflow: hidden;
+}
+
+/* Only while open: a closed <dialog> must stay display: none. */
+.songbook[open] {
+  display: flex;
+  flex-direction: column;
 }
 
 .songbook-views {
@@ -29,8 +43,9 @@
    stay lined up with the search box. */
 .songbook-panel {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  height: min(65vh, var(--layout-songbook-panel));
+  min-height: 0;
 }
 
 .songbook-panel > :not(.songbook-body) {
