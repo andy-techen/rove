@@ -67,6 +67,9 @@ export const STROKE_ICONS = {
     'M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM12 14v6M8 4v9h2V4M14 4v9h2V4',
   // "Flowing": the chord's notes rolling on, a wave running into a note.
   flowing: 'M3 16c2.5-6 5.5-6 8 0 1.7 4 4 3.5 5.5 0M16.5 7.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0',
+  // A clipboard: paste chords copied from elsewhere.
+  paste:
+    'M9 3h6v3H9zM9 4.5H6.5A1.5 1.5 0 0 0 5 6v13.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15',
   // A guitar pick: strummed.
   strum: 'M12 21c-2.6-2.7-7-8.2-7-12.4C5 5.3 8.1 3 12 3s7 2.3 7 5.6c0 4.2-4.4 9.7-7 12.4z',
   lyrics: 'M4 6h14M4 10h14M4 14h6M14 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0M18 18v-6h3',

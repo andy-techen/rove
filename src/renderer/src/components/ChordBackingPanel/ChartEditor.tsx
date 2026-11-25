@@ -26,6 +26,7 @@ import {
 import { sameChord } from '../../state/chords/chordText'
 import { chordName } from '../../state/chords/noteNames'
 import { Button } from '../ui/Button'
+import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
 import { cx } from '../ui/cx'
 import { ChordPicker, ChordSuggestions } from './ChordPicker'
@@ -48,8 +49,10 @@ interface Props {
   locked: boolean
   /** New bars; `feels` comes too when bars moved, so each keeps how it's played. */
   onBars(bars: Chord[][], feels?: ChordFeel[]): void
-  /** Chords a paste couldn't read, to say so under the chart. */
-  unread: string[]
+  /** What the last paste couldn't do (no chords, or chords it couldn't read). */
+  pasteNote: string | null
+  /** Fills bars from a chord sheet on the clipboard, from the selected bar on. */
+  onPasteChords(): void
   /** Takes the picked bars out, as Delete does on the timeline. */
   onRemove(): void
   /** Bars `first` to `last` strummed or fingerpicked. */
@@ -69,7 +72,8 @@ export function ChartEditor({
   playingBar,
   suggestions,
   locked,
-  unread,
+  pasteNote,
+  onPasteChords,
   onBars,
   onPreview,
   onFeel,
@@ -326,23 +330,37 @@ export function ChartEditor({
           >
             {t('chords.addBar')}
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            icon="duplicate"
-            disabled={locked || !lineIsFull}
-            onClick={() => {
-              const repeated = repeatLine(bars, selected, barsPerLine)
-              onBars(repeated.bars, repeatLine(feels, selected, barsPerLine).bars)
-              onPlace({ bar: repeated.copyAt, slot: 0 })
-            }}
-          >
-            {t('chords.repeatLine')}
-          </Button>
+          <span className="chart-line-actions">
+            <Button
+              size="sm"
+              variant="ghost"
+              icon="duplicate"
+              disabled={locked || !lineIsFull}
+              onClick={() => {
+                const repeated = repeatLine(bars, selected, barsPerLine)
+                onBars(repeated.bars, repeatLine(feels, selected, barsPerLine).bars)
+                onPlace({ bar: repeated.copyAt, slot: 0 })
+              }}
+            >
+              {t('chords.repeatLine')}
+            </Button>
+            <span className="chart-paste">
+              <Button
+                size="sm"
+                variant="quiet"
+                icon="paste"
+                disabled={locked}
+                onClick={onPasteChords}
+              >
+                {t('chords.pasteChords')}
+              </Button>
+              <HelpTip text={t('chords.pasteChordsHelp')} />
+            </span>
+          </span>
         </div>
-        {unread.length > 0 && (
+        {pasteNote && (
           <p className="chart-unread" role="status">
-            {t('chords.unread', { names: unread.join(', ') })}
+            {pasteNote}
           </p>
         )}
       </div>

@@ -148,6 +148,14 @@ section.panel.chord-backing-panel {
   margin-top: calc(-1 * var(--space-4));
 }
 
+/* Repeat and Paste together at the end of the row, Paste's help beside it. */
+.chart-line-actions,
+.chart-paste {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
 .chart-unread {
   margin: 0;
   font-size: var(--font-size-ui);

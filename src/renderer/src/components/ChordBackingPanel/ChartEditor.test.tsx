@@ -16,9 +16,11 @@ const chartOf = (text: string): ChordChart => ({ bars: chartFromText(text).bars 
 function renderEditor(
   text = '| C | % | % | % |',
   beatsPerBar: 3 | 4 = 4,
-  instrument: 'guitar' | 'piano' = 'guitar'
+  instrument: 'guitar' | 'piano' = 'guitar',
+  pasteNote: string | null = null
 ) {
   const onBars = vi.fn()
+  const onPasteChords = vi.fn()
   const onPreview = vi.fn()
   const onRemove = vi.fn()
   function Harness() {
@@ -26,7 +28,8 @@ function renderEditor(
     const [place, setPlace] = useState({ bar: 0, slot: 0 })
     return (
       <ChartEditor
-        unread={[]}
+        pasteNote={pasteNote}
+        onPasteChords={onPasteChords}
         instrument={instrument}
         chart={chart}
         beatsPerBar={beatsPerBar}
@@ -53,7 +56,7 @@ function renderEditor(
   render(<Harness />)
   const lastBars = () =>
     onBars.mock.lastCall![0].map((bar: Chord[]) => bar.map(chordName).join(' '))
-  return { onPreview, onRemove, lastBars }
+  return { onPreview, onRemove, onPasteChords, lastBars }
 }
 
 const picker = () => within(screen.getByRole('region', { name: /^Chord for / }))
@@ -142,6 +145,17 @@ describe('ChartEditor', () => {
     await userEvent.keyboard('{ArrowRight}{ArrowRight}')
     expect(bar(3)).toHaveFocus()
     expect(picker().getByText(t('chords.barNumber', { n: 3 }))).toBeInTheDocument()
+  })
+
+  it('pastes chords copied from a website with the Paste chords button', async () => {
+    const { onPasteChords } = renderEditor()
+    await userEvent.click(screen.getByRole('button', { name: t('chords.pasteChords') }))
+    expect(onPasteChords).toHaveBeenCalled()
+  })
+
+  it('says when there were no chords to paste', () => {
+    renderEditor('| C |', 4, 'guitar', t('chords.pasteNone'))
+    expect(screen.getByRole('status')).toHaveTextContent(t('chords.pasteNone'))
   })
 
   it('repeats a line of three bars in 3/4', async () => {
