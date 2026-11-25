@@ -105,7 +105,7 @@ export type BeatsPerBar = 3 | 4
 export type ChordFeel = GuitarFeel | PianoFeel
 /** Strummed across the strings, or fingerpicked a string at a time. */
 export type GuitarFeel = 'strum' | 'pick'
-/** One held chord a bar, or the chord's notes rolled up one a beat. */
+/** One held chord a bar, or the chord's notes rolled up one a beat (shown as "Ballad"). */
 export type PianoFeel = 'chords' | 'flowing'
 export const GUITAR_FEELS: readonly GuitarFeel[] = ['strum', 'pick']
 export const PIANO_FEELS: readonly PianoFeel[] = ['chords', 'flowing']
