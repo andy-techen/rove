@@ -7,6 +7,7 @@ import {
   yieldsToControls
 } from '@shared/keymap'
 import { MenuAction } from '@shared/menu'
+import { keyboardFocus } from '../ui/focusRing'
 import { currentKeymap } from './keymap'
 
 /** Anything the person can ask for from the menu bar or the keyboard. */
@@ -60,7 +61,7 @@ const keyboardFocused = (target: EventTarget | null): boolean =>
   target instanceof Element &&
   target !== document.body &&
   !!target.closest('button, [role=button], input, select, summary, a[href]') &&
-  target.matches(':focus-visible')
+  keyboardFocus(target)
 
 /** The shortcut a key press triggers, if the renderer (not the menu) owns those keys. */
 export function shortcutForKey(e: KeyboardEvent): ShortcutId | null {

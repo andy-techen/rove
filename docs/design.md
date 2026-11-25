@@ -108,7 +108,12 @@ If a pattern repeats in two places, promote it to `ui/`.
 
 ## Accessibility
 
-- Everything works with the keyboard; focus is always visible (`:focus-visible`).
+- Everything works with the keyboard; focus is always visible (`:focus-visible`) while
+  moving around with the keyboard, and hidden after a click, even when keys are pressed
+  next (the beat pad, shortcuts). `state/ui/focusRing.ts` marks which on
+  `<html data-input>`: a custom focus style goes under
+  `:root:not([data-input='pointer'])`, and code asks `keyboardFocus(el)`, never
+  `matches(':focus-visible')`.
 - Icon-only controls have accessible names; toggles use `aria-pressed`; menus use
   `role="menu"` / `menuitem`; meters use `role="meter"` with a spoken value.
 - Don't rely on colour alone: mute shows a different icon as well as a colour.

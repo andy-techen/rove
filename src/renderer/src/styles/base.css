@@ -29,6 +29,11 @@ select {
   outline-offset: var(--size-focus-ring);
 }
 
+/* After a click, only keyboard navigation brings the ring back (state/ui/focusRing.ts). */
+:root[data-input='pointer'] :focus-visible {
+  outline: none;
+}
+
 [hidden] {
   display: none !important;
 }

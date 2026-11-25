@@ -99,7 +99,7 @@
   outline: none;
 }
 
-.slider input:focus-visible::-webkit-slider-thumb {
+:root:not([data-input='pointer']) .slider input:focus-visible::-webkit-slider-thumb {
   box-shadow:
     var(--shadow-thumb),
     0 0 0 var(--size-focus-ring) var(--color-accent);

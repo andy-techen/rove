@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { keyboardFocus } from '../../../state/ui/focusRing'
 import './Tooltip.css'
 
 interface Props {
@@ -75,7 +76,7 @@ export function Tooltip({ text, children }: Props): React.JSX.Element {
         onPointerLeave={hide}
         onPointerDown={hide}
         onFocus={(e) => {
-          if (e.target.matches(':focus-visible')) show(0)
+          if (keyboardFocus(e.target)) show(0)
         }}
         onBlur={hide}
       >

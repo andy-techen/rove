@@ -40,7 +40,7 @@
   pointer-events: none;
 }
 
-.knob:has(input:focus-visible) {
+:root:not([data-input='pointer']) .knob:has(input:focus-visible) {
   outline: var(--size-focus-ring) solid var(--color-accent);
   outline-offset: var(--size-focus-ring);
 }

@@ -336,7 +336,7 @@
 }
 
 .lane:hover .bars-grip,
-.bars-grip:focus-visible {
+:root:not([data-input='pointer']) .bars-grip:focus-visible {
   background: linear-gradient(to right, var(--color-accent), transparent);
 }
 

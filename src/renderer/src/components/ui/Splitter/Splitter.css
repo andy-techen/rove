@@ -36,7 +36,7 @@
 }
 
 .splitter:hover::after,
-.splitter:focus-visible::after {
+:root:not([data-input='pointer']) .splitter:focus-visible::after {
   background: var(--color-accent);
 }
 
