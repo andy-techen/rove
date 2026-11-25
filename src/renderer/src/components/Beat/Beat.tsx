@@ -150,7 +150,7 @@ export function Beat({ click, tempo, locked }: Props): React.JSX.Element {
                     </button>
                   ))}
                 </span>
-                <HelpTip text={t('chords.tempoHelp')} />
+                <HelpTip lines={[t('chords.tempoHelp.what'), t('chords.tempoHelp.unsure')]} />
               </div>
             </>
           )}

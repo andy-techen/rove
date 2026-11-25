@@ -63,7 +63,13 @@ export function ExportDialog({ state, onStart, onReveal, onClose }: Props): Reac
 
       <fieldset className="export-choice" disabled={working}>
         <legend>
-          {t('export.loudness')} <HelpTip text={t('export.loudnessHelp')} />
+          {t('export.loudness')}{' '}
+          <HelpTip
+            items={LOUDNESS.map((l) => ({
+              term: t(`export.loudnessOptions.${l}`),
+              text: t(`export.loudnessHelp.${l}`)
+            }))}
+          />
         </legend>
         {LOUDNESS.map((l) => (
           <label key={l} className="export-option">

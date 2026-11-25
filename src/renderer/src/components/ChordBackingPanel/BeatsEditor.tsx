@@ -264,7 +264,11 @@ export function BeatsEditor({
       onDone={() => setRenaming(false)}
     />
   )
-  const help = <HelpTip text={editing ? t('beats.padHelp') : t('beats.partsHelp')} />
+  const help = editing ? (
+    <HelpTip lines={[t('beats.padHelp.record'), t('beats.padHelp.edit')]} />
+  ) : (
+    <HelpTip text={t('beats.partsHelp')} />
+  )
   const recordButton = (
     <span className="beats-record">
       {recorder.state === 'counting' && (

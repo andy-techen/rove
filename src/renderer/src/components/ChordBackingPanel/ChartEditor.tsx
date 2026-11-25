@@ -354,7 +354,9 @@ export function ChartEditor({
               >
                 {t('chords.pasteChords')}
               </Button>
-              <HelpTip text={t('chords.pasteChordsHelp')} />
+              <HelpTip
+                lines={[t('chords.pasteChordsHelp.copy'), t('chords.pasteChordsHelp.bars')]}
+              />
             </span>
           </span>
         </div>

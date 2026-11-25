@@ -102,7 +102,9 @@ describe('VoiceProfile', () => {
     const high = t('voice.tone.body.high')
     expect(await screen.findByLabelText(new RegExp(`^${low} to ${high}: `))).toBeInTheDocument()
     await user.tab()
-    const help = screen.getByRole('button', { name: t('voice.tone.help') })
+    const help = screen.getByRole('button', {
+      name: new RegExp(`^${t('voice.tone.helpNote')}`)
+    })
     help.focus()
     expect(await screen.findByRole('tooltip')).toHaveTextContent(t('voice.tone.helpNote'))
   })

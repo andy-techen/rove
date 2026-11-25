@@ -337,7 +337,6 @@
         "high": "Airy",
         "about": "how much breath you hear around your notes"
       },
-      "help": "Light or rich: how much low, full sound your voice carries. Mellow or bright: how much it rings out over the music. Clear or airy: how much breath you hear around your notes. Every end is a good voice, just a different one.",
       "row": "{low} to {high}: {word}",
       "pair": "{low} or {high}",
       "helpNote": "Each end is a good voice, just a different one."
@@ -464,7 +463,10 @@
     "newBeat": "New beat",
     "newBeatTitle": "Make your own beat, starting from this one",
     "pad": "Beat pad",
-    "padHelp": "Press Record and play along on the keys shown. Click to add a hit; click a hit to remove it.",
+    "padHelp": {
+      "record": "Press Record and play along on the keys shown.",
+      "edit": "Click to add a hit; click a hit to remove it."
+    },
     "hitLabel": "{drum} at beat {beat}",
     "lane": "{drum} ({key})",
     "record": "Record",
@@ -520,7 +522,10 @@
     "yours": "These are the chords you wrote. Rove plays them on the Chords track.",
     "tempoLabel": "Tempo in beats per minute",
     "tap": "Tap",
-    "tempoHelp": "The song’s speed and beats in a bar, which every instrumental and the metronome follow. Not sure? Tap along a few times.",
+    "tempoHelp": {
+      "what": "The song’s speed and beats in a bar, which every instrumental and the metronome follow.",
+      "unsure": "Not sure? Tap along a few times."
+    },
     "countOf": "{n} beats",
     "countLabel": "Beats in a bar",
     "bars": "Bars",
@@ -534,7 +539,10 @@
     "unreadItem": "{name} in bar {bar}",
     "unreadMore": "and {n} more",
     "pasteChords": "Paste chords",
-    "pasteChordsHelp": "Copy a song’s chords from any chord website, lyrics and all, then press Paste chords. Each chord gets its own bar, starting from the one you picked.",
+    "pasteChordsHelp": {
+      "copy": "Copy a song’s chords from any chord website, lyrics and all, then press Paste chords.",
+      "bars": "Each chord gets its own bar, starting from the one you picked."
+    },
     "pasteNone": "No chords to paste. Copy a song’s chords from a chord website first.",
     "pickerLabel": "Chord for {bars}",
     "barNumber": "Bar {n}",
@@ -671,7 +679,11 @@
       "loud": "Louder",
       "asMixed": "As mixed"
     },
-    "loudnessHelp": "Ready for streaming matches streaming services. Louder pushes harder. As mixed changes nothing.",
+    "loudnessHelp": {
+      "streaming": "matches the loudness of streaming services",
+      "loud": "pushes it louder still",
+      "asMixed": "leaves it exactly as you mixed it"
+    },
     "start": "Export",
     "cancel": "Cancel",
     "stages": {

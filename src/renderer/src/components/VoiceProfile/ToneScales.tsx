@@ -5,30 +5,6 @@ import { TONE_SCALES, toneHeadline, toneLeans } from '../../state/voice/toneWord
 import { HelpTip } from '../ui/HelpTip'
 import { cx } from '../ui/cx'
 
-/** What the three scales mean: that both ends are good, then a short list. */
-function ToneHelp(): React.JSX.Element {
-  return (
-    <div className="voice-help">
-      <p>{t('voice.tone.helpNote')}</p>
-      <ul>
-        {TONE_SCALES.map((scale) => (
-          <li key={scale}>
-            <span>
-              <strong>
-                {t('voice.tone.pair', {
-                  low: t(`voice.tone.${scale}.low`),
-                  high: t(`voice.tone.${scale}.high`).toLowerCase()
-                })}
-              </strong>
-              : {t(`voice.tone.${scale}.about`)}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
 /**
  * How the voice sounds: a few words up top, then each scale as a dot between two words
  * that are both good, with a tick at the middle. The word the voice leans to stands
@@ -40,7 +16,16 @@ export function ToneScales({ tone }: { tone: Tone }): React.JSX.Element {
     <section className="voice-card">
       <div className="voice-title">
         <h3>{t('voice.tone.title')}</h3>
-        <HelpTip text={t('voice.tone.help')} content={<ToneHelp />} />
+        <HelpTip
+          lines={[t('voice.tone.helpNote')]}
+          items={TONE_SCALES.map((scale) => ({
+            term: t('voice.tone.pair', {
+              low: t(`voice.tone.${scale}.low`),
+              high: t(`voice.tone.${scale}.high`).toLowerCase()
+            }),
+            text: t(`voice.tone.${scale}.about`)
+          }))}
+        />
       </div>
       <p className="voice-subtitle">{t('voice.tone.subtitle')}</p>
       <p className="voice-headline">

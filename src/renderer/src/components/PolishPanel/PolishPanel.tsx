@@ -114,7 +114,12 @@ export function PolishPanel({
                 onClick={auto.onListen}
               />
               {auto.reasons && (
-                <HelpTip text={auto.reasons.map((r) => t(`polish.auto.reasons.${r}`)).join(' ')} />
+                <HelpTip
+                  // One reason reads as a sentence; several as a list.
+                  {...(auto.reasons.length > 1
+                    ? { items: auto.reasons.map((r) => ({ text: t(`polish.auto.reasons.${r}`) })) }
+                    : { text: t(`polish.auto.reasons.${auto.reasons[0]}`) })}
+                />
               )}
             </>
           )}

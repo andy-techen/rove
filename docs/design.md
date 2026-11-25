@@ -30,7 +30,8 @@ hears.
   border, so they read as clickable without standing out like `secondary`.
 - **Instructions hide behind help.** How-to text goes behind a `HelpTip` (a small "?"
   that reveals the instruction on hover or keyboard focus), beside the control it
-  explains. Don't add always-visible paragraphs.
+  explains. Don't add always-visible paragraphs. Help longer than a sentence or two
+  reads better broken up: steps on their own lines, options or parts as bullets.
 - **Visible text is for names, values and warnings** the singer must act on (a song
   name, a time, "Too loud!").
 - **Plain language.** Name controls by what the singer hears ("Space", "Smoothness");
@@ -101,7 +102,7 @@ Reach for these before writing new markup:
 | `NumberField`  | A number to type over (Enter applies, Esc reverts); pair it with a slider.                                               |
 | `Switch`       | On/off toggles with a label.                                                                                             |
 | `Select`       | A short list to pick one from (the song key). Native, so the keyboard just works.                                        |
-| `HelpTip`      | A "?" that reveals instructions on hover or focus; `content` for a short formatted list (bullets, bold).                 |
+| `HelpTip`      | A "?" that reveals help on hover or focus: `text` for a sentence; `lines` (steps) and `items` (bullets) for longer help. |
 | `Logo`         | The app icon with the "rove" wordmark (top bar `sm`, full-screen headings `lg`).                                         |
 
 If a pattern repeats in two places, promote it to `ui/`.
