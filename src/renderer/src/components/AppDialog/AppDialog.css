@@ -1,14 +1,28 @@
+/* One size whichever section shows, so switching never resizes it; a long section
+   scrolls inside. The corner drags it bigger or smaller (resize), and the size it was
+   dragged to comes back next time as --app-dialog-width and --app-dialog-height. */
 .app-dialog {
-  width: min(var(--layout-app-dialog), calc(100vw - var(--space-12)));
+  width: var(--app-dialog-width, var(--layout-app-dialog));
+  height: var(--app-dialog-height, var(--layout-app-dialog-height));
+  min-width: var(--layout-app-dialog-min-width);
+  min-height: var(--layout-app-dialog-min-height);
+  max-width: calc(100vw - var(--space-12));
+  resize: both;
+  overflow: hidden;
 }
 
-/* Sidebar and section side by side, at one fixed height so switching sections never
-   resizes the dialog; a long section scrolls inside it. */
+/* Only while open: a closed <dialog> must stay display: none. */
+.app-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 .app-dialog-body {
   display: grid;
+  flex: 1;
+  min-height: 0;
   grid-template-columns: var(--layout-app-dialog-sidebar) minmax(0, 1fr);
   gap: var(--space-9);
-  height: min(var(--layout-app-dialog-body), calc(100vh - var(--layout-app-dialog-chrome)));
 }
 
 .app-dialog-panel {

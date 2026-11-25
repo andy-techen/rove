@@ -77,6 +77,18 @@ describe('AppDialog', () => {
   })
 })
 
+describe('AppDialog size', () => {
+  it('opens at the size it was last dragged to', () => {
+    localStorage.setItem('rove.appDialog.width', '700')
+    localStorage.setItem('rove.appDialog.height', '500')
+    openAt('settings')
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.style.getPropertyValue('--app-dialog-width')).toBe('700px')
+    expect(dialog.style.getPropertyValue('--app-dialog-height')).toBe('500px')
+    localStorage.clear()
+  })
+})
+
 describe('AppDialog settings', () => {
   it('shows where new songs are saved and changes it', async () => {
     vi.mocked(window.api.getSongsFolder).mockResolvedValue('/Users/sam/Music/Rove')

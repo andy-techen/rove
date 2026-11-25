@@ -21,7 +21,7 @@ const BOTTOM_KEY = 'rove.bottomPanel.height'
 const SPLIT_KEY = 'rove.sidePanels.lyricsHeight'
 
 // Panel sizes are a preference for this computer, not part of a song.
-function recall(key: string): number | null {
+export function recall(key: string): number | null {
   try {
     const n = Number(window.localStorage.getItem(key))
     return Number.isFinite(n) && n > 0 ? n : null
@@ -30,7 +30,7 @@ function recall(key: string): number | null {
   }
 }
 
-function remember(key: string, value: number): void {
+export function remember(key: string, value: number): void {
   try {
     window.localStorage.setItem(key, String(Math.round(value)))
   } catch {

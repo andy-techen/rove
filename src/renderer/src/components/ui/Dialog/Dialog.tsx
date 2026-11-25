@@ -1,4 +1,4 @@
-import { ReactNode, RefObject, useEffect, useRef } from 'react'
+import { CSSProperties, ReactNode, RefObject, useEffect, useRef } from 'react'
 import { IconButton } from '../IconButton'
 import { cx } from '../cx'
 import './Dialog.css'
@@ -12,6 +12,10 @@ interface Props {
   /** A field to start in, for a dialog that's there to be typed into. */
   initialFocus?: RefObject<HTMLElement | null>
   className?: string
+  /** Geometry worked out at run time, as CSS custom properties (a remembered size). */
+  style?: CSSProperties
+  /** The dialog element, for a caller that measures it. */
+  dialogRef?: RefObject<HTMLDialogElement | null>
 }
 
 /** A modal panel with a title and close button; Esc or the close button dismisses it. */
@@ -21,7 +25,9 @@ export function Dialog({
   onClose,
   children,
   initialFocus,
-  className
+  className,
+  style,
+  dialogRef
 }: Props): React.JSX.Element {
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -37,8 +43,12 @@ export function Dialog({
 
   return (
     <dialog
-      ref={dialog}
+      ref={(el) => {
+        dialog.current = el
+        if (dialogRef) dialogRef.current = el
+      }}
       className={cx('dialog', className)}
+      style={style}
       aria-label={title}
       tabIndex={-1}
       onClose={onClose}

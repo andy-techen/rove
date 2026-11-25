@@ -1,5 +1,6 @@
-import { KeyboardEvent, useRef } from 'react'
+import { CSSProperties, KeyboardEvent, useRef } from 'react'
 import { t } from '@shared/copy'
+import { useAppDialogSize } from '../../state/ui/appDialogSize'
 import { Dialog } from '../ui/Dialog'
 import { cx } from '../ui/cx'
 import { KeymapTable } from './KeymapTable'
@@ -33,6 +34,8 @@ const tabId = (section: Section): string => `app-dialog-tab-${section}`
 /** One place for the singer's voice, settings and shortcuts, picked from a sidebar. */
 export function AppDialog({ section, onSection, onClose }: Props): React.JSX.Element {
   const tabs = useRef<Partial<Record<Section, HTMLButtonElement | null>>>({})
+  const dialog = useRef<HTMLDialogElement>(null)
+  const size = useAppDialogSize(dialog)
   const Content = CONTENT[section]
 
   const onKeyDown = (e: KeyboardEvent): void => {
@@ -50,6 +53,13 @@ export function AppDialog({ section, onSection, onClose }: Props): React.JSX.Ele
       closeLabel={t('appDialog.close')}
       onClose={onClose}
       className="app-dialog"
+      dialogRef={dialog}
+      style={
+        {
+          ...(size.width && { '--app-dialog-width': `${size.width}px` }),
+          ...(size.height && { '--app-dialog-height': `${size.height}px` })
+        } as CSSProperties
+      }
     >
       <div className="app-dialog-body">
         <div
