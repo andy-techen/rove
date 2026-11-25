@@ -162,8 +162,6 @@
 /* Keys play their note when clicked. */
 .voice-key {
   fill: var(--color-key-white);
-  stroke: var(--color-border);
-  stroke-width: var(--size-hairline);
   cursor: pointer;
 }
 

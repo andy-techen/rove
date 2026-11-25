@@ -5,6 +5,9 @@ import type { KeyScale } from './keyboardGeometry'
 const KEY_HEIGHT = 24
 const LABEL_Y = 37
 const LABEL_INSET = 2
+// Keys are told apart by a sliver of background between them, not an outline, as the
+// rest of the app separates shapes; without it two white keys (E and F) would merge.
+const KEY_GAP = 1
 const BLACK_KEYS = new Set([1, 3, 6, 8, 10])
 const C = 0
 
@@ -23,8 +26,8 @@ export function Keyboard({ scale, y }: { scale: KeyScale; y: number }): React.JS
         <rect
           key={note}
           className={BLACK_KEYS.has(note % 12) ? 'voice-key black' : 'voice-key'}
-          x={x(note)}
-          width={keyWidth}
+          x={x(note) + KEY_GAP / 2}
+          width={keyWidth - KEY_GAP}
           height={KEY_HEIGHT}
           onClick={() => void previewNote(note)}
         />
