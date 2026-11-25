@@ -24,6 +24,15 @@ const YIN_THRESHOLD = 0.15
 // Quieter than this is room noise, not singing.
 const SILENCE_DB = -50
 const FRAMES_PER_CHUNK = 500
+// When the vocal folds fall into a two-cycle pattern (a rough or creaky note), YIN can
+// take two cycles for one and read the note an octave low. A real fundamental always
+// carries some energy, so if the sound at the found pitch is this far under the sound
+// an octave up, the found pitch isn't there and the note is the octave above. Set on
+// recorded takes: it caught three quarters of the octave-low readings and touched no
+// pitch that sounded where it was read.
+const MISSING_FUNDAMENTAL_RATIO = 0.1
+// Long enough to tell the lowest note from its octave in the spectrum.
+const SPECTRUM_SEC = 0.128
 
 const A4_HZ = 440
 const A4_MIDI = 69
@@ -73,6 +82,41 @@ function yinLag(
   return 0
 }
 
+/** Magnitude of one frequency in a Hann-windowed stretch of `x` (Goertzel). */
+function magnitudeAt(
+  x: Float32Array,
+  start: number,
+  hann: Float64Array,
+  hz: number,
+  rate: number
+): number {
+  const coeff = 2 * Math.cos((2 * Math.PI * hz) / rate)
+  let prev = 0
+  let prev2 = 0
+  for (let j = 0; j < hann.length; j++) {
+    const s = x[start + j] * hann[j] + coeff * prev - prev2
+    prev2 = prev
+    prev = s
+  }
+  return Math.sqrt(Math.max(0, prev * prev + prev2 * prev2 - coeff * prev * prev2))
+}
+
+/** Whether the sound around `centre` has almost nothing at `hz` but plenty an octave up. */
+function fundamentalMissing(
+  x: Float32Array,
+  centre: number,
+  hann: Float64Array,
+  hz: number,
+  rate: number
+): boolean {
+  const start = centre - Math.floor(hann.length / 2)
+  if (start < 0 || start + hann.length > x.length) return false
+  return (
+    magnitudeAt(x, start, hann, hz, rate) <
+    MISSING_FUNDAMENTAL_RATIO * magnitudeAt(x, start, hann, 2 * hz, rate)
+  )
+}
+
 /** Removes one-hop glitches (an octave jump, a dropout) inside a sung note. */
 function smoothGlitches(f0: Float32Array): Float32Array {
   const out = f0.slice()
@@ -95,6 +139,11 @@ export async function analysePitch(samples: Float32Array, sampleRate: number): P
   const maxLag = Math.ceil(rate / MIN_F0_HZ)
   const span = window + maxLag + 1
   const diff = new Float64Array(maxLag + 1)
+  const spectrumLength = Math.round(SPECTRUM_SEC * rate)
+  const hann = Float64Array.from(
+    { length: spectrumLength },
+    (_, n) => 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (spectrumLength - 1))
+  )
   const frames = Math.floor(samples.length / sampleRate / PITCH_HOP_SEC) + 1
   const f0 = new Float32Array(frames)
   for (let i = 0; i < frames; i++) {
@@ -102,7 +151,9 @@ export async function analysePitch(samples: Float32Array, sampleRate: number): P
     const start = Math.round(i * PITCH_HOP_SEC * rate) - Math.floor(span / 2)
     if (start >= 0 && start + span <= data.length) {
       const lag = yinLag(data, start, window, minLag, maxLag, diff)
-      f0[i] = lag > 0 ? rate / lag : 0
+      const hz = lag > 0 ? rate / lag : 0
+      const centre = Math.round(i * PITCH_HOP_SEC * rate)
+      f0[i] = hz && fundamentalMissing(data, centre, hann, hz, rate) ? 2 * hz : hz
     }
     if ((i + 1) % FRAMES_PER_CHUNK === 0) await nextTick()
   }

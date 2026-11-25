@@ -16,6 +16,16 @@ const voice = (hz: number, seconds: number): Float32Array =>
     return 0.25 * Math.sin(t) + 0.12 * Math.sin(2 * t) + 0.06 * Math.sin(3 * t)
   })
 
+/**
+ * A rough voice: the vocal folds fall into a two-cycle pattern, so every other cycle
+ * differs (energy at 1.5× the note) while nothing sounds an octave below.
+ */
+const roughVoice = (hz: number, seconds: number): Float32Array =>
+  Float32Array.from({ length: Math.round(seconds * SR) }, (_, i) => {
+    const t = (2 * Math.PI * hz * i) / SR
+    return 0.25 * Math.sin(t) + 0.12 * Math.sin(2 * t) + 0.12 * Math.sin(1.5 * t)
+  })
+
 const voiced = (f0: Float32Array): number[] => Array.from(f0).filter((f) => f > 0)
 const median = (xs: number[]): number => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]
 
@@ -26,6 +36,16 @@ describe('pitch detection', () => {
     expect(found.length).toBeGreaterThan(f0.length * 0.8)
     // Within 5 cents.
     expect(Math.abs(hzToMidi(median(found)) - hzToMidi(hz))).toBeLessThan(0.05)
+  })
+
+  it('hears a rough voice at the note sung, not an octave below', async () => {
+    const { f0 } = await analysePitch(roughVoice(220, 0.5), SR)
+    expect(median(voiced(f0))).toBeCloseTo(220, 0)
+  })
+
+  it('keeps a low note low', async () => {
+    const { f0 } = await analysePitch(voice(80, 0.5), SR)
+    expect(median(voiced(f0))).toBeCloseTo(80, 0)
   })
 
   it('hears nothing in silence', async () => {
