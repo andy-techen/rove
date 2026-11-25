@@ -267,6 +267,9 @@
       "light": "Light",
       "dark": "Dark"
     },
+    "settingsMenu": "Settings",
+    "voice": "Your Voice…",
+    "shortcuts": "Keyboard Shortcuts…",
     "checkMicrophone": "Check Microphone…",
     "renameTrack": "Rename Track",
     "removeTrack": "Remove Track"

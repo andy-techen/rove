@@ -6,7 +6,9 @@ export const SECTIONS = ['voice', 'settings', 'shortcuts'] as const
 export type Section = (typeof SECTIONS)[number]
 
 const BY_COMMAND: Partial<Record<Command, Section>> = {
-  settings: 'settings'
+  voice: 'voice',
+  settings: 'settings',
+  shortcuts: 'shortcuts'
 }
 
 /** The section a menu command opens, if it opens one. */

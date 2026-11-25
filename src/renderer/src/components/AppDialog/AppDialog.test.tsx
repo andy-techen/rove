@@ -28,12 +28,15 @@ const changeButton = (label: string) =>
   screen.getByRole('button', { name: new RegExp(`shortcut for ${label} `) })
 
 describe('AppDialog', () => {
-  it('opens at Settings from the Settings command', () => {
-    render(<Harness />)
-    fireMenu('settings')
-    expect(screen.getByRole('dialog', { name: t('appDialog.settings') })).toBeInTheDocument()
-    expect(tab('settings')).toHaveAttribute('aria-selected', 'true')
-  })
+  it.each(['voice', 'settings', 'shortcuts'] as const)(
+    'opens at %s from its menu item',
+    (section) => {
+      render(<Harness />)
+      fireMenu(section)
+      expect(screen.getByRole('dialog', { name: t(`appDialog.${section}`) })).toBeInTheDocument()
+      expect(tab(section)).toHaveAttribute('aria-selected', 'true')
+    }
+  )
 
   it('lists the sections in order: your voice, settings, shortcuts', () => {
     openAt('settings')

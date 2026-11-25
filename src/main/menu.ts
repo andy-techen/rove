@@ -41,7 +41,15 @@ export function installMenu(keymap: Keymap): void {
       submenu: [
         { role: 'about' },
         separator,
-        shortcut('settings'),
+        // One item per section of the settings dialog; ⌘, opens Settings itself.
+        {
+          label: t('menu.settingsMenu'),
+          submenu: [
+            { label: t('menu.voice'), click: () => send('voice') },
+            shortcut('settings'),
+            { label: t('menu.shortcuts'), click: () => send('shortcuts') }
+          ]
+        },
         { label: t('menu.checkMicrophone'), click: () => send('micCheck') },
         separator,
         { role: 'services' },
