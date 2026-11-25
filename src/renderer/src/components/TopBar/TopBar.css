@@ -38,17 +38,20 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-3);
   overflow-x: auto;
   scrollbar-width: none;
 }
 
+/* Each song is a soft chip with a gap between, so where one ends and the next begins
+   is clear without a border; the open song's chip is the strongest. */
 .tab {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   max-width: var(--layout-tab-max);
   border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
   color: var(--color-text-muted);
 }
 
@@ -59,9 +62,9 @@
   user-select: none;
 }
 
-/* A filled tab under the pointer, so the drag picks up a whole tab, not bare text. */
+/* Brighter under the pointer, so the drag clearly picks up a whole tab. */
 .tab:hover {
-  background: var(--color-surface-raised);
+  background: var(--color-highlight);
 }
 
 .tab.dragging {
@@ -88,7 +91,7 @@
 }
 
 .tab.active {
-  background: var(--color-surface-raised);
+  background: var(--color-highlight);
   color: var(--color-text);
 }
 
