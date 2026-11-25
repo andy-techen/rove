@@ -97,11 +97,14 @@ describe('VoiceProfile', () => {
   })
 
   it('says which way each tone scale leans, and explains them', async () => {
-    renderWith(twoSongs())
+    const user = renderWith(twoSongs())
     const low = t('voice.tone.body.low')
     const high = t('voice.tone.body.high')
     expect(await screen.findByLabelText(new RegExp(`^${low} to ${high}: `))).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: t('voice.tone.help') })).toBeInTheDocument()
+    await user.tab()
+    const help = screen.getByRole('button', { name: t('voice.tone.help') })
+    help.focus()
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(t('voice.tone.helpNote'))
   })
 
   it('says how many held notes land on the note', async () => {

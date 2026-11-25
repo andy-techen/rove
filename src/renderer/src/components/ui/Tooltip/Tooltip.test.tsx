@@ -26,6 +26,18 @@ describe('Tooltip', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Mute Vocal 1')
   })
 
+  it('shows formatted content in place of the plain text when given', async () => {
+    render(
+      <Tooltip text="Light or rich: body" content={<strong>Light ↔ Rich</strong>}>
+        <button type="button">?</button>
+      </Tooltip>
+    )
+    await userEvent.tab()
+    const tip = await screen.findByRole('tooltip')
+    expect(tip).toHaveTextContent('Light ↔ Rich')
+    expect(tip).not.toHaveTextContent('Light or rich: body')
+  })
+
   it('shows inside an open dialog, so it sits above the dialog, not behind it', async () => {
     render(
       <dialog open>

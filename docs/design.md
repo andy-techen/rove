@@ -101,7 +101,7 @@ Reach for these before writing new markup:
 | `NumberField`  | A number to type over (Enter applies, Esc reverts); pair it with a slider.                                               |
 | `Switch`       | On/off toggles with a label.                                                                                             |
 | `Select`       | A short list to pick one from (the song key). Native, so the keyboard just works.                                        |
-| `HelpTip`      | A "?" that reveals instructions on hover or focus.                                                                       |
+| `HelpTip`      | A "?" that reveals instructions on hover or focus; `content` for a short formatted list (bullets, bold).                 |
 | `Logo`         | The app icon with the "rove" wordmark (top bar `sm`, full-screen headings `lg`).                                         |
 
 If a pattern repeats in two places, promote it to `ui/`.

@@ -3,6 +3,11 @@
   display: contents;
 }
 
+/* Formatted help (a short list) gets a little more room than a one-line tip. */
+.tooltip-rich {
+  padding: var(--space-4) var(--space-5);
+}
+
 .tooltip {
   position: fixed;
   z-index: 100;

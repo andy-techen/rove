@@ -6,6 +6,11 @@ import './Tooltip.css'
 interface Props {
   /** What the control does. Shown on hover or keyboard focus. */
   text: string
+  /**
+   * Formatted content shown in place of `text`, for help with a little structure (a
+   * short list). `text` stays the plain version screen readers hear.
+   */
+  content?: ReactNode
   children: ReactNode
 }
 
@@ -31,7 +36,7 @@ const hostFor = (anchor: Element | null): Element =>
   anchor?.closest('dialog[open]') ?? document.body
 
 /** Wraps a control and explains it on hover or focus. */
-export function Tooltip({ text, children }: Props): React.JSX.Element {
+export function Tooltip({ text, content, children }: Props): React.JSX.Element {
   const id = useId()
   const anchor = useRef<HTMLSpanElement>(null)
   const bubble = useRef<HTMLDivElement>(null)
@@ -64,7 +69,7 @@ export function Tooltip({ text, children }: Props): React.JSX.Element {
     const centred = r.left + r.width / 2 - w / 2
     const left = Math.max(EDGE_PX, Math.min(centred, window.innerWidth - w - EDGE_PX))
     setPlace({ left, top })
-  }, [open, text])
+  }, [open, text, content])
 
   return (
     <>
@@ -88,11 +93,11 @@ export function Tooltip({ text, children }: Props): React.JSX.Element {
             ref={bubble}
             id={id}
             role="tooltip"
-            className="tooltip"
+            className={content ? 'tooltip tooltip-rich' : 'tooltip'}
             // Runtime geometry: measured against the control on screen.
             style={place ?? { visibility: 'hidden' }}
           >
-            {text}
+            {content ?? text}
           </div>,
           host
         )}

@@ -321,18 +321,23 @@
       "balanced": "Balanced",
       "body": {
         "low": "Light",
-        "high": "Rich"
+        "high": "Rich",
+        "about": "how much low, full sound your voice carries"
       },
       "brightness": {
         "low": "Mellow",
-        "high": "Bright"
+        "high": "Bright",
+        "about": "how much it rings out over the music"
       },
       "air": {
         "low": "Clear",
-        "high": "Airy"
+        "high": "Airy",
+        "about": "how much breath you hear around your notes"
       },
       "help": "Light or rich: how much low, full sound your voice carries. Mellow or bright: how much it rings out over the music. Clear or airy: how much breath you hear around your notes. Every end is a good voice, just a different one.",
-      "row": "{low} to {high}: {word}"
+      "row": "{low} to {high}: {word}",
+      "pair": "{low} or {high}",
+      "helpNote": "Each end is a good voice, just a different one."
     },
     "toneHeadline": {
       "two": "{first} and {second}",

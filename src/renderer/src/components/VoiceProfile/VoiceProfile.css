@@ -65,7 +65,24 @@
 }
 
 /* The head's button sets its height, so the subtitle needs no pull upwards here. */
-.voice-card-head + .voice-subtitle {
+.voice-card-head + /* Help with a little structure, shown in a tooltip: a short list, then a note. */
+.voice-help ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: var(--space-7);
+}
+
+.voice-help strong {
+  font-weight: var(--font-weight-semibold);
+}
+
+.voice-help p {
+  margin: var(--space-3) 0 0;
+}
+
+.voice-subtitle {
   margin-top: 0;
 }
 

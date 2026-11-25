@@ -5,6 +5,28 @@ import { TONE_SCALES, toneHeadline, toneLeans } from '../../state/voice/toneWord
 import { HelpTip } from '../ui/HelpTip'
 import { cx } from '../ui/cx'
 
+/** What the three scales mean, as a short list, for the help tip by the title. */
+function ToneHelp(): React.JSX.Element {
+  return (
+    <div className="voice-help">
+      <ul>
+        {TONE_SCALES.map((scale) => (
+          <li key={scale}>
+            <strong>
+              {t('voice.tone.pair', {
+                low: t(`voice.tone.${scale}.low`),
+                high: t(`voice.tone.${scale}.high`).toLowerCase()
+              })}
+            </strong>
+            : {t(`voice.tone.${scale}.about`)}
+          </li>
+        ))}
+      </ul>
+      <p>{t('voice.tone.helpNote')}</p>
+    </div>
+  )
+}
+
 /**
  * How the voice sounds: a few words up top, then each scale as a dot between two words
  * that are both good, with a tick at the middle. The word the voice leans to stands
@@ -16,7 +38,7 @@ export function ToneScales({ tone }: { tone: Tone }): React.JSX.Element {
     <section className="voice-card">
       <div className="voice-title">
         <h3>{t('voice.tone.title')}</h3>
-        <HelpTip text={t('voice.tone.help')} />
+        <HelpTip text={t('voice.tone.help')} content={<ToneHelp />} />
       </div>
       <p className="voice-subtitle">{t('voice.tone.subtitle')}</p>
       <p className="voice-headline">
