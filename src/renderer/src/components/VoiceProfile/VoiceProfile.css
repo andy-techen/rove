@@ -241,7 +241,18 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-9);
-  align-items: start;
+}
+
+/* Tone and Pitch stand the same height: the tone rows spread to fill what the pitch
+   chart takes. */
+.voice-pair .voice-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-pair .voice-tone {
+  flex: 1;
+  align-content: space-evenly;
 }
 
 /* Tone: a dot on a track between two good words; the word it leans to stands out. */

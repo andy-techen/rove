@@ -4,8 +4,12 @@ import { LABEL_DESCENT } from './keyboardGeometry'
 import { Measured } from './Measured'
 
 const BIN_GAP = 2
-const HEIGHT = 70
+const HEIGHT = 110
 const LABEL_GAP = 16
+// Room above the tallest bar for the band's label, so the band shows over every bar
+// as the comfort zone does on the range chart.
+const BAND_LABEL_Y = 12
+const HEADROOM = 18
 // The soft band in the middle: as close as most listeners hear as on the note.
 const ON_NOTE_CENTS = 20
 const TENTHS = 10
@@ -36,8 +40,16 @@ function Bins({ landing, width }: { landing: number[]; width: number }): React.J
         width={(binAt(ON_NOTE_CENTS) - binAt(-ON_NOTE_CENTS)) * binWidth}
         height={HEIGHT}
       />
+      <text
+        className="voice-chart-label"
+        x={binAt(0) * binWidth}
+        y={BAND_LABEL_Y}
+        textAnchor="middle"
+      >
+        {t('voice.onNoteBand')}
+      </text>
       {landing.map((count, i) => {
-        const height = (count / most) * HEIGHT
+        const height = (count / most) * (HEIGHT - HEADROOM)
         return (
           <rect
             key={i}
@@ -51,9 +63,6 @@ function Bins({ landing, width }: { landing: number[]; width: number }): React.J
       })}
       <text className="voice-chart-label" x={0} y={HEIGHT + LABEL_GAP}>
         {t('voice.flat')}
-      </text>
-      <text className="voice-chart-label" x={width / 2} y={HEIGHT + LABEL_GAP} textAnchor="middle">
-        {t('voice.onNote')}
       </text>
       <text className="voice-chart-label" x={width} y={HEIGHT + LABEL_GAP} textAnchor="end">
         {t('voice.sharp')}
