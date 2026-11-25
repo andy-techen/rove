@@ -143,8 +143,11 @@
 }
 
 .tab-close {
-  /* Tucked up to the name: the name's own padding already spaces them. */
-  margin-left: calc(-1 * var(--space-2));
+  /* The same space from the name to the ✕ as from the tab's left edge to the name
+     (the name's padding), and from the ✕ to the right edge: the button's own padding
+     and border are taken off its margins so the glyph lands there exactly. */
+  margin-left: calc(-1 * (var(--space-2) + var(--size-hairline)));
+  margin-right: calc(var(--space-4) - var(--space-2) - var(--size-hairline));
   padding: var(--space-1) var(--space-2);
   opacity: 0;
 }
