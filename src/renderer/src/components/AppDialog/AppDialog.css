@@ -14,6 +14,12 @@
 }
 
 /* Only while open: a closed <dialog> must stay display: none. */
+/* As much space between the title and the section as under the section, so the
+   section sits evenly between them. */
+.app-dialog .dialog-header {
+  margin-bottom: var(--space-8);
+}
+
 .app-dialog[open] {
   display: flex;
   flex-direction: column;
