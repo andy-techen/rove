@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { AUTO_LIMITS, TONE_REFERENCE, suggestPolish } from './autoPolish'
 import { POLISH_CONTROLS, defaultPolish, polishParams } from './polish'
-import { VoiceProfile } from './voiceProfile'
+import { PolishReading } from './polishReading'
 
 /** A take that needs nothing special: a clean room, a steady voice, tone as expected. */
-function profile(changes: Partial<VoiceProfile> = {}): VoiceProfile {
+function profile(changes: Partial<PolishReading> = {}): PolishReading {
   return {
     voiceDb: -18,
     softDb: -26,
@@ -20,7 +20,7 @@ function profile(changes: Partial<VoiceProfile> = {}): VoiceProfile {
   }
 }
 
-const lead = (changes: Partial<VoiceProfile> = {}) => suggestPolish(profile(changes), 'lead')
+const lead = (changes: Partial<PolishReading> = {}) => suggestPolish(profile(changes), 'lead')
 
 describe('suggestPolish', () => {
   it('stays near our usual settings for a take that needs nothing special', () => {

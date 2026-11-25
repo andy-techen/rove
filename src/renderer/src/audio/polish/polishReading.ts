@@ -1,9 +1,20 @@
-import { fft } from '../dsp/fft'
 import { nextTick } from '../dsp/resample'
-import { gainToDb } from '../dsp/units'
+import {
+  AIR_BAND,
+  BODY_BAND,
+  FRAME,
+  Frame,
+  HOP,
+  PRESENCE_BAND,
+  SINGING_OVER_ROOM_DB,
+  analyseFrame,
+  densityDb,
+  percentile,
+  singingTest
+} from '../dsp/voiceBands'
 
 /** What auto polish heard in a vocal track's takes. Levels are dBFS (RMS). */
-export interface VoiceProfile {
+export interface PolishReading {
   /** Typical singing level: the median of the sung moments. */
   voiceDb: number
   /** Soft singing: the quietest tenth of the sung moments. */
@@ -32,18 +43,9 @@ export interface HeardWindow {
   durationSec: number
 }
 
-const FRAME = 2048
-const HOP = FRAME / 2
 // Frames analysed between pauses that let the window repaint.
 const FRAMES_PER_CHUNK = 400
 
-// Below this the whole track is silence.
-const SILENCE_DB = -70
-// Singing sits at least this far over the room, and within this far of the loudest moments.
-const SINGING_OVER_ROOM_DB = 10
-const SINGING_UNDER_LOUD_DB = 30
-// Share of a frame's energy that marks it as voiced (low) or as an "s" (high).
-const VOICED_SHARE = 0.5
 const SIBILANT_SHARE = 0.5
 // Hum: most of the energy between lines sits below this.
 const HUM_SHARE = 0.5
@@ -54,45 +56,11 @@ const MIN_SIBILANT_FRAMES = 5
 const CLIP_LEVEL = 0.999
 const CLIP_RUN = 3
 
-// Bands, in Hz. The de-esser band matches the de-esser's split in the mixer.
-const VOICED_BAND = [80, 5000] as const
-const SIBILANT_BAND = [5000, Infinity] as const
-const HUM_BAND = [0, 150] as const
-const DE_ESS_BAND = [6000, Infinity] as const
-const BODY_BAND = [150, 400] as const
-const MID_BAND = [1000, 2000] as const
-const PRESENCE_BAND = [2500, 5000] as const
-const AIR_BAND = [8000, 12000] as const
-
 const PERCENT = {
   soft: 0.1,
   median: 0.5,
   loud: 0.95,
-  room: 0.2,
-  roomFallback: 0.1
-}
-
-interface Frame {
-  db: number
-  voicedShare: number
-  sibilantShare: number
-  humShare: number
-  deEssDb: number
-  body: number
-  mid: number
-  presence: number
-  air: number
-}
-
-const hann = Float64Array.from(
-  { length: FRAME },
-  (_, n) => 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (FRAME - 1))
-)
-const hannPower = hann.reduce((sum, w) => sum + w * w, 0)
-
-function percentile(values: number[], p: number): number {
-  const sorted = [...values].sort((a, b) => a - b)
-  return sorted[Math.floor(p * (sorted.length - 1))]
+  room: 0.2
 }
 
 const median = (values: number[]): number => percentile(values, PERCENT.median)
@@ -122,52 +90,14 @@ function hasClipping(samples: Float32Array): boolean {
   return false
 }
 
-/** One frame's level and how its energy splits across the bands. */
-function analyseFrame(samples: Float32Array, at: number, sampleRate: number): Frame {
-  const re = new Float64Array(FRAME)
-  const im = new Float64Array(FRAME)
-  let energy = 0
-  for (let n = 0; n < FRAME; n++) {
-    const s = samples[at + n]
-    energy += s * s
-    re[n] = s * hann[n]
-  }
-  fft(re, im)
-  const hzPerBin = sampleRate / FRAME
-  // Mean power in a band (Parseval), counting both halves of the spectrum.
-  const band = ([lo, hi]: readonly [number, number]): number => {
-    let sum = 0
-    for (let k = Math.max(1, Math.ceil(lo / hzPerBin)); k < FRAME / 2 && k * hzPerBin < hi; k++) {
-      sum += re[k] * re[k] + im[k] * im[k]
-    }
-    return (2 * sum) / (FRAME * hannPower)
-  }
-  const total = band([0, Infinity]) || Number.MIN_VALUE
-  return {
-    db: gainToDb(Math.sqrt(energy / FRAME)),
-    voicedShare: band(VOICED_BAND) / total,
-    sibilantShare: band(SIBILANT_BAND) / total,
-    humShare: band(HUM_BAND) / total,
-    deEssDb: gainToDb(Math.sqrt(band(DE_ESS_BAND))),
-    body: band(BODY_BAND),
-    mid: band(MID_BAND),
-    presence: band(PRESENCE_BAND),
-    air: band(AIR_BAND)
-  }
-}
-
-/** Per-Hz level of one band relative to another, over many frames. */
-function densityDb(frames: Frame[], key: keyof Frame, width: number, ref: Frame[]): number {
-  const sum = (fs: Frame[], k: keyof Frame): number => fs.reduce((s, f) => s + f[k], 0)
-  const refDensity = sum(ref, 'mid') / (MID_BAND[1] - MID_BAND[0])
-  return 10 * Math.log10((sum(frames, key) / width + Number.MIN_VALUE) / (refDensity || 1))
-}
+const sum = (frames: Frame[], key: keyof Frame): number =>
+  frames.reduce((total, f) => total + f[key], 0)
 
 /**
  * Listens to the played parts of a vocal track's takes and measures what auto polish
  * needs. Null when there's too little singing to say anything.
  */
-export async function analyseVoice(windows: HeardWindow[]): Promise<VoiceProfile | null> {
+export async function analyseVoice(windows: HeardWindow[]): Promise<PolishReading | null> {
   const frames: Frame[] = []
   let clipped = false
   const secPerHop: number[] = []
@@ -180,14 +110,9 @@ export async function analyseVoice(windows: HeardWindow[]): Promise<VoiceProfile
       if (frames.length % FRAMES_PER_CHUNK === 0) await nextTick()
     }
   }
-  if (frames.length === 0) return null
-  const levels = frames.map((f) => f.db)
-  const loudest = percentile(levels, PERCENT.loud)
-  if (loudest < SILENCE_DB) return null
-
-  const roomGuess = percentile(levels, PERCENT.roomFallback)
-  const singingFloor = Math.max(roomGuess + SINGING_OVER_ROOM_DB, loudest - SINGING_UNDER_LOUD_DB)
-  const isSinging = (f: Frame): boolean => f.db > singingFloor && f.voicedShare >= VOICED_SHARE
+  const test = singingTest(frames)
+  if (!test) return null
+  const { roomDb: roomGuess, floorDb: singingFloor, isSinging } = test
   const isSibilant = (f: Frame): boolean =>
     f.db > roomGuess + SINGING_OVER_ROOM_DB && f.sibilantShare >= SIBILANT_SHARE
   const singing = frames.filter(isSinging)
@@ -198,6 +123,7 @@ export async function analyseVoice(windows: HeardWindow[]): Promise<VoiceProfile
 
   const sung = singing.map((f) => f.db)
   const softDb = percentile(sung, PERCENT.soft)
+  const mid = sum(singing, 'mid')
   return {
     voiceDb: median(sung),
     softDb,
@@ -216,9 +142,9 @@ export async function analyseVoice(windows: HeardWindow[]): Promise<VoiceProfile
             PERCENT.loud
           )
         : null,
-    bodyDb: densityDb(singing, 'body', BODY_BAND[1] - BODY_BAND[0], singing),
-    presenceDb: densityDb(singing, 'presence', PRESENCE_BAND[1] - PRESENCE_BAND[0], singing),
-    airDb: densityDb(singing, 'air', AIR_BAND[1] - AIR_BAND[0], singing),
+    bodyDb: densityDb(sum(singing, 'body'), BODY_BAND, mid),
+    presenceDb: densityDb(sum(singing, 'presence'), PRESENCE_BAND, mid),
+    airDb: densityDb(sum(singing, 'air'), AIR_BAND, mid),
     clipped
   }
 }

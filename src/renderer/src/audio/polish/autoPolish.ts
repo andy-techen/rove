@@ -1,5 +1,5 @@
 import { PolishAmounts, amountFor, defaultPolish } from './polish'
-import { VoiceProfile } from './voiceProfile'
+import { PolishReading } from './polishReading'
 
 /** Auto polish sets every control but Tuning, which changes the singing itself. */
 export type SuggestedAmounts = Omit<PolishAmounts, 'tuning'>
@@ -40,7 +40,7 @@ export const AUTO_LIMITS: Record<SuggestedControl, { min: number; max: number }>
 }
 
 /**
- * The tone we expect from a voice, per Hz relative to 1–2 kHz (see `VoiceProfile`).
+ * The tone we expect from a voice, per Hz relative to 1–2 kHz (see `PolishReading`).
  * A starting point to tune by ear across voices and mics, not a rule.
  */
 export const TONE_REFERENCE = { bodyDb: 10, presenceDb: -8, airDb: -25 }
@@ -86,7 +86,7 @@ function nudge(shortBy: number, n: Nudge): number {
  * depends on level (noise reduction, evenness) aim a real parameter at the take and
  * invert the slider; tone controls take bounded steps from the part's defaults.
  */
-export function suggestPolish(profile: VoiceProfile, part: 'lead' | 'harmony'): AutoPolish {
+export function suggestPolish(profile: PolishReading, part: 'lead' | 'harmony'): AutoPolish {
   const base = defaultPolish(part)
   // Level-aimed controls keep the part's offset from the lead (a harmony sits more even).
   const lead = defaultPolish('lead')

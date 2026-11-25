@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { TONE_REFERENCE, suggestPolish } from '../../audio/polish/autoPolish'
 import { defaultPolish } from '../../audio/polish/polish'
-import { VoiceProfile, analyseVoice } from '../../audio/polish/voiceProfile'
+import { PolishReading, analyseVoice } from '../../audio/polish/polishReading'
 import {
   Project,
   createProject,
@@ -17,9 +17,9 @@ import { useAutoPolish } from '../../state/processing/useAutoPolish'
 import { PolishPanel } from '.'
 
 // The hook boundary: what Rove hears is decided here, not by real audio.
-vi.mock('../../audio/polish/voiceProfile', () => ({ analyseVoice: vi.fn() }))
+vi.mock('../../audio/polish/polishReading', () => ({ analyseVoice: vi.fn() }))
 
-const dullTake: VoiceProfile = {
+const dullTake: PolishReading = {
   voiceDb: -18,
   softDb: -26,
   rangeDb: 15,

@@ -1,5 +1,5 @@
 import { PolishSuggestion } from '../../audio/polish/autoPolish'
-import { HeardWindow } from '../../audio/polish/voiceProfile'
+import { HeardWindow } from '../../audio/polish/polishReading'
 import { Project, Track, polishOf } from './project'
 
 // Clip windows are compared to the millisecond: finer differences can't be heard.

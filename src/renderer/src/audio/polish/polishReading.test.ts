@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { dbToGain } from '../dsp/units'
-import { HeardWindow, analyseVoice } from './voiceProfile'
+import { HeardWindow, analyseVoice } from './polishReading'
 
 const RATE = 48000
 

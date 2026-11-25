@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AUTO_POLISH_VERSION, suggestPolish } from '../../audio/polish/autoPolish'
-import { VoiceProfile, analyseVoice } from '../../audio/polish/voiceProfile'
+import { PolishReading, analyseVoice } from '../../audio/polish/polishReading'
 import { Project } from '../song/project'
 import {
   heardOf,
@@ -48,7 +48,7 @@ export function useAutoPolish(
     latest.current = project
   }, [project])
   // Profiles by what was heard, so a second click on unchanged takes is instant.
-  const profiles = useRef(new Map<string, VoiceProfile | null>())
+  const profiles = useRef(new Map<string, PolishReading | null>())
 
   const track = project?.tracks.find((t) => t.id === trackId)
   const windows = track ? heardWindows(track, audio) : []
@@ -58,7 +58,7 @@ export function useAutoPolish(
     const heard = heardOf(track)
     setListeningTo(track.id)
     setOutcome(null)
-    let profile: VoiceProfile | null
+    let profile: PolishReading | null
     try {
       if (!profiles.current.has(heard)) profiles.current.set(heard, await analyseVoice(windows))
       profile = profiles.current.get(heard) ?? null
