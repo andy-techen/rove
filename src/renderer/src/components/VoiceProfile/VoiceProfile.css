@@ -64,14 +64,33 @@
   margin-bottom: 0;
 }
 
-/* The head's button sets its height, so the subtitle needs no pull upwards here. */
-.voice-card-head + /* Help with a little structure, shown in a tooltip: a short list, then a note. */
+/* Help with a little structure, shown in a tooltip: a short list, then a note. */
 .voice-help ul {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   margin: 0;
-  padding-left: var(--space-7);
+  padding: 0;
+  list-style: none;
+}
+
+/* Our own small dot, close to the text: the browser's bullet sits far out to the left,
+   which wastes a tooltip's narrow width. Wrapped lines stay under the text. */
+.voice-help li {
+  display: grid;
+  grid-template-columns: var(--size-voice-help-dot) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.voice-help li::before {
+  content: '';
+  width: var(--size-voice-help-dot);
+  height: var(--size-voice-help-dot);
+  border-radius: var(--radius-round);
+  background: currentColor;
+  /* Sit on the middle of the first line rather than its baseline. */
+  transform: translateY(calc(-0.5 * var(--size-voice-help-dot)));
 }
 
 .voice-help strong {
@@ -82,7 +101,8 @@
   margin: var(--space-3) 0 0;
 }
 
-.voice-subtitle {
+/* The head's button sets its height, so the subtitle needs no pull upwards here. */
+.voice-card-head + .voice-subtitle {
   margin-top: 0;
 }
 

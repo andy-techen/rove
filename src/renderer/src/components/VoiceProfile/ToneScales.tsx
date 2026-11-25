@@ -12,13 +12,15 @@ function ToneHelp(): React.JSX.Element {
       <ul>
         {TONE_SCALES.map((scale) => (
           <li key={scale}>
-            <strong>
-              {t('voice.tone.pair', {
-                low: t(`voice.tone.${scale}.low`),
-                high: t(`voice.tone.${scale}.high`).toLowerCase()
-              })}
-            </strong>
-            : {t(`voice.tone.${scale}.about`)}
+            <span>
+              <strong>
+                {t('voice.tone.pair', {
+                  low: t(`voice.tone.${scale}.low`),
+                  high: t(`voice.tone.${scale}.high`).toLowerCase()
+                })}
+              </strong>
+              : {t(`voice.tone.${scale}.about`)}
+            </span>
           </li>
         ))}
       </ul>
