@@ -29,6 +29,24 @@
   font-weight: var(--font-weight-semibold);
 }
 
+/* A title with a help tip beside it. The tip's button is taller than the title's text,
+   so it hangs over the line rather than pushing what's below further down than on a
+   card without one. */
+.voice-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.voice-card .voice-title h3 {
+  margin: 0;
+}
+
+.voice-title .help-tip {
+  margin-block: calc(-1 * var(--space-4));
+}
+
 .voice-card h3 {
   margin: 0 0 var(--space-4);
   font-size: var(--font-size-heading);
@@ -185,40 +203,30 @@
   align-items: start;
 }
 
-/* Tone: each scale's name as a pill, then a dot on a track between two good words. */
+/* Tone: a dot on a track between two good words; the word it leans to stands out. */
 .voice-tone {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-5) var(--space-4);
+  gap: var(--space-6) var(--space-5);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* Each row lays its pieces into the list's columns, so tracks line up. */
+/* Each row lays its pieces into the list's columns, so the tracks line up. */
 .voice-tone li {
   display: contents;
-}
-
-.voice-pill {
-  justify-self: start;
-  padding: var(--space-1) var(--space-5);
-  border: none;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-  font-size: var(--font-size-caption);
-  cursor: help;
-}
-
-.voice-pill:hover {
-  background: var(--color-highlight);
 }
 
 .voice-tone-end {
   font-size: var(--font-size-caption);
   color: var(--color-text-muted);
+}
+
+.voice-tone-end.lean {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
 }
 
 .voice-tone-track {
@@ -228,6 +236,18 @@
   margin: 0 calc(var(--size-voice-tone-dot) / 2);
   border-radius: var(--radius-pill);
   background: var(--color-border);
+}
+
+/* The middle: balanced between the two words. */
+.voice-tone-track::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--size-hairline);
+  height: var(--size-voice-tone-dot);
+  background: var(--color-text-muted);
+  transform: translate(-50%, -50%);
 }
 
 .voice-tone-track::after {

@@ -1,5 +1,6 @@
 import { t } from '@shared/copy'
 import { LANDING_BIN_CENTS, LANDING_RANGE_CENTS } from '@shared/voice'
+import { LABEL_DESCENT } from './keyboardGeometry'
 import { Measured } from './Measured'
 
 const BIN_GAP = 2
@@ -24,8 +25,8 @@ function Bins({ landing, width }: { landing: number[]; width: number }): React.J
     <svg
       className="voice-chart"
       width={width}
-      height={HEIGHT + LABEL_GAP}
-      viewBox={`0 0 ${width} ${HEIGHT + LABEL_GAP}`}
+      height={HEIGHT + LABEL_GAP + LABEL_DESCENT}
+      viewBox={`0 0 ${width} ${HEIGHT + LABEL_GAP + LABEL_DESCENT}`}
       role="img"
       aria-label={t('voice.pitch.chart')}
     >

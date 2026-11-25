@@ -83,12 +83,12 @@ describe('VoiceProfile', () => {
     expect(screen.getAllByText(t('voice.noSinging'))).toHaveLength(1)
   })
 
-  it('explains each tone scale on its pill', async () => {
+  it('says which way each tone scale leans, and explains them', async () => {
     renderWith(twoSongs())
-    const body = await screen.findByRole('button', {
-      name: new RegExp(`^${t('voice.tone.body.name')}:`)
-    })
-    expect(body).toHaveAccessibleName(expect.stringContaining(t('voice.tone.body.help')))
+    const low = t('voice.tone.body.low')
+    const high = t('voice.tone.body.high')
+    expect(await screen.findByLabelText(new RegExp(`^${low} to ${high}: `))).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t('voice.tone.help') })).toBeInTheDocument()
   })
 
   it('says how many held notes land on the note', async () => {

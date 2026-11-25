@@ -317,24 +317,19 @@
       "subtitle": "How your voice sounds",
       "balanced": "Balanced",
       "body": {
-        "name": "Body",
         "low": "Light",
-        "high": "Rich",
-        "help": "How much low, full sound your voice carries. Light voices float; rich ones fill the room. Both sound good."
+        "high": "Rich"
       },
       "brightness": {
-        "name": "Brightness",
         "low": "Mellow",
-        "high": "Bright",
-        "help": "How much your voice rings out. Mellow voices are smooth and soft; bright ones cut through the music. Both sound good."
+        "high": "Bright"
       },
       "air": {
-        "name": "Air",
         "low": "Clear",
-        "high": "Airy",
-        "help": "How much breath you hear around your notes. Clear voices are focused; airy ones sound close and gentle. Both sound good."
+        "high": "Airy"
       },
-      "scale": "{name}: {word}. {help}"
+      "help": "Light or rich: how much low, full sound your voice carries. Mellow or bright: how much it rings out over the music. Clear or airy: how much breath you hear around your notes. Every end is a good voice, just a different one.",
+      "row": "{low} to {high}: {word}"
     },
     "toneHeadline": {
       "two": "{first} and {second}",

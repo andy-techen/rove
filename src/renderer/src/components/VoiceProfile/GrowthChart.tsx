@@ -2,6 +2,7 @@ import { t } from '@shared/copy'
 import { noteWithOctave } from '../../state/chords/noteNames'
 import { monthLabel } from '../../state/voice/voiceText'
 import type { KeyRange, MonthView } from '../../state/voice/voiceView'
+import { LABEL_DESCENT } from './keyboardGeometry'
 import { Measured } from './Measured'
 
 // A year at a glance; older months scroll off the left.
@@ -32,7 +33,7 @@ function Chart({ months, keys, width }: Props & { width: number }): React.JSX.El
     (n) => n % 12 === C
   )
   const labels = shown.map((m, i) => monthLabel(m.year, m.month, i === 0))
-  const height = PLOT_TOP + PLOT_HEIGHT + MONTH_LABEL_GAP + AXIS_LABEL_NUDGE
+  const height = PLOT_TOP + PLOT_HEIGHT + MONTH_LABEL_GAP + LABEL_DESCENT
   return (
     <svg
       className="voice-chart"

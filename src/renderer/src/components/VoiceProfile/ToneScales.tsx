@@ -2,18 +2,22 @@ import { CSSProperties } from 'react'
 import { t } from '@shared/copy'
 import type { Tone } from '../../audio/voice'
 import { TONE_SCALES, toneHeadline, toneLeans } from '../../state/voice/toneWords'
-import { Tooltip } from '../ui/Tooltip'
+import { HelpTip } from '../ui/HelpTip'
+import { cx } from '../ui/cx'
 
 /**
  * How the voice sounds: a few words up top, then each scale as a dot between two words
- * that are both good, so no end reads as a fault. The scale's name is a pill that
- * explains it on hover or focus.
+ * that are both good, with a tick at the middle. The word the voice leans to stands
+ * out; one help tip by the title explains all three.
  */
 export function ToneScales({ tone }: { tone: Tone }): React.JSX.Element {
   const leans = toneLeans(tone)
   return (
     <section className="voice-card">
-      <h3>{t('voice.tone.title')}</h3>
+      <div className="voice-title">
+        <h3>{t('voice.tone.title')}</h3>
+        <HelpTip text={t('voice.tone.help')} />
+      </div>
       <p className="voice-subtitle">{t('voice.tone.subtitle')}</p>
       <p className="voice-headline">
         <strong>{toneHeadline(leans)}</strong>
@@ -24,23 +28,9 @@ export function ToneScales({ tone }: { tone: Tone }): React.JSX.Element {
           const high = t(`voice.tone.${scale}.high`)
           const lean = leans[scale]
           const word = lean === 'balanced' ? t('voice.tone.balanced') : lean === 'low' ? low : high
-          const help = t(`voice.tone.${scale}.help`)
           return (
-            <li key={scale}>
-              <Tooltip text={help}>
-                <button
-                  type="button"
-                  className="voice-pill"
-                  aria-label={t('voice.tone.scale', {
-                    name: t(`voice.tone.${scale}.name`),
-                    word,
-                    help
-                  })}
-                >
-                  {t(`voice.tone.${scale}.name`)}
-                </button>
-              </Tooltip>
-              <span className="voice-tone-end" aria-hidden="true">
+            <li key={scale} aria-label={t('voice.tone.row', { low, high, word })}>
+              <span className={cx('voice-tone-end', lean === 'low' && 'lean')} aria-hidden="true">
                 {low}
               </span>
               <span
@@ -48,7 +38,7 @@ export function ToneScales({ tone }: { tone: Tone }): React.JSX.Element {
                 style={{ '--position': tone[scale] } as CSSProperties}
                 aria-hidden="true"
               />
-              <span className="voice-tone-end" aria-hidden="true">
+              <span className={cx('voice-tone-end', lean === 'high' && 'lean')} aria-hidden="true">
                 {high}
               </span>
             </li>
