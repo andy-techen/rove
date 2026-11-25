@@ -4,8 +4,8 @@
 }
 
 /* Formatted help (a short list) gets a little more room than a one-line tip. */
-.tooltip-rich {
-  padding: var(--space-4) var(--space-5);
+.tooltip.tooltip-rich {
+  padding: var(--space-6) var(--space-7);
 }
 
 .tooltip {

@@ -5,10 +5,11 @@ import { TONE_SCALES, toneHeadline, toneLeans } from '../../state/voice/toneWord
 import { HelpTip } from '../ui/HelpTip'
 import { cx } from '../ui/cx'
 
-/** What the three scales mean, as a short list, for the help tip by the title. */
+/** What the three scales mean: that both ends are good, then a short list. */
 function ToneHelp(): React.JSX.Element {
   return (
     <div className="voice-help">
+      <p>{t('voice.tone.helpNote')}</p>
       <ul>
         {TONE_SCALES.map((scale) => (
           <li key={scale}>
@@ -24,7 +25,6 @@ function ToneHelp(): React.JSX.Element {
           </li>
         ))}
       </ul>
-      <p>{t('voice.tone.helpNote')}</p>
     </div>
   )
 }
