@@ -93,11 +93,20 @@ export function scheduleClips(
   return nodes
 }
 
-export function stopNodes(nodes: AudioBufferSourceNode[]): void {
+/**
+ * Stops clips now, or at `atTime` on the audio clock, so a take can pick up from
+ * playback on the very frame the old nodes fall silent.
+ */
+export function stopNodes(nodes: AudioBufferSourceNode[], atTime?: number): void {
   for (const node of nodes) {
     node.onended = null
-    node.stop()
-    node.disconnect()
+    if (atTime === undefined) {
+      node.stop()
+      node.disconnect()
+    } else {
+      node.stop(atTime)
+      node.addEventListener('ended', () => node.disconnect())
+    }
   }
 }
 

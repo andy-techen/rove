@@ -35,7 +35,8 @@ export interface ClickTrack {
   nodes: AudioBufferSourceNode[]
   /** Turns the click up or down while it plays. */
   setLevel(level: number): void
-  stop(): void
+  /** Silences the clicks now, or from `atTime` on the audio clock. */
+  stop(atTime?: number): void
 }
 
 /**
@@ -63,12 +64,25 @@ export function scheduleClicks(
   return {
     nodes,
     setLevel: (next) => gain.gain.setTargetAtTime(next, ctx.currentTime, LEVEL_RAMP_SEC),
-    stop: () => {
-      for (const node of nodes) {
-        node.stop()
-        node.disconnect()
+    stop: (atTime) => {
+      if (atTime === undefined) {
+        for (const node of nodes) {
+          node.stop()
+          node.disconnect()
+        }
+        gain.disconnect()
+        return
       }
-      gain.disconnect()
+      // A click scheduled after atTime never sounds; the ones before it finish as they were.
+      let ringing = nodes.length
+      for (const node of nodes) {
+        node.stop(atTime)
+        node.addEventListener('ended', () => {
+          node.disconnect()
+          if (--ringing === 0) gain.disconnect()
+        })
+      }
+      if (ringing === 0) gain.disconnect()
     }
   }
 }

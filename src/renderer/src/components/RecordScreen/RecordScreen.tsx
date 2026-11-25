@@ -78,6 +78,7 @@ import {
   selectTracks,
   tracksActedOn
 } from '../../state/editing/trackSelection'
+import { canStartRecording } from '../../state/transport/recordGate'
 import { useExport } from '../../state/song/useExport'
 import { bufferFor, useProcessedAudio } from '../../state/processing/processedAudio'
 import { useVocalRemoval } from '../../state/processing/useVocalRemoval'
@@ -268,13 +269,14 @@ export function RecordScreen({
   const selectedClip =
     selected && open ? findClip(open.data, selected.trackId, selected.clipId) : undefined
   const canSplit = canEdit && !!open && canSplitClips(open.data, selectedClips, position)
-  const canRecord =
-    hasMusicChoice(open?.data, skipBacking) &&
-    transport.recorderReady &&
-    idle &&
-    !transport.hasPendingTake &&
-    !busy &&
-    !waiting
+  const canRecord = canStartRecording({
+    mode,
+    hasMusic: hasMusicChoice(open?.data, skipBacking),
+    recorderReady: transport.recorderReady,
+    hasPendingTake: transport.hasPendingTake,
+    busy,
+    waiting
+  })
 
   const canExport = canEdit && canExportSong(open?.data) && !chordBacking.waiting
   const openExport = (): void => {

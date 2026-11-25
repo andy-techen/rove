@@ -41,9 +41,10 @@ interface Session {
 }
 
 /** Stops everything a run scheduled: its clips and its clicks. */
-function endSession(s: Session): void {
-  stopNodes(s.nodes)
-  for (const clicks of s.clicks) clicks.stop()
+/** Stops a session's audio now, or at `atTime` on the audio clock. */
+function endSession(s: Session, atTime?: number): void {
+  stopNodes(s.nodes, atTime)
+  for (const clicks of s.clicks) clicks.stop(atTime)
 }
 
 /** The metronome: where it ticks, and how loud (0 is off). */
@@ -328,11 +329,24 @@ export function useTransport(
     await ctx.resume()
     setStatus(null)
     setError(null)
-    const fromSec = position
-    // With the click on, one bar of ticks counts the singer in before the take starts.
     const { grid, level } = metronome
-    const countIn = grid && level > 0 ? countInSec(grid) : 0
-    const startAt = ctx.currentTime + START_LEAD_SEC + countIn
+    // Pressed while the song plays: the music carries straight on into the take, so the
+    // singer comes in where they heard it. Playback hands over on the frame the take
+    // starts, and there's no count-in: they're already in the song.
+    const playing = mode === 'playing' ? session.current : null
+    let fromSec = position
+    let countIn = 0
+    let startAt: number
+    if (playing) {
+      startAt = ctx.currentTime + START_LEAD_SEC
+      fromSec = positionNow() + START_LEAD_SEC
+      endSession(playing, startAt)
+      session.current = null
+    } else {
+      // With the click on, one bar of ticks counts the singer in before the take starts.
+      countIn = grid && level > 0 ? countInSec(grid) : 0
+      startAt = ctx.currentTime + START_LEAD_SEC + countIn
+    }
     // The singer hears the music plus every other vocal, for layering harmonies; the
     // track being recorded (vocal or backing) stays silent so it isn't sung over twice.
     const backingNodes = scheduleClips(
