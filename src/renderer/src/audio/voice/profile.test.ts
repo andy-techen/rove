@@ -78,12 +78,12 @@ describe('profileOf', () => {
     })
   })
 
-  it('places a brighter voice higher on clarity', () => {
+  it('places a brighter voice higher on brightness', () => {
     const tone = (presence: number) => ({ body: 1, mid: 1, presence, air: 0.01, frames: 10 })
     const dull = profileOf(summary({ tone: tone(0.1) })).tone
     const bright = profileOf(summary({ tone: tone(1) })).tone
-    expect(bright!.clarity).toBeGreaterThan(dull!.clarity)
-    expect(bright!.clarity).toBeLessThanOrEqual(1)
+    expect(bright!.brightness).toBeGreaterThan(dull!.brightness)
+    expect(bright!.brightness).toBeLessThanOrEqual(1)
   })
 })
 

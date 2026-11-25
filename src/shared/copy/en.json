@@ -293,7 +293,8 @@
     "minutes": "{minutes} min",
     "minutesSeconds": "{minutes} min {seconds} s",
     "hoursMinutes": "{hours} h {minutes} min",
-    "range": "Your range",
+    "range": "Range",
+    "rangeSubtitle": "The notes you sing, across every song",
     "lowest": "Lowest",
     "comfort": "Comfort zone",
     "playNote": "Play {note}",
@@ -305,26 +306,47 @@
     "rangeChart": "Time on each note. Your comfort zone is {low} to {high}.",
     "songsChart": "Your range in each song",
     "songRange": "{song}: comfort zone {low} to {high}",
-    "growth": "How your range has grown",
+    "growth": "Over time",
+    "growthSubtitle": "Your range each month, with new highs and lows",
     "growthChart": "Your range each month",
     "noSinging": "No singing",
     "newHigh": "New high {note}",
     "newLow": "New low {note}",
-    "tone": "Your tone",
-    "toneScale": "{name}: {percent}% of the way from {low} to {high}",
-    "warmth": "Warmth",
-    "warmthLow": "Thin",
-    "warmthHigh": "Full",
-    "clarity": "Clarity",
-    "clarityLow": "Soft",
-    "clarityHigh": "Bright",
-    "air": "Air",
-    "airLow": "Clean",
-    "airHigh": "Breathy",
-    "landing": "Landing on the note",
+    "tone": {
+      "title": "Tone",
+      "subtitle": "How your voice sounds",
+      "balanced": "Balanced",
+      "body": {
+        "name": "Body",
+        "low": "Light",
+        "high": "Rich",
+        "help": "How much low, full sound your voice carries. Light voices float; rich ones fill the room. Both sound good."
+      },
+      "brightness": {
+        "name": "Brightness",
+        "low": "Mellow",
+        "high": "Bright",
+        "help": "How much your voice rings out. Mellow voices are smooth and soft; bright ones cut through the music. Both sound good."
+      },
+      "air": {
+        "name": "Air",
+        "low": "Clear",
+        "high": "Airy",
+        "help": "How much breath you hear around your notes. Clear voices are focused; airy ones sound close and gentle. Both sound good."
+      },
+      "scale": "{name}: {word}. {help}"
+    },
+    "toneHeadline": {
+      "two": "{first} and {second}",
+      "three": "{first}, {second} and {third}"
+    },
+    "pitch": {
+      "title": "Pitch",
+      "subtitle": "How close your held notes land to the note",
+      "landed": "land on the note",
+      "chart": "How close your held notes land to the note, from flat to sharp"
+    },
     "landedShare": "{count} in 10",
-    "landedCaption": "held notes land on the note",
-    "landingChart": "How close your held notes land to the note",
     "flat": "Flat",
     "onNote": "On the note",
     "sharp": "Sharp"

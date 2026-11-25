@@ -27,7 +27,7 @@ function Bins({ landing, width }: { landing: number[]; width: number }): React.J
       height={HEIGHT + LABEL_GAP}
       viewBox={`0 0 ${width} ${HEIGHT + LABEL_GAP}`}
       role="img"
-      aria-label={t('voice.landingChart')}
+      aria-label={t('voice.pitch.chart')}
     >
       <rect
         className="voice-comfort"
@@ -65,11 +65,12 @@ function Bins({ landing, width }: { landing: number[]; width: number }): React.J
 export function LandingChart({ landing, landedShare }: Props): React.JSX.Element {
   return (
     <section className="voice-card">
-      <h3>{t('voice.landing')}</h3>
+      <h3>{t('voice.pitch.title')}</h3>
+      <p className="voice-subtitle">{t('voice.pitch.subtitle')}</p>
       {landedShare !== null && (
         <p className="voice-headline">
           <strong>{t('voice.landedShare', { count: Math.round(landedShare * TENTHS) })}</strong>{' '}
-          {t('voice.landedCaption')}
+          {t('voice.pitch.landed')}
         </p>
       )}
       <Measured>{(width) => <Bins landing={landing} width={width} />}</Measured>

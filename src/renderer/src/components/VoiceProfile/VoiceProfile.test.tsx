@@ -83,6 +83,14 @@ describe('VoiceProfile', () => {
     expect(screen.getAllByText(t('voice.noSinging'))).toHaveLength(1)
   })
 
+  it('explains each tone scale on its pill', async () => {
+    renderWith(twoSongs())
+    const body = await screen.findByRole('button', {
+      name: new RegExp(`^${t('voice.tone.body.name')}:`)
+    })
+    expect(body).toHaveAccessibleName(expect.stringContaining(t('voice.tone.body.help')))
+  })
+
   it('says how many held notes land on the note', async () => {
     // 11 of 14 held notes (4 + 7) sit in the middle bin.
     renderWith(twoSongs())

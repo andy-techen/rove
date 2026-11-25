@@ -45,6 +45,11 @@
   margin-bottom: 0;
 }
 
+/* The head's button sets its height, so the subtitle needs no pull upwards here. */
+.voice-card-head + .voice-subtitle {
+  margin-top: 0;
+}
+
 .voice-caption {
   font-size: var(--font-size-caption);
   color: var(--color-text-muted);
@@ -54,7 +59,7 @@
 .voice-stats {
   display: flex;
   gap: var(--space-9);
-  margin: var(--space-4) 0 var(--space-6);
+  margin: 0 0 var(--space-6);
 }
 
 .voice-stats dt {
@@ -177,27 +182,50 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-9);
+  align-items: start;
 }
 
-/* Tone: a dot on a plain track between two words. */
+/* Tone: each scale's name as a pill, then a dot on a track between two good words. */
 .voice-tone {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5) var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.voice-tone-name {
-  font-size: var(--font-size-ui);
+/* Each row lays its pieces into the list's columns, so tracks line up. */
+.voice-tone li {
+  display: contents;
+}
+
+.voice-pill {
+  justify-self: start;
+  padding: var(--space-1) var(--space-5);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-caption);
+  cursor: help;
+}
+
+.voice-pill:hover {
+  background: var(--color-highlight);
+}
+
+.voice-tone-end {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
 }
 
 .voice-tone-track {
   position: relative;
   display: block;
   height: var(--size-slider-track);
-  margin: var(--space-4) calc(var(--size-voice-tone-dot) / 2);
+  margin: 0 calc(var(--size-voice-tone-dot) / 2);
   border-radius: var(--radius-pill);
   background: var(--color-border);
 }
@@ -215,9 +243,8 @@
   transform: translate(-50%, -50%);
 }
 
-.voice-tone-ends {
-  display: flex;
-  justify-content: space-between;
+.voice-subtitle {
+  margin: calc(-1 * var(--space-3)) 0 var(--space-5);
   font-size: var(--font-size-caption);
   color: var(--color-text-muted);
 }

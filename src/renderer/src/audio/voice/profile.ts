@@ -15,14 +15,17 @@ const LANDED_CENTS = 20
  * the main session will tune them by ear across voices and mics.
  */
 const TONE_RANGE_DB: Record<keyof Tone, { band: Band; low: number; high: number }> = {
-  warmth: { band: BODY_BAND, low: -5, high: 25 },
-  clarity: { band: PRESENCE_BAND, low: -23, high: 7 },
+  body: { band: BODY_BAND, low: -5, high: 25 },
+  brightness: { band: PRESENCE_BAND, low: -23, high: 7 },
   air: { band: AIR_BAND, low: -45, high: -5 }
 }
 
 export interface Tone {
-  warmth: number
-  clarity: number
+  /** Light (0) to rich (1): the low body of the voice. */
+  body: number
+  /** Mellow (0) to bright (1): how much it rings out. */
+  brightness: number
+  /** Clear (0) to airy (1): breath around the notes. */
   air: number
 }
 
@@ -97,13 +100,13 @@ function landedShare(landing: number[]): number | null {
 
 function toneOf({ body, mid, presence, air, frames }: TakeSummary['tone']): Tone | null {
   if (frames === 0 || mid === 0) return null
-  const power: Record<keyof Tone, number> = { warmth: body, clarity: presence, air }
+  const power: Record<keyof Tone, number> = { body, brightness: presence, air }
   const position = (key: keyof Tone): number => {
     const { band, low, high } = TONE_RANGE_DB[key]
     const db = densityDb(power[key], band, mid)
     return Math.min(1, Math.max(0, (db - low) / (high - low)))
   }
-  return { warmth: position('warmth'), clarity: position('clarity'), air: position('air') }
+  return { body: position('body'), brightness: position('brightness'), air: position('air') }
 }
 
 export function profileOf(summary: TakeSummary): VoiceProfile {

@@ -56,6 +56,7 @@ function Profile({ entries }: { entries: Entry[] }): React.JSX.Element {
       <RangeCard profile={view.overall} songs={view.songs} keys={view.keys} />
       <section className="voice-card">
         <h3>{t('voice.growth')}</h3>
+        <p className="voice-subtitle">{t('voice.growthSubtitle')}</p>
         <GrowthChart months={view.months} keys={view.keys} />
       </section>
       <div className="voice-pair">

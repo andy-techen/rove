@@ -172,6 +172,7 @@ export function RangeCard({ profile, songs, keys }: Props): React.JSX.Element {
           {t(bySong ? 'voice.allSongs' : 'voice.bySong')}
         </Button>
       </div>
+      <p className="voice-subtitle">{t('voice.rangeSubtitle')}</p>
       <dl className="voice-stats">
         <div>
           <dt>{t('voice.lowest')}</dt>
