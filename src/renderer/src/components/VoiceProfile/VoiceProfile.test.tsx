@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
@@ -69,12 +69,25 @@ describe('VoiceProfile', () => {
     expect(previewNote).toHaveBeenCalledWith(67)
   })
 
-  it('shows each song’s range when By song is pressed', async () => {
+  it('shows each song’s range when By song is chosen', async () => {
     const user = renderWith(twoSongs())
     await user.click(await screen.findByRole('button', { name: t('voice.bySong') }))
+    expect(screen.getByRole('button', { name: t('voice.bySong') })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
     const songs = screen.getByRole('list', { name: t('voice.songsChart') })
-    expect(songs.querySelectorAll('[role="listitem"]')).toHaveLength(2)
-    expect(screen.getByRole('button', { name: t('voice.allSongs') })).toBeInTheDocument()
+    expect(within(songs).getAllByRole('listitem')).toHaveLength(2)
+  })
+
+  it('shows the six newest songs, and the rest on Show all', async () => {
+    const days = ['01', '02', '03', '04', '05', '06', '07']
+    const user = renderWith(days.map((d) => sungEntry(`Song ${d}`, `2026-08-${d}`, { sec: 60 })))
+    await user.click(await screen.findByRole('button', { name: t('voice.bySong') }))
+    const songs = screen.getByRole('list', { name: t('voice.songsChart') })
+    expect(within(songs).getAllByRole('listitem')).toHaveLength(6)
+    await user.click(screen.getByRole('button', { name: t('voice.showAllSongs', { count: 7 }) }))
+    expect(within(songs).getAllByRole('listitem')).toHaveLength(7)
   })
 
   it('marks the month that reached a new high note', async () => {

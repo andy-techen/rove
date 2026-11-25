@@ -16,6 +16,8 @@ const LABEL_Y = 12
 const ROW_HEIGHT = 18
 const ROW_BAR = 10
 const KEYBOARD_GAP = 6
+// Enough songs to compare at a glance; the rest wait behind Show all.
+const SONGS_SHOWN = 6
 
 const note = (n: number | null): string => (n === null ? '–' : noteWithOctave(n))
 
@@ -72,12 +74,17 @@ function NoteTime({
   )
 }
 
-/** One song's comfort zone (thick) and lowest to highest notes (thin). */
+/**
+ * One song's comfort zone (thick) and lowest to highest notes (thin), over the
+ * singer's overall comfort zone (shaded) so the song reads against it.
+ */
 function SongRow({
   profile: p,
+  overall,
   scale
 }: {
   profile: VoiceProfile
+  overall: VoiceProfile
   scale: KeyScale
 }): React.JSX.Element {
   const { keyWidth, x } = scale
@@ -91,6 +98,14 @@ function SongRow({
       viewBox={`0 0 ${width} ${ROW_HEIGHT}`}
       aria-hidden="true"
     >
+      {overall.comfortLow !== null && overall.comfortHigh !== null && (
+        <rect
+          className="voice-comfort voice-comfort-row"
+          x={x(overall.comfortLow)}
+          width={(overall.comfortHigh - overall.comfortLow + 1) * keyWidth}
+          height={ROW_HEIGHT}
+        />
+      )}
       {p.lowestNote !== null && p.highestNote !== null && (
         <line
           className="voice-extent"
@@ -113,8 +128,21 @@ function SongRow({
   )
 }
 
-/** One row per song on a shared keyboard, each named above its range. */
-function SongRanges({ songs, keys }: { songs: SongView[]; keys: KeyRange }): React.JSX.Element {
+/**
+ * One row per song on a shared keyboard, each named above its range, newest first. A
+ * long list shows its first few, with the rest behind Show all.
+ */
+function SongRanges({
+  songs,
+  overall,
+  keys
+}: {
+  songs: SongView[]
+  overall: VoiceProfile
+  keys: KeyRange
+}): React.JSX.Element {
+  const [all, setAll] = useState(false)
+  const shown = all ? songs : songs.slice(0, SONGS_SHOWN)
   return (
     <div className="voice-songs" role="list" aria-label={t('voice.songsChart')}>
       <Measured>
@@ -122,7 +150,7 @@ function SongRanges({ songs, keys }: { songs: SongView[]; keys: KeyRange }): Rea
           const scale = keyScale(keys, width)
           return (
             <>
-              {songs.map(({ folder, songName, profile }) => (
+              {shown.map(({ folder, songName, profile }) => (
                 <div
                   key={folder}
                   className="voice-song"
@@ -136,7 +164,7 @@ function SongRanges({ songs, keys }: { songs: SongView[]; keys: KeyRange }): Rea
                   <span className="voice-song-name" aria-hidden="true">
                     {songName}
                   </span>
-                  <SongRow profile={profile} scale={scale} />
+                  <SongRow profile={profile} overall={overall} scale={scale} />
                 </div>
               ))}
               <svg
@@ -151,6 +179,42 @@ function SongRanges({ songs, keys }: { songs: SongView[]; keys: KeyRange }): Rea
           )
         }}
       </Measured>
+      {songs.length > SONGS_SHOWN && (
+        <Button variant="quiet" size="sm" className="voice-songs-more" onClick={() => setAll(!all)}>
+          {all ? t('voice.showFewerSongs') : t('voice.showAllSongs', { count: songs.length })}
+        </Button>
+      )}
+    </div>
+  )
+}
+
+type RangeView = 'all' | 'songs'
+
+/** All songs or By song: two choices side by side, the one showing filled in. */
+function ViewSwitch({
+  view,
+  onView
+}: {
+  view: RangeView
+  onView(view: RangeView): void
+}): React.JSX.Element {
+  const options: { value: RangeView; label: string }[] = [
+    { value: 'all', label: t('voice.allSongs') },
+    { value: 'songs', label: t('voice.bySong') }
+  ]
+  return (
+    <div className="voice-switch" role="group" aria-label={t('voice.rangeView')}>
+      {options.map(({ value, label }) => (
+        <button
+          key={value}
+          type="button"
+          className="voice-switch-option"
+          aria-pressed={view === value}
+          onClick={() => onView(value)}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   )
 }
@@ -163,14 +227,12 @@ interface Props {
 
 /** Your range: the headline notes, and time on each note overall or a range per song. */
 export function RangeCard({ profile, songs, keys }: Props): React.JSX.Element {
-  const [bySong, setBySong] = useState(false)
+  const [view, setView] = useState<RangeView>('all')
   return (
     <section className="voice-card">
       <div className="voice-card-head">
         <h3>{t('voice.range')}</h3>
-        <Button variant="quiet" size="sm" aria-pressed={bySong} onClick={() => setBySong(!bySong)}>
-          {t(bySong ? 'voice.allSongs' : 'voice.bySong')}
-        </Button>
+        <ViewSwitch view={view} onView={setView} />
       </div>
       <p className="voice-subtitle">{t('voice.rangeSubtitle')}</p>
       <dl className="voice-stats">
@@ -199,8 +261,8 @@ export function RangeCard({ profile, songs, keys }: Props): React.JSX.Element {
           </dd>
         </div>
       </dl>
-      {bySong ? (
-        <SongRanges songs={songs} keys={keys} />
+      {view === 'songs' ? (
+        <SongRanges songs={songs} overall={profile} keys={keys} />
       ) : (
         <Measured>
           {(width) => <NoteTime profile={profile} scale={keyScale(keys, width)} />}

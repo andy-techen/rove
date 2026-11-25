@@ -176,6 +176,11 @@
 
 /* By song: each song named above its range, all on one keyboard. Names sit above
    rather than beside, so every row spans the keyboard's full width. */
+.voice-songs {
+  display: flex;
+  flex-direction: column;
+}
+
 .voice-songs .voice-measured {
   display: flex;
   flex-direction: column;
@@ -186,6 +191,43 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+}
+
+/* Behind each song's row, the singer's overall comfort zone, so it lines up down the list. */
+.voice-comfort-row {
+  rx: 0;
+}
+
+.voice-songs-more {
+  align-self: flex-start;
+  margin-top: var(--space-4);
+}
+
+/* All songs | By song: two quiet choices in one soft track, the one showing filled. */
+.voice-switch {
+  display: inline-flex;
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+}
+
+.voice-switch-option {
+  padding: var(--space-2) var(--space-5);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+.voice-switch-option:hover {
+  color: var(--color-text);
+}
+
+.voice-switch-option[aria-pressed='true'] {
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .voice-song-name {

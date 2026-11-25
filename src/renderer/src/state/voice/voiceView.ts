@@ -90,11 +90,12 @@ export function voiceView(entries: Entry[]): VoiceView {
   const overall = profileOf(combine(entries.map((e) => e.summary)))
   const totals = totalsOf(entries)
   if (overall.sungSec < VOICE_UNLOCK_SEC) return { locked: true, sungSec: overall.sungSec, totals }
-  const songs = bySong(entries).map(({ folder, songName, summary }) => ({
-    folder,
-    songName,
-    profile: profileOf(summary)
-  }))
+  // Newest first: the songs being sung now are the ones a singer looks for.
+  const lastSung = (folder: string): number =>
+    Math.max(...entries.filter((e) => e.ref.folder === folder).map((e) => e.ref.recordedAt))
+  const songs = bySong(entries)
+    .map(({ folder, songName, summary }) => ({ folder, songName, profile: profileOf(summary) }))
+    .sort((a, b) => lastSung(b.folder) - lastSung(a.folder))
   return {
     locked: false,
     totals,

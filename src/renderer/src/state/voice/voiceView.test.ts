@@ -25,6 +25,17 @@ describe('voiceView', () => {
     })
   })
 
+  it('lists songs by when they were last sung, newest first', () => {
+    const view = unlocked(
+      voiceView([
+        sungEntry('Old', '2026-07-01', { sec: 100 }),
+        sungEntry('New', '2026-09-01', { sec: 100 }),
+        sungEntry('Old', '2026-10-01', { sec: 100 })
+      ])
+    )
+    expect(view.songs.map((s) => s.folder)).toEqual(['Old', 'New'])
+  })
+
   it('unlocks at 3 minutes, across songs', () => {
     const half = VOICE_UNLOCK_SEC / 2
     const view = voiceView([
