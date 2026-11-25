@@ -15,6 +15,8 @@ export interface BeatLoopOptions {
   beatsPerBar: number
   /** Bars of click alone before the beat comes in. */
   countInBars: number
+  /** Bars to play after the count-in, then stop. */
+  bars: number
   /** The bar's hits, `time` in seconds from its start; read afresh for every bar. */
   hits(): DrumHit[]
   /** How loud the drums play. */
@@ -23,11 +25,32 @@ export interface BeatLoopOptions {
 
 export interface BeatLoop {
   /**
-   * Where a tap made now falls, as the singer heard it: beats into the bar, and whether
-   * the count-in is over.
+   * Where a tap made now falls, as the singer heard it: beats into the bar, whether the
+   * count-in is over, and whether every bar has played.
    */
-  tapAt(): { counting: boolean; at: number }
+  tapAt(): LoopPlace
   stop(): void
+}
+
+export interface LoopPlace {
+  counting: boolean
+  /** Beats into the bar. */
+  at: number
+  done: boolean
+}
+
+/** Where `heardSec` after the loop started falls in it. */
+export function loopPlace(
+  heardSec: number,
+  { secPerBeat, beatsPerBar, countInBars, bars }: Omit<BeatLoopOptions, 'hits' | 'level'>
+): LoopPlace {
+  const barSec = secPerBeat * beatsPerBar
+  const bar = Math.floor(heardSec / barSec)
+  return {
+    counting: bar < countInBars,
+    at: (heardSec - bar * barSec) / secPerBeat,
+    done: bar >= countInBars + bars
+  }
 }
 
 const buffers = new WeakMap<BaseAudioContext, Map<string, AudioBuffer>>()
@@ -46,11 +69,11 @@ function bufferFor(ctx: BaseAudioContext, voice: DrumHit['voice']): AudioBuffer 
 }
 
 /**
- * Plays a bar over and over with a click on every beat, counting in first, and reports
+ * Plays a bar `bars` times with a click on every beat, counting in first, and reports
  * where taps land in it. A change to the hits is heard from the next time round.
  */
 export function startBeatLoop(ctx: AudioContext, options: BeatLoopOptions): BeatLoop {
-  const { secPerBeat, beatsPerBar, countInBars } = options
+  const { secPerBeat, beatsPerBar, countInBars, bars } = options
   const barSec = secPerBeat * beatsPerBar
   const startTime = ctx.currentTime + START_DELAY_SEC
   const out = ctx.createGain()
@@ -84,7 +107,10 @@ export function startBeatLoop(ctx: AudioContext, options: BeatLoopOptions): Beat
   }
 
   const wake = (): void => {
-    while (startTime + scheduled * barSec < ctx.currentTime + LOOKAHEAD_SEC)
+    while (
+      scheduled < countInBars + bars &&
+      startTime + scheduled * barSec < ctx.currentTime + LOOKAHEAD_SEC
+    )
       scheduleBar(scheduled++)
   }
   wake()
@@ -95,8 +121,7 @@ export function startBeatLoop(ctx: AudioContext, options: BeatLoopOptions): Beat
       // The singer taps to what they hear, which left the speakers a moment after it
       // was played.
       const heard = ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0) - startTime
-      const bar = Math.floor(heard / barSec)
-      return { counting: bar < countInBars, at: (heard - bar * barSec) / secPerBeat }
+      return loopPlace(heard, options)
     },
     stop() {
       clearInterval(timer)

@@ -7,10 +7,12 @@ import { PAD_PLAY_LEVEL } from './preview'
 
 // One bar of click alone, so the first tap can land on one.
 const COUNT_IN_BARS = 1
-// How often to check whether the count-in is over.
+// The bar is played through once while recording, then recording stops by itself.
+const RECORD_BARS = 1
+// How often to check whether the count-in, or the bar, is over.
 const CHECK_MS = 50
 
-/** Off; clicking through the count-in; or looping and catching taps. */
+/** Off; clicking through the count-in; or playing the bar once and catching taps. */
 export type RecordingState = 'off' | 'counting' | 'recording'
 
 interface Options {
@@ -36,9 +38,9 @@ interface BeatRecorder {
 }
 
 /**
- * Records a beat by playing it: the bar loops with a click, and every drum tapped lands
- * in the beat where it was played. Each time round, earlier taps play back, so a beat
- * can be built a drum at a time.
+ * Records a beat by playing it: after a count-in the bar plays once with a click, and
+ * every drum tapped lands in the beat where it was played; then it stops. Recording
+ * again plays the earlier taps back, so a beat can be built a drum at a time.
  */
 export function useBeatRecorder(options: Options): BeatRecorder {
   const [state, setState] = useState<RecordingState>('off')
@@ -59,9 +61,12 @@ export function useBeatRecorder(options: Options): BeatRecorder {
   useEffect(() => stop, [timing])
 
   useEffect(() => {
-    if (state !== 'counting') return
+    if (state === 'off') return
     const timer = setInterval(() => {
-      if (loop.current && !loop.current.tapAt().counting) setState('recording')
+      const where = loop.current?.tapAt()
+      if (!where) return
+      if (where.done) stop()
+      else if (state === 'counting' && !where.counting) setState('recording')
     }, CHECK_MS)
     return () => clearInterval(timer)
   }, [state])
@@ -75,6 +80,7 @@ export function useBeatRecorder(options: Options): BeatRecorder {
       secPerBeat: options.secPerBeat,
       beatsPerBar: options.beatsPerBar,
       countInBars: COUNT_IN_BARS,
+      bars: RECORD_BARS,
       level: PAD_PLAY_LEVEL,
       hits: () =>
         beat.current ? myBeatBar(beat.current, options.beatsPerBar, options.secPerBeat) : []
@@ -86,7 +92,7 @@ export function useBeatRecorder(options: Options): BeatRecorder {
     options.onPreview(drum)
     const current = beat.current
     const where = loop.current?.tapAt()
-    if (!current || !where || where.counting) return
+    if (!current || !where || where.counting || where.done) return
     const at = placeTap(where.at, options.beatsPerBar, options.snap)
     const hits = withHit(current.hits, { drum, at })
     if (hits === current.hits) return
