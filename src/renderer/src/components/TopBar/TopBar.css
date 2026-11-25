@@ -122,7 +122,6 @@
 
 .song-name {
   max-width: var(--layout-song-name-max);
-  font-weight: var(--font-weight-semibold);
 }
 
 /* Renaming edits the name in place: exactly the name's box (a longer name scrolls
@@ -135,7 +134,6 @@
   box-shadow: inset 0 0 0 var(--size-hairline) var(--color-accent);
   background: transparent;
   color: var(--color-text);
-  font-weight: var(--font-weight-semibold);
 }
 
 .song-name-input:focus-visible {
@@ -149,13 +147,12 @@
   margin-left: calc(-1 * (var(--space-2) + var(--size-hairline)));
   margin-right: calc(var(--space-4) - var(--space-2) - var(--size-hairline));
   padding: var(--space-1) var(--space-2);
-  opacity: 0;
+  /* Always there, so every tab has the same shape; quiet until it's pointed at. */
+  color: var(--color-text-muted);
 }
 
-.tab:hover .tab-close,
-.tab.active .tab-close,
-.tab-close:focus-visible {
-  opacity: 1;
+.tab-close:hover {
+  color: var(--color-text);
 }
 
 /* Save status and actions */
