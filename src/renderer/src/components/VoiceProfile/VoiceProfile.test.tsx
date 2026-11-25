@@ -40,6 +40,16 @@ describe('VoiceProfile', () => {
     expect(screen.getByText(t('voice.locked', { minutes: 3 }))).toBeInTheDocument()
   })
 
+  it('counts the songs, time recorded and takes it has listened to', async () => {
+    // Each song's take records twice as long as it sings: 2 × 240 s.
+    renderWith(twoSongs())
+    await screen.findByText(t('voice.songs'))
+    const card = (label: string) => screen.getByText(label).nextSibling
+    expect(card(t('voice.songs'))).toHaveTextContent('2')
+    expect(card(t('voice.recorded'))).toHaveTextContent(singingTime(480))
+    expect(card(t('voice.takes'))).toHaveTextContent('2')
+  })
+
   it('shows the lowest, highest and comfort zone across every song', async () => {
     renderWith(twoSongs())
     expect(await screen.findByRole('heading', { name: t('voice.range') })).toBeInTheDocument()

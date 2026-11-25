@@ -11,7 +11,18 @@ const unlocked = (view: ReturnType<typeof voiceView>) => {
 describe('voiceView', () => {
   it('stays locked until there are 3 minutes of singing', () => {
     const view = voiceView([sungEntry('A', '2026-07-01', { sec: VOICE_UNLOCK_SEC - 1 })])
-    expect(view).toEqual({ locked: true, sungSec: VOICE_UNLOCK_SEC - 1 })
+    expect(view).toMatchObject({ locked: true, sungSec: VOICE_UNLOCK_SEC - 1 })
+  })
+
+  it('counts songs, recorded time and takes, a split take once', () => {
+    const take = sungEntry('A', '2026-07-01', { sec: 10, recordedSec: 30 })
+    const split = { ...take, ref: { ...take.ref, offsetSec: 20 } }
+    const other = sungEntry('B', '2026-07-02', { sec: 10, recordedSec: 15 })
+    expect(voiceView([take, split, other]).totals).toEqual({
+      songs: 2,
+      recordedSec: 75,
+      takes: 2
+    })
   })
 
   it('unlocks at 3 minutes, across songs', () => {

@@ -4,6 +4,8 @@ import type { Entry } from '../../audio/voice'
 interface Sung {
   /** Seconds sung, spread evenly over the notes. */
   sec?: number
+  /** Seconds of recording; twice the singing unless given. */
+  recordedSec?: number
   notes?: number[]
   /** Held notes per landing bin; bin 10 is 0–5 cents sharp. */
   landing?: Record<number, number>
@@ -26,6 +28,7 @@ export function sungEntry(folder: string, date: string, sung: Sung = {}): Entry 
     },
     summary: {
       sungSec: sec,
+      recordedSec: sung.recordedSec ?? 2 * sec,
       noteSec,
       lowestNote: Math.min(...notes),
       highestNote: Math.max(...notes),

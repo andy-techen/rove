@@ -23,6 +23,7 @@ const CENTS_PER_SEMITONE = 100
 export function emptySummary(): TakeSummary {
   return {
     sungSec: 0,
+    recordedSec: 0,
     noteSec: {},
     lowestNote: null,
     highestNote: null,
@@ -78,6 +79,7 @@ export async function summariseTake(
   const { f0, hopSec } = await analysePitch(played, sampleRate)
   const midi = Array.from(f0, (hz) => (hz > 0 ? hzToMidi(hz) : 0))
 
+  summary.recordedSec = played.length / sampleRate
   summary.sungSec = midi.filter((note) => note > 0).length * hopSec
   const runs = heldNotes(midi, hopSec)
   for (const note of runs.flat()) {

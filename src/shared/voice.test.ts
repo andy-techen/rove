@@ -57,6 +57,7 @@ describe('vocalClipsOf', () => {
 
 const summary = (): TakeSummary => ({
   sungSec: 12,
+  recordedSec: 20,
   noteSec: { 60: 4, 62: 8 },
   lowestNote: 60,
   highestNote: 62,
@@ -91,6 +92,10 @@ describe('parseVoiceCache', () => {
     ['NaN seconds on a note', entry({ summary: { ...summary(), noteSec: { 60: NaN } } })],
     ['a missing tone band', entry({ summary: { ...summary(), tone: { body: 1 } } })],
     ['a fractional lowest note', entry({ summary: { ...summary(), lowestNote: 60.5 } })],
+    [
+      'no recorded length (saved before it was measured)',
+      entry({ summary: { ...summary(), recordedSec: undefined } })
+    ],
     ['no summary', entry({ summary: null })]
   ])('drops an entry with %s', (_name, bad) => {
     expect(parseVoiceCache([bad, entry()])).toEqual([entry()])

@@ -26,10 +26,20 @@ export interface SongView {
   profile: VoiceProfile
 }
 
+/** What's been listened to, for the cards at the top. */
+export interface VoiceTotals {
+  songs: number
+  /** Seconds of recording on the timelines, sung or not. */
+  recordedSec: number
+  /** Takes listened to; a take split into several clips counts once. */
+  takes: number
+}
+
 export type VoiceView =
-  | { locked: true; sungSec: number }
+  | { locked: true; sungSec: number; totals: VoiceTotals }
   | {
       locked: false
+      totals: VoiceTotals
       overall: VoiceProfile
       months: MonthView[]
       songs: SongView[]
@@ -67,10 +77,19 @@ function monthViews(entries: Entry[]): MonthView[] {
   })
 }
 
+function totalsOf(entries: Entry[]): VoiceTotals {
+  return {
+    songs: new Set(entries.map((e) => e.ref.folder)).size,
+    recordedSec: entries.reduce((sum, e) => sum + e.summary.recordedSec, 0),
+    takes: new Set(entries.map((e) => JSON.stringify([e.ref.folder, e.ref.file]))).size
+  }
+}
+
 /** What the Your voice section shows, from every summarised take window. */
 export function voiceView(entries: Entry[]): VoiceView {
   const overall = profileOf(combine(entries.map((e) => e.summary)))
-  if (overall.sungSec < VOICE_UNLOCK_SEC) return { locked: true, sungSec: overall.sungSec }
+  const totals = totalsOf(entries)
+  if (overall.sungSec < VOICE_UNLOCK_SEC) return { locked: true, sungSec: overall.sungSec, totals }
   const songs = bySong(entries).map(({ folder, songName, summary }) => ({
     folder,
     songName,
@@ -78,6 +97,7 @@ export function voiceView(entries: Entry[]): VoiceView {
   }))
   return {
     locked: false,
+    totals,
     overall,
     months: monthViews(entries),
     songs,

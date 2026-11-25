@@ -23,8 +23,9 @@ const whole = { offsetSec: 0, durationSec: 0 }
 const notes = (noteSec: Record<number, number>): number[] => Object.keys(noteSec).map(Number)
 
 describe('summariseTake', () => {
-  it('counts the time a note is sung', async () => {
+  it('counts the time a note is sung, and the whole window recorded', async () => {
     const summary = await summariseTake(join(silence(0.5), voice(220, 1)), SR, whole)
+    expect(summary.recordedSec).toBeCloseTo(1.5, 3)
     expect(summary.sungSec).toBeCloseTo(1, 1)
     expect(summary.noteSec[A3]).toBeCloseTo(1, 1)
   })

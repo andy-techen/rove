@@ -58,6 +58,7 @@ export function combine(summaries: TakeSummary[]): TakeSummary {
     }
     return {
       sungSec: sum.sungSec + s.sungSec,
+      recordedSec: sum.recordedSec + s.recordedSec,
       noteSec,
       lowestNote: minOf(sum.lowestNote, s.lowestNote),
       highestNote: maxOf(sum.highestNote, s.highestNote),

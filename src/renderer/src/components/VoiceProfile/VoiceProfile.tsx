@@ -9,6 +9,7 @@ import { GrowthChart } from './GrowthChart'
 import { LandingChart } from './LandingChart'
 import { RangeCard } from './RangeCard'
 import { ToneScales } from './ToneScales'
+import { TotalsCards } from './TotalsCards'
 import './VoiceProfile.css'
 
 const SEC_PER_MIN = 60
@@ -41,9 +42,17 @@ function Locked({ sungSec }: { sungSec: number }): React.JSX.Element {
 
 function Profile({ entries }: { entries: Entry[] }): React.JSX.Element {
   const view = useMemo(() => voiceView(entries), [entries])
-  if (view.locked) return <Locked sungSec={view.sungSec} />
+  if (view.locked) {
+    return (
+      <div className="voice-profile">
+        <TotalsCards totals={view.totals} />
+        <Locked sungSec={view.sungSec} />
+      </div>
+    )
+  }
   return (
     <div className="voice-profile">
+      <TotalsCards totals={view.totals} />
       <RangeCard profile={view.overall} songs={view.songs} keys={view.keys} />
       <section className="voice-card">
         <h3>{t('voice.growth')}</h3>

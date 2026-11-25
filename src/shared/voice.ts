@@ -16,6 +16,8 @@ export const LANDING_BINS = (2 * LANDING_RANGE_CENTS) / LANDING_BIN_CENTS
 export interface TakeSummary {
   /** Seconds where a sung note was heard. */
   sungSec: number
+  /** Seconds of recording in the window, sung or not. */
+  recordedSec: number
   /** Seconds on each note, keyed by MIDI note number (60 is middle C). */
   noteSec: Record<number, number>
   /** The lowest and highest notes held long enough to count; null when none were. */
@@ -121,7 +123,9 @@ const isNote = (n: unknown): n is number | null =>
 
 function parseSummary(raw: unknown): TakeSummary | null {
   const s = raw as Partial<Record<keyof TakeSummary, unknown>> | null
-  if (!s || !isSeconds(s.sungSec) || !isNote(s.lowestNote) || !isNote(s.highestNote)) return null
+  // Summaries from before recordedSec existed fail here, so those windows are listened to again.
+  if (!s || !isSeconds(s.sungSec) || !isSeconds(s.recordedSec)) return null
+  if (!isNote(s.lowestNote) || !isNote(s.highestNote)) return null
   const noteSec = parseNoteSec(s.noteSec)
   if (!noteSec) return null
   const { landing } = s
@@ -141,6 +145,7 @@ function parseSummary(raw: unknown): TakeSummary | null {
   }
   return {
     sungSec: s.sungSec,
+    recordedSec: s.recordedSec,
     noteSec,
     lowestNote: s.lowestNote,
     highestNote: s.highestNote,
