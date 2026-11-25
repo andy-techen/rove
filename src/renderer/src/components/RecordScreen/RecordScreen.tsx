@@ -108,7 +108,7 @@ import {
   removeBars,
   swapBars
 } from '../../state/chords/chartBars'
-import { chordSheetToPaste } from '../../state/chords/chordText'
+import { chordSheetToPaste, unreadNote } from '../../state/chords/chordText'
 import { transposeKey } from '../../audio/pitch/key'
 import {
   BOTTOM_HEIGHT,
@@ -476,10 +476,8 @@ export function RecordScreen({
     const [first] = chartTarget.range
     const bars = pasteBars(chartTarget.bars, first, sheet.bars)
     song.edit(withChartBars(open.data, chartTarget.trackId, bars))
-    const unread = sheet.unread.join(', ')
-    setPasteNote(
-      unread ? { trackId: chartTarget.trackId, text: t('chords.unread', { names: unread }) } : null
-    )
+    const note = unreadNote(sheet.unread, first)
+    setPasteNote(note ? { trackId: chartTarget.trackId, text: note } : null)
     setChartPlace({ bar: first, slot: 0, last: first + sheet.bars.length - 1 })
     return true
   }

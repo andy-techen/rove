@@ -347,7 +347,7 @@ export function ChartEditor({
             <span className="chart-paste">
               <Button
                 size="sm"
-                variant="quiet"
+                variant="ghost"
                 icon="paste"
                 disabled={locked}
                 onClick={onPasteChords}

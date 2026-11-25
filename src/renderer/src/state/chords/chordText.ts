@@ -1,5 +1,6 @@
 import { CHORD_QUALITIES, Chord, ChordQuality } from '../../audio/music/chords'
 import { PITCH_CLASSES } from '../../audio/pitch/key'
+import { t } from '@shared/copy'
 import { chordName } from './noteNames'
 
 const LETTERS: Record<string, number> = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 }
@@ -96,8 +97,12 @@ const NEAREST: Record<string, ChordQuality> = {
   o7: 'dim'
 }
 
+// Sheets put a passing or optional chord in brackets: "(G)" is played as G.
+const unbracketed = (text: string): string => text.replace(/^\((.+)\)$/, '$1')
+
 /** A chord as a chord sheet writes it, richer ones played as their nearest. */
-function sheetChord(text: string): Chord | null {
+function sheetChord(written: string): Chord | null {
+  const text = unbracketed(written)
   const exact = parseChord(text)
   if (exact) return exact
   const [body, ...bass] = text.split('/')
@@ -106,6 +111,12 @@ function sheetChord(text: string): Chord | null {
   if (!root || !quality) return null
   const plain = parseChord([body.slice(0, root.length), ...bass].join('/'))
   return plain && { ...plain, quality }
+}
+
+/** A chord a paste couldn't read, and which pasted bar (from 0) it was in. */
+export interface UnreadChord {
+  name: string
+  bar: number
 }
 
 // A bar written as one of these keeps the chord before it going ("N.C.": no chord).
@@ -130,8 +141,8 @@ const words = (s: string): string[] => s.split(/\s+/).filter(Boolean)
  * headings and tab are skipped. Anything on a line of chords it can't read is listed in
  * `unread` and its bar left to carry the last chord on.
  */
-export function chartFromText(text: string): { bars: Chord[][]; unread: string[] } {
-  const unread: string[] = []
+export function chartFromText(text: string): { bars: Chord[][]; unread: UnreadChord[] } {
+  const unread: UnreadChord[] = []
   const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -139,8 +150,10 @@ export function chartFromText(text: string): { bars: Chord[][]; unread: string[]
   // A whole sheet can hold lyrics, where "A" or "Am" is a word; only a capital letter
   // starts a chord there. A single typed line can be any case.
   const isChord = (token: string): boolean =>
-    (lines.length === 1 || /^[A-G]/.test(token)) && !!sheetChord(token)
+    (lines.length === 1 || /^[A-G]/.test(unbracketed(token))) && !!sheetChord(token)
 
+  // Each line's bars follow the ones before, so an unread chord can name its bar.
+  const bars: Chord[][] = []
   const readLine = (line: string): Chord[][] => {
     if (TAB.test(line)) return []
     const inline = [...line.matchAll(INLINE)].map((m) => m[1].trim())
@@ -153,28 +166,29 @@ export function chartFromText(text: string): { bars: Chord[][]; unread: string[]
     const playable = tokens.filter((t) => !REPEAT.test(t) && !CARRY_ON.has(t))
     // A line is chords when at least half of what's on it reads as chords.
     if (!playable.length || playable.filter(isChord).length * 2 < playable.length) return []
-    const readBar = (cell: string[]): Chord[] =>
+    const readBar = (cell: string[], bar: number): Chord[] =>
       cell.flatMap((token) => {
         if (CARRY_ON.has(token) || REPEAT.test(token)) return []
         const chord = sheetChord(token)
-        if (!chord) unread.push(token)
+        if (!chord) unread.push({ name: token, bar: bars.length + bar })
         return chord ? [chord] : []
       })
-    let bars: Chord[][]
+    let read: Chord[][]
     if (body.includes('|')) {
       const cells = body.split('|')
       // "| C | G |" has nothing before the first line or after the last.
       if (!cells[0].trim()) cells.shift()
       if (cells.length && !cells.at(-1)?.trim()) cells.pop()
-      bars = cells.map((cell) => readBar(words(cell)))
+      read = cells.map((cell, i) => readBar(words(cell), i))
     } else {
-      bars = tokens.filter((t) => !REPEAT.test(t)).map((token) => readBar([token]))
+      read = tokens.filter((t) => !REPEAT.test(t)).map((token, i) => readBar([token], i))
     }
     const times = repeat ? Number(repeat[1] ?? repeat[2]) : 1
-    return Array.from({ length: Math.max(1, times) }, () => bars).flat()
+    return Array.from({ length: Math.max(1, times) }, () => read).flat()
   }
 
-  return { bars: lines.flatMap(readLine), unread }
+  for (const line of lines) bars.push(...readLine(line))
+  return { bars, unread }
 }
 
 /**
@@ -185,10 +199,27 @@ export function chartFromText(text: string): { bars: Chord[][]; unread: string[]
 export function chordSheetToPaste(
   text: string,
   textAtCopy: string | null
-): { bars: Chord[][]; unread: string[] } | null {
+): { bars: Chord[][]; unread: UnreadChord[] } | null {
   if (textAtCopy !== null && text === textAtCopy) return null
   const chart = chartFromText(text)
   return chart.bars.length ? chart : null
+}
+
+// A paste that missed a lot names the first few; the bars show the rest.
+const UNREAD_SHOWN = 4
+
+/**
+ * What to tell the singer about chords a paste couldn't read: each with the bar it's in,
+ * counting from `firstBar` (where the paste started, from 0). Null when all were read.
+ */
+export function unreadNote(unread: UnreadChord[], firstBar: number): string | null {
+  if (!unread.length) return null
+  const items = unread
+    .slice(0, UNREAD_SHOWN)
+    .map((u) => t('chords.unreadItem', { name: u.name, bar: firstBar + u.bar + 1 }))
+  if (unread.length > UNREAD_SHOWN)
+    items.push(t('chords.unreadMore', { n: unread.length - UNREAD_SHOWN }))
+  return t('chords.unread', { list: items.join(', ') })
 }
 
 /** Every chord the picker offers: each kind on each root, C first. */

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { chartFromText, chordSheetToPaste, chordsMatching, parseChord } from './chordText'
+import { t } from '@shared/copy'
+import {
+  chartFromText,
+  chordSheetToPaste,
+  chordsMatching,
+  parseChord,
+  unreadNote
+} from './chordText'
 import { chordName } from './noteNames'
 
 const names = (bars: ReturnType<typeof chartFromText>['bars']) =>
@@ -38,7 +45,7 @@ describe('chartFromText', () => {
   it('lists what it could not read and leaves that bar carrying on', () => {
     const { bars, unread } = chartFromText('C Hm G')
     expect(names(bars)).toEqual(['C', '', 'G'])
-    expect(unread).toEqual(['Hm'])
+    expect(unread).toEqual([{ name: 'Hm', bar: 1 }])
   })
 })
 
@@ -93,6 +100,15 @@ describe('chartFromText with a chord sheet from the web', () => {
     ])
   })
 
+  it('reads chords in brackets, the way sheets mark a passing chord', () => {
+    expect(sheet('C   (G)   Am\nsome words here\nF (C/E)')).toEqual(['C', 'G', 'Am', 'F', 'C/E'])
+  })
+
+  it('says which bar each chord it couldn’t read is in', () => {
+    const { unread } = chartFromText('C   G\nla la la\nAm  Hm7#11  F')
+    expect(unread).toEqual([{ name: 'Hm7#11', bar: 3 }])
+  })
+
   it('never takes a lyric that starts like a chord for chords', () => {
     expect(sheet('A whole new world\nC   G\nAm I wrong\nF')).toEqual(['C', 'G', 'F'])
   })
@@ -109,6 +125,30 @@ describe('chordSheetToPaste', () => {
 
   it('leaves Paste alone when the clipboard holds no chords', () => {
     expect(chordSheetToPaste('Just some lyrics here', null)).toBeNull()
+  })
+})
+
+describe('unreadNote', () => {
+  const item = (name: string, bar: number) => t('chords.unreadItem', { name, bar })
+
+  it('names each chord it couldn’t read with the bar it’s in, counting from where it pasted', () => {
+    const note = unreadNote(
+      [
+        { name: 'Hm', bar: 0 },
+        { name: 'X7', bar: 4 }
+      ],
+      2
+    )
+    expect(note).toBe(t('chords.unread', { list: [item('Hm', 3), item('X7', 7)].join(', ') }))
+  })
+
+  it('keeps a long list short', () => {
+    const many = Array.from({ length: 9 }, (_, i) => ({ name: 'Hm', bar: i }))
+    expect(unreadNote(many, 0)).toContain(t('chords.unreadMore', { n: 5 }))
+  })
+
+  it('says nothing when everything was read', () => {
+    expect(unreadNote([], 0)).toBeNull()
   })
 })
 
