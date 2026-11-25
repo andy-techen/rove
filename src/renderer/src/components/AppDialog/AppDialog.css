@@ -2,8 +2,13 @@
    scrolls inside. The corner drags it bigger or smaller (resize), and the size it was
    dragged to comes back next time as --app-dialog-width and --app-dialog-height. */
 .app-dialog {
-  /* Same space under the section as above the title, so it sits evenly in the frame. */
-  padding-bottom: var(--space-8);
+  /* The header row is as tall as its close button (an icon button). */
+  --app-dialog-header: calc(
+    var(--size-icon-primary) + 2 * var(--space-3) + 2 * var(--size-hairline)
+  );
+  /* As much room under the section as the title band takes above it (padding, header,
+     the gap below it), so the section sits evenly in the frame. */
+  padding-bottom: calc(var(--space-8) + var(--app-dialog-header) + var(--space-8));
   width: var(--app-dialog-width, var(--layout-app-dialog));
   height: var(--app-dialog-height, var(--layout-app-dialog-height));
   min-width: var(--layout-app-dialog-min-width);
@@ -13,13 +18,12 @@
   overflow: hidden;
 }
 
-/* Only while open: a closed <dialog> must stay display: none. */
-/* As much space between the title and the section as under the section, so the
-   section sits evenly between them. */
+/* Room between the title and the section. */
 .app-dialog .dialog-header {
   margin-bottom: var(--space-8);
 }
 
+/* Only while open: a closed <dialog> must stay display: none. */
 .app-dialog[open] {
   display: flex;
   flex-direction: column;
