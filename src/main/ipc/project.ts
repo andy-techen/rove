@@ -9,14 +9,13 @@ import {
   nextTakeName,
   nextUntitledName,
   resolveAudioPath,
-  songbookFolder,
   songFolderName,
   uniqueFolderName,
   uniqueName
 } from './fileNames'
 import { songsFolder } from './settings'
+import { MANIFEST, readManifest, songbookDirs, songbookSong } from './songbook'
 
-const MANIFEST = 'project.json'
 const BACKING_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg']
 
 // The renderer may only touch song folders the main process opened for it:
@@ -82,15 +81,6 @@ async function audioDirFiles(projectDir: string): Promise<string[]> {
   return fs.readdir(audioDir)
 }
 
-async function readManifest(projectDir: string): Promise<unknown> {
-  try {
-    return JSON.parse(await fs.readFile(path.join(projectDir, MANIFEST), 'utf8'))
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null
-    throw err
-  }
-}
-
 // Folders Rove created under the songs folder follow the song name. Folders the user
 // picked elsewhere are theirs to organize, so only the name in project.json changes.
 async function followName(projectDir: string, songName: string): Promise<string> {
@@ -117,14 +107,6 @@ async function writeManifestFile(projectDir: string, manifest: unknown): Promise
 const cleanText = (raw: unknown): string =>
   typeof raw === 'string' ? raw.trim().slice(0, SONG_NAME_MAX_LENGTH) : ''
 
-/** A Rove song inside the songs folder, named by the Songbook; anything else is refused. */
-async function songbookSong(folder: unknown): Promise<string> {
-  const dir = songbookFolder(songsRoot(), folder)
-  if (!dir) throw new Error(t('dialogs.songNotOpen'))
-  await fs.access(path.join(dir, MANIFEST))
-  return dir
-}
-
 export function registerProjectIpc(): void {
   ipcMain.handle('project:choose', async (e) => {
     const options = {
@@ -144,13 +126,6 @@ export function registerProjectIpc(): void {
   // Lists every song under the songs folder for the Songbook. Folders without a
   // project.json are skipped: the user's other folders aren't Rove songs.
   ipcMain.handle('project:list', async () => {
-    const root = songsRoot()
-    let entries: import('node:fs').Dirent[]
-    try {
-      entries = await fs.readdir(root, { withFileTypes: true })
-    } catch {
-      return []
-    }
     const songs: {
       folder: string
       name: string
@@ -158,20 +133,18 @@ export function registerProjectIpc(): void {
       note?: string
       modifiedAt: number
     }[] = []
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue
-      const dir = path.join(root, entry.name)
+    for (const { folder, dir } of await songbookDirs()) {
       try {
         const [manifest, stat] = await Promise.all([
           readManifest(dir),
           fs.stat(path.join(dir, MANIFEST))
         ])
         const m = manifest as { name?: unknown; artist?: unknown; note?: unknown } | null
-        const name = m && typeof m.name === 'string' && m.name.trim() ? m.name : entry.name
+        const name = m && typeof m.name === 'string' && m.name.trim() ? m.name : folder
         const artist = m && typeof m.artist === 'string' && m.artist.trim() ? m.artist : undefined
         const note = cleanNote(m?.note)
         songs.push({
-          folder: entry.name,
+          folder,
           name,
           ...(artist && { artist }),
           ...(note && { note }),

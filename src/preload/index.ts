@@ -5,6 +5,7 @@ import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/appearance'
 import { CATALOG_CHANNELS } from '@shared/catalog'
 import { SETTINGS_CHANNELS } from '@shared/settings'
 import { WISHLIST_CHANNELS } from '@shared/wishlist'
+import { VOICE_CHANNELS } from '@shared/voice'
 import { parseOverrides } from '@shared/keymap'
 import {
   CONTEXT_MENU_CHANNEL,
@@ -92,6 +93,12 @@ const api: RoveApi = {
   readSeparationModel: () => ipcRenderer.invoke('separation:model'),
   saveInstrumental: (projectDir, source, wav) =>
     ipcRenderer.invoke('project:saveInstrumental', projectDir, source, wav),
+  voice: {
+    listTakes: () => ipcRenderer.invoke(VOICE_CHANNELS.listTakes),
+    readTake: (folder, file) => ipcRenderer.invoke(VOICE_CHANNELS.readTake, folder, file),
+    loadCache: () => ipcRenderer.invoke(VOICE_CHANNELS.loadCache),
+    saveCache: (entries) => ipcRenderer.invoke(VOICE_CHANNELS.saveCache, entries)
+  },
   getSongsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.songsFolder),
   chooseSongsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.chooseSongsFolder),
   setTheme: (next) => ipcRenderer.invoke(APPEARANCE_CHANNELS.set, next),

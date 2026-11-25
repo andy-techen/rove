@@ -12,6 +12,7 @@ import { registerSettingsIpc } from './ipc/settings'
 import { registerSeparationIpc } from './ipc/separation'
 import { registerWishlistIpc } from './ipc/wishlist'
 import { registerCatalogIpc } from './ipc/catalog'
+import { registerVoiceIpc } from './ipc/voice'
 import { APP_ORIGIN, registerAppScheme, serveApp } from './appProtocol'
 import {
   CLIPBOARD_TEXT_CHANNEL,
@@ -109,6 +110,7 @@ app.whenReady().then(async () => {
   registerSeparationIpc()
   registerWishlistIpc()
   registerCatalogIpc()
+  registerVoiceIpc()
 
   createWindow()
 

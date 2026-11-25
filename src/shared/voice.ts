@@ -69,3 +69,111 @@ export interface VoiceApi {
   loadCache(): Promise<VoiceCacheEntry[]>
   saveCache(entries: VoiceCacheEntry[]): Promise<void>
 }
+
+/** A vocal clip as project.json has it: which part of which take plays. */
+export type VocalClip = Pick<TakeRef, 'file' | 'offsetSec' | 'durationSec' | 'part'>
+
+const isSeconds = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0
+
+/**
+ * Every vocal clip in a project.json, lead and harmony. Malformed clips are left out, and a
+ * clip copied to another spot on the timeline counts once: it's the same singing.
+ */
+export function vocalClipsOf(manifest: unknown): VocalClip[] {
+  const m = manifest as { version?: unknown; tracks?: unknown } | null
+  if (!m || !Array.isArray(m.tracks)) return []
+  // Version 1 stacked every take on one lead track and kept the backing track apart.
+  const legacy = m.version === 1
+  const clips: VocalClip[] = []
+  const seen = new Set<string>()
+  for (const track of m.tracks as unknown[]) {
+    const tr = track as { role?: unknown; part?: unknown; clips?: unknown } | null
+    if (!tr || !Array.isArray(tr.clips) || (!legacy && tr.role !== 'vocal')) continue
+    const part = tr.part === 'harmony' ? 'harmony' : 'lead'
+    for (const clip of tr.clips as unknown[]) {
+      const c = clip as { file?: unknown; offset?: unknown; duration?: unknown } | null
+      if (!c || typeof c.file !== 'string' || !c.file) continue
+      const offsetSec = c.offset ?? 0
+      const durationSec = c.duration ?? 0
+      if (!isSeconds(offsetSec) || !isSeconds(durationSec)) continue
+      const key = JSON.stringify([c.file, offsetSec, durationSec])
+      if (seen.has(key)) continue
+      seen.add(key)
+      clips.push({ file: c.file, offsetSec, durationSec, part })
+    }
+  }
+  return clips
+}
+
+function parseNoteSec(raw: unknown): Record<number, number> | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  const notes: Record<number, number> = {}
+  for (const [key, sec] of Object.entries(raw)) {
+    const note = Number(key)
+    if (!Number.isInteger(note) || note < 0 || !isSeconds(sec)) return null
+    notes[note] = sec
+  }
+  return notes
+}
+
+const isNote = (n: unknown): n is number | null =>
+  n === null || (Number.isInteger(n) && (n as number) >= 0)
+
+function parseSummary(raw: unknown): TakeSummary | null {
+  const s = raw as Partial<Record<keyof TakeSummary, unknown>> | null
+  if (!s || !isSeconds(s.sungSec) || !isNote(s.lowestNote) || !isNote(s.highestNote)) return null
+  const noteSec = parseNoteSec(s.noteSec)
+  if (!noteSec) return null
+  const { landing } = s
+  if (!Array.isArray(landing) || landing.length !== LANDING_BINS || !landing.every(isSeconds)) {
+    return null
+  }
+  const tone = s.tone as Partial<TakeSummary['tone']> | null
+  if (
+    !tone ||
+    !isSeconds(tone.body) ||
+    !isSeconds(tone.mid) ||
+    !isSeconds(tone.presence) ||
+    !isSeconds(tone.air) ||
+    !isSeconds(tone.frames)
+  ) {
+    return null
+  }
+  return {
+    sungSec: s.sungSec,
+    noteSec,
+    lowestNote: s.lowestNote,
+    highestNote: s.highestNote,
+    landing: [...landing],
+    tone: {
+      body: tone.body,
+      mid: tone.mid,
+      presence: tone.presence,
+      air: tone.air,
+      frames: tone.frames
+    }
+  }
+}
+
+/** The stored summaries, keeping only well-formed entries; a bad one is analysed again. */
+export function parseVoiceCache(raw: unknown): VoiceCacheEntry[] {
+  if (!Array.isArray(raw)) return []
+  const entries: VoiceCacheEntry[] = []
+  for (const entry of raw) {
+    const e = entry as Partial<Record<keyof VoiceCacheEntry, unknown>> | null
+    if (!e || typeof e.folder !== 'string' || !e.folder || typeof e.file !== 'string' || !e.file) {
+      continue
+    }
+    if (!isSeconds(e.offsetSec) || !isSeconds(e.durationSec)) continue
+    const summary = parseSummary(e.summary)
+    if (!summary) continue
+    entries.push({
+      folder: e.folder,
+      file: e.file,
+      offsetSec: e.offsetSec,
+      durationSec: e.durationSec,
+      summary
+    })
+  }
+  return entries
+}

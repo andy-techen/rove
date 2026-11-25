@@ -83,6 +83,8 @@ workarounds (with a link) are worth a comment; restating the code isn't.
 - The renderer can only touch song folders the main process opened (dialog, created,
   or restored). Validate every path that crosses IPC.
 - Audio files are never overwritten or deleted. Takes are written with `wx`.
+- The voice profile reads takes from songs that aren't open only through
+  `voice:readTake`, which serves a file only if one of that song's vocal clips plays it.
 - Tuning plays and exports tuned copies held in memory (`audio/pitch/tuning.ts`); the
   recordings on disk stay as sung.
 - Only the main process goes online (lyrics search, `main/ipc/lyrics.ts`), and only

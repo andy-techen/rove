@@ -4,6 +4,7 @@ import type { KeymapOverrides } from '../shared/keymap'
 import type { LyricsResult } from '../shared/lyrics'
 import type { Theme } from '../shared/appearance'
 import type { WishlistItem } from '../shared/wishlist'
+import type { VoiceApi } from '../shared/voice'
 import type { ContextMenuItem, MenuAction, NativeEdit } from '../shared/menu'
 
 export interface ChosenProject {
@@ -103,6 +104,8 @@ export interface RoveApi {
   readSeparationModel(): Promise<Uint8Array>
   /** Saves an instrumental beside the song it came from; resolves to its project path. */
   saveInstrumental(projectDir: string, source: string, wav: ArrayBuffer): Promise<string>
+  /** The singer's takes across every Songbook song, and the voice profile's saved summaries. */
+  voice: VoiceApi
   /** Where new songs are created. */
   getSongsFolder(): Promise<string>
   /** Asks for a new songs folder; resolves to it, or null if cancelled. */

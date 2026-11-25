@@ -12,7 +12,7 @@ flowchart LR
   subgraph Main["Main process (Node.js) · src/main"]
     index["index.ts<br/>window, mic permission"]
     menu["menu.ts<br/>native menu bar"]
-    ipc["ipc/<br/>project · export · lyrics<br/>keymap · appearance"]
+    ipc["ipc/<br/>project · export · lyrics<br/>keymap · appearance · voice"]
   end
 
   subgraph Preload["Preload · src/preload"]
@@ -32,7 +32,7 @@ flowchart LR
   api -- "ipcRenderer.invoke" --> ipc
   menu -- "menu commands" --> api
   ipc --> disk[("Song folders<br/>~/Music/Rove/…")]
-  ipc --> userData[("userData<br/>state · keymap · appearance")]
+  ipc --> userData[("userData<br/>state · keymap · appearance<br/>voice.json")]
   ipc -- "net.fetch" --> lrclib(("LRCLIB<br/>lyrics search"))
   shared -.-> Main
   shared -.-> Renderer
@@ -167,6 +167,22 @@ flowchart LR
 
 Results are cached per audio buffer (`audio/dsp/renderCache.ts`), so switching tabs or replaying
 doesn't analyse the song again.
+
+## Voice profile: every take, read through the main process
+
+The voice profile (range, tone, pitch accuracy) listens to the vocal clips on every
+Songbook song, open or not. The main process (`ipc/voice.ts`) does the file work; the
+contract is `src/shared/voice.ts`.
+
+- `voice:listTakes` reads each song's `project.json` and lists its vocal clips, lead and
+  harmony (`vocalClipsOf`), with the take's mtime as when it was sung. Clips whose file
+  is gone are left out.
+- `voice:readTake(folder, file)` returns a take's bytes only when the folder is a song
+  directly inside the songs folder and one of its vocal clips plays that file, inside
+  its audio folder (`resolveTake`). Backing tracks and other files are refused.
+- The renderer summarises each played window in a worker and keeps the summaries in
+  `userData/voice.json` (`voice:loadCache` / `voice:saveCache`, checked both ways by
+  `parseVoiceCache`), so a take window is analysed once.
 
 ## Where the audio work lives (`src/renderer/src/audio`)
 

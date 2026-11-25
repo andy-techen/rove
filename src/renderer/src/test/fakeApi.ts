@@ -63,6 +63,12 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
     setTheme: vi.fn(async (theme: Theme) => theme),
     readSeparationModel: vi.fn(async () => new Uint8Array()),
     saveInstrumental: vi.fn(async () => 'audio/song (no vocals).wav'),
+    voice: {
+      listTakes: vi.fn(async () => []),
+      readTake: vi.fn(async () => new Uint8Array()),
+      loadCache: vi.fn(async () => []),
+      saveCache: vi.fn(async () => {})
+    },
     getSongsFolder: vi.fn(async () => '/Users/singer/Music/Rove'),
     chooseSongsFolder: vi.fn(async (): Promise<string | null> => null),
     onTheme: vi.fn((listener: (theme: Theme) => void) => {
