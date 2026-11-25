@@ -269,7 +269,6 @@
     },
     "voice": "Your Voice…",
     "checkMicrophone": "Check Microphone…",
-    "help": "Rove Help",
     "renameTrack": "Rename Track",
     "removeTrack": "Remove Track"
   },
@@ -278,8 +277,7 @@
     "close": "Close",
     "voice": "Your voice",
     "settings": "Settings",
-    "shortcuts": "Shortcuts",
-    "help": "Help"
+    "shortcuts": "Shortcuts"
   },
   "voice": {
     "loading": "Getting your voice ready…",
@@ -333,23 +331,6 @@
     "changeFolder": "Change…",
     "chooseFolderTitle": "Choose where to save new songs",
     "chooseFolderButton": "Use This Folder"
-  },
-  "help": {
-    "intro": "Record over a backing track, layer harmonies, then polish the sound.",
-    "tipsTitle": "Tips",
-    "tips": {
-      "headphones": "Wear headphones while recording so the music stays out of your vocal.",
-      "punchIn": "Click a spot on the timeline, then record to sing over just that part.",
-      "edit": "Drag a clip to move it, its edges to trim, and its top corners to fade.",
-      "sweetSpot": "The green notch under each Polish slider marks the default setting.",
-      "selectClips": "Drag across an empty part of the timeline to select several clips; ⌘-click adds one. Group them from the Edit menu, or right-click, to keep them together. Drag clips up or down to move them to another track.",
-      "moveTracks": "Drag a track by its name to move it up or down.",
-      "selectTracks": "⌘-click or ⇧-click track names to select several, then mute or remove them together.",
-      "tuning": "Turn up Tuning in Polish to pull notes into the song’s key. Rove hears the key from the music.",
-      "music": "Select the music track to change its speed or key.",
-      "chords": "Open Chords to see the music’s chords as it plays; click one to jump there.",
-      "lyrics": "Open Lyrics to search for the words. They follow along as you sing; click a line to jump there."
-    }
   },
   "newSong": {
     "title": "New song",

@@ -30,8 +30,7 @@ const changeButton = (label: string) =>
 describe('AppDialog', () => {
   it.each([
     ['voice', 'voice'],
-    ['settings', 'settings'],
-    ['help', 'help']
+    ['settings', 'settings']
   ] as const)('opens at %s from the %s command', (command, section) => {
     render(<Harness />)
     fireMenu(command)
@@ -39,16 +38,16 @@ describe('AppDialog', () => {
     expect(tab(section)).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('lists the sections in order: your voice, settings, shortcuts, help', () => {
-    openAt('help')
+  it('lists the sections in order: your voice, settings, shortcuts', () => {
+    openAt('settings')
     expect(screen.getAllByRole('tab').map((el) => el.textContent)).toEqual(
-      ['voice', 'settings', 'shortcuts', 'help'].map((s) => t(`appDialog.${s as Section}`))
+      ['voice', 'settings', 'shortcuts'].map((s) => t(`appDialog.${s as Section}`))
     )
   })
 
   it('switches section when a sidebar item is clicked', async () => {
     render(<Harness />)
-    fireMenu('help')
+    fireMenu('settings')
     await userEvent.click(tab('shortcuts'))
     expect(screen.getByRole('tabpanel', { name: t('appDialog.shortcuts') })).toBeInTheDocument()
     expect(screen.getAllByRole('table')).toHaveLength(2)
@@ -62,7 +61,7 @@ describe('AppDialog', () => {
     expect(tab('settings')).toHaveFocus()
     expect(tab('settings')).toHaveAttribute('aria-selected', 'true')
     await userEvent.keyboard('{ArrowUp}{ArrowUp}')
-    expect(tab('help')).toHaveAttribute('aria-selected', 'true')
+    expect(tab('shortcuts')).toHaveAttribute('aria-selected', 'true')
   })
 
   it('closes from the close button', async () => {
@@ -74,7 +73,7 @@ describe('AppDialog', () => {
 
   it('closes on Esc', () => {
     render(<Harness />)
-    fireMenu('help')
+    fireMenu('settings')
     // jsdom doesn't close a modal on Esc; the browser does, and fires close.
     fireEvent(screen.getByRole('dialog'), new Event('close'))
     expect(screen.queryByRole('dialog')).toBeNull()
@@ -100,15 +99,12 @@ describe('AppDialog settings', () => {
   })
 })
 
-describe('AppDialog help', () => {
-  it('shows the intro and tips', () => {
-    openAt('help')
-    expect(screen.getByText(t('help.intro'))).toBeInTheDocument()
-    expect(screen.getByText(t('help.tips.headphones'))).toBeInTheDocument()
-  })
-})
-
 describe('AppDialog shortcuts', () => {
+  it('says how to change a shortcut above the shortcuts', () => {
+    openAt('shortcuts')
+    expect(screen.getByText(t('keymap.hint'))).toBeInTheDocument()
+  })
+
   it('lists every shortcut with its keys, in two tables side by side', () => {
     openAt('shortcuts')
     const row = screen.getByRole('row', { name: new RegExp(t('keymap.redo')) })

@@ -3,6 +3,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { t } from '@shared/copy'
 import { SETTINGS_CHANNELS, Settings, parseSettings } from '@shared/settings'
+import { writeAtomically } from './writeAtomically'
 
 const settingsFile = (): string => path.join(app.getPath('userData'), 'settings.json')
 
@@ -14,9 +15,7 @@ export const songsFolder = (): string =>
 
 async function save(next: Settings): Promise<void> {
   settings = next
-  const tmp = `${settingsFile()}.tmp`
-  await fs.writeFile(tmp, JSON.stringify(settings, null, 2))
-  await fs.rename(tmp, settingsFile())
+  await writeAtomically(settingsFile(), JSON.stringify(settings, null, 2))
 }
 
 /** Loads settings before the first window opens and serves them to windows. */

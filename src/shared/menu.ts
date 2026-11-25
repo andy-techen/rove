@@ -14,7 +14,6 @@ export const MENU_ACTIONS = [
   'micCheck',
   'settings',
   'voice',
-  'help',
   'undo',
   'redo',
   'cut',

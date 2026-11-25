@@ -4,6 +4,7 @@ import path from 'path'
 import { KeymapOverrides, effectiveKeymap, parseOverrides } from '@shared/keymap'
 import { CONTEXT_MENU_CHANNEL, KEYMAP_CHANNELS, parseContextMenu } from '@shared/menu'
 import { installMenu, showContextMenu } from '../menu'
+import { writeAtomically } from './writeAtomically'
 
 const keymapFile = (): string => path.join(app.getPath('userData'), 'keymap.json')
 
@@ -20,9 +21,7 @@ async function load(): Promise<void> {
 
 async function save(raw: unknown): Promise<KeymapOverrides> {
   overrides = parseOverrides(raw)
-  const tmp = `${keymapFile()}.tmp`
-  await fs.writeFile(tmp, JSON.stringify(overrides, null, 2))
-  await fs.rename(tmp, keymapFile())
+  await writeAtomically(keymapFile(), JSON.stringify(overrides, null, 2))
   installMenu(effectiveKeymap(overrides))
   for (const win of BrowserWindow.getAllWindows()) {
     win.webContents.send(KEYMAP_CHANNELS.changed, overrides)

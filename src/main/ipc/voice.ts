@@ -12,6 +12,7 @@ import { resolveAudioPath } from './fileNames'
 import { songsFolder } from './settings'
 import { readManifest, songbookDirs } from './songbook'
 import { resolveTake } from './voiceTakes'
+import { writeAtomically } from './writeAtomically'
 
 const cacheFile = (): string => path.join(app.getPath('userData'), 'voice.json')
 
@@ -49,11 +50,8 @@ async function loadCache(): Promise<VoiceCacheEntry[]> {
   }
 }
 
-// Write then rename so a crash mid-write can't leave a half-written cache.
 async function saveCache(raw: unknown): Promise<void> {
-  const tmp = `${cacheFile()}.tmp`
-  await fs.writeFile(tmp, JSON.stringify(parseVoiceCache(raw)))
-  await fs.rename(tmp, cacheFile())
+  await writeAtomically(cacheFile(), JSON.stringify(parseVoiceCache(raw)))
 }
 
 export function registerVoiceIpc(): void {

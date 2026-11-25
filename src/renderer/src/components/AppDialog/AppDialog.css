@@ -2,13 +2,18 @@
   width: min(var(--layout-app-dialog), calc(100vw - var(--space-12)));
 }
 
-/* Sidebar and section side by side; the body keeps one height so switching sections
-   doesn't make the dialog jump. */
+/* Sidebar and section side by side, at one fixed height so switching sections never
+   resizes the dialog; a long section scrolls inside it. */
 .app-dialog-body {
   display: grid;
   grid-template-columns: var(--layout-app-dialog-sidebar) minmax(0, 1fr);
   gap: var(--space-9);
-  min-height: var(--layout-app-dialog-body);
+  height: min(var(--layout-app-dialog-body), calc(100vh - var(--layout-app-dialog-chrome)));
+}
+
+.app-dialog-panel {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .app-dialog-sidebar {
@@ -38,23 +43,6 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* Help */
-
-.help-section h3 {
-  margin-top: var(--space-8);
-  margin-bottom: var(--space-4);
-  font-size: var(--font-size-ui);
-  color: var(--color-text-muted);
-}
-
-.help-tips {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding-left: var(--space-8);
-  font-size: var(--font-size-ui);
-}
-
 /* Shortcuts table */
 
 .keymap-header {
@@ -64,13 +52,17 @@
   margin-bottom: var(--space-2);
 }
 
+.keymap-hint {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
 .keymap-reset-all {
   margin-left: auto;
 }
 
 .keymap-scroll {
-  max-height: var(--layout-keymap-max);
-  overflow-y: auto;
   /* Room for the focus ring on the first and last rows' keys. */
   padding: var(--space-1);
 }

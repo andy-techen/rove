@@ -13,7 +13,6 @@ import {
 } from '@shared/keymap'
 import { saveOverrides, useKeymap } from '../../state/commands/keymap'
 import { useShortcuts } from '../../state/commands/shortcuts'
-import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
 import { cx } from '../ui/cx'
 
@@ -140,7 +139,7 @@ export function KeymapTable(): React.JSX.Element {
   return (
     <div className="keymap">
       <header className="keymap-header">
-        <HelpTip text={t('keymap.hint')} />
+        <p className="keymap-hint">{t('keymap.hint')}</p>
         <IconButton
           className="keymap-reset-all"
           icon="reset"
@@ -149,7 +148,7 @@ export function KeymapTable(): React.JSX.Element {
           onClick={() => void saveOverrides({})}
         />
       </header>
-      {/* Two columns side by side, scrolling in a short box so the dialog stays small. */}
+      {/* Two columns side by side; the dialog's section scrolls when they're long. */}
       <div className="keymap-scroll">
         <div className="keymap-columns">{COLUMNS.map(renderColumn)}</div>
       </div>

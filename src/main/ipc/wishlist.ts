@@ -10,6 +10,7 @@ import {
   cleanText,
   parseWishlist
 } from '@shared/wishlist'
+import { writeAtomically } from './writeAtomically'
 
 const wishlistFile = (): string => path.join(app.getPath('userData'), 'wishlist.json')
 
@@ -23,9 +24,7 @@ async function load(): Promise<WishlistItem[]> {
 }
 
 async function save(items: WishlistItem[]): Promise<void> {
-  const tmp = `${wishlistFile()}.tmp`
-  await fs.writeFile(tmp, JSON.stringify(items, null, 2))
-  await fs.rename(tmp, wishlistFile())
+  await writeAtomically(wishlistFile(), JSON.stringify(items, null, 2))
 }
 
 /** Newest first, as the Songbook shows them. */

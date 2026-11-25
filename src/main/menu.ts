@@ -133,8 +133,7 @@ export function installMenu(keymap: Keymap): void {
           : [])
       ]
     },
-    { role: 'windowMenu' },
-    { role: 'help', submenu: [{ label: t('menu.help'), click: () => send('help') }] }
+    { role: 'windowMenu' }
   ]
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }

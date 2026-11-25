@@ -15,6 +15,7 @@ import {
 } from './fileNames'
 import { songsFolder } from './settings'
 import { MANIFEST, readManifest, songbookDirs, songbookSong } from './songbook'
+import { writeAtomically } from './writeAtomically'
 
 const BACKING_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg']
 
@@ -96,12 +97,8 @@ async function followName(projectDir: string, songName: string): Promise<string>
   return target
 }
 
-// Write then rename so a crash mid-write can't leave a half-written project file.
 async function writeManifestFile(projectDir: string, manifest: unknown): Promise<void> {
-  const target = path.join(projectDir, MANIFEST)
-  const tmp = `${target}.tmp`
-  await fs.writeFile(tmp, JSON.stringify(manifest, null, 2))
-  await fs.rename(tmp, target)
+  await writeAtomically(path.join(projectDir, MANIFEST), JSON.stringify(manifest, null, 2))
 }
 
 const cleanText = (raw: unknown): string =>

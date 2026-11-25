@@ -3,6 +3,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/appearance'
 import { refreshMenu } from '../menu'
+import { writeAtomically } from './writeAtomically'
 
 const appearanceFile = (): string => path.join(app.getPath('userData'), 'appearance.json')
 
@@ -24,9 +25,7 @@ export async function setTheme(raw: unknown): Promise<Theme> {
   refreshMenu()
   for (const win of BrowserWindow.getAllWindows()) reportTheme(win)
   try {
-    const tmp = `${appearanceFile()}.tmp`
-    await fs.writeFile(tmp, JSON.stringify({ theme }, null, 2))
-    await fs.rename(tmp, appearanceFile())
+    await writeAtomically(appearanceFile(), JSON.stringify({ theme }, null, 2))
   } catch {
     // Not remembered for next time, but the switch still holds for this session.
   }

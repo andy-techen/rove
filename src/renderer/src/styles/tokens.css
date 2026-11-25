@@ -147,10 +147,11 @@
   /* The app dialog: a section sidebar beside the two-column shortcuts table. */
   --layout-app-dialog: 820px;
   --layout-app-dialog-sidebar: 140px;
-  --layout-app-dialog-body: 360px;
+  --layout-app-dialog-body: 480px;
+  /* The dialog's header and padding around the body, kept clear of the window's edge. */
+  --layout-app-dialog-chrome: 140px;
   --layout-songbook-panel: 460px;
   --layout-shortcut-keys: 56px;
-  --layout-keymap-max: 280px;
   --layout-lyrics: 320px;
   --layout-chord: 64px;
   --layout-grip: 64px;

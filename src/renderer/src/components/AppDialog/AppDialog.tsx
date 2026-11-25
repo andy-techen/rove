@@ -2,7 +2,6 @@ import { KeyboardEvent, useRef } from 'react'
 import { t } from '@shared/copy'
 import { Dialog } from '../ui/Dialog'
 import { cx } from '../ui/cx'
-import { HelpSection } from './HelpSection'
 import { KeymapTable } from './KeymapTable'
 import { SECTIONS, Section } from './sections'
 import { SettingsSection } from './SettingsSection'
@@ -12,8 +11,7 @@ import './AppDialog.css'
 const CONTENT: Record<Section, () => React.JSX.Element> = {
   voice: VoiceSection,
   settings: SettingsSection,
-  shortcuts: KeymapTable,
-  help: HelpSection
+  shortcuts: KeymapTable
 }
 
 // Arrow keys step through the sections, wrapping round; Home and End jump to the ends.
@@ -32,7 +30,7 @@ interface Props {
 
 const tabId = (section: Section): string => `app-dialog-tab-${section}`
 
-/** One place for the singer's voice, settings, shortcuts and help, picked from a sidebar. */
+/** One place for the singer's voice, settings and shortcuts, picked from a sidebar. */
 export function AppDialog({ section, onSection, onClose }: Props): React.JSX.Element {
   const tabs = useRef<Partial<Record<Section, HTMLButtonElement | null>>>({})
   const Content = CONTENT[section]
