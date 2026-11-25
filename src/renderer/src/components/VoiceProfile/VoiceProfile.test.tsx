@@ -6,7 +6,10 @@ import type { VoiceCacheEntry } from '@shared/voice'
 import type { Entry } from '../../audio/voice'
 import { sungEntry } from '../../state/voice/testEntries'
 import { singingTime } from '../../state/voice/voiceText'
+import { previewNote } from '../../state/chords/preview'
 import { VoiceProfile } from '.'
+
+vi.mock('../../state/chords/preview', () => ({ previewNote: vi.fn() }))
 
 /** Songs already listened to, so the profile shows straight from the cache. */
 function renderWith(entries: Entry[]) {
@@ -55,6 +58,15 @@ describe('VoiceProfile', () => {
     expect(await screen.findByRole('heading', { name: t('voice.range') })).toBeInTheDocument()
     expect(screen.getByText(t('voice.lowest')).nextSibling).toHaveTextContent('C3')
     expect(screen.getByText(t('voice.highest')).nextSibling).toHaveTextContent('G4')
+  })
+
+  it('plays a note on the piano when its name is clicked', async () => {
+    const user = renderWith(twoSongs())
+    const [highest] = await screen.findAllByRole('button', {
+      name: t('voice.playNote', { note: 'G4' })
+    })
+    await user.click(highest)
+    expect(previewNote).toHaveBeenCalledWith(67)
   })
 
   it('shows each song’s range when By song is pressed', async () => {

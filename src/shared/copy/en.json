@@ -296,7 +296,7 @@
     "range": "Your range",
     "lowest": "Lowest",
     "comfort": "Comfort zone",
-    "noteSpan": "{low} – {high}",
+    "playNote": "Play {note}",
     "highest": "Highest",
     "mostUsed": "Most at home",
     "bySong": "By song",

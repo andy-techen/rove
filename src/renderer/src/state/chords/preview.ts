@@ -2,6 +2,7 @@ import { Chord } from '../../audio/music/chords'
 import { getAudioContext } from '../../audio/engine/engine'
 import { DRUM_TAIL_SEC, drum, drumLevel, renderDrums } from '../../audio/music/drums'
 import { renderStrums } from '../../audio/music/guitar'
+import { PIANO_RING_OUT_SEC, loadPianoSamples, renderPiano } from '../../audio/music/piano'
 import { BarBeat, BeatChart, PadDrum, Project } from '../song/project'
 import { barOf } from './beats'
 import { barGrid } from './chart'
@@ -20,6 +21,27 @@ export async function previewChord(chord: Chord): Promise<void> {
     [{ time: 0, notes: guitarNotes(chord), velocity: 1, direction: 'down' }],
     0,
     PREVIEW_SEC,
+    ctx.sampleRate
+  )
+  play(ctx, samples)
+}
+
+// Long enough to hear and hum along with, then the key is let go and it dies away.
+const NOTE_HOLD_SEC = 1.2
+
+/**
+ * Plays one note on the piano, so a singer without perfect pitch can hear what a note
+ * name sounds like (their lowest note, their comfort zone).
+ */
+export async function previewNote(midi: number): Promise<void> {
+  const ctx = getAudioContext()
+  await ctx.resume()
+  const piano = await loadPianoSamples(ctx.sampleRate)
+  const samples = await renderPiano(
+    [{ time: 0, midi, velocity: 1, holdSec: NOTE_HOLD_SEC }],
+    piano,
+    0,
+    NOTE_HOLD_SEC + PIANO_RING_OUT_SEC,
     ctx.sampleRate
   )
   play(ctx, samples)

@@ -7,6 +7,7 @@ import { Button } from '../ui/Button'
 import { Keyboard } from './Keyboard'
 import { KEYBOARD_HEIGHT, KeyScale, keyScale } from './keyboardGeometry'
 import { Measured } from './Measured'
+import { NoteButton } from './NoteButton'
 
 const BARS_HEIGHT = 90
 const BAR_GAP = 2
@@ -17,8 +18,6 @@ const ROW_BAR = 10
 const KEYBOARD_GAP = 6
 
 const note = (n: number | null): string => (n === null ? '–' : noteWithOctave(n))
-const span = (low: number | null, high: number | null): string =>
-  t('voice.noteSpan', { low: note(low), high: note(high) })
 
 /** Time on each note over the keyboard, with the comfort zone shaded behind. */
 function NoteTime({
@@ -176,19 +175,27 @@ export function RangeCard({ profile, songs, keys }: Props): React.JSX.Element {
       <dl className="voice-stats">
         <div>
           <dt>{t('voice.lowest')}</dt>
-          <dd>{note(profile.lowestNote)}</dd>
+          <dd>
+            <NoteButton note={profile.lowestNote} />
+          </dd>
         </div>
         <div>
           <dt>{t('voice.comfort')}</dt>
-          <dd>{span(profile.comfortLow, profile.comfortHigh)}</dd>
+          <dd>
+            <NoteButton note={profile.comfortLow} /> – <NoteButton note={profile.comfortHigh} />
+          </dd>
         </div>
         <div>
           <dt>{t('voice.highest')}</dt>
-          <dd>{note(profile.highestNote)}</dd>
+          <dd>
+            <NoteButton note={profile.highestNote} />
+          </dd>
         </div>
         <div>
           <dt>{t('voice.mostUsed')}</dt>
-          <dd>{note(profile.mostUsedNote)}</dd>
+          <dd>
+            <NoteButton note={profile.mostUsedNote} />
+          </dd>
         </div>
       </dl>
       {bySong ? (
