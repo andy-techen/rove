@@ -140,6 +140,7 @@
   --layout-advanced-label: 164px;
   --layout-advanced-value: 72px;
   --layout-tooltip: 340px; /* wide enough for a one-sentence hint on one line */
+  --layout-tooltip-rich: 460px; /* formatted help: a short list, each item on one line */
   --layout-titlebar: 44px;
   --layout-traffic-lights: 80px;
   --layout-dialog: 640px;

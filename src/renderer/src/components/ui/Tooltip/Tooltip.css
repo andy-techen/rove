@@ -5,6 +5,7 @@
 
 /* Formatted help (a short list) gets a little more room than a one-line tip. */
 .tooltip.tooltip-rich {
+  max-width: min(var(--layout-tooltip-rich), calc(100vw - var(--space-7)));
   padding: var(--space-6) var(--space-7);
 }
 
