@@ -6,7 +6,6 @@ export const SECTIONS = ['voice', 'settings', 'shortcuts'] as const
 export type Section = (typeof SECTIONS)[number]
 
 const BY_COMMAND: Partial<Record<Command, Section>> = {
-  voice: 'voice',
   settings: 'settings'
 }
 

@@ -28,14 +28,11 @@ const changeButton = (label: string) =>
   screen.getByRole('button', { name: new RegExp(`shortcut for ${label} `) })
 
 describe('AppDialog', () => {
-  it.each([
-    ['voice', 'voice'],
-    ['settings', 'settings']
-  ] as const)('opens at %s from the %s command', (command, section) => {
+  it('opens at Settings from the Settings command', () => {
     render(<Harness />)
-    fireMenu(command)
-    expect(screen.getByRole('dialog', { name: t(`appDialog.${section}`) })).toBeInTheDocument()
-    expect(tab(section)).toHaveAttribute('aria-selected', 'true')
+    fireMenu('settings')
+    expect(screen.getByRole('dialog', { name: t('appDialog.settings') })).toBeInTheDocument()
+    expect(tab('settings')).toHaveAttribute('aria-selected', 'true')
   })
 
   it('lists the sections in order: your voice, settings, shortcuts', () => {
@@ -55,13 +52,13 @@ describe('AppDialog', () => {
 
   it('moves between sections with the arrow keys, wrapping round', async () => {
     render(<Harness />)
-    fireMenu('voice')
-    tab('voice').focus()
+    fireMenu('settings')
+    tab('settings').focus()
     await userEvent.keyboard('{ArrowDown}')
-    expect(tab('settings')).toHaveFocus()
-    expect(tab('settings')).toHaveAttribute('aria-selected', 'true')
-    await userEvent.keyboard('{ArrowUp}{ArrowUp}')
+    expect(tab('shortcuts')).toHaveFocus()
     expect(tab('shortcuts')).toHaveAttribute('aria-selected', 'true')
+    await userEvent.keyboard('{ArrowDown}')
+    expect(tab('voice')).toHaveAttribute('aria-selected', 'true')
   })
 
   it('closes from the close button', async () => {
