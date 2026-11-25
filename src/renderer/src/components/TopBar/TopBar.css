@@ -33,28 +33,34 @@
 
 /* Tabs */
 
-/* The tabs fill the bar down to its bottom edge and touch, so they sit on the song
-   below like folder tabs. */
 .tabs {
-  flex: 1;
-  align-self: stretch;
+  flex: 0 1 auto;
   min-width: 0;
   display: flex;
-  align-items: stretch;
-  padding-top: var(--space-2);
-  margin-bottom: calc(-1 * var(--space-1));
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The songs sit in one soft track, the open one a raised pill: the same switch as the
+   voice profile's All songs | By song. It hugs the tabs and scrolls when there are more
+   than fit; New song and Songbook sit beside it. */
+.tab-track {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-/* Each song is a soft fill, rounded only at the top; the open song's is the strongest. */
 .tab {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   max-width: var(--layout-tab-max);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  background: var(--color-surface-raised);
+  border-radius: var(--radius-md);
   color: var(--color-text-muted);
 }
 
@@ -65,9 +71,8 @@
   user-select: none;
 }
 
-/* Brighter under the pointer, so the drag clearly picks up a whole tab. */
 .tab:hover {
-  background: var(--color-highlight);
+  color: var(--color-text);
 }
 
 .tab.dragging {
@@ -94,7 +99,7 @@
 }
 
 .tab.active {
-  background: var(--color-highlight);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 

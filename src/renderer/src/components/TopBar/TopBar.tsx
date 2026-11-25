@@ -78,82 +78,84 @@ export function TopBar({
       <span className="brand">
         <Logo />
       </span>
-      <nav className="tabs" role="tablist" aria-label={t('topBar.tabsLabel')}>
-        {tabs.map((tab, index) => {
-          const active = tab.id === activeId
-          return (
-            <div
-              key={tab.id}
-              role="tab"
-              aria-selected={active}
-              className={cx(
-                'tab',
-                active && 'active',
-                drag?.from === index && 'dragging',
-                dropSlot === index && 'drop-before',
-                dropSlot === tabs.length && index === tabs.length - 1 && 'drop-after'
-              )}
-              draggable={!disabled}
-              onDragStart={(e) => {
-                // Typing a new name drags text, not the tab.
-                if (e.target instanceof HTMLInputElement) return
-                if (e.dataTransfer) {
-                  e.dataTransfer.effectAllowed = 'move'
-                  // Carry the whole tab, held where it was grabbed, rather than the
-                  // browser's default of whatever text or button was under the pointer.
+      <nav className="tabs">
+        <div className="tab-track" role="tablist" aria-label={t('topBar.tabsLabel')}>
+          {tabs.map((tab, index) => {
+            const active = tab.id === activeId
+            return (
+              <div
+                key={tab.id}
+                role="tab"
+                aria-selected={active}
+                className={cx(
+                  'tab',
+                  active && 'active',
+                  drag?.from === index && 'dragging',
+                  dropSlot === index && 'drop-before',
+                  dropSlot === tabs.length && index === tabs.length - 1 && 'drop-after'
+                )}
+                draggable={!disabled}
+                onDragStart={(e) => {
+                  // Typing a new name drags text, not the tab.
+                  if (e.target instanceof HTMLInputElement) return
+                  if (e.dataTransfer) {
+                    e.dataTransfer.effectAllowed = 'move'
+                    // Carry the whole tab, held where it was grabbed, rather than the
+                    // browser's default of whatever text or button was under the pointer.
+                    const box = e.currentTarget.getBoundingClientRect()
+                    e.dataTransfer.setDragImage?.(
+                      e.currentTarget,
+                      e.clientX - box.left,
+                      e.clientY - box.top
+                    )
+                  }
+                  setDrag({ from: index, slot: null })
+                }}
+                onDragOver={(e) => {
+                  if (!drag) return
+                  e.preventDefault()
                   const box = e.currentTarget.getBoundingClientRect()
-                  e.dataTransfer.setDragImage?.(
-                    e.currentTarget,
-                    e.clientX - box.left,
-                    e.clientY - box.top
-                  )
-                }
-                setDrag({ from: index, slot: null })
-              }}
-              onDragOver={(e) => {
-                if (!drag) return
-                e.preventDefault()
-                const box = e.currentTarget.getBoundingClientRect()
-                const after = e.clientX > box.left + box.width / 2
-                const slot = index + (after ? 1 : 0)
-                if (slot !== drag.slot) setDrag({ ...drag, slot })
-              }}
-              onDrop={(e) => {
-                e.preventDefault()
-                if (drag?.slot != null)
-                  onMove(tabs[drag.from].id, indexForSlot(drag.from, drag.slot))
-                endDrag()
-              }}
-              onDragEnd={endDrag}
-            >
-              {active ? (
-                <SongName name={tab.name} disabled={disabled} onRename={onRename} />
-              ) : (
-                <Tooltip text={tab.name}>
-                  <button
-                    type="button"
-                    className="tab-name"
+                  const after = e.clientX > box.left + box.width / 2
+                  const slot = index + (after ? 1 : 0)
+                  if (slot !== drag.slot) setDrag({ ...drag, slot })
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (drag?.slot != null)
+                    onMove(tabs[drag.from].id, indexForSlot(drag.from, drag.slot))
+                  endDrag()
+                }}
+                onDragEnd={endDrag}
+              >
+                {active ? (
+                  <SongName name={tab.name} disabled={disabled} onRename={onRename} />
+                ) : (
+                  <Tooltip text={tab.name}>
+                    <button
+                      type="button"
+                      className="tab-name"
+                      disabled={disabled}
+                      onClick={() => onSwitch(tab.id)}
+                    >
+                      {tab.name}
+                    </button>
+                  </Tooltip>
+                )}
+                {closable && (
+                  <IconButton
+                    icon="close"
+                    iconSize="secondary"
+                    className="tab-close"
+                    label={t('topBar.close', { name: tab.name })}
+                    title={t('topBar.closeTitle')}
                     disabled={disabled}
-                    onClick={() => onSwitch(tab.id)}
-                  >
-                    {tab.name}
-                  </button>
-                </Tooltip>
-              )}
-              {closable && (
-                <IconButton
-                  icon="close"
-                  iconSize="secondary"
-                  className="tab-close"
-                  label={t('topBar.close', { name: tab.name })}
-                  title={t('topBar.closeTitle')}
-                  disabled={disabled}
-                  onClick={() => onClose(tab.id)}
-                />
-              )}
-            </div>
-          )
-        })}
+                    onClick={() => onClose(tab.id)}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </div>
         <IconButton
           icon="plus"
           iconSize="secondary"
