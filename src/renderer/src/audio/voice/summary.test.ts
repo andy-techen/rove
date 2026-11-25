@@ -38,6 +38,12 @@ describe('summariseTake', () => {
     expect([held.lowestNote, held.highestNote]).toEqual([A3, A3])
   })
 
+  it('leaves a passing note out of the time on each note', async () => {
+    const take = join(voice(midiToHz(E4), 0.08), silence(0.3), voice(220, 0.5))
+    const summary = await summariseTake(take, SR, whole)
+    expect(notes(summary.noteSec)).toEqual([A3])
+  })
+
   it('splits a run where the pitch jumps to a new note', async () => {
     const summary = await summariseTake(join(voice(220, 0.5), voice(midiToHz(E4), 0.5)), SR, whole)
     expect([summary.lowestNote, summary.highestNote]).toEqual([A3, E4])

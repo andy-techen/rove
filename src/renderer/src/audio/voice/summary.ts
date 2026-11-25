@@ -11,9 +11,10 @@ import { analysePitch, hzToMidi } from '../pitch/pitch'
 /** The part of a take that plays. durationSec 0 means to the end. */
 export type TakeWindow = Pick<TakeRef, 'offsetSec' | 'durationSec'>
 
-// A note has to be held this long to count towards range and landing: shorter runs
-// are slides, ornaments and consonants, which would stretch the range with notes the
-// singer passes through rather than sings.
+// A note has to be held this long to count towards range, time on each note and
+// landing: shorter runs are slides, ornaments and the odd octave slip in the pitch
+// tracker, which would stretch the range with notes the singer passes through rather
+// than sings.
 const HELD_NOTE_SEC = 0.15
 // A jump bigger than this between hops is a new note, not vibrato or drift.
 const NOTE_CHANGE_SEMITONES = 0.7
@@ -77,14 +78,14 @@ export async function summariseTake(
   const { f0, hopSec } = await analysePitch(played, sampleRate)
   const midi = Array.from(f0, (hz) => (hz > 0 ? hzToMidi(hz) : 0))
 
-  for (const note of midi) {
-    if (!note) continue
+  summary.sungSec = midi.filter((note) => note > 0).length * hopSec
+  const runs = heldNotes(midi, hopSec)
+  for (const note of runs.flat()) {
     const key = Math.round(note)
-    summary.sungSec += hopSec
     summary.noteSec[key] = (summary.noteSec[key] ?? 0) + hopSec
   }
 
-  const held = heldNotes(midi, hopSec).map(median)
+  const held = runs.map(median)
   if (held.length) {
     summary.lowestNote = Math.round(Math.min(...held))
     summary.highestNote = Math.round(Math.max(...held))

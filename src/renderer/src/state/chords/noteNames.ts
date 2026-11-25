@@ -8,6 +8,10 @@ const noteNames = (): string[] => t('tuning.noteNames').split(' ')
 /** "C♯", "B♭": a pitch class (0 = C) as Rove spells it. */
 export const noteName = (pitchClass: number): string => noteNames()[pitchClass]
 
+/** "C♯3": a MIDI note as a note name and octave (60 is C4, middle C). */
+export const noteWithOctave = (midi: number): string =>
+  `${noteName(((midi % 12) + 12) % 12)}${Math.floor(midi / 12) - 1}`
+
 /** "A minor". */
 export function keyName(key: SongKey): string {
   return t('tuning.keyName', { note: noteNames()[key.tonic], mode: t(`tuning.${key.mode}`) })

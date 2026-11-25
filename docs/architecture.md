@@ -183,21 +183,26 @@ contract is `src/shared/voice.ts`.
 - The renderer summarises each played window in a worker and keeps the summaries in
   `userData/voice.json` (`voice:loadCache` / `voice:saveCache`, checked both ways by
   `parseVoiceCache`), so a take window is analysed once.
+- `state/voice/useVoiceProfile.ts` runs that loop when Your voice opens (App dialog), then
+  `voiceView.ts` adds the summaries up overall, by month and by song. Nothing shows until
+  `VOICE_UNLOCK_SEC` (3 minutes) of sung notes are heard. The charts live in
+  `components/VoiceProfile/` and draw at their measured width, so labels keep their size.
 
 ## Where the audio work lives (`src/renderer/src/audio`)
 
-| Folder        | What it does                                                                                                                       |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `engine/`     | The AudioContext, mic devices and input, recorder setup, lining takes up                                                           |
-| `mix/`        | The live graph: per-track gain, pan, mute and tone; playback; metronome clicks; meters and waveform peaks                          |
-| `polish/`     | Polish settings mapped to the noise gate, EQ, compressor, de-esser and reverb                                                      |
-| `pitch/`      | Sung-note detection, key finding, tuned copies rendered offline                                                                    |
-| `separation/` | Vocal removal: SCNet in a worker with onnxruntime-web, on the CPU's threads                                                        |
-| `music/`      | Beat tracking, time-stretch and pitch-shift for the backing track, chord detection; instrumentals' guitar, sampled piano and drums |
-| `export/`     | Offline mixdown and loudness levelling                                                                                             |
-| `encode/`     | WAV and MP3 encoding (takes and exports)                                                                                           |
-| `dsp/`        | Shared maths: FFT, resampling, units, and the render cache                                                                         |
-| `worklets/`   | Code that runs on the audio thread: the recorder and the noise gate                                                                |
+| Folder        | What it does                                                                                                                                    |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine/`     | The AudioContext, mic devices and input, recorder setup, lining takes up                                                                        |
+| `mix/`        | The live graph: per-track gain, pan, mute and tone; playback; metronome clicks; meters and waveform peaks                                       |
+| `polish/`     | Polish settings mapped to the noise gate, EQ, compressor, de-esser and reverb                                                                   |
+| `pitch/`      | Sung-note detection, key finding, tuned copies rendered offline                                                                                 |
+| `voice/`      | The voice profile: reading takes, summing what each played window adds (time per note, held notes, tone), adding summaries up; runs in a worker |
+| `separation/` | Vocal removal: SCNet in a worker with onnxruntime-web, on the CPU's threads                                                                     |
+| `music/`      | Beat tracking, time-stretch and pitch-shift for the backing track, chord detection; instrumentals' guitar, sampled piano and drums              |
+| `export/`     | Offline mixdown and loudness levelling                                                                                                          |
+| `encode/`     | WAV and MP3 encoding (takes and exports)                                                                                                        |
+| `dsp/`        | Shared maths: FFT, resampling, units, and the render cache                                                                                      |
+| `worklets/`   | Code that runs on the audio thread: the recorder and the noise gate                                                                             |
 
 Heavy work (tuning, speed and key, analysis, export) runs offline into buffers; live
 playback only mixes what's ready. Recordings on disk are never changed: tuned and

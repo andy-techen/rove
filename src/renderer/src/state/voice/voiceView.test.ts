@@ -1,0 +1,46 @@
+import { describe, expect, it } from 'vitest'
+import { VOICE_UNLOCK_SEC } from '@shared/voice'
+import { sungEntry } from './testEntries'
+import { voiceView } from './voiceView'
+
+const unlocked = (view: ReturnType<typeof voiceView>) => {
+  if (view.locked) throw new Error('expected an unlocked view')
+  return view
+}
+
+describe('voiceView', () => {
+  it('stays locked until there are 3 minutes of singing', () => {
+    const view = voiceView([sungEntry('A', '2026-07-01', { sec: VOICE_UNLOCK_SEC - 1 })])
+    expect(view).toEqual({ locked: true, sungSec: VOICE_UNLOCK_SEC - 1 })
+  })
+
+  it('unlocks at 3 minutes, across songs', () => {
+    const half = VOICE_UNLOCK_SEC / 2
+    const view = voiceView([
+      sungEntry('A', '2026-07-01', { sec: half }),
+      sungEntry('B', '2026-07-02', { sec: half })
+    ])
+    expect(view.locked).toBe(false)
+  })
+
+  it('spans whole octaves around every note sung', () => {
+    const view = unlocked(voiceView([sungEntry('A', '2026-07-01', { sec: 200, notes: [50, 67] })]))
+    expect(view.keys).toEqual({ low: 48, high: 71 })
+  })
+
+  it('marks the months that reached a new high or low note', () => {
+    const view = unlocked(
+      voiceView([
+        sungEntry('A', '2026-07-01', { sec: 100, notes: [50, 60] }),
+        sungEntry('B', '2026-08-01', { sec: 100, notes: [50, 64] }),
+        sungEntry('C', '2026-10-01', { sec: 100, notes: [47, 62] })
+      ])
+    )
+    expect(view.months.map((m) => [m.month, m.newHigh, m.newLow, m.profile !== null])).toEqual([
+      [6, false, false, true],
+      [7, true, false, true],
+      [8, false, false, false],
+      [9, false, true, true]
+    ])
+  })
+})
