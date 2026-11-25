@@ -50,7 +50,7 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  App["App.tsx<br/>onboarding, help, new-song dialog"] --> tabs["useTabs<br/>open songs, tab order"]
+  App["App.tsx<br/>onboarding, app dialog, new-song dialog"] --> tabs["useTabs<br/>open songs, tab order"]
   tabs --> screen["RecordScreen<br/>(one per tab, kept mounted)"]
 
   screen --> song["useSong<br/>project.json, undo, saving"]

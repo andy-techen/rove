@@ -1,6 +1,6 @@
 // Every keyboard shortcut in Rove, in one place. The native menu takes its
 // accelerators from here, the renderer matches its own keys against it, tooltips
-// show its keys, and the Help panel lists it. People can rebind any shortcut; their
+// show its keys, and the app dialog's Shortcuts section lists it. People can rebind any shortcut; their
 // changes are stored as overrides of these defaults.
 
 export type ShortcutGroup = 'file' | 'edit' | 'playback' | 'view'
@@ -11,7 +11,7 @@ export interface Shortcut {
   accelerator: string
   /** Not in the menu bar, so the renderer handles its keys whatever they are. */
   menu?: false
-  /** Shown in Help, but not a key press (e.g. "⌘ + scroll"); can't be rebound. */
+  /** Shown in Shortcuts, but not a key press (e.g. "⌘ + scroll"); can't be rebound. */
   gesture?: true
 }
 

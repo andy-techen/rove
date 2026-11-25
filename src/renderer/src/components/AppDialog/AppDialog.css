@@ -1,4 +1,46 @@
-.help-dialog h3 {
+.app-dialog {
+  width: min(var(--layout-app-dialog), calc(100vw - var(--space-12)));
+}
+
+/* Sidebar and section side by side; the body keeps one height so switching sections
+   doesn't make the dialog jump. */
+.app-dialog-body {
+  display: grid;
+  grid-template-columns: var(--layout-app-dialog-sidebar) minmax(0, 1fr);
+  gap: var(--space-9);
+  min-height: var(--layout-app-dialog-body);
+}
+
+.app-dialog-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.app-dialog-tab {
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-dialog-tab:hover {
+  background: var(--color-surface-raised);
+}
+
+.app-dialog-tab.active {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Help */
+
+.help-section h3 {
   margin-top: var(--space-8);
   margin-bottom: var(--space-4);
   font-size: var(--font-size-ui);
@@ -19,12 +61,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-8);
   margin-bottom: var(--space-2);
-}
-
-.keymap-header h3 {
-  margin: 0;
 }
 
 .keymap-reset-all {
@@ -114,4 +151,35 @@ button.keymap-keys:hover {
 
 .keymap-table .keymap-problem {
   font-size: var(--font-size-caption);
+}
+/* Settings */
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: var(--font-size-ui);
+}
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--font-weight-semibold);
+}
+
+.settings-folder {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* A long path is cut short; hovering shows it whole. */
+.settings-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
 }

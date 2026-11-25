@@ -42,6 +42,7 @@ export function installMenu(keymap: Keymap): void {
         { role: 'about' },
         separator,
         shortcut('settings'),
+        { label: t('menu.voice'), click: () => send('voice') },
         { label: t('menu.checkMicrophone'), click: () => send('micCheck') },
         separator,
         { role: 'services' },

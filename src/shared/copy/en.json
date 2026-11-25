@@ -267,14 +267,21 @@
       "light": "Light",
       "dark": "Dark"
     },
+    "voice": "Your Voice…",
     "checkMicrophone": "Check Microphone…",
     "help": "Rove Help",
     "renameTrack": "Rename Track",
     "removeTrack": "Remove Track"
   },
-  "settings": {
-    "title": "Settings",
+  "appDialog": {
+    "sections": "Sections",
     "close": "Close",
+    "voice": "Your voice",
+    "settings": "Settings",
+    "shortcuts": "Shortcuts",
+    "help": "Help"
+  },
+  "settings": {
     "songsFolder": "Songs folder",
     "songsFolderHint": "Where new songs are saved",
     "changeFolder": "Change…",
@@ -282,10 +289,7 @@
     "chooseFolderButton": "Use This Folder"
   },
   "help": {
-    "title": "Help",
-    "close": "Close",
     "intro": "Record over a backing track, layer harmonies, then polish the sound.",
-    "shortcutsTitle": "Keyboard shortcuts",
     "tipsTitle": "Tips",
     "tips": {
       "headphones": "Wear headphones while recording so the music stays out of your vocal.",

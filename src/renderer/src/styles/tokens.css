@@ -141,6 +141,10 @@
   --layout-traffic-lights: 80px;
   --layout-dialog: 640px;
   --layout-dialog-narrow: 420px;
+  /* The app dialog: a section sidebar beside the two-column shortcuts table. */
+  --layout-app-dialog: 820px;
+  --layout-app-dialog-sidebar: 140px;
+  --layout-app-dialog-body: 360px;
   --layout-songbook-panel: 460px;
   --layout-shortcut-keys: 56px;
   --layout-keymap-max: 280px;

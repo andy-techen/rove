@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { HelpDialog } from './components/HelpDialog'
+import { AppDialog, useAppDialog } from './components/AppDialog'
 import { NewSongDialog } from './components/NewSongDialog'
-import { SettingsDialog } from './components/SettingsDialog'
 import { SongbookDialog } from './components/SongbookDialog'
 import { MicCheck } from './components/MicCheck'
 import { RecordScreen } from './components/RecordScreen'
@@ -18,8 +17,7 @@ function App(): React.JSX.Element {
   const mic = useMicrophone()
   const [onboarded, setOnboarded] = useState(hasOnboarded)
   const [screen, setScreen] = useState<Screen>(onboarded ? 'record' : 'micCheck')
-  const [helpOpen, setHelpOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const dialog = useAppDialog()
   const [naming, setNaming] = useState(false)
   const [songbookOpen, setSongbookOpen] = useState(false)
   const tabs = useTabs(onboarded)
@@ -45,9 +43,7 @@ function App(): React.JSX.Element {
   const menu = useRef<(action: Command) => void>(() => {})
   useEffect(() => {
     menu.current = (action) => {
-      if (action === 'help') setHelpOpen(true)
-      else if (action === 'settings') setSettingsOpen(true)
-      else if (action === 'micCheck') setScreen('micCheck')
+      if (action === 'micCheck') setScreen('micCheck')
       else if (!onboarded) return
       else if (action === 'newSong') setNaming(true)
       else if (action === 'open') void tabs.open()
@@ -82,8 +78,9 @@ function App(): React.JSX.Element {
       ))}
       {!showMicCheck && tabs.error && <p className="error app-error">{tabs.error}</p>}
       {showMicCheck && <MicCheck mic={mic} onboarding={!onboarded} onDone={finishMicCheck} />}
-      {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
-      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {dialog.section && (
+        <AppDialog section={dialog.section} onSection={dialog.show} onClose={dialog.close} />
+      )}
       {naming && (
         <NewSongDialog
           onCreate={(name, artist, note) => {

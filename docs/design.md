@@ -29,8 +29,8 @@ hears.
 - **Small actions in a row of controls are `quiet` buttons** ("Tap"): a soft fill, no
   border, so they read as clickable without standing out like `secondary`.
 - **Instructions hide behind help.** How-to text goes behind a `HelpTip` (a small "?"
-  that reveals the instruction on hover or keyboard focus) or in the Help panel (app
-  menu → Help). Don't add always-visible paragraphs.
+  that reveals the instruction on hover or keyboard focus) or in the app dialog's Help
+  section (app menu → Help). Don't add always-visible paragraphs.
 - **Visible text is for names, values and warnings** the singer must act on (a song
   name, a time, "Too loud!").
 - **Plain language.** Name controls by what the singer hears ("Space", "Smoothness");

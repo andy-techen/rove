@@ -52,9 +52,9 @@ Import components through their folder (`'../Timeline'`), not deep paths.
 ## Shortcuts and commands
 
 - Every shortcut lives in `src/shared/keymap.ts` with its default keys. The native
-  menu, the renderer's key handling, tooltips and the Help table all read from it, so
+  menu, the renderer's key handling, tooltips and the Shortcuts table all read from it, so
   a new shortcut is one entry there plus a `keymap.<id>` copy key.
-- People can rebind shortcuts in Help. Their changes are overrides stored in
+- People can rebind shortcuts in the app dialog's Shortcuts section. Their changes are overrides stored in
   `userData/keymap.json`; the main process validates them (`parseOverrides`) and
   rebuilds the menu. In the renderer, read keys with `useShortcuts()` so text updates
   when a shortcut changes; never format a default accelerator directly.

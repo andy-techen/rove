@@ -138,9 +138,8 @@ export function KeymapTable(): React.JSX.Element {
   )
 
   return (
-    <section className="keymap" aria-labelledby="keymap-title">
+    <div className="keymap">
       <header className="keymap-header">
-        <h3 id="keymap-title">{t('help.shortcutsTitle')}</h3>
         <HelpTip text={t('keymap.hint')} />
         <IconButton
           className="keymap-reset-all"
@@ -154,6 +153,6 @@ export function KeymapTable(): React.JSX.Element {
       <div className="keymap-scroll">
         <div className="keymap-columns">{COLUMNS.map(renderColumn)}</div>
       </div>
-    </section>
+    </div>
   )
 }

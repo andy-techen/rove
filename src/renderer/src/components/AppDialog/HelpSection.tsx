@@ -1,7 +1,4 @@
 import { t } from '@shared/copy'
-import { Dialog } from '../ui/Dialog'
-import { KeymapTable } from './KeymapTable'
-import './HelpDialog.css'
 
 const TIPS = [
   'help.tips.headphones',
@@ -17,22 +14,17 @@ const TIPS = [
   'help.tips.chords'
 ] as const
 
-export function HelpDialog({ onClose }: { onClose(): void }): React.JSX.Element {
+/** What Rove is for, and tips for getting the most from it. */
+export function HelpSection(): React.JSX.Element {
   return (
-    <Dialog
-      title={t('help.title')}
-      closeLabel={t('help.close')}
-      onClose={onClose}
-      className="help-dialog"
-    >
+    <div className="help-section">
       <p className="muted">{t('help.intro')}</p>
-      <KeymapTable />
       <h3>{t('help.tipsTitle')}</h3>
       <ul className="help-tips">
         {TIPS.map((tip) => (
           <li key={tip}>{t(tip)}</li>
         ))}
       </ul>
-    </Dialog>
+    </div>
   )
 }
