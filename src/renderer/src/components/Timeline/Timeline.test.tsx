@@ -40,6 +40,8 @@ function timelineProps(overrides: Partial<Parameters<typeof Timeline>[0]> = {}) 
     onAddChords: vi.fn(),
     onPickChord: vi.fn(),
     onSwapBars: vi.fn(),
+    onMoveBars: vi.fn(),
+    onNudgeBars: vi.fn(),
     onAddVocal: vi.fn(),
     onMix: vi.fn(),
     selectedClips: [],
@@ -372,6 +374,24 @@ describe('Timeline', () => {
     fireEvent.pointerEnter(named(t('chords.keep', { chord: 'Am' }), 3), { buttons: 1 })
     fireEvent.pointerUp(named(t('chords.keep', { chord: 'Am' }), 3))
     expect(props.onSwapBars).toHaveBeenCalledWith('k1', 0, 2)
+  })
+
+  it('moves where the bars start when the grip on the first bar is dragged', () => {
+    const props = renderTimeline({ tracks: [chordsLane(), lane({})] })
+    const grip = screen.getByRole('button', { name: t('timeline.moveBars') })
+    fireEvent.pointerDown(grip, { button: 0, clientX: 100 })
+    fireEvent.pointerMove(grip, { clientX: 160 })
+    fireEvent.pointerUp(grip, { clientX: 160 })
+    const phases = vi.mocked(props.onMoveBars).mock.calls.map(([phase]) => phase)
+    expect(phases).toEqual(['start', 'move', 'end'])
+    expect(vi.mocked(props.onMoveBars).mock.calls[1][1]).toBeGreaterThan(0)
+  })
+
+  it('nudges where the bars start with the arrow keys on the grip', () => {
+    const props = renderTimeline({ tracks: [chordsLane(), lane({})] })
+    const grip = screen.getByRole('button', { name: t('timeline.moveBars') })
+    fireEvent.keyDown(grip, { key: 'ArrowLeft' })
+    expect(props.onNudgeBars).toHaveBeenCalledWith(-1)
   })
 
   it('picks a run of bars with shift-click', async () => {

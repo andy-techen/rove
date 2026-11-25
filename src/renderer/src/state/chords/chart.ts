@@ -191,3 +191,45 @@ export function chartClickGrid(timeline: ChartTimeline): ClickGrid {
     beatsPerBar: timeline.beatsPerBar
   }
 }
+
+/** Where bar 1 has moved to while its grip is dragged, and what it snapped onto. */
+export interface DraggedStart {
+  /** In the song's own time (before Speed), as the tempo keeps it. */
+  startSec: number
+  /** Where on the timeline it snapped, for the guide line; null when it moves freely. */
+  snappedAt: number | null
+}
+
+/**
+ * Bar 1 dragged `deltaSec` along the timeline from `fromSec`. It snaps onto the music's
+ * nearest beat, or the start of the song, when it comes within `toleranceSec` (timeline
+ * seconds) of one, so lining the bars up with the music is easy.
+ */
+export function draggedBarStart(
+  fromSec: number,
+  deltaSec: number,
+  speed: number,
+  musicBeat: { bpm: number; startSec: number } | null,
+  toleranceSec: number
+): DraggedStart {
+  const wanted = Math.max(0, fromSec + deltaSec * speed)
+  const targets = [0]
+  if (musicBeat && musicBeat.bpm > 0) {
+    const period = SEC_PER_MIN / musicBeat.bpm
+    targets.push(musicBeat.startSec + Math.round((wanted - musicBeat.startSec) / period) * period)
+  }
+  const near = targets
+    .filter((sec) => sec >= 0 && Math.abs(sec - wanted) / speed <= toleranceSec)
+    .sort((a, b) => Math.abs(a - wanted) - Math.abs(b - wanted))[0]
+  return near === undefined
+    ? { startSec: tidy(wanted), snappedAt: null }
+    : { startSec: tidy(near), snappedAt: tidy(near / speed) }
+}
+
+// One arrow-key press moves bar 1 this far on the timeline: fine enough to line a chord
+// up by ear, where dragging does the big moves.
+const NUDGE_SEC = 0.02
+
+/** Bar 1 nudged a little earlier (-1) or later (1), in the song's own time. */
+export const nudgedBarStart = (fromSec: number, direction: -1 | 1, speed: number): number =>
+  Math.max(0, tidy(fromSec + direction * NUDGE_SEC * speed))

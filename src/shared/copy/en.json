@@ -97,6 +97,8 @@
     "recordBacking": "Record the music",
     "addInstrumental": "Add an instrumental",
     "changeChord": "Bar {bar}: {chord}",
+    "moveBars": "Move where the bars start",
+    "moveBarsHelp": "Drag to line the bars up with the music. Every instrumental and the metronome move together.",
     "recorded": "Recorded",
     "recordedDetail": "Recorded · {length}",
     "detailGuitar": "Instrumental · Guitar",

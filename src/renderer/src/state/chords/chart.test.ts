@@ -20,10 +20,11 @@ import {
   withMusicSpeed,
   withNewTrack,
   withSongBeats,
+  withSongStart,
   withSongTempo
 } from '../song/project'
 import { hasMusicChoice, mixdownOf, selectLanes, songEnd } from '../song/selectors'
-import { chartClickGrid, chartTimeline, placeAt } from './chart'
+import { chartClickGrid, chartTimeline, draggedBarStart, nudgedBarStart, placeAt } from './chart'
 import { chartFromText } from './chordText'
 import { chordName } from './noteNames'
 import { t } from '@shared/copy'
@@ -307,5 +308,39 @@ describe('a beats instrumental', () => {
     const broken = { ...chordsTracksOf(p)[0], beats: { groove: 'disco', parts: [] } }
     const opened = parseProject({ ...p, tracks: [broken] })
     expect(chordsTracksOf(opened)[0].instrument).toBeUndefined()
+  })
+})
+
+describe('moving where the bars start', () => {
+  const beat = { bpm: 120, startSec: 0.3 } // the music's beats: 0.3, 0.8, 1.3…
+
+  it('moves every instrumental together, never before the song starts', () => {
+    const p = withSongStart(song('C G'), 1.5)
+    expect(lineOf(p).startSec).toBe(1.5)
+    expect(tempoOf(withSongStart(p, -2)).startSec).toBe(0)
+  })
+
+  it('follows the drag where there is no beat close by', () => {
+    expect(draggedBarStart(1, 0.12, 1, beat, 0.05)).toEqual({ startSec: 1.12, snappedAt: null })
+  })
+
+  it('snaps onto the music’s nearest beat when dragged close to it', () => {
+    expect(draggedBarStart(1, 0.27, 1, beat, 0.05)).toEqual({ startSec: 1.3, snappedAt: 1.3 })
+  })
+
+  it('snaps onto the start of the song', () => {
+    expect(draggedBarStart(0.5, -0.47, 1, null, 0.05)).toEqual({ startSec: 0, snappedAt: 0 })
+    expect(draggedBarStart(0.5, -3, 1, null, 0.05).startSec).toBe(0)
+  })
+
+  it('works in the song’s own time when Speed plays it faster', () => {
+    // At double speed, a second dragged on the timeline is two seconds of the song.
+    const moved = draggedBarStart(1, 0.5, 2, null, 0.01)
+    expect(moved.startSec).toBe(2)
+  })
+
+  it('nudges a little with the arrow keys', () => {
+    expect(nudgedBarStart(1, 1, 1)).toBeCloseTo(1.02)
+    expect(nudgedBarStart(0.01, -1, 1)).toBe(0)
   })
 })

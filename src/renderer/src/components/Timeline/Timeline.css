@@ -318,6 +318,28 @@
   box-shadow: inset calc(-1 * var(--size-hairline)) 0 0 var(--color-bg);
 }
 
+/*
+ * The grip on an instrumental's first bar, like a clip's trim edge: drag it to move where
+ * the bars start. It sits over the bar's left edge and shows on hover or focus.
+ */
+.bars-grip {
+  position: absolute;
+  top: var(--clip-inset);
+  bottom: var(--clip-inset);
+  z-index: 2;
+  width: var(--size-trim-handle);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  background: transparent;
+  cursor: ew-resize;
+}
+
+.lane:hover .bars-grip,
+.bars-grip:focus-visible {
+  background: linear-gradient(to right, var(--color-accent), transparent);
+}
+
 /* The chord's name, centred over the whole block; the bars underneath take the clicks. */
 .chord-block-name {
   position: absolute;

@@ -17,6 +17,7 @@ import { ChordCellView, LaneView } from '../../state/song/selectors'
 import { MenuTarget } from '../../state/commands/contextMenu'
 import { Button } from '../ui/Button'
 import { IconButton } from '../ui/IconButton'
+import { Tooltip } from '../ui/Tooltip'
 import { cx } from '../ui/cx'
 import { ClipView, GesturePhase } from './ClipView'
 import { ClipBlockView } from './ClipBlockView'
@@ -72,6 +73,14 @@ interface Props {
   onPickChord(trackId: string, place: ChartPlace): void
   /** A bar was dragged onto another on a chords lane: they trade places. */
   onSwapBars(trackId: string, from: number, to: number): void
+  /**
+   * The grip on an instrumental's first bar was dragged `deltaSec` along the timeline:
+   * where every instrumental's bars start moves with it. It snaps onto something within
+   * `toleranceSec`.
+   */
+  onMoveBars(phase: GesturePhase, deltaSec: number, toleranceSec: number): void
+  /** The grip was nudged with an arrow key: bar 1 a little earlier (-1) or later (1). */
+  onNudgeBars(direction: -1 | 1): void
   /** The bar open in the Instrumental panel, outlined on its lane. */
   pickedChord?: { trackId: string; place: ChartPlace } | null
   onAddVocal(part: VocalPart): void
@@ -140,6 +149,8 @@ export function Timeline({
   onPickChord,
   pickedChord = null,
   onSwapBars,
+  onMoveBars,
+  onNudgeBars,
   onAddVocal,
   onMix,
   selectedClips,
@@ -276,6 +287,49 @@ export function Timeline({
   const boxEnded = useRef(false)
   // Dragging a bar on a chords lane onto another swaps the two; `over` is where it'd land.
   const chordDrag = useRef<{ trackId: string; bar: number } | null>(null)
+  // Where the pointer went down on a bars grip, and whether it has moved far enough to drag.
+  const barsDrag = useRef<{ x0: number; moved: boolean } | null>(null)
+
+  /** The grip on an instrumental's first bar: drag it, or nudge it with the arrow keys. */
+  const barsGrip = (startSec: number): ReactNode => (
+    <Tooltip text={t('timeline.moveBarsHelp')}>
+      <button
+        type="button"
+        className="bars-grip"
+        aria-label={t('timeline.moveBars')}
+        // Runtime geometry: on bar 1's left edge.
+        style={{ left: x(startSec) }}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return
+          e.stopPropagation()
+          e.currentTarget.setPointerCapture?.(e.pointerId)
+          barsDrag.current = { x0: e.clientX, moved: false }
+        }}
+        onPointerMove={(e) => {
+          const d = barsDrag.current
+          if (!d || pxPerSec <= 0) return
+          if (!d.moved) {
+            if (Math.abs(e.clientX - d.x0) < BOX_THRESHOLD_PX) return
+            d.moved = true
+            onMoveBars('start', 0, SNAP_PX / pxPerSec)
+          }
+          onMoveBars('move', (e.clientX - d.x0) / pxPerSec, SNAP_PX / pxPerSec)
+        }}
+        onPointerUp={(e) => {
+          const d = barsDrag.current
+          barsDrag.current = null
+          if (d?.moved && pxPerSec > 0)
+            onMoveBars('end', (e.clientX - d.x0) / pxPerSec, SNAP_PX / pxPerSec)
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+          e.preventDefault()
+          e.stopPropagation()
+          onNudgeBars(e.key === 'ArrowLeft' ? -1 : 1)
+        }}
+      />
+    </Tooltip>
+  )
   const [chordDrop, setChordDrop] = useState<{ trackId: string; bar: number } | null>(null)
   useEffect(() => {
     // Cleared after the click that ends the drag has been handled.
@@ -564,6 +618,7 @@ export function Timeline({
               }
             />
           ))}
+          {canEdit && track.chords?.[0] && barsGrip(track.chords[0].start)}
           {track.chords?.map((block) => (
             <div
               key={`${block.cells[0].place.bar}:${block.cells[0].place.slot}`}

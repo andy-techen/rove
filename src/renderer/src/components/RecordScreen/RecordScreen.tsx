@@ -46,6 +46,7 @@ import {
   withChartFeel,
   feelsOf,
   ChordFeel,
+  withSongStart,
   withSongTempo,
   withTempoOfMusic,
   tempoOf,
@@ -90,7 +91,9 @@ import {
   barRange,
   chartClickGrid,
   barGrid,
+  draggedBarStart,
   instrumentalTimeline,
+  nudgedBarStart,
   placeAt,
   transposeChord
 } from '../../state/chords/chart'
@@ -226,6 +229,8 @@ export function RecordScreen({
     (GestureStart & { key: string; together: ClipRef[]; laneShift: number }) | null
   >(null)
   const gestureCount = useRef(0)
+  // Bar 1 being dragged: where it started, and the undo step every move joins.
+  const barsDrag = useRef<{ fromSec: number; key: string } | null>(null)
 
   const name = open?.data.name
   const dir = open?.dir
@@ -752,6 +757,32 @@ export function RecordScreen({
               const feels = swapBars(feelsOf(chart), from, to)
               song.edit(withChartBars(open.data, trackId, swapBars(chart.bars, from, to), feels))
               pickChord(trackId, { bar: to, slot: 0 })
+            }}
+            onMoveBars={(phase, deltaSec, toleranceSec) => {
+              if (!open) return
+              if (phase === 'start')
+                barsDrag.current = {
+                  fromSec: tempoOf(open.data).startSec,
+                  key: `bars-drag:${++gestureCount.current}`
+                }
+              const drag = barsDrag.current
+              if (!drag) return
+              const moved = draggedBarStart(
+                drag.fromSec,
+                deltaSec,
+                musicOf(open.data).speed,
+                musicTempo,
+                toleranceSec
+              )
+              song.edit(withSongStart(open.data, moved.startSec), drag.key)
+              setSnapAt(phase === 'end' ? null : moved.snappedAt)
+              if (phase === 'end') barsDrag.current = null
+            }}
+            onNudgeBars={(direction) => {
+              if (!open || !canEdit) return
+              const { startSec } = tempoOf(open.data)
+              const next = nudgedBarStart(startSec, direction, musicOf(open.data).speed)
+              song.edit(withSongStart(open.data, next), 'bars-nudge')
             }}
             pickedChord={
               panelShown && polishTrack?.role === 'chords'

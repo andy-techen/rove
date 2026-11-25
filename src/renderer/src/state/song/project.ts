@@ -1135,6 +1135,12 @@ export const withSongBeats = (project: Project, beatsPerBar: BeatsPerBar): Proje
   tempo: { ...tempoOf(project), beatsPerBar }
 })
 
+/** Every instrumental's bar 1, and the metronome's, at `startSec` (never before the song). */
+export const withSongStart = (project: Project, startSec: number): Project => ({
+  ...project,
+  tempo: { ...tempoOf(project), startSec: Math.max(0, startSec) }
+})
+
 /** Bars `first` to `last` played with `feel`. */
 export const withChartFeel = (
   project: Project,
