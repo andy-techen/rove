@@ -37,6 +37,8 @@ export interface RoveApi {
   onFullScreen(listener: (fullScreen: boolean) => void): () => void
   /** Runs a text-editing command (undo, cut, paste…) on the focused field. */
   nativeEdit(command: NativeEdit): Promise<void>
+  /** The system clipboard's text (empty when it holds none). */
+  readClipboardText(): Promise<string>
   /** Shows a right-click menu; the choice arrives through `onMenu`. */
   showContextMenu(items: ContextMenuItem[]): Promise<void>
   /** Listens for native menu choices; returns a function that stops listening. */

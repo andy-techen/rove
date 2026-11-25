@@ -61,30 +61,134 @@ export function parseChord(text: string): Chord | null {
     : { root: root.pitch, quality, bass: bass.pitch }
 }
 
-// A bar written as one of these keeps the chord before it going.
-const CARRY_ON = new Set(['%', '-', '.', '·', '/'])
+// Richer chords chord sheets use, played as the nearest kind Rove knows: an added or
+// suspended colour drops away, ninths and up keep their seventh, half-diminished is
+// played diminished. Matched exactly, like SUFFIXES.
+const NEAREST: Record<string, ChordQuality> = {
+  add9: 'major',
+  add2: 'major',
+  '2': 'major',
+  '5': 'major',
+  '6': 'major',
+  '69': 'major',
+  aug: 'major',
+  '+': 'major',
+  '9': '7',
+  '11': '7',
+  '13': '7',
+  '7sus4': '7',
+  '7sus': '7',
+  '7b9': '7',
+  '7#9': '7',
+  maj9: 'maj7',
+  M9: 'maj7',
+  m6: 'minor',
+  madd9: 'minor',
+  mM7: 'minor',
+  mmaj7: 'minor',
+  m9: 'm7',
+  m11: 'm7',
+  m7b5: 'dim',
+  ø: 'dim',
+  ø7: 'dim',
+  dim7: 'dim',
+  '°7': 'dim',
+  o7: 'dim'
+}
+
+/** A chord as a chord sheet writes it, richer ones played as their nearest. */
+function sheetChord(text: string): Chord | null {
+  const exact = parseChord(text)
+  if (exact) return exact
+  const [body, ...bass] = text.split('/')
+  const root = body && readNote(body)
+  const quality = root && NEAREST[body.slice(root.length)]
+  if (!root || !quality) return null
+  const plain = parseChord([body.slice(0, root.length), ...bass].join('/'))
+  return plain && { ...plain, quality }
+}
+
+// A bar written as one of these keeps the chord before it going ("N.C.": no chord).
+const CARRY_ON = new Set(['%', '-', '.', '·', '/', 'N.C.', 'NC'])
+// "x2", "(x3)", "2x": play the line that many times.
+const REPEAT = /^\(?(?:[x×](\d+)|(\d+)[x×])\)?$/i
+// A heading on its own line: "[Verse 1]", "[Chorus]".
+const HEADING = /^\[[^\]]*\]$/
+// A label before a line's chords: "Intro:", "Chorus 2:".
+const LABEL = /^[A-Za-z][\w ]*:\s*/
+// Chords written into the lyrics: "[C]Let it [G]be".
+const INLINE = /\[([^\]]+)\]/g
+// A line of guitar tab: "e|---3---|".
+const TAB = /^[A-Ga-g][#b]?\s*\|[-\d|hpbr/\\~x ]*$/
+
+const words = (s: string): string[] => s.split(/\s+/).filter(Boolean)
 
 /**
- * A chart typed or pasted as text: "C G Am F" (one chord per bar) or
- * "| C | G | F G | C |" (bars between lines, chords in a bar share it). Anything it
- * can't read is listed in `unread` and its bar left to carry the last chord on.
+ * A chart typed or pasted as text: "C G Am F" (one chord per bar), "| C | G | F G | C |"
+ * (bars between lines, chords in a bar share it), or a chord sheet copied from the web,
+ * chords above the lyrics or inside them in brackets, one bar per chord. Lyrics,
+ * headings and tab are skipped. Anything on a line of chords it can't read is listed in
+ * `unread` and its bar left to carry the last chord on.
  */
 export function chartFromText(text: string): { bars: Chord[][]; unread: string[] } {
   const unread: string[] = []
-  const readBar = (tokens: string[]): Chord[] =>
-    tokens.flatMap((token) => {
-      if (CARRY_ON.has(token)) return []
-      const chord = parseChord(token)
-      if (!chord) unread.push(token)
-      return chord ? [chord] : []
-    })
-  const words = (s: string): string[] => s.split(/\s+/).filter(Boolean)
-  if (!text.includes('|')) return { bars: words(text).map((w) => readBar([w])), unread }
-  const cells = text.split('|')
-  // "| C | G |" has nothing before the first line or after the last.
-  if (!cells[0].trim()) cells.shift()
-  if (cells.length && !cells.at(-1)?.trim()) cells.pop()
-  return { bars: cells.map((cell) => readBar(words(cell))), unread }
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  // A whole sheet can hold lyrics, where "A" or "Am" is a word; only a capital letter
+  // starts a chord there. A single typed line can be any case.
+  const isChord = (token: string): boolean =>
+    (lines.length === 1 || /^[A-G]/.test(token)) && !!sheetChord(token)
+
+  const readLine = (line: string): Chord[][] => {
+    if (TAB.test(line)) return []
+    const inline = [...line.matchAll(INLINE)].map((m) => m[1].trim())
+    if (inline.length && inline.every(isChord))
+      return inline.map((name) => [sheetChord(name) as Chord])
+    if (HEADING.test(line)) return []
+    const body = line.replace(LABEL, '')
+    const tokens = words(body.replace(/\|/g, ' '))
+    const repeat = tokens.map((t) => REPEAT.exec(t)).find(Boolean)
+    const playable = tokens.filter((t) => !REPEAT.test(t) && !CARRY_ON.has(t))
+    // A line is chords when at least half of what's on it reads as chords.
+    if (!playable.length || playable.filter(isChord).length * 2 < playable.length) return []
+    const readBar = (cell: string[]): Chord[] =>
+      cell.flatMap((token) => {
+        if (CARRY_ON.has(token) || REPEAT.test(token)) return []
+        const chord = sheetChord(token)
+        if (!chord) unread.push(token)
+        return chord ? [chord] : []
+      })
+    let bars: Chord[][]
+    if (body.includes('|')) {
+      const cells = body.split('|')
+      // "| C | G |" has nothing before the first line or after the last.
+      if (!cells[0].trim()) cells.shift()
+      if (cells.length && !cells.at(-1)?.trim()) cells.pop()
+      bars = cells.map((cell) => readBar(words(cell)))
+    } else {
+      bars = tokens.filter((t) => !REPEAT.test(t)).map((token) => readBar([token]))
+    }
+    const times = repeat ? Number(repeat[1] ?? repeat[2]) : 1
+    return Array.from({ length: Math.max(1, times) }, () => bars).flat()
+  }
+
+  return { bars: lines.flatMap(readLine), unread }
+}
+
+/**
+ * The chart Paste should put in, from the system clipboard's `text`: null when it holds
+ * no chords, or when it hasn't changed since bars were copied in Rove (`textAtCopy`), so
+ * those bars, with how each is played, paste instead.
+ */
+export function chordSheetToPaste(
+  text: string,
+  textAtCopy: string | null
+): { bars: Chord[][]; unread: string[] } | null {
+  if (textAtCopy !== null && text === textAtCopy) return null
+  const chart = chartFromText(text)
+  return chart.bars.length ? chart : null
 }
 
 /** Every chord the picker offers: each kind on each root, C first. */

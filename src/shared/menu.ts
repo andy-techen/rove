@@ -70,6 +70,8 @@ export const FULL_SCREEN_CHANNEL = 'window:fullScreen'
 
 /** Text editing commands the renderer asks the main process to run natively. */
 export const NATIVE_EDIT_CHANNEL = 'edit:native'
+/** The system clipboard's text, so Paste can read a chord sheet copied from the web. */
+export const CLIPBOARD_TEXT_CHANNEL = 'edit:clipboardText'
 export const NATIVE_EDITS = ['undo', 'redo', 'cut', 'copy', 'paste', 'selectAll'] as const
 export type NativeEdit = (typeof NATIVE_EDITS)[number]
 

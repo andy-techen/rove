@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, session, systemPreferences } from 'electron'
+import { app, clipboard, shell, BrowserWindow, ipcMain, session, systemPreferences } from 'electron'
 import { join } from 'path'
 import { electronApp, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -13,7 +13,12 @@ import { registerSeparationIpc } from './ipc/separation'
 import { registerWishlistIpc } from './ipc/wishlist'
 import { registerCatalogIpc } from './ipc/catalog'
 import { APP_ORIGIN, registerAppScheme, serveApp } from './appProtocol'
-import { FULL_SCREEN_CHANNEL, NATIVE_EDIT_CHANNEL, NATIVE_EDITS } from '@shared/menu'
+import {
+  CLIPBOARD_TEXT_CHANNEL,
+  FULL_SCREEN_CHANNEL,
+  NATIVE_EDIT_CHANNEL,
+  NATIVE_EDITS
+} from '@shared/menu'
 
 // Opening size, and the smallest that still fits the timeline and mixer.
 const WINDOW = { width: 900, height: 670, minWidth: 640, minHeight: 480 }
@@ -93,6 +98,8 @@ app.whenReady().then(async () => {
       e.sender[command as (typeof NATIVE_EDITS)[number]]()
     }
   })
+  // Read only, and only text: Paste on a chord chart reads a chord sheet from it.
+  ipcMain.handle(CLIPBOARD_TEXT_CHANNEL, () => clipboard.readText())
   registerProjectIpc()
   registerExportIpc()
   registerLyricsIpc()

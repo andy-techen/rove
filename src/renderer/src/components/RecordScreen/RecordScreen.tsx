@@ -100,7 +100,15 @@ import {
 import { chordsInKey, keyOfChart } from '../../state/chords/keyChords'
 import { playBeat, previewChord, previewDrum } from '../../state/chords/preview'
 import { Chord } from '../../audio/music/chords'
-import { clearBars, copyBars, insertBars, removeBars, swapBars } from '../../state/chords/chartBars'
+import {
+  clearBars,
+  copyBars,
+  insertBars,
+  pasteBars,
+  removeBars,
+  swapBars
+} from '../../state/chords/chartBars'
+import { chordSheetToPaste } from '../../state/chords/chordText'
 import { transposeKey } from '../../audio/pitch/key'
 import {
   BOTTOM_HEIGHT,
@@ -360,6 +368,8 @@ export function RecordScreen({
   const [clipboard, setClipboard] = useState<CopiedClips | null>(null)
   // Copied bars of chords, kept apart from clips: they paste into any instrumental.
   const [copiedBars, setCopiedBars] = useState<{ bars: Chord[][]; feels: ChordFeel[] } | null>(null)
+  // Chords the last paste into a chart couldn't read, shown under that chart.
+  const [chartUnread, setChartUnread] = useState<{ trackId: string; names: string[] } | null>(null)
   // Copied drum bars, kept apart from chords: they paste only into beats.
   const [copiedBeats, setCopiedBeats] = useState<CopiedBeats | null>(null)
   // With no clips picked, copy and paste act on the bars open in the Instrumental panel.
@@ -373,7 +383,7 @@ export function RecordScreen({
   const chartTarget =
     !selectedClips.length &&
     polishTrack?.role === 'chords' &&
-    instrumentOf(polishTrack) === 'guitar' &&
+    instrumentOf(polishTrack) !== 'beats' &&
     polishTrack.chart
       ? {
           trackId: polishTrack.id,
@@ -393,9 +403,18 @@ export function RecordScreen({
         bars: copyBars(chartTarget.bars, first, last),
         feels: copyBars(chartTarget.feels, first, last)
       })
+      rememberClipboard()
       return
     }
     if (open && selectedClips.length) setClipboard(copyClips(open.data, selectedClips))
+  }
+  // The clipboard's text when bars were last copied in Rove: Paste uses those bars until
+  // something else (a chord sheet from the web) is copied.
+  const clipboardAtCopy = useRef<string | null>(null)
+  const rememberClipboard = (): void => {
+    void window.api.readClipboardText().then((text) => {
+      clipboardAtCopy.current = text
+    })
   }
   const cutBars = (): void => {
     if (!open || !chartTarget || !canEdit) return
@@ -404,6 +423,7 @@ export function RecordScreen({
       bars: copyBars(chartTarget.bars, first, last),
       feels: copyBars(chartTarget.feels, first, last)
     })
+    rememberClipboard()
     song.edit(
       withChartBars(open.data, chartTarget.trackId, clearBars(chartTarget.bars, first, last))
     )
@@ -417,15 +437,8 @@ export function RecordScreen({
       setChartPlace({ bar: at, slot: 0, last: at + copiedBeats.parts.length - 1 })
       return
     }
-    if (chartTarget && copiedBars) {
-      if (!open || !canEdit) return
-      // Pasted bars go in after the selection, so pasting adds to the song rather than
-      // writing over what's there; pasting again lays the copies end to end.
-      const at = chartTarget.range[1] + 1
-      const bars = insertBars(chartTarget.bars, at, copiedBars.bars)
-      const feels = insertBars(chartTarget.feels, at, copiedBars.feels)
-      song.edit(withChartBars(open.data, chartTarget.trackId, bars, feels))
-      setChartPlace({ bar: at, slot: 0, last: at + copiedBars.bars.length - 1 })
+    if (chartTarget) {
+      void pasteIntoChart()
       return
     }
     if (!open || !clipboard || !canEdit) return
@@ -438,6 +451,32 @@ export function RecordScreen({
     // Landing at the end of the paste means pasting again lays copies end to end.
     const span = Math.max(...clipboard.items.map((i) => i.at + i.clip.duration))
     transport.seek(position + span)
+  }
+  /**
+   * Paste into a chord chart: a chord sheet copied from the web writes its chords over
+   * the bars from the selected one on; bars copied in Rove go in after the selection.
+   */
+  const pasteIntoChart = async (): Promise<void> => {
+    if (!open || !chartTarget || !canEdit) return
+    const text = await window.api.readClipboardText()
+    const sheet = chordSheetToPaste(text, copiedBars ? clipboardAtCopy.current : null)
+    if (sheet) {
+      const [first] = chartTarget.range
+      const bars = pasteBars(chartTarget.bars, first, sheet.bars)
+      song.edit(withChartBars(open.data, chartTarget.trackId, bars))
+      setChartUnread({ trackId: chartTarget.trackId, names: sheet.unread })
+      setChartPlace({ bar: first, slot: 0, last: first + sheet.bars.length - 1 })
+      return
+    }
+    if (copiedBars) {
+      // Pasted bars go in after the selection, so pasting adds to the song rather than
+      // writing over what's there; pasting again lays the copies end to end.
+      const at = chartTarget.range[1] + 1
+      const bars = insertBars(chartTarget.bars, at, copiedBars.bars)
+      const feels = insertBars(chartTarget.feels, at, copiedBars.feels)
+      song.edit(withChartBars(open.data, chartTarget.trackId, bars, feels))
+      setChartPlace({ bar: at, slot: 0, last: at + copiedBars.bars.length - 1 })
+    }
   }
   const group = (): void => {
     if (open && canEdit && selectedClips.length > 1) song.edit(groupClips(open.data, selectedClips))
@@ -1004,6 +1043,7 @@ export function RecordScreen({
                   ) : (
                     chart && (
                       <ChartEditor
+                        unread={chartUnread?.trackId === polishTrack.id ? chartUnread.names : []}
                         instrument={instrumentOf(polishTrack) === 'piano' ? 'piano' : 'guitar'}
                         onFeel={(first, last, feel) =>
                           song.edit(withChartFeel(open.data, polishTrack.id, first, last, feel))

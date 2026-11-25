@@ -1,4 +1,4 @@
-import { CSSProperties, KeyboardEvent, MouseEvent, useEffect, useRef, useState } from 'react'
+import { CSSProperties, KeyboardEvent, MouseEvent, useEffect, useRef } from 'react'
 import { t } from '@shared/copy'
 import { Chord } from '../../audio/music/chords'
 import {
@@ -19,12 +19,11 @@ import {
   clearBars,
   fillBars,
   keepAt,
-  pasteBars,
   repeatLine,
   splitBar,
   withChordAt
 } from '../../state/chords/chartBars'
-import { chartFromText, sameChord } from '../../state/chords/chordText'
+import { sameChord } from '../../state/chords/chordText'
 import { chordName } from '../../state/chords/noteNames'
 import { Button } from '../ui/Button'
 import { IconButton } from '../ui/IconButton'
@@ -49,6 +48,8 @@ interface Props {
   locked: boolean
   /** New bars; `feels` comes too when bars moved, so each keeps how it's played. */
   onBars(bars: Chord[][], feels?: ChordFeel[]): void
+  /** Chords a paste couldn't read, to say so under the chart. */
+  unread: string[]
   /** Takes the picked bars out, as Delete does on the timeline. */
   onRemove(): void
   /** Bars `first` to `last` strummed or fingerpicked. */
@@ -68,6 +69,7 @@ export function ChartEditor({
   playingBar,
   suggestions,
   locked,
+  unread,
   onBars,
   onPreview,
   onFeel,
@@ -80,7 +82,6 @@ export function ChartEditor({
   // A line holds as many bars as a bar has beats (4 in 4/4, 3 in 3/4), as charts are
   // written, so lines read as phrases.
   const barsPerLine = beatsPerBar
-  const [unread, setUnread] = useState<string[]>([])
   const barRefs = useRef<(HTMLButtonElement | null)[]>([])
   const focusOnDraw = useRef<number | null>(null)
   useEffect(() => {
@@ -178,18 +179,7 @@ export function ChartEditor({
     })
 
   return (
-    <div
-      className="chart-editor"
-      onPaste={(e) => {
-        // Pasting into the tempo or the search is ordinary typing.
-        if ((e.target as HTMLElement).closest('input') || locked) return
-        const pasted = chartFromText(e.clipboardData.getData('text'))
-        if (!pasted.bars.length) return
-        e.preventDefault()
-        onBars(pasteBars(bars, first, pasted.bars))
-        setUnread(pasted.unread)
-      }}
-    >
+    <div className="chart-editor">
       <div className="chart-sheet">
         <div className="chart-settings">
           <span className="chart-bar-tools">

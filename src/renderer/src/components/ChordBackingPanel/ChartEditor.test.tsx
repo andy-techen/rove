@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -26,6 +26,7 @@ function renderEditor(
     const [place, setPlace] = useState({ bar: 0, slot: 0 })
     return (
       <ChartEditor
+        unread={[]}
         instrument={instrument}
         chart={chart}
         beatsPerBar={beatsPerBar}
@@ -141,12 +142,6 @@ describe('ChartEditor', () => {
     await userEvent.keyboard('{ArrowRight}{ArrowRight}')
     expect(bar(3)).toHaveFocus()
     expect(picker().getByText(t('chords.barNumber', { n: 3 }))).toBeInTheDocument()
-  })
-
-  it('fills bars from a pasted chart', () => {
-    const { lastBars } = renderEditor('C')
-    fireEvent.paste(bar(1), { clipboardData: { getData: () => '| G | D | Em | C |' } })
-    expect(lastBars()).toEqual(['G', 'D', 'Em', 'C'])
   })
 
   it('repeats a line of three bars in 3/4', async () => {

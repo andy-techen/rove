@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chartFromText, chordsMatching, parseChord } from './chordText'
+import { chartFromText, chordSheetToPaste, chordsMatching, parseChord } from './chordText'
 import { chordName } from './noteNames'
 
 const names = (bars: ReturnType<typeof chartFromText>['bars']) =>
@@ -39,6 +39,76 @@ describe('chartFromText', () => {
     const { bars, unread } = chartFromText('C Hm G')
     expect(names(bars)).toEqual(['C', '', 'G'])
     expect(unread).toEqual(['Hm'])
+  })
+})
+
+describe('chartFromText with a chord sheet from the web', () => {
+  const sheet = (text: string) => names(chartFromText(text).bars)
+
+  it('reads the chords above the lyrics, one bar each, skipping lyrics and headings', () => {
+    const pasted = chartFromText(
+      [
+        '[Verse 1]',
+        'G              Em',
+        'I found a love for me',
+        '',
+        'C                  D',
+        'Darling, just dive right in'
+      ].join('\n')
+    )
+    expect(names(pasted.bars)).toEqual(['G', 'Em', 'C', 'D'])
+    expect(pasted.unread).toEqual([])
+  })
+
+  it('reads a labelled line of chords and repeats it when marked', () => {
+    expect(sheet('Intro: C G Am F\nChorus:\nF G (x2)')).toEqual([
+      'C',
+      'G',
+      'Am',
+      'F',
+      'F',
+      'G',
+      'F',
+      'G'
+    ])
+  })
+
+  it('reads chords written inside the lyrics in brackets', () => {
+    expect(sheet('[C]Let it be, let it [G]be\nLet it [Am]be, let it [F]be')).toEqual([
+      'C',
+      'G',
+      'Am',
+      'F'
+    ])
+  })
+
+  it('plays richer chords as the nearest one Rove knows', () => {
+    expect(sheet('Cadd9  G/B  Em7b5\nD9  Fmaj9  Asus2')).toEqual([
+      'C',
+      'G/B',
+      'Edim',
+      'D7',
+      'Fmaj7',
+      'Asus2'
+    ])
+  })
+
+  it('never takes a lyric that starts like a chord for chords', () => {
+    expect(sheet('A whole new world\nC   G\nAm I wrong\nF')).toEqual(['C', 'G', 'F'])
+  })
+})
+
+describe('chordSheetToPaste', () => {
+  it('pastes chords copied from elsewhere', () => {
+    expect(names(chordSheetToPaste('C G Am F', null)!.bars)).toEqual(['C', 'G', 'Am', 'F'])
+  })
+
+  it('leaves bars copied in Rove to paste when the clipboard has not changed since', () => {
+    expect(chordSheetToPaste('C G Am F', 'C G Am F')).toBeNull()
+  })
+
+  it('leaves Paste alone when the clipboard holds no chords', () => {
+    expect(chordSheetToPaste('Just some lyrics here', null)).toBeNull()
   })
 })
 

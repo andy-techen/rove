@@ -12,6 +12,7 @@ import {
   KEYMAP_CHANNELS,
   MENU_CHANNEL,
   NATIVE_EDIT_CHANNEL,
+  CLIPBOARD_TEXT_CHANNEL,
   isMenuAction
 } from '@shared/menu'
 import type { RoveApi } from './index.d'
@@ -57,6 +58,10 @@ const api: RoveApi = {
   captureShortcutKeys: (on) => ipcRenderer.invoke(KEYMAP_CHANNELS.capture, on),
   showContextMenu: (items) => ipcRenderer.invoke(CONTEXT_MENU_CHANNEL, items),
   nativeEdit: (command) => ipcRenderer.invoke(NATIVE_EDIT_CHANNEL, command),
+  readClipboardText: async () => {
+    const text: unknown = await ipcRenderer.invoke(CLIPBOARD_TEXT_CHANNEL)
+    return typeof text === 'string' ? text : ''
+  },
   requestMicAccess: () => ipcRenderer.invoke('mic:requestAccess'),
   openMicSettings: () => ipcRenderer.invoke('mic:openSettings'),
   chooseProjectFolder: () => ipcRenderer.invoke('project:choose'),
