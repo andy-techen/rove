@@ -8,6 +8,7 @@ import {
   parseProject,
   tempoOf,
   withChartBars,
+  withChartFeel,
   withBeatParts,
   withChordBacking,
   withInstrument,
@@ -95,6 +96,15 @@ describe('withChordBacking', () => {
     const opened = parseProject(old)
     expect(tempoOf(opened)).toEqual({ bpm: 72, beatsPerBar: 3, startSec: 1 })
     expect(chartOf(opened)).toEqual(track.chart)
+  })
+
+  it('keeps a piano part and its feels when the song is saved and opened', () => {
+    const p = song('C G')
+    const id = chordsTracksOf(p)[0].id
+    const piano = withChartFeel(withInstrument(p, id, 'piano', 2), id, 1, 1, 'flowing')
+    const opened = parseProject(JSON.parse(JSON.stringify(piano)))
+    expect(chordsTracksOf(opened)[0].instrument).toBe('piano')
+    expect(chartOf(opened)?.feels).toEqual(['strum', 'flowing'])
   })
 
   it('moves a song-wide chart from an older song onto its chords track', () => {

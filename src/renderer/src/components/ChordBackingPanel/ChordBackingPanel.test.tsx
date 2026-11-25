@@ -27,14 +27,13 @@ describe('ChordBackingPanel', () => {
     expect(heading).toHaveTextContent('Backing 2')
   })
 
-  it('plays guitar or beats, with piano still to come', async () => {
+  it('plays guitar, piano or beats', async () => {
     const { onInstrument } = renderPanel()
     expect(screen.getByRole('button', { name: t('instrumental.guitar') })).toHaveAttribute(
       'aria-pressed',
       'true'
     )
-    expect(screen.getByRole('button', { name: t('instrumental.piano') })).toBeDisabled()
-    await userEvent.click(screen.getByRole('button', { name: t('instrumental.beats') }))
-    expect(onInstrument).toHaveBeenCalledWith('beats')
+    await userEvent.click(screen.getByRole('button', { name: t('instrumental.piano') }))
+    expect(onInstrument).toHaveBeenCalledWith('piano')
   })
 })

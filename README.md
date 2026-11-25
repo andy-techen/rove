@@ -30,6 +30,12 @@ code and pretrained weights MIT, © 2024 starrytong) as exported to ONNX by
 [ONNX Runtime Web](https://onnxruntime.ai). Its licence ships with the app in
 `resources/models/scnet/LICENSE`.
 
+The piano instrumental plays samples from the
+[Salamander Grand Piano v3](https://github.com/sfzinstruments/SalamanderGrandPiano) by
+Alexander Holm, licensed under
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); trimmed and re-encoded, with
+its licence beside them in `src/renderer/src/audio/music/pianoSamples/`.
+
 ## Stack
 
 Electron + electron-vite, React + TypeScript, Web Audio API with an AudioWorklet for raw PCM capture, electron-builder for packaging.

@@ -170,18 +170,18 @@ doesn't analyse the song again.
 
 ## Where the audio work lives (`src/renderer/src/audio`)
 
-| Folder        | What it does                                                                                              |
-| ------------- | --------------------------------------------------------------------------------------------------------- |
-| `engine/`     | The AudioContext, mic devices and input, recorder setup, lining takes up                                  |
-| `mix/`        | The live graph: per-track gain, pan, mute and tone; playback; metronome clicks; meters and waveform peaks |
-| `polish/`     | Polish settings mapped to the noise gate, EQ, compressor, de-esser and reverb                             |
-| `pitch/`      | Sung-note detection, key finding, tuned copies rendered offline                                           |
-| `separation/` | Vocal removal: SCNet in a worker with onnxruntime-web, on the CPU's threads                               |
-| `music/`      | Beat tracking, time-stretch and pitch-shift for the backing track, chord detection                        |
-| `export/`     | Offline mixdown and loudness levelling                                                                    |
-| `encode/`     | WAV and MP3 encoding (takes and exports)                                                                  |
-| `dsp/`        | Shared maths: FFT, resampling, units, and the render cache                                                |
-| `worklets/`   | Code that runs on the audio thread: the recorder and the noise gate                                       |
+| Folder        | What it does                                                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `engine/`     | The AudioContext, mic devices and input, recorder setup, lining takes up                                                           |
+| `mix/`        | The live graph: per-track gain, pan, mute and tone; playback; metronome clicks; meters and waveform peaks                          |
+| `polish/`     | Polish settings mapped to the noise gate, EQ, compressor, de-esser and reverb                                                      |
+| `pitch/`      | Sung-note detection, key finding, tuned copies rendered offline                                                                    |
+| `separation/` | Vocal removal: SCNet in a worker with onnxruntime-web, on the CPU's threads                                                        |
+| `music/`      | Beat tracking, time-stretch and pitch-shift for the backing track, chord detection; instrumentals' guitar, sampled piano and drums |
+| `export/`     | Offline mixdown and loudness levelling                                                                                             |
+| `encode/`     | WAV and MP3 encoding (takes and exports)                                                                                           |
+| `dsp/`        | Shared maths: FFT, resampling, units, and the render cache                                                                         |
+| `worklets/`   | Code that runs on the audio thread: the recorder and the noise gate                                                                |
 
 Heavy work (tuning, speed and key, analysis, export) runs offline into buffers; live
 playback only mixes what's ready. Recordings on disk are never changed: tuned and

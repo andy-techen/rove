@@ -1,7 +1,16 @@
 import { CSSProperties, KeyboardEvent, MouseEvent, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { Chord } from '../../audio/music/chords'
-import { BeatsPerBar, ChordChart, ChordFeel, feelsOf } from '../../state/song/project'
+import {
+  BeatsPerBar,
+  ChordChart,
+  ChordFeel,
+  GUITAR_FEELS,
+  PIANO_FEELS,
+  feelsOf,
+  guitarFeel,
+  pianoFeel
+} from '../../state/song/project'
 import { ChartPlace, barRange } from '../../state/chords/chart'
 import {
   MAX_CHORDS_PER_BAR,
@@ -22,9 +31,15 @@ import { IconButton } from '../ui/IconButton'
 import { cx } from '../ui/cx'
 import { ChordPicker, ChordSuggestions } from './ChordPicker'
 
-const FEELS: ChordFeel[] = ['strum', 'pick']
+// Each instrument offers its own feels, and reads a bar set on the other as its nearest.
+const FEELS = {
+  guitar: { choices: GUITAR_FEELS, read: guitarFeel },
+  piano: { choices: PIANO_FEELS, read: pianoFeel }
+} as const
 
 interface Props {
+  /** Which instrument plays the chords, so the feels are its own. */
+  instrument: 'guitar' | 'piano'
   chart: ChordChart
   /** Beats in a bar, from the song's tempo: a line holds as many bars. */
   beatsPerBar: BeatsPerBar
@@ -47,6 +62,7 @@ interface Props {
 
 /** Writing an instrumental's chords: a chord (or two) for each bar, and how it's played. */
 export function ChartEditor({
+  instrument,
   chart,
   beatsPerBar,
   playingBar,
@@ -178,13 +194,15 @@ export function ChartEditor({
         <div className="chart-settings">
           <span className="chart-bar-tools">
             <span className="feel-choice" role="group" aria-label={t('instrumental.feel')}>
-              {FEELS.map((feel) => (
+              {FEELS[instrument].choices.map((feel) => (
                 <IconButton
                   onMouseDown={keepFocus}
                   key={feel}
                   icon={feel}
                   label={t(`instrumental.${feel}`)}
-                  aria-pressed={feels.slice(first, last + 1).every((f) => f === feel)}
+                  aria-pressed={feels
+                    .slice(first, last + 1)
+                    .every((f) => FEELS[instrument].read(f) === feel)}
                   disabled={locked}
                   onClick={() => onFeel(first, last, feel)}
                 />

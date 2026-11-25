@@ -86,6 +86,12 @@ const IMPORT_PREFIX = /^backing-/
 const EXTENSION = /\.[^.]+$/
 
 /** A backing file's name as the singer knows it: no import prefix or extension. */
+const INSTRUMENT_DETAIL = {
+  guitar: 'timeline.detailGuitar',
+  piano: 'timeline.detailPiano',
+  beats: 'timeline.detailBeats'
+} as const
+
 export function backingTitle(fileName: string): string {
   return fileName.replace(IMPORT_PREFIX, '').replace(EXTENSION, '')
 }
@@ -154,9 +160,7 @@ export function selectLanes(
         id: track.id,
         role: track.role,
         name: track.name,
-        detail: t(
-          instrumentOf(track) === 'beats' ? 'timeline.detailBeats' : 'timeline.detailGuitar'
-        ),
+        detail: t(INSTRUMENT_DETAIL[instrumentOf(track)]),
         imported: false,
         volume: track.volume,
         startVolume: startingVolume(track.role),

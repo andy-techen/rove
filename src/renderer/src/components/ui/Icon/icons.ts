@@ -62,6 +62,11 @@ export const STROKE_ICONS = {
     'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 16v-5l2 1M10 16a1 1 0 1 0 2 0 1 1 0 1 0-2 0',
   // A pointing finger: fingerpicked, a string at a time.
   pick: 'M8 13V4.5a1.5 1.5 0 0 1 3 0V12M11 11.5v-2a1.5 1.5 0 1 1 3 0V12M14 10.5a1.5 1.5 0 0 1 3 0V12M17 11.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-2 .2a6 6 0 0 1-5-2.7l-.2-.3c-.3-.5-1.4-2.4-3.3-5.7a1.5 1.5 0 0 1 .5-2 1.9 1.9 0 0 1 2.3.3L8 13',
+  // Piano feels. "Chords": a few piano keys, their black keys between them.
+  chords:
+    'M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM12 14v6M8 4v9h2V4M14 4v9h2V4',
+  // "Flowing": the chord's notes rolling on, a wave running into a note.
+  flowing: 'M3 16c2.5-6 5.5-6 8 0 1.7 4 4 3.5 5.5 0M16.5 7.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0',
   // A guitar pick: strummed.
   strum: 'M12 21c-2.6-2.7-7-8.2-7-12.4C5 5.3 8.1 3 12 3s7 2.3 7 5.6c0 4.2-4.4 9.7-7 12.4z',
   lyrics: 'M4 6h14M4 10h14M4 14h6M14 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0M18 18v-6h3',

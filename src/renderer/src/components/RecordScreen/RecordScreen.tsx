@@ -973,6 +973,7 @@ export function RecordScreen({
                   ) : (
                     chart && (
                       <ChartEditor
+                        instrument={instrumentOf(polishTrack) === 'piano' ? 'piano' : 'guitar'}
                         onFeel={(first, last, feel) =>
                           song.edit(withChartFeel(open.data, polishTrack.id, first, last, feel))
                         }

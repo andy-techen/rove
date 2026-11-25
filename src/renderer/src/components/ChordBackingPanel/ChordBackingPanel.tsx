@@ -3,7 +3,6 @@ import { t } from '@shared/copy'
 import { Instrument } from '../../state/song/project'
 import { Button } from '../ui/Button'
 import { Panel } from '../ui/Panel'
-import { Tooltip } from '../ui/Tooltip'
 import './ChordBackingPanel.css'
 
 interface Props {
@@ -17,16 +16,11 @@ interface Props {
   children: ReactNode
 }
 
-// Guitar and beats play today; piano is on the way (docs/plans/chord-backing.md).
-const CHOICES: { id: Instrument | 'piano'; ready: boolean }[] = [
-  { id: 'guitar', ready: true },
-  { id: 'piano', ready: false },
-  { id: 'beats', ready: true }
-]
+const CHOICES: Instrument[] = ['guitar', 'piano', 'beats']
 
 /**
- * An instrumental Rove plays for you, bar by bar: a guitar from the chords you write, or
- * drums. Shown when its track is selected.
+ * An instrumental Rove plays for you, bar by bar: a guitar or piano from the chords you
+ * write, or drums. Shown when its track is selected.
  */
 export function ChordBackingPanel({
   trackName,
@@ -38,26 +32,19 @@ export function ChordBackingPanel({
 }: Props): React.JSX.Element {
   const instruments = (
     <div className="instrument-choice" role="group" aria-label={t('instrumental.instrument')}>
-      {CHOICES.map(({ id, ready }) => {
+      {CHOICES.map((id) => {
         const on = id === instrument
-        const button = (
+        return (
           <Button
             key={id}
             size="sm"
             variant={on ? 'secondary' : 'ghost'}
             aria-pressed={on}
-            disabled={!ready || locked}
-            onClick={() => id !== 'piano' && !on && onInstrument(id)}
+            disabled={locked}
+            onClick={() => !on && onInstrument(id)}
           >
             {t(`instrumental.${id}`)}
           </Button>
-        )
-        return ready ? (
-          button
-        ) : (
-          <Tooltip key={id} text={t('instrumental.soon')}>
-            {button}
-          </Tooltip>
         )
       })}
     </div>

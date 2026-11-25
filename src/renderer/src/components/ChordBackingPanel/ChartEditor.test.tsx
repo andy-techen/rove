@@ -13,7 +13,11 @@ import { ChartEditor } from './ChartEditor'
 const chartOf = (text: string): ChordChart => ({ bars: chartFromText(text).bars })
 
 /** The editor with its chart kept in state, as the song would keep it. */
-function renderEditor(text = '| C | % | % | % |', beatsPerBar: 3 | 4 = 4) {
+function renderEditor(
+  text = '| C | % | % | % |',
+  beatsPerBar: 3 | 4 = 4,
+  instrument: 'guitar' | 'piano' = 'guitar'
+) {
   const onBars = vi.fn()
   const onPreview = vi.fn()
   const onRemove = vi.fn()
@@ -22,6 +26,7 @@ function renderEditor(text = '| C | % | % | % |', beatsPerBar: 3 | 4 = 4) {
     const [place, setPlace] = useState({ bar: 0, slot: 0 })
     return (
       <ChartEditor
+        instrument={instrument}
         chart={chart}
         beatsPerBar={beatsPerBar}
         playingBar={-1}
@@ -155,6 +160,21 @@ describe('ChartEditor', () => {
     await userEvent.click(bar(2))
     await userEvent.click(screen.getByRole('button', { name: t('instrumental.pick') }))
     expect(screen.getByRole('button', { name: t('instrumental.pick') })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
+  })
+
+  it('offers the piano its own feels, reading a strummed bar as Chords', async () => {
+    renderEditor('| C | G | Am | F |', 4, 'piano')
+    await userEvent.click(bar(1))
+    expect(screen.queryByRole('button', { name: t('instrumental.pick') })).toBeNull()
+    expect(screen.getByRole('button', { name: t('instrumental.chords') })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
+    await userEvent.click(screen.getByRole('button', { name: t('instrumental.flowing') }))
+    expect(screen.getByRole('button', { name: t('instrumental.flowing') })).toHaveAttribute(
       'aria-pressed',
       'true'
     )

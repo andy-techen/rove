@@ -92,17 +92,36 @@ export interface SongTempo {
 export interface ChordChart {
   /** Each bar's chords, sharing the bar evenly; an empty bar carries the last chord on. */
   bars: Chord[][]
-  /** How the guitar plays each bar, alongside `bars`; a bar without one is strummed. */
+  /** How each bar is played, alongside `bars`; a bar without one is strummed. */
   feels?: ChordFeel[]
 }
 
 export type BeatsPerBar = 3 | 4
+/**
+ * How a bar is played. The guitar's feels and the piano's share each bar's one slot, so
+ * moving, copying or deleting bars carries both; each instrument reads the other's as
+ * its nearest equivalent (`guitarFeel`, `pianoFeel`).
+ */
+export type ChordFeel = GuitarFeel | PianoFeel
 /** Strummed across the strings, or fingerpicked a string at a time. */
-export type ChordFeel = 'strum' | 'pick'
+export type GuitarFeel = 'strum' | 'pick'
+/** One held chord a bar, or the chord's notes rolled up one a beat. */
+export type PianoFeel = 'chords' | 'flowing'
+export const GUITAR_FEELS: readonly GuitarFeel[] = ['strum', 'pick']
+export const PIANO_FEELS: readonly PianoFeel[] = ['chords', 'flowing']
+const CHORD_FEELS: readonly ChordFeel[] = [...GUITAR_FEELS, ...PIANO_FEELS]
 
-/** What an instrumental plays: a guitar from its chords, or drums. */
-export type Instrument = 'guitar' | 'beats'
-export const INSTRUMENTS: readonly Instrument[] = ['guitar', 'beats']
+/** A bar's feel as the guitar plays it: rolling piano parts are fingerpicked. */
+export const guitarFeel = (feel: ChordFeel): GuitarFeel =>
+  feel === 'pick' || feel === 'flowing' ? 'pick' : 'strum'
+
+/** A bar's feel as the piano plays it: a strum is struck chords, a pick rolls. */
+export const pianoFeel = (feel: ChordFeel): PianoFeel =>
+  feel === 'pick' || feel === 'flowing' ? 'flowing' : 'chords'
+
+/** What an instrumental plays: a guitar or piano from its chords, or drums. */
+export type Instrument = 'guitar' | 'piano' | 'beats'
+export const INSTRUMENTS: readonly Instrument[] = ['guitar', 'piano', 'beats']
 
 /** The drums' style for the whole song. Pop first; more grooves come later. */
 export type GrooveId = 'pop'
@@ -785,7 +804,7 @@ function isChart(value: unknown): value is ChordChart {
     Array.isArray(c.bars) &&
     c.bars.every((bar) => Array.isArray(bar) && bar.every(isChord)) &&
     (c.feels === undefined ||
-      (Array.isArray(c.feels) && c.feels.every((f) => f === 'strum' || f === 'pick')))
+      (Array.isArray(c.feels) && c.feels.every((f) => CHORD_FEELS.includes(f))))
   )
 }
 
@@ -1072,8 +1091,8 @@ export function withChartBars(
     const kept = bars.slice(0, CHART_MAX_BARS)
     const played = kept.map((_, i) => (feels ?? chart.feels)?.[i] ?? 'strum')
     const next: ChordChart = { ...chart, bars: kept }
-    // Only kept when some bar is fingerpicked, so all-strummed charts stay as they were.
-    if (played.includes('pick')) next.feels = played
+    // Only kept when some bar isn't strummed, so all-strummed charts stay as they were.
+    if (played.some((f) => f !== 'strum')) next.feels = played
     else delete next.feels
     return next
   })

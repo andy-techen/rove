@@ -100,6 +100,7 @@
     "recorded": "Recorded",
     "recordedDetail": "Recorded · {length}",
     "detailGuitar": "Instrumental · Guitar",
+    "detailPiano": "Instrumental · Piano",
     "detailBeats": "Instrumental · Beats"
   },
   "track": {
@@ -379,10 +380,11 @@
     "guitar": "Guitar",
     "piano": "Piano",
     "beats": "Beats",
-    "soon": "Coming soon",
     "feel": "How these bars are played",
     "strum": "Strum",
-    "pick": "Fingerpick"
+    "pick": "Fingerpick",
+    "chords": "Chords",
+    "flowing": "Flowing"
   },
   "beats": {
     "parts": "How busy the drums are",
