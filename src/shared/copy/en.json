@@ -8,6 +8,11 @@
     "newSongFailed": "Couldn't create a new song.",
     "openFolderFailed": "Couldn't open that folder."
   },
+  "crash": {
+    "title": "Something went wrong",
+    "safe": "Your songs and recordings are safe. Reopen them to carry on.",
+    "reopen": "Reopen your songs"
+  },
   "micCheck": {
     "subtitleOnboarding": "Let’s get your mic ready.",
     "requesting": "Asking for microphone access…",
