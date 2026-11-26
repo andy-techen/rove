@@ -11,6 +11,9 @@ on:
       - 'src/renderer/src/styles/tokens.css'
       - 'src/renderer/src/components/ui/Icon/icons.ts'
       - 'src/renderer/src/components/ui/Logo/**'
+      - 'src/renderer/src/components/ui/Knob/knobMath.ts'
+      - 'src/renderer/src/audio/**'
+      - 'src/shared/copy/en.json'
       - '.github/workflows/site.yml'
   workflow_dispatch:
 
@@ -37,7 +40,14 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: site/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+
+      # The site builds the app's own files (tokens, icons, audio code), and their
+      # tsconfig extends the app's packages. No scripts: the site needs no Electron.
+      - run: npm ci --ignore-scripts
+        working-directory: .
 
       - run: npm ci
 
