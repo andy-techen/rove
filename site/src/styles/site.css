@@ -378,6 +378,12 @@ body.dusk {
 @supports (animation-timeline: scroll()) {
   body.dusk {
     animation: dusk linear both;
+  }
+
+  /* A rule of its own: a minifier folds a timeline in the same rule into the
+     animation shorthand, which browsers don't accept, and the whole animation is
+     dropped. The extra `html` lets it win over the shorthand, which resets it. */
+  html body.dusk {
     animation-timeline: scroll(root);
   }
 }
