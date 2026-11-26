@@ -566,6 +566,8 @@
     "repeatLine": "Repeat this line",
     "deleteBars": "Delete the picked bars",
     "addBar": "Add a bar",
+    "raiseKey": "Raise the key: every chord a half step higher",
+    "lowerKey": "Lower the key: every chord a half step lower",
     "unread": "Couldn’t read {list}. Those bars keep the chord before.",
     "unreadItem": "{name} in bar {bar}",
     "unreadMore": "and {n} more",

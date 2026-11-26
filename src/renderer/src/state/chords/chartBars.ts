@@ -1,4 +1,5 @@
 import { Chord } from '../../audio/music/chords'
+import { transposeChord } from './chart'
 import { sameChord } from './chordText'
 
 // A bar holds one chord, or two sharing it: what a beginner's chart needs.
@@ -22,6 +23,10 @@ export function withChordAt(bars: Chord[][], at: number, slot: number, chord: Ch
   const first = bar[0] ?? chordBefore(bars, at) ?? chord
   return replace(bars, at, merged([first, chord]))
 }
+
+/** Every chord in the chart moved `semitones` up (or down), for singing it in a new key. */
+export const transposeBars = (bars: Chord[][], semitones: number): Chord[][] =>
+  bars.map((bar) => bar.map((chord) => transposeChord(chord, semitones)))
 
 /** Two halves with the same chord are just one bar of it. */
 const merged = (bar: Chord[]): Chord[] =>

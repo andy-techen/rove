@@ -21,6 +21,7 @@ import {
   keepAt,
   repeatLine,
   splitBar,
+  transposeBars,
   withChordAt
 } from '../../state/chords/chartBars'
 import { sameChord } from '../../state/chords/chordText'
@@ -202,6 +203,22 @@ export function ChartEditor({
                 />
               ))}
             </span>
+            <span className="chart-tools-divider" aria-hidden="true" />
+            {/* Bars stay where they are, so each keeps how it's played. */}
+            <IconButton
+              onMouseDown={keepFocus}
+              icon="keyDown"
+              label={t('chords.lowerKey')}
+              disabled={locked}
+              onClick={() => onBars(transposeBars(bars, -1))}
+            />
+            <IconButton
+              onMouseDown={keepFocus}
+              icon="keyUp"
+              label={t('chords.raiseKey')}
+              disabled={locked}
+              onClick={() => onBars(transposeBars(bars, 1))}
+            />
             <span className="chart-tools-divider" aria-hidden="true" />
             <IconButton
               onMouseDown={keepFocus}

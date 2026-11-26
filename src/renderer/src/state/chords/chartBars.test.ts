@@ -13,6 +13,7 @@ import {
   splitBar,
   swapBars,
   tapTempo,
+  transposeBars,
   withChordAt
 } from './chartBars'
 import { chartFromText } from './chordText'
@@ -33,6 +34,16 @@ describe('editing bars', () => {
 
   it('splits a bar into two halves of the same chord until one is picked', () => {
     expect(names(splitBar(bars('| C | Am |'), 1))).toEqual(['C', 'Am Am'])
+  })
+
+  it('moves every chord, slash bass and all, into a new key', () => {
+    expect(names(transposeBars(bars('| C | F/A G7 | % | Bm |'), 2))).toEqual([
+      'D',
+      'G/B A7',
+      '',
+      'C♯m'
+    ])
+    expect(names(transposeBars(bars('| C | Am |'), -1))).toEqual(['B', 'A♭m'])
   })
 
   it('fills, clears and removes a run of bars', () => {

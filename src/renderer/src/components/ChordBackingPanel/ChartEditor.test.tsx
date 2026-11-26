@@ -74,6 +74,15 @@ describe('ChartEditor', () => {
     expect(bar(3)).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('raises and lowers the key of every chord', async () => {
+    const { lastBars } = renderEditor('| C | Am F | % | G7 |')
+    await userEvent.click(screen.getByRole('button', { name: t('chords.raiseKey') }))
+    expect(lastBars()).toEqual(['C♯', 'B♭m F♯', '', 'A♭7'])
+    await userEvent.click(screen.getByRole('button', { name: t('chords.lowerKey') }))
+    await userEvent.click(screen.getByRole('button', { name: t('chords.lowerKey') }))
+    expect(lastBars()).toEqual(['B', 'A♭m E', '', 'F♯7'])
+  })
+
   it('fills a run of shift-clicked bars with one chord', async () => {
     const { lastBars } = renderEditor('| C | F | % | % |')
     const user = userEvent.setup()

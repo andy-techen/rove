@@ -13,6 +13,8 @@ export const STROKE_ICONS = {
   delete: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',
+  keyUp: 'M12 19V5M6 11l6-6 6 6',
+  keyDown: 'M12 5v14M6 13l6 6 6-6',
   close: 'M6 6l12 12M18 6L6 18',
   volume: 'M4 9h4l5-4v14l-5-4H4zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12',
   muted: 'M4 9h4l5-4v14l-5-4H4zM17 9.5l5 5M22 9.5l-5 5',
