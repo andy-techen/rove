@@ -20,7 +20,8 @@ const FALLBACK: Download = { version: null, appleSilicon: RELEASES_URL, intel: R
 // the releases page instead of failing the build.
 export async function latestDownload(): Promise<Download> {
   const headers: Record<string, string> = { Accept: 'application/vnd.github+json' }
-  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
+  const token: string | undefined = import.meta.env.GITHUB_TOKEN
+  if (token) headers.Authorization = `Bearer ${token}`
   try {
     const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers })
     if (!res.ok) throw new Error(`GitHub answered ${res.status}`)
