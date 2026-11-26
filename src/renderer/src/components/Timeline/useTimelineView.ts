@@ -109,10 +109,16 @@ export function useTimelineView(opts: {
   if (detached && (!opts.follow || playheadVisible)) setDetached(false)
 
   // Keep the playhead in view while it moves. Adjusting during render (guarded so it
-  // settles) avoids an extra effect-driven render every frame.
+  // settles) avoids an extra effect-driven render every frame. The target is clamped
+  // like the scroll itself: near the end there's nowhere further to go, and an
+  // unreachable target would set state on every render.
   const followTarget =
     opts.follow && !detached
-      ? followPlayhead(opts.position * pxPerSec, scrollX, areaWidth)
+      ? clampScroll(
+          followPlayhead(opts.position * pxPerSec, scrollX, areaWidth),
+          contentWidth,
+          areaWidth
+        )
       : scrollX
   if (followTarget !== scrollX) setView({ ...view, scrollX: followTarget })
   const scrolledByHand = (): void => {

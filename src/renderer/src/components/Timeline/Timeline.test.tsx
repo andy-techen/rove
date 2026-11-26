@@ -284,6 +284,13 @@ describe('Timeline', () => {
     expect(screen.queryByText('0:10')).not.toBeInTheDocument()
   })
 
+  it('keeps following the playhead as it nears the end of the timeline', () => {
+    // An empty song's timeline is 30 s long; a take nearing its end used to loop forever
+    // trying to scroll past the end.
+    render(<Timeline {...timelineProps({ follow: true, position: 29 })} />)
+    expect(screen.getByRole('button', { name: t('timeline.zoomIn') })).toBeInTheDocument()
+  })
+
   it('jumps back to the playhead from the button beside zoom', async () => {
     const clip = {
       id: 'c1',
