@@ -16,9 +16,15 @@ export function getAudioContext(): AudioContext {
   return context
 }
 
-export async function listInputs(): Promise<MediaDeviceInfo[]> {
+export async function listDevices(): Promise<{
+  inputs: MediaDeviceInfo[]
+  outputs: MediaDeviceInfo[]
+}> {
   const devices = await navigator.mediaDevices.enumerateDevices()
-  return devices.filter((d) => d.kind === 'audioinput')
+  return {
+    inputs: devices.filter((d) => d.kind === 'audioinput'),
+    outputs: devices.filter((d) => d.kind === 'audiooutput')
+  }
 }
 
 // Browser voice processing is built for calls and makes sung vocals pump and warble.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeInputError, pickInputDevice } from './devices'
+import { describeInputError, pickInputDevice, playsOutLoud } from './devices'
 
 const device = (deviceId: string): MediaDeviceInfo => ({ deviceId }) as MediaDeviceInfo
 
@@ -20,6 +20,36 @@ describe('pickInputDevice', () => {
 
   it('returns null when no mic is connected', () => {
     expect(pickInputDevice([], 'rode')).toBeNull()
+  })
+})
+
+describe('playsOutLoud', () => {
+  const output = (deviceId: string, label: string): MediaDeviceInfo =>
+    ({ deviceId, label, kind: 'audiooutput' }) as MediaDeviceInfo
+
+  it('spots the built-in speakers as the system output', () => {
+    expect(playsOutLoud([output('default', 'Default - MacBook Pro Speakers (Built-in)')])).toBe(
+      true
+    )
+  })
+
+  it('spots a display playing the sound', () => {
+    expect(playsOutLoud([output('default', 'Default - LG UltraFine Display Audio')])).toBe(true)
+  })
+
+  it('trusts headphones and earbuds', () => {
+    expect(playsOutLoud([output('default', 'Default - External Headphones (Built-in)')])).toBe(
+      false
+    )
+    expect(playsOutLoud([output('default', 'Default - AirPods Pro')])).toBe(false)
+  })
+
+  it('reads only the system output, not other connected devices', () => {
+    const outputs = [
+      output('default', 'Default - AirPods Pro'),
+      output('mbp', 'MacBook Pro Speakers')
+    ]
+    expect(playsOutLoud(outputs)).toBe(false)
   })
 })
 

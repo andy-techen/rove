@@ -204,6 +204,7 @@ export function RecordScreen({
   const songChords = useChords(open?.data, audio)
   const transport = useTransport(song, mic.source, {
     latencySec: mic.latencySec,
+    outLoud: mic.outLoud,
     processed,
     parts: chordBacking.parts,
     waiting: waiting || chordBacking.waiting,

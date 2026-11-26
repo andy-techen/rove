@@ -102,9 +102,12 @@ export function useTransport(
     processed,
     parts,
     waiting,
-    metronome
+    metronome,
+    outLoud
   }: {
     latencySec: number
+    /** Sound plays through speakers: the mic isn't played back, or it would howl. */
+    outLoud: boolean
     processed: ProcessedAudio
     /** What the chords track plays, rendered. */
     parts: ChordPart[]
@@ -177,9 +180,10 @@ export function useTransport(
 
   // While recording, the singer hears themselves through the track being recorded,
   // so that track's mute, volume and position (and polish) apply to what they hear.
+  // Through speakers the mic would pick itself up and howl, so they hear only the music.
   const recordingTrackId = live?.trackId ?? null
   useEffect(() => {
-    if (!source || !recordingTrackId || !mixer) return
+    if (!source || !recordingTrackId || !mixer || outLoud) return
     const gain = source.context.createGain()
     gain.gain.value = MONITOR_GAIN
     source.connect(gain).connect(mixer.input(recordingTrackId))
@@ -187,7 +191,7 @@ export function useTransport(
       source.disconnect(gain)
       gain.disconnect()
     }
-  }, [source, recordingTrackId, mixer])
+  }, [source, recordingTrackId, mixer, outLoud])
 
   /** The metronome from `fromSec` on, ticking from `atTime` (silent while the level is 0). */
   const startClicks = (ctx: AudioContext, fromSec: number, atTime: number): ClickTrack[] => {

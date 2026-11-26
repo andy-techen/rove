@@ -13,6 +13,17 @@ export function pickInputDevice(
   return inputs[0]?.deviceId ?? null
 }
 
+// Output names that play into the room, where the mic would hear itself and howl.
+// Anything else (headphones, earbuds, an interface) is trusted to keep the sound
+// at the singer's ears.
+const OUT_LOUD = /speaker|display audio/i
+
+/** Whether the system's sound output plays into the room rather than into headphones. */
+export function playsOutLoud(outputs: MediaDeviceInfo[]): boolean {
+  const current = outputs.find((d) => d.deviceId === SYSTEM_DEFAULT_ID) ?? outputs[0]
+  return !!current && OUT_LOUD.test(current.label)
+}
+
 export function loadSavedDeviceId(): string | null {
   try {
     return localStorage.getItem(SAVED_DEVICE_KEY)
