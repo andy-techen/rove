@@ -78,7 +78,7 @@ import {
   selectTracks,
   tracksActedOn
 } from '../../state/editing/trackSelection'
-import { canStartRecording } from '../../state/transport/recordGate'
+import { canChangeLyrics, canStartRecording } from '../../state/transport/recordGate'
 import { useExport } from '../../state/song/useExport'
 import { bufferFor, useProcessedAudio } from '../../state/processing/processedAudio'
 import { useVocalRemoval } from '../../state/processing/useVocalRemoval'
@@ -1081,7 +1081,10 @@ export function RecordScreen({
                         beatsPerBar={tempoOf(open.data).beatsPerBar}
                         // Heard as it will play: in the key the Key knob moved it to.
                         onPreview={(chord) =>
-                          void previewChord(transposeChord(chord, musicOf(open.data).semitones))
+                          void previewChord(
+                            transposeChord(chord, musicOf(open.data).semitones),
+                            instrumentOf(polishTrack)
+                          )
                         }
                       />
                     )
@@ -1143,7 +1146,7 @@ export function RecordScreen({
                   songName={open.data.name}
                   lyrics={open.data.lyrics}
                   position={position}
-                  locked={!canEdit}
+                  locked={!canChangeLyrics(mode, busy)}
                   onSeek={transport.seek}
                   onChange={(lyrics) => song.edit(withLyrics(open.data, lyrics))}
                   onNudge={(bySec) => song.edit(nudgeLyrics(open.data, bySec), 'lyrics-offset')}

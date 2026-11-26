@@ -3,9 +3,10 @@ import { getAudioContext } from '../../audio/engine/engine'
 import { DRUM_TAIL_SEC, drum, drumLevel, renderDrums } from '../../audio/music/drums'
 import { renderStrums } from '../../audio/music/guitar'
 import { PIANO_RING_OUT_SEC, loadPianoSamples, renderPiano } from '../../audio/music/piano'
-import { BarBeat, BeatChart, PadDrum, Project } from '../song/project'
+import { BarBeat, BeatChart, Instrument, PadDrum, Project } from '../song/project'
 import { barOf } from './beats'
 import { barGrid } from './chart'
+import { pianoChord } from './pianoPart'
 import { guitarNotes } from './strum'
 
 // Long enough to hear the chord ring, short enough to pick the next one.
@@ -13,16 +14,28 @@ const PREVIEW_SEC = 1.5
 // Quieter than the song, so trying chords while it plays doesn't drown it out.
 const PREVIEW_LEVEL = 0.8
 
-/** Strums a chord once, so picking one in the chart lets you hear it. */
-export async function previewChord(chord: Chord): Promise<void> {
+/**
+ * Plays a chord once on the track's instrument, so picking one in the chart lets you hear
+ * it as the song will: strummed on guitar, struck on piano.
+ */
+export async function previewChord(chord: Chord, instrument: Instrument): Promise<void> {
   const ctx = getAudioContext()
   await ctx.resume()
-  const samples = await renderStrums(
-    [{ time: 0, notes: guitarNotes(chord), velocity: 1, direction: 'down' }],
-    0,
-    PREVIEW_SEC,
-    ctx.sampleRate
-  )
+  const samples =
+    instrument === 'piano'
+      ? await renderPiano(
+          pianoChord(chord, PREVIEW_SEC),
+          await loadPianoSamples(ctx.sampleRate),
+          0,
+          PREVIEW_SEC + PIANO_RING_OUT_SEC,
+          ctx.sampleRate
+        )
+      : await renderStrums(
+          [{ time: 0, notes: guitarNotes(chord), velocity: 1, direction: 'down' }],
+          0,
+          PREVIEW_SEC,
+          ctx.sampleRate
+        )
   play(ctx, samples)
 }
 

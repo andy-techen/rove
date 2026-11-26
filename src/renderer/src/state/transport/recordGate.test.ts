@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canStartRecording } from './recordGate'
+import { canChangeLyrics, canStartRecording } from './recordGate'
 
 const ready = {
   mode: 'idle' as const,
@@ -25,5 +25,16 @@ describe('canStartRecording', () => {
     expect(canStartRecording({ ...ready, recorderReady: false })).toBe(false)
     expect(canStartRecording({ ...ready, hasMusic: false })).toBe(false)
     expect(canStartRecording({ ...ready, hasPendingTake: true })).toBe(false)
+  })
+})
+
+describe('canChangeLyrics', () => {
+  it('lets the singer pick lyrics while recording, to read along', () => {
+    expect(canChangeLyrics('recording', false)).toBe(true)
+  })
+
+  it('waits while a take is being saved, so the change is not lost under it', () => {
+    expect(canChangeLyrics('saving', false)).toBe(false)
+    expect(canChangeLyrics('idle', true)).toBe(false)
   })
 })

@@ -27,3 +27,12 @@ export function canStartRecording(gate: RecordGate): boolean {
     !gate.waiting
   )
 }
+
+/**
+ * Whether the lyrics can be picked or nudged. Unlike clip edits this is fine mid-take:
+ * the singer often wants the words up once they've started, and the take lands in the
+ * song as it is when they stop. Only a save in progress waits, as it would overwrite it.
+ */
+export function canChangeLyrics(mode: Mode, busy: boolean): boolean {
+  return mode !== 'saving' && !busy
+}

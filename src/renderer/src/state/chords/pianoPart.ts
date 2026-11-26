@@ -158,3 +158,17 @@ export function pianoEvents(timeline: StrumTimeline, feels: ChordFeel[] = []): P
     }
   })
 }
+
+// A one-off chord is laid out as a bar of four beats, so it plays as the "Chords" feel does.
+const PREVIEW_BEATS = 4
+
+/** One chord struck and held for `holdSec`, the way the piano plays it in a song. */
+export function pianoChord(chord: Chord, holdSec: number): PianoEvent[] {
+  return pianoEvents({
+    chords: [{ chord, start: 0, end: holdSec }],
+    secPerBeat: holdSec / PREVIEW_BEATS,
+    beatsPerBar: PREVIEW_BEATS,
+    startSec: 0,
+    endSec: holdSec
+  })
+}

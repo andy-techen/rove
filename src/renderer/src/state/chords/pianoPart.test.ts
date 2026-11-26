@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CHORD_QUALITIES, Chord, ChordSegment } from '../../audio/music/chords'
 import { ChordFeel } from '../song/project'
-import { PIANO_RANGE, pianoEvents, pianoVoicing } from './pianoPart'
+import { PIANO_RANGE, pianoChord, pianoEvents, pianoVoicing } from './pianoPart'
 
 const C: Chord = { root: 0, quality: 'major' }
 const G: Chord = { root: 7, quality: 'major' }
@@ -104,5 +104,16 @@ describe('pianoEvents', () => {
       allBars('chords')
     )
     expect(Math.min(...events.map((e) => e.time))).toBe(4)
+  })
+})
+
+describe('pianoChord', () => {
+  const c: Chord = { root: 0, quality: 'major' }
+
+  it('strikes the bass and the chord together, as the piano plays it', () => {
+    const { bass, chord } = pianoVoicing(c)
+    const events = pianoChord(c, 1.5)
+    expect(events.map((e) => e.midi).sort()).toEqual([bass, ...chord].sort())
+    expect(events.every((e) => e.time === 0 && e.holdSec === 1.5)).toBe(true)
   })
 })
