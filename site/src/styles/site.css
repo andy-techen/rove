@@ -371,8 +371,15 @@ body.dusk {
   --color-wave-vocal: #c47a14;
   --color-clip-vocal: #fdebcc;
   color-scheme: light;
-  animation: dusk linear both;
-  animation-timeline: scroll(root);
+}
+
+/* Only where the browser can tie an animation to scrolling. Without that, a timeless
+   animation jumps straight to its last frame and the page would start at night. */
+@supports (animation-timeline: scroll()) {
+  body.dusk {
+    animation: dusk linear both;
+    animation-timeline: scroll(root);
+  }
 }
 
 @keyframes dusk {
