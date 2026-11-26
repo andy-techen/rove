@@ -3,6 +3,7 @@ import { KeymapOverrides, parseOverrides } from '@shared/keymap'
 import type { MenuAction } from '@shared/menu'
 import type { LyricsResult } from '@shared/lyrics'
 import type { Theme } from '@shared/appearance'
+import { FREE_STATUS, LicenseStatus } from '@shared/license'
 import type { RoveApi } from '../../../preload/index.d'
 
 /** A stand-in for the preload bridge: every call is a spy, menu events can be fired. */
@@ -74,6 +75,17 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
     onTheme: vi.fn((listener: (theme: Theme) => void) => {
       listener('system')
       return () => {}
-    })
+    }),
+    onLicense: vi.fn((listener: (status: LicenseStatus) => void) => {
+      listener(FREE_STATUS)
+      return () => {}
+    }),
+    activateLicense: vi.fn(async (key: string) => ({
+      ok: true as const,
+      status: { plan: 'premium' as const, keyHint: `•••• ${key.slice(-4)}` }
+    })),
+    deactivateLicense: vi.fn(async () => FREE_STATUS),
+    openCheckout: vi.fn(async () => false),
+    openLicenseOrders: vi.fn(async () => {})
   }
 }

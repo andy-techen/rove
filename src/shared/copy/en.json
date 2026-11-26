@@ -274,6 +274,7 @@
     },
     "settingsMenu": "Settings",
     "voice": "Your Voice…",
+    "premium": "Rove Premium…",
     "shortcuts": "Keyboard Shortcuts…",
     "checkMicrophone": "Check Microphone…",
     "renameTrack": "Rename Track",
@@ -284,7 +285,32 @@
     "close": "Close",
     "voice": "Your voice",
     "settings": "Settings",
+    "premium": "Rove Premium",
     "shortcuts": "Shortcuts"
+  },
+  "premium": {
+    "pitch": "Pay once, and it’s yours to keep. It unlocks:",
+    "features": {
+      "vocalRemoval": "Take the vocals out of any song you add",
+      "autoPolish": "Auto polish: Rove listens and sets your sound for you"
+    },
+    "buy": "Get Premium",
+    "buySoon": "Buying opens soon. For now, any license key unlocks Premium.",
+    "haveKey": "Have a license key?",
+    "keyLabel": "License key",
+    "keyPlaceholder": "Paste your key",
+    "activate": "Activate",
+    "activating": "Activating…",
+    "errors": {
+      "invalid": "That key didn't work. Check it against your receipt email and try again.",
+      "limit": "This key is already on as many Macs as it can be. Deactivate it on one you don't use.",
+      "offline": "Couldn't reach the license server. Check your internet and try again."
+    },
+    "lostKey": "Lost your key?",
+    "on": "Premium is on. Thanks for supporting Rove!",
+    "deactivate": "Deactivate this Mac",
+    "deactivating": "Deactivating…",
+    "deactivateHint": "Frees this Mac so you can use your key on another one. Your songs stay as they are."
   },
   "voice": {
     "loading": "Getting your voice ready…",

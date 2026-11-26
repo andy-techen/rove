@@ -63,6 +63,27 @@ Import components through their folder (`'../Timeline'`), not deep paths.
   menu; single keys and text keys (arrows, ⌫) are handled in the renderer so they don't
   swallow typing.
 
+## Premium features
+
+- Premium is a one-time purchase. Which features it holds is one list,
+  `PREMIUM_FEATURES` in `src/shared/premiumFeatures.ts`; everything else is free and never
+  gated. Taking a feature off the list makes each gate on it fail the typecheck.
+- The main process owns the license (`main/ipc/license.ts`, saved in
+  `userData/license.json`): premium with a key, free without. It sends the plan to the
+  window.
+  The renderer reads it with `useFeature(id)` (`state/license/useFeature.ts`) to show a
+  feature or show it locked.
+- Gate in both places: where the main process does a premium feature's work, it calls
+  `requirePlanFor(id)` first (handing over the vocal removal model does), so hiding a
+  button is never the only lock.
+- Keys are checked by a `LicenseService` (`main/ipc/licenseService.ts`). For now it's a
+  fake: nothing goes online, any key of 8 or more characters activates, and anything
+  shorter is turned down so the error can be tried. Lemon Squeezy replaces it there,
+  and nothing else changes. To test, activate any key in Settings ▸ Rove Premium, and
+  "Deactivate this Mac" to go back to free.
+- The window never gets the key, only its last few characters (`keyHint`), and only
+  fixed addresses open in the browser (checkout, the orders page).
+
 ## Constants, not magic numbers
 
 - Any number with a meaning (timings, thresholds, sizes, limits, defaults) gets a named

@@ -13,6 +13,7 @@ import { registerSeparationIpc } from './ipc/separation'
 import { registerWishlistIpc } from './ipc/wishlist'
 import { registerCatalogIpc } from './ipc/catalog'
 import { registerVoiceIpc } from './ipc/voice'
+import { registerLicenseIpc, reportLicense } from './ipc/license'
 import { APP_ORIGIN, registerAppScheme, serveApp } from './appProtocol'
 import {
   CLIPBOARD_TEXT_CHANNEL,
@@ -51,6 +52,7 @@ function createWindow(): void {
   mainWindow.on('leave-full-screen', reportFullScreen)
   mainWindow.webContents.on('did-finish-load', reportFullScreen)
   mainWindow.webContents.on('did-finish-load', () => reportTheme(mainWindow))
+  mainWindow.webContents.on('did-finish-load', () => reportLicense(mainWindow))
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
@@ -111,6 +113,7 @@ app.whenReady().then(async () => {
   registerWishlistIpc()
   registerCatalogIpc()
   registerVoiceIpc()
+  await registerLicenseIpc()
 
   createWindow()
 

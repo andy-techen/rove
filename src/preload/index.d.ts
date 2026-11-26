@@ -3,6 +3,7 @@ import type { ExportFormat } from '../shared/exportFormats'
 import type { KeymapOverrides } from '../shared/keymap'
 import type { LyricsResult } from '../shared/lyrics'
 import type { Theme } from '../shared/appearance'
+import type { ActivationResult, LicenseStatus } from '../shared/license'
 import type { WishlistItem } from '../shared/wishlist'
 import type { VoiceApi } from '../shared/voice'
 import type { ContextMenuItem, MenuAction, NativeEdit } from '../shared/menu'
@@ -112,6 +113,16 @@ export interface RoveApi {
   chooseSongsFolder(): Promise<string | null>
   /** Listens for the chosen theme (now, then on each change); returns an unsubscribe. */
   onTheme(listener: (theme: Theme) => void): () => void
+  /** Listens for this Mac's plan and key hint (now, then on each change). */
+  onLicense(listener: (status: LicenseStatus) => void): () => void
+  /** Activates a license key on this Mac; premium turns on if it's accepted. */
+  activateLicense(key: string): Promise<ActivationResult>
+  /** Frees this Mac's activation and goes back to free. */
+  deactivateLicense(): Promise<LicenseStatus>
+  /** Opens checkout in the browser; false while there's nowhere to buy yet. */
+  openCheckout(): Promise<boolean>
+  /** Opens the page where buyers find their orders and keys. */
+  openLicenseOrders(): Promise<void>
 }
 
 declare global {

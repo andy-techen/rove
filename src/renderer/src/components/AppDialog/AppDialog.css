@@ -201,3 +201,71 @@ button.keymap-keys:hover {
   white-space: nowrap;
   color: var(--color-text-muted);
 }
+
+.premium {
+  gap: var(--space-7);
+}
+
+.premium-lead {
+  margin: 0;
+}
+
+.premium-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.premium-features li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The tick is the singer's: what they get. */
+.premium-features svg {
+  color: var(--color-accent-text);
+}
+
+.premium-buy,
+.premium-key {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.premium-note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.premium-key-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  align-self: stretch;
+}
+
+.premium-key-row input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-4) var(--space-5);
+  border: var(--size-hairline) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-ui);
+}
+
+.premium-hint {
+  font-variant-numeric: tabular-nums;
+}
+
+.premium .error {
+  margin: 0;
+}

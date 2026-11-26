@@ -79,6 +79,9 @@ import {
   tracksActedOn
 } from '../../state/editing/trackSelection'
 import { canChangeLyrics, canStartRecording } from '../../state/transport/recordGate'
+import { usePlan } from '../../state/license/useFeature'
+import { offersVocals } from '../../state/license/premiumControls'
+import { isEnabled } from '@shared/features'
 import { useExport } from '../../state/song/useExport'
 import { bufferFor, useProcessedAudio } from '../../state/processing/processedAudio'
 import { useVocalRemoval } from '../../state/processing/useVocalRemoval'
@@ -678,6 +681,7 @@ export function RecordScreen({
     polishTrack?.role === 'backing' ? polishTrack.id : null
   )
   const error = song.error ?? transport.error
+  const plan = usePlan()
 
   return (
     <div className="screen" hidden={!active}>
@@ -977,13 +981,17 @@ export function RecordScreen({
                   onSpeed={(speed, key) => song.edit(withMusicSpeed(open.data, speed), key)}
                   onSemitones={(n, key) => song.edit(withMusicPitch(open.data, n), key)}
                   onTone={(tone, key) => song.edit(withMusicTone(open.data, tone), key)}
-                  vocals={{
-                    state: vocalRemoval.vocals,
-                    error: vocalRemoval.error,
-                    onRemove: vocalRemoval.remove,
-                    onCancel: vocalRemoval.cancel,
-                    onPutBack: vocalRemoval.putBack
-                  }}
+                  vocals={
+                    offersVocals(plan, vocalRemoval.vocals)
+                      ? {
+                          state: vocalRemoval.vocals,
+                          error: vocalRemoval.error,
+                          onRemove: vocalRemoval.remove,
+                          onCancel: vocalRemoval.cancel,
+                          onPutBack: vocalRemoval.putBack
+                        }
+                      : undefined
+                  }
                   onHide={hidePanel}
                   onReset={() =>
                     song.edit(
@@ -1098,12 +1106,16 @@ export function RecordScreen({
                   trackName={polishTrack.name}
                   part={polishTrack.part ?? 'lead'}
                   polish={polishOf(polishTrack)}
-                  auto={{
-                    ...autoPolish,
-                    reasons: polishTrack.polishSuggestion?.reasons ?? null,
-                    disabled: !idle,
-                    onListen: autoPolish.listen
-                  }}
+                  auto={
+                    isEnabled('autoPolish', plan)
+                      ? {
+                          ...autoPolish,
+                          reasons: polishTrack.polishSuggestion?.reasons ?? null,
+                          disabled: !idle,
+                          onListen: autoPolish.listen
+                        }
+                      : undefined
+                  }
                   locked={!canEdit}
                   onHide={hidePanel}
                   onChange={(next, key) =>

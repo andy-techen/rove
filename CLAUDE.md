@@ -24,7 +24,8 @@ src/
     audio/             Web Audio, by area: engine, mix, polish, pitch, music, voice,
                        separation, export, encode, dsp, worklets
     state/             Logic and hooks, by area: song (project, undo, saving), editing,
-                       tabs, transport, processing, lyrics, chords, voice, commands, ui
+                       tabs, transport, processing, lyrics, chords, voice, license,
+                       commands, ui
     components/        One folder per component; shared building blocks in ui/
     styles/            Design tokens and base styles
 docs/                  Brand, design, development, testing and architecture

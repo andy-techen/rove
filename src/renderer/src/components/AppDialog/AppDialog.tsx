@@ -5,6 +5,7 @@ import { Dialog } from '../ui/Dialog'
 import { cx } from '../ui/cx'
 import { KeymapTable } from './KeymapTable'
 import { SECTIONS, Section } from './sections'
+import { PremiumSection } from './PremiumSection'
 import { SettingsSection } from './SettingsSection'
 import { VoiceSection } from './VoiceSection'
 import './AppDialog.css'
@@ -12,6 +13,7 @@ import './AppDialog.css'
 const CONTENT: Record<Section, () => React.JSX.Element> = {
   voice: VoiceSection,
   settings: SettingsSection,
+  premium: PremiumSection,
   shortcuts: KeymapTable
 }
 
@@ -31,7 +33,7 @@ interface Props {
 
 const tabId = (section: Section): string => `app-dialog-tab-${section}`
 
-/** One place for the singer's voice, settings and shortcuts, picked from a sidebar. */
+/** One place for the singer's voice, settings, premium and shortcuts, picked from a sidebar. */
 export function AppDialog({ section, onSection, onClose }: Props): React.JSX.Element {
   const tabs = useRef<Partial<Record<Section, HTMLButtonElement | null>>>({})
   const dialog = useRef<HTMLDialogElement>(null)

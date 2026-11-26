@@ -28,7 +28,7 @@ const changeButton = (label: string) =>
   screen.getByRole('button', { name: new RegExp(`shortcut for ${label} `) })
 
 describe('AppDialog', () => {
-  it.each(['voice', 'settings', 'shortcuts'] as const)(
+  it.each(['voice', 'settings', 'premium', 'shortcuts'] as const)(
     'opens at %s from its menu item',
     (section) => {
       render(<Harness />)
@@ -38,10 +38,10 @@ describe('AppDialog', () => {
     }
   )
 
-  it('lists the sections in order: your voice, settings, shortcuts', () => {
+  it('lists the sections in order: your voice, settings, premium, shortcuts', () => {
     openAt('settings')
     expect(screen.getAllByRole('tab').map((el) => el.textContent)).toEqual(
-      ['voice', 'settings', 'shortcuts'].map((s) => t(`appDialog.${s as Section}`))
+      ['voice', 'settings', 'premium', 'shortcuts'].map((s) => t(`appDialog.${s as Section}`))
     )
   })
 
@@ -55,8 +55,8 @@ describe('AppDialog', () => {
 
   it('moves between sections with the arrow keys, wrapping round', async () => {
     render(<Harness />)
-    fireMenu('settings')
-    tab('settings').focus()
+    fireMenu('premium')
+    tab('premium').focus()
     await userEvent.keyboard('{ArrowDown}')
     expect(tab('shortcuts')).toHaveFocus()
     expect(tab('shortcuts')).toHaveAttribute('aria-selected', 'true')

@@ -47,6 +47,7 @@ export function installMenu(keymap: Keymap): void {
           submenu: [
             { label: t('menu.voice'), click: () => send('voice') },
             shortcut('settings'),
+            { label: t('menu.premium'), click: () => send('premium') },
             { label: t('menu.shortcuts'), click: () => send('shortcuts') }
           ]
         },

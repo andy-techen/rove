@@ -12,7 +12,7 @@ flowchart LR
   subgraph Main["Main process (Node.js) · src/main"]
     index["index.ts<br/>window, mic permission"]
     menu["menu.ts<br/>native menu bar"]
-    ipc["ipc/<br/>project · export · lyrics<br/>keymap · appearance · voice"]
+    ipc["ipc/<br/>project · export · lyrics<br/>keymap · appearance · voice<br/>license"]
   end
 
   subgraph Preload["Preload · src/preload"]
@@ -238,6 +238,17 @@ one CPU thread when the page is cross-origin isolated, so the packaged app loads
 `file://`, and the dev server sends them too. "Put vocals back" switches the clips to
 their original songs, which were never touched.
 
+## Free and premium: one list, checked in both processes
+
+`src/shared/premiumFeatures.ts` lists the premium features (vocal removal and auto polish);
+everything else is free. The main process keeps the license key
+(`main/ipc/license.ts`, in `userData/license.json`): with a key the plan is premium,
+without one it's free. It sends the plan and a hint of the key to the window as the
+theme is sent, once on load and again on each change. Keys are checked through a
+`LicenseService`, a fake for now that Lemon Squeezy's license API will replace. The
+renderer shows or locks features with `useFeature`, and the main process refuses
+premium work itself (`requirePlanFor`), so a hidden button is never the only lock.
+
 ## What lives where on disk
 
 | Where                              | What                                                    |
@@ -247,6 +258,7 @@ their original songs, which were never touched.
 | `userData/state.json`              | Which songs were open, in tab order, and the active one |
 | `userData/keymap.json`             | Shortcuts the singer rebound                            |
 | `userData/appearance.json`         | Match System, Light or Dark                             |
+| `userData/license.json`            | The license key that unlocks premium on this Mac        |
 
 ## Building and shipping
 

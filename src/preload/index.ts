@@ -3,6 +3,13 @@ import { EXPORT_CHANNELS } from '@shared/exportFormats'
 import { LYRICS_CHANNELS } from '@shared/lyrics'
 import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/appearance'
 import { CATALOG_CHANNELS } from '@shared/catalog'
+import {
+  FREE_STATUS,
+  LICENSE_CHANNELS,
+  LicenseStatus,
+  parseActivationResult,
+  parseLicenseStatus
+} from '@shared/license'
 import { SETTINGS_CHANNELS } from '@shared/settings'
 import { WISHLIST_CHANNELS } from '@shared/wishlist'
 import { VOICE_CHANNELS } from '@shared/voice'
@@ -31,6 +38,12 @@ ipcRenderer.on(FULL_SCREEN_CHANNEL, (_e, full: unknown) => {
 let theme: Theme = 'system'
 ipcRenderer.on(APPEARANCE_CHANNELS.changed, (_e, raw: unknown) => {
   theme = parseTheme(raw)
+})
+
+// The license arrives the same way, so features show or lock from the first render.
+let license: LicenseStatus = FREE_STATUS
+ipcRenderer.on(LICENSE_CHANNELS.changed, (_e, raw: unknown) => {
+  license = parseLicenseStatus(raw)
 })
 
 const api: RoveApi = {
@@ -107,7 +120,20 @@ const api: RoveApi = {
     const handler = (_e: Electron.IpcRendererEvent, raw: unknown): void => listener(parseTheme(raw))
     ipcRenderer.on(APPEARANCE_CHANNELS.changed, handler)
     return () => ipcRenderer.removeListener(APPEARANCE_CHANNELS.changed, handler)
-  }
+  },
+  onLicense: (listener) => {
+    listener(license)
+    const handler = (_e: Electron.IpcRendererEvent, raw: unknown): void =>
+      listener(parseLicenseStatus(raw))
+    ipcRenderer.on(LICENSE_CHANNELS.changed, handler)
+    return () => ipcRenderer.removeListener(LICENSE_CHANNELS.changed, handler)
+  },
+  activateLicense: async (key) =>
+    parseActivationResult(await ipcRenderer.invoke(LICENSE_CHANNELS.activate, key)),
+  deactivateLicense: async () =>
+    parseLicenseStatus(await ipcRenderer.invoke(LICENSE_CHANNELS.deactivate)),
+  openCheckout: async () => (await ipcRenderer.invoke(LICENSE_CHANNELS.openCheckout)) === true,
+  openLicenseOrders: () => ipcRenderer.invoke(LICENSE_CHANNELS.openOrders)
 }
 
 contextBridge.exposeInMainWorld('api', api)
