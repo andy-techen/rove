@@ -1,0 +1,549 @@
+---
+// What Rove does, shown with small pieces of the app drawn as the app draws them. Each
+// card plays its trick on hover, or as it scrolls into view on a phone.
+import { VIEW, arcPath, pointAt } from '@app/renderer/src/components/ui/Knob/knobMath'
+import { wave } from '../wave'
+
+const laneWave = wave(36, 9, [[0.04, 0.96]])
+// Original lines, written for the site.
+const LYRICS = [
+  'Driving home with the windows down',
+  'Singing every word out loud',
+  'Nobody here to hear but me',
+  'So I sing it like I mean it'
+]
+// Guitar grips, low E to high E: the fret for each string, -1 muted, 0 open.
+const CHORDS: { name: string; frets: number[] }[] = [
+  { name: 'C', frets: [-1, 3, 2, 0, 1, 0] },
+  { name: 'G', frets: [3, 2, 0, 0, 0, 3] },
+  { name: 'Am', frets: [-1, 0, 2, 2, 1, 0] },
+  { name: 'F', frets: [1, 3, 3, 2, 1, 1] }
+]
+// Chord box geometry, in the grip SVG's units.
+const GRIP = { left: 8, top: 14, string: 10, fret: 13, frets: 4, strings: 6 }
+const stringX = (s: number): number => GRIP.left + s * GRIP.string
+const fretY = (f: number): number => GRIP.top + f * GRIP.fret
+
+// The knob as the app draws it: a ring, the value along it, a green dot at our pick.
+const RING = 40
+const RAIL = arcPath(0, 1, RING)
+const KNOBS = [
+  { name: 'Warmth', value: 0.55, pick: 0.5 },
+  { name: 'Clarity', value: 0.6, pick: 0.55 },
+  { name: 'Evenness', value: 0.45, pick: 0.5 },
+  { name: 'Space', value: 0.62, pick: 0.62 }
+].map((k) => ({ ...k, dot: pointAt(k.pick, RING) }))
+
+// Time spent on each note from G3 up to E5, bell shaped around a comfortable middle.
+const NOTES = 22
+const FIRST_NOTE = 7 // G, in semitones above C
+const BLACK_KEYS = new Set([1, 3, 6, 8, 10])
+const COMFORT = { from: 5, to: 15 }
+const time = Array.from({ length: NOTES }, (_, i) => {
+  const bell = Math.exp(-(((i - 10) / 5.5) ** 2))
+  return Math.max(0.08, bell * (0.8 + 0.2 * Math.sin(i * 1.9)))
+})
+---
+
+<section id="features" class="section" aria-labelledby="features-title">
+  <div class="wrap">
+    <h2 id="features-title">Everything your song needs.</h2>
+    <p class="sub">From the first take to the one you share.</p>
+
+    <div class="toys">
+      <article class="card toy toy-harmony">
+        <div class="art" aria-hidden="true">
+          <div class="lane">
+            <b>Lead</b><span class="bars">{laneWave.map((v) => <i style={`--h: ${v}`} />)}</span>
+          </div>
+          <div class="lane lane-harmony">
+            <b>Harmony</b><span class="bars"
+              >{laneWave.map((v) => <i style={`--h: ${v * 0.8}`} />)}</span
+            >
+          </div>
+        </div>
+        <h3>Layer your own harmonies</h3>
+      </article>
+
+      <article class="card toy toy-lyrics" data-cycle>
+        <ol class="art lines" aria-hidden="true">
+          {LYRICS.map((line, i) => <li class={i === 0 ? 'now' : undefined}>{line}</li>)}
+        </ol>
+        <h3>Lyrics at hand</h3>
+      </article>
+
+      <article class="card toy toy-chords" data-cycle>
+        <div class="art chord-now" aria-hidden="true">
+          <div class="grips">
+            {
+              CHORDS.map((c, i) => (
+                <svg viewBox="0 0 66 72" class:list={['grip', { now: i === 0 }]}>
+                  {Array.from({ length: GRIP.frets + 1 }, (_, f) => (
+                    <line
+                      class:list={{ nut: f === 0 }}
+                      x1={stringX(0)}
+                      x2={stringX(GRIP.strings - 1)}
+                      y1={fretY(f)}
+                      y2={fretY(f)}
+                    />
+                  ))}
+                  {Array.from({ length: GRIP.strings }, (_, s) => (
+                    <line x1={stringX(s)} x2={stringX(s)} y1={fretY(0)} y2={fretY(GRIP.frets)} />
+                  ))}
+                  {c.frets.map((f, s) =>
+                    f > 0 ? (
+                      <circle class="finger" cx={stringX(s)} cy={fretY(f - 0.5)} r="3.8" />
+                    ) : f === 0 ? (
+                      <circle class="open" cx={stringX(s)} cy="7" r="2.6" />
+                    ) : (
+                      <text class="mute" x={stringX(s)} y="9.5">
+                        ×
+                      </text>
+                    )
+                  )}
+                </svg>
+              ))
+            }
+          </div>
+          <ol class="chord-strip">
+            {CHORDS.map((c, i) => <li class={i === 0 ? 'now' : undefined}>{c.name}</li>)}
+          </ol>
+        </div>
+        <h3>Chords to follow</h3>
+      </article>
+
+      <article class="card toy toy-voice">
+        <div class="art voice-range" aria-hidden="true">
+          <div
+            class="hist"
+            style={`--from: ${COMFORT.from}; --to: ${COMFORT.to}; --n: ${NOTES}`}
+          >
+            <span class="comfort"></span>
+            {time.map((v, i) => <i style={`--h: ${v}; --i: ${i}`} />)}
+          </div>
+          <div class="keys" style={`--n: ${NOTES}`}>
+            {
+              time.map((_, i) => (
+                <span class:list={{ black: BLACK_KEYS.has((FIRST_NOTE + i) % 12) }} />
+              ))
+            }
+          </div>
+          <dl class="range-facts">
+            <div><dt>Lowest</dt><dd>G3</dd></div>
+            <div><dt>Comfort</dt><dd>C4–A4</dd></div>
+            <div><dt>Highest</dt><dd>E5</dd></div>
+          </dl>
+        </div>
+        <h3>Get to know your voice</h3>
+      </article>
+
+      <article class="card toy toy-polish">
+        <div class="art knobs" aria-hidden="true">
+          {
+            KNOBS.map((k, i) => (
+              <figure class="knob" style={`--to: ${k.value}; --i: ${i}`}>
+                <svg viewBox={`0 0 ${VIEW} ${VIEW}`}>
+                  <circle class="face" cx="50" cy="50" r="30" />
+                  <path class="rail" d={RAIL} />
+                  <path class="value" d={RAIL} pathLength="1" />
+                  <circle class="pick" cx={k.dot.x} cy={k.dot.y} r="4" />
+                  <line class="pointer" x1="50" y1="50" x2="50" y2="24" />
+                </svg>
+                <figcaption>{k.name}</figcaption>
+              </figure>
+            ))
+          }
+        </div>
+        <h3>Polish in plain words</h3>
+      </article>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { cycleState } from '../features'
+
+  // Lyrics and chords move on as they do in the app while a song plays.
+  const CYCLE_MS = 1800
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let step = 0
+    setInterval(() => {
+      step++
+      for (const toy of document.querySelectorAll('[data-cycle]')) {
+        for (const list of toy.querySelectorAll('.lines, .grips, .chord-strip')) {
+          ;[...list.children].forEach((el, i) => {
+            const state = cycleState(i, step, list.children.length)
+            el.classList.toggle('now', state === 'now')
+            el.classList.toggle('past', state === 'past')
+          })
+        }
+      }
+    }, CYCLE_MS)
+  }
+
+  // Phones can't hover, so each card plays its trick as it scrolls into view.
+  if (matchMedia('(hover: none)').matches) {
+    const wake = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) e.target.classList.toggle('awake', e.isIntersecting)
+      },
+      { threshold: 0.6 }
+    )
+    document.querySelectorAll('.toy').forEach((toy) => wake.observe(toy))
+  }
+</script>
+
+<style>
+  .sub {
+    margin-top: var(--space-6);
+    color: var(--color-text-muted);
+    font-size: var(--site-font-lead);
+  }
+
+  .toys {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-8);
+    margin-top: var(--space-12);
+  }
+
+  .toy {
+    grid-column: span 2;
+  }
+
+  .toy-harmony,
+  .toy-lyrics {
+    grid-column: span 3;
+  }
+
+  .art {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  /* Harmony: a second lane slides in under the lead. */
+  .lane {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    font-size: var(--site-font-small);
+  }
+
+  .lane b {
+    width: var(--site-size-lane-name);
+  }
+
+  .bars {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--site-size-bar-gap);
+    height: var(--site-size-lane-wave);
+  }
+
+  .bars i {
+    flex: 1;
+    height: calc(var(--h) * 100%);
+    border-radius: var(--radius-sm);
+    background: var(--color-wave-vocal);
+  }
+
+  .lane-harmony {
+    opacity: 0;
+    translate: 0 -100%;
+    transition:
+      opacity var(--site-duration-slide) var(--site-ease),
+      translate var(--site-duration-slide) var(--site-ease);
+  }
+
+  .lane-harmony .bars {
+    opacity: var(--opacity-fade-line);
+  }
+
+  .toy-harmony:is(:hover, .awake) .lane-harmony {
+    opacity: 1;
+    translate: none;
+  }
+
+  /* Lyrics, as the panel shows them: sung lines dim, the one being sung lit. */
+  .lines {
+    padding: 0;
+    list-style: none;
+    font-size: var(--site-font-lyric);
+  }
+
+  .lines li {
+    transition:
+      color var(--site-duration-swap),
+      opacity var(--site-duration-swap);
+  }
+
+  .lines .past {
+    color: var(--color-text-muted);
+    opacity: var(--opacity-fade-line);
+  }
+
+  .lines .now {
+    color: var(--color-accent-text);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* Chords: how to hold the one to play now, and the ones coming up. */
+  .chord-now {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: var(--space-9);
+  }
+
+  .grips {
+    display: grid;
+  }
+
+  .grip {
+    grid-area: 1 / 1;
+    width: var(--site-size-grip);
+    visibility: hidden;
+  }
+
+  .grip.now {
+    visibility: visible;
+  }
+
+  .grip line {
+    stroke: var(--color-text-muted);
+    stroke-width: 1;
+  }
+
+  .grip .nut {
+    stroke: var(--color-text);
+    stroke-width: 3;
+  }
+
+  .grip .finger {
+    fill: var(--color-accent);
+  }
+
+  .grip .open {
+    fill: none;
+    stroke: var(--color-text-muted);
+  }
+
+  .grip .mute {
+    fill: var(--color-text-muted);
+    font-size: 8px;
+    text-anchor: middle;
+  }
+
+  .chord-strip {
+    display: flex;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .chord-strip li {
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-semibold);
+    transition:
+      background var(--site-duration-swap),
+      color var(--site-duration-swap),
+      scale var(--site-duration-swap) var(--site-ease);
+  }
+
+  .chord-strip .now {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    scale: var(--site-scale-now);
+  }
+
+  /* Range: time on each note over a keyboard, the comfortable stretch in soft marigold. */
+  .voice-range {
+    gap: var(--space-3);
+  }
+
+  .hist {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--n), 1fr);
+    align-items: end;
+    gap: var(--site-size-bar-gap);
+    height: var(--site-size-range);
+  }
+
+  .comfort {
+    position: absolute;
+    inset: 0 auto 0 calc(var(--from) / var(--n) * 100%);
+    width: calc((var(--to) - var(--from) + 1) / var(--n) * 100%);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  }
+
+  .hist i {
+    position: relative;
+    height: calc(var(--h) * 100%);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: var(--color-wave-vocal);
+    transform-origin: bottom;
+    scale: 1 0.35;
+    transition: scale var(--site-duration-grow) var(--site-ease);
+    transition-delay: calc(var(--i) * var(--site-stagger-bar));
+  }
+
+  .toy-voice:is(:hover, .awake) .hist i {
+    scale: 1;
+  }
+
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(var(--n), 1fr);
+    gap: var(--size-hairline);
+    height: var(--site-size-keys);
+  }
+
+  .keys span {
+    border: var(--size-hairline) solid var(--color-border);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    background: var(--color-surface-raised);
+  }
+
+  .keys .black {
+    border-color: var(--color-text);
+    background: var(--color-text);
+  }
+
+  .range-facts {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--space-4);
+    font-size: var(--site-font-small);
+  }
+
+  .range-facts dt {
+    color: var(--color-text-muted);
+  }
+
+  .range-facts dd {
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* Polish: knobs drawn as the app draws them, turning up to their setting. */
+  .toy-polish {
+    border-color: transparent;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  .knobs {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: var(--site-size-knobs-max);
+  }
+
+  .knob {
+    --f: 0.1;
+    text-align: center;
+    transition: --f var(--site-duration-turn) var(--site-ease);
+    transition-delay: calc(var(--i) * var(--site-stagger-knob));
+  }
+
+  .toy-polish:is(:hover, .awake) .knob {
+    --f: var(--to);
+  }
+
+  .knob svg {
+    width: 100%;
+    max-width: var(--site-size-knob);
+    margin-inline: auto;
+    overflow: visible;
+  }
+
+  .face {
+    fill: var(--site-sun);
+  }
+
+  .rail,
+  .value {
+    fill: none;
+    stroke-width: 7;
+    stroke-linecap: round;
+  }
+
+  .rail {
+    stroke: color-mix(in srgb, var(--color-on-accent) 20%, transparent);
+  }
+
+  .value {
+    stroke: var(--color-on-accent);
+    stroke-dasharray: var(--f) 1;
+  }
+
+  .pick {
+    fill: var(--color-good);
+  }
+
+  .pointer {
+    stroke: var(--color-on-accent);
+    stroke-width: 5;
+    stroke-linecap: round;
+    transform-box: view-box;
+    transform-origin: 50px 50px;
+    rotate: calc(var(--f) * 270deg - 135deg);
+  }
+
+  figcaption {
+    margin-top: var(--space-3);
+    font-size: var(--site-font-small);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* Tablets: two cards to a row, Polish last and across the whole width. */
+  @media (max-width: 1024px) {
+    .toys {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .toy,
+    .toy-harmony,
+    .toy-lyrics {
+      grid-column: auto;
+    }
+
+    .toy-polish {
+      grid-column: 1 / -1;
+    }
+
+    /* Across the full width, the knobs spread out to fill it. */
+    .knobs {
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .toys {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lane-harmony,
+    .hist i,
+    .knob {
+      transition: none;
+    }
+  }
+</style>
+
+<style is:global>
+  /* Lets a knob's turn animate. */
+  @property --f {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0.1;
+  }
+</style>

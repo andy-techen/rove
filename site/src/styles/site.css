@@ -1,0 +1,428 @@
+/* The website's own tokens and base styles. Colours, spacing and radii come from the
+   app's tokens.css (imported first); these add what a web page needs and the app
+   doesn't: a larger type scale, page widths and the golden-hour sky. */
+
+:root {
+  /* Type: bigger than the app, which is a dense desktop tool read up close. */
+  /* Headings in Fredoka: round strokes, like the wordmark. */
+  --site-font-display: 'Fredoka', var(--font-family);
+  --site-font-hero: clamp(56px, 10vw, 136px);
+  --site-font-h2: clamp(36px, 6vw, 64px);
+  --site-font-lyric: 18px;
+  --site-font-h3: 19px;
+  --site-font-body: 17px;
+  --site-font-lead: clamp(18px, 2.2vw, 21px);
+  --site-font-small: 14px;
+  --site-line-height-tight: 1.1;
+
+  --site-width: 1120px;
+  --site-width-text: 720px;
+  --site-gutter: var(--space-8);
+  --site-section: clamp(64px, 11vw, 128px);
+  --site-header: 64px;
+  /* Above anything a page lifts, like the waveforms that straddle a horizon. */
+  --site-layer-header: 10;
+  --site-radius-card: 18px;
+  --site-radius-art: 24px;
+  --site-size-feature-icon: 40px;
+  --site-size-logo-icon: 28px;
+  --site-size-logo-word: 18px;
+  --site-size-button: 48px;
+  --site-size-input-max: 320px;
+  --site-size-join-field: 260px;
+  /* The hero: a sunset whose horizon is the singer's waveform. */
+  --site-size-sun: min(24vw, 280px);
+  --site-size-sun-tablet: min(40vw, 340px);
+  --site-size-sun-phone: 58vw;
+  --site-size-voice: clamp(120px, 22vw, 260px);
+  --site-size-voice-phone: 110px;
+  --site-size-sea: clamp(90px, 14vw, 180px);
+  --site-size-sea-phone: 72px;
+  /* Room the controls take above the waveform, so the sun clears them. */
+  --site-size-controls: 120px;
+  --site-size-play: 64px;
+  --site-size-play-phone: 52px;
+  --site-size-play-icon: 24px;
+  --site-size-polish-dot: 22px;
+  --site-size-sun-glow: 120px;
+  --site-size-sun-glow-spread: 40px;
+  --site-size-setting-sun: 360px;
+  /* Feature cards and the app pieces drawn in them. */
+  --site-size-toy: 220px;
+  --site-radius-toy: 28px;
+  --site-size-lane-name: 72px;
+  --site-size-lane-wave: 26px;
+  --site-size-bar-gap: 2px;
+  --site-size-grip: 92px;
+  --site-size-knob: 72px;
+  --site-size-knobs-max: 420px;
+  --site-size-range: 64px;
+  --site-size-keys: 18px;
+  /* The community page's evening sky, where singers take turns along the horizon. */
+  --site-size-singers: clamp(90px, 16vw, 180px);
+  --site-size-singers-gap: clamp(12px, 3vw, 40px);
+
+  /* Motion: slow and soft, like the light at the end of the day. */
+  --site-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --site-duration-reveal: 700ms;
+  --site-reveal-distance: 18px;
+  --site-reveal-stagger: 90ms;
+  --site-duration-hover: 240ms;
+  --site-duration-swap: 300ms;
+  --site-duration-slide: 500ms;
+  --site-duration-grow: 700ms;
+  --site-duration-turn: 900ms;
+  --site-duration-glow: 1200ms;
+  --site-duration-sunrise: 3s;
+  --site-duration-play: 1400ms;
+  --site-stagger-knob: 80ms;
+  --site-stagger-bar: 20ms;
+  --site-tilt-hover: -0.6deg;
+  --site-scale-now: 1.12;
+  --site-scale-glow: 1.06;
+
+  /* The hero's sky, from the app icon: dusk gold by day... */
+  --site-sky-top: #f9cf8a;
+  --site-sky-bottom: #f29a4a;
+  --site-sea: #df7f3a;
+  --site-sun: #fff8ea;
+
+  /* Evening, for the community page: always after sunset, whatever the theme. */
+  --site-evening-sky-top: #2b2220;
+  --site-evening-sky-bottom: #a85f2a;
+  --site-evening-sea: #4a3122;
+  --site-evening-sun: #ffd48a;
+  --site-evening-text: #fbf6ef;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* ...and the last of the light by evening. */
+    --site-sky-top: #3a2d27;
+    --site-sky-bottom: #b8692a;
+    --site-sea: #5a3a24;
+    --site-sun: #ffd48a;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--site-header);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--site-font-body);
+  line-height: var(--line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--site-font-display);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--site-line-height-tight);
+  letter-spacing: -0.02em;
+}
+
+/* Even lines for headings, and no lone last word in paragraphs. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+h1 {
+  font-size: var(--site-font-hero);
+}
+
+h2 {
+  font-size: var(--site-font-h2);
+}
+
+h3 {
+  font-size: var(--site-font-h3);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: normal;
+}
+
+a {
+  color: var(--color-accent-text);
+}
+
+img,
+svg {
+  display: block;
+}
+
+:focus-visible {
+  outline: var(--size-focus-ring) solid var(--color-accent);
+  outline-offset: var(--size-focus-ring);
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--site-width);
+  margin-inline: auto;
+  padding-inline: var(--site-gutter);
+}
+
+.section {
+  padding-block: var(--site-section);
+}
+
+.section-head {
+  max-width: var(--site-width-text);
+  margin-bottom: var(--space-12);
+}
+
+.section-head p {
+  margin-top: var(--space-7);
+  color: var(--color-text-muted);
+  font-size: var(--site-font-lead);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.small {
+  font-size: var(--site-font-small);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Buttons: pill shaped and generous, for a page read at arm's length. Marigold is the
+   main action only (docs/brand.md). */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: var(--site-size-button);
+  padding-inline: var(--space-9);
+  border: var(--size-hairline) solid transparent;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast),
+    transform var(--duration-fast);
+}
+
+.button-primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.button-primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.button-secondary {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.button-secondary:hover {
+  background: var(--color-surface-raised);
+}
+
+.button:active {
+  transform: scale(var(--scale-press));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+
+  .button:active {
+    transform: none;
+  }
+}
+
+/* A card holding a small piece of the app, with its name underneath. */
+.card {
+  display: grid;
+  align-content: space-between;
+  gap: var(--space-9);
+  min-height: var(--site-size-toy);
+  padding: var(--space-10);
+  border: var(--size-hairline) solid var(--color-border);
+  border-radius: var(--site-radius-toy);
+  background: var(--color-surface);
+  transition: rotate var(--site-duration-hover) var(--site-ease);
+}
+
+.card:hover {
+  rotate: var(--site-tilt-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .card:hover {
+    rotate: none;
+  }
+}
+
+/* Sections drift up as they scroll into view. Only once the script has marked the page
+   ready, so with no script (or reduced motion) everything simply shows. */
+.reveal-ready [data-reveal] {
+  opacity: 0;
+  translate: 0 var(--site-reveal-distance);
+  transition:
+    opacity var(--site-duration-reveal) var(--site-ease),
+    translate var(--site-duration-reveal) var(--site-ease);
+  transition-delay: calc(var(--reveal-order, 0) * var(--site-reveal-stagger));
+}
+
+.reveal-ready [data-reveal].revealed {
+  opacity: 1;
+  translate: none;
+}
+
+/* Afternoon to evening. On the home page the colours change as you scroll: cream, then
+   gold, a brief sunset, then night. It always starts in daylight, whatever the system
+   theme, so the sky and what sits on it are pinned to day there. The colours are
+   registered so the browser can blend them. */
+@property --color-bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #fbf6ef;
+}
+
+@property --color-surface {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #fffdf9;
+}
+
+@property --color-surface-raised {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f4ece1;
+}
+
+@property --color-border {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #e6dacb;
+}
+
+@property --color-text {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #2a211b;
+}
+
+@property --color-text-muted {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #75675a;
+}
+
+@property --color-accent-text {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #9c5a06;
+}
+
+body.dusk {
+  --site-sky-top: #f9cf8a;
+  --site-sky-bottom: #f29a4a;
+  --site-sea: #df7f3a;
+  --site-sun: #fff8ea;
+  --site-sun-set: #ffd48a;
+  --color-wave-vocal: #c47a14;
+  --color-clip-vocal: #fdebcc;
+  color-scheme: light;
+  animation: dusk linear both;
+  animation-timeline: scroll(root);
+}
+
+@keyframes dusk {
+  0%,
+  20% {
+    --color-bg: #fbf6ef;
+    --color-surface: #fffdf9;
+    --color-surface-raised: #f4ece1;
+    --color-border: #e6dacb;
+    --color-text: #2a211b;
+    --color-text-muted: #75675a;
+    --color-accent-text: #9c5a06;
+  }
+
+  50%,
+  68% {
+    --color-bg: #f8e2bd;
+    --color-surface: #fcf0db;
+    --color-surface-raised: #f3d6a8;
+    --color-border: #e9c78f;
+    --color-text: #2a211b;
+    --color-text-muted: #6e5a45;
+    --color-accent-text: #8f4f02;
+  }
+
+  /* The last warm light, held briefly so gold never fades through grey. */
+  80% {
+    --color-bg: #e9a072;
+    --color-surface: #f1b78e;
+    --color-surface-raised: #e48f5f;
+    --color-border: #d98257;
+    --color-text: #2a1712;
+    --color-text-muted: #5a3426;
+    --color-accent-text: #6e2f05;
+  }
+
+  92%,
+  100% {
+    --color-bg: #1f1b18;
+    --color-surface: #2a2522;
+    --color-surface-raised: #332d29;
+    --color-border: #433b35;
+    --color-text: #f3f1ee;
+    --color-text-muted: #b3aca3;
+    --color-accent-text: #f2a93b;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.dusk {
+    animation: none;
+  }
+}

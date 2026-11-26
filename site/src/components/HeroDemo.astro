@@ -1,0 +1,272 @@
+---
+// The hero is the demo: a golden-hour sky whose horizon is the singer's waveform, its
+// top half the voice and its bottom half the reflection in the sea. Press play to hear
+// a song sung in Rove; turn on Polish and the sun glows.
+import Icon from './Icon.astro'
+import { wave } from '../wave'
+
+const BARS = 140
+// Drawn on the server so the horizon is there before the song loads.
+const shape = wave(BARS, 4, [
+  [0.04, 0.3],
+  [0.36, 0.64],
+  [0.7, 0.96]
+])
+---
+
+<section class="hero" data-hero>
+  <div class="sun" aria-hidden="true"></div>
+  <div class="wrap hero-text">
+    <h1>Sing for the love of it.</h1>
+    <p class="lead">Bring the voice. Rove brings the sound.</p>
+  </div>
+
+  <div class="horizon">
+    <div class="wrap controls">
+      <button class="play" type="button" data-play aria-label="Play" disabled>
+        <span class="play-icon"><Icon name="play" /></span>
+        <span class="pause-icon"><Icon name="pause" /></span>
+      </button>
+      <span class="hint">Press play to hear a song sung in Rove</span>
+      <button class="polish" type="button" role="switch" aria-checked="false" data-polish>
+        <span class="polish-dot"></span> Polish
+      </button>
+    </div>
+    <svg
+      class="voice"
+      viewBox={`0 0 ${BARS} 2`}
+      preserveAspectRatio="none"
+      data-wave
+      aria-hidden="true"
+    >
+      {
+        ['ahead', 'played'].map((layer) => (
+          <g class={layer}>
+            {shape.map((v, x) => (
+              <rect x={x + 0.2} y={1 - v * 0.95} width="0.6" height={v * 1.9} />
+            ))}
+          </g>
+        ))
+      }
+    </svg>
+    <div class="sea"></div>
+  </div>
+</section>
+
+<script>
+  import { mountHero } from '../demo/hero'
+  const hero = document.querySelector<HTMLElement>('[data-hero]')
+  if (hero) void mountHero(hero)
+</script>
+
+<style>
+  .hero {
+    --playhead: 0;
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: calc(100svh - var(--site-header));
+    overflow: hidden;
+    background: linear-gradient(var(--site-sky-top), var(--site-sky-bottom) 85%);
+    color: var(--color-on-accent);
+  }
+
+  .sun {
+    position: absolute;
+    right: 12%;
+    bottom: calc(var(--site-size-sea) + var(--site-size-voice) / 2 + var(--site-size-controls));
+    width: var(--site-size-sun);
+    aspect-ratio: 1;
+    border-radius: var(--radius-round);
+    background: var(--site-sun);
+    transition:
+      box-shadow var(--site-duration-glow) var(--site-ease),
+      scale var(--site-duration-glow) var(--site-ease);
+    animation: rise var(--site-duration-sunrise) var(--site-ease) both;
+  }
+
+  .is-polished .sun {
+    scale: var(--site-scale-glow);
+    box-shadow: 0 0 var(--site-size-sun-glow) var(--site-size-sun-glow-spread)
+      color-mix(in srgb, var(--site-sun) 55%, transparent);
+  }
+
+  .hero-text {
+    position: relative;
+    display: grid;
+    align-content: center;
+    gap: var(--space-8);
+  }
+
+  h1 {
+    max-width: 9ch;
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+  }
+
+  .lead {
+    font-size: var(--site-font-lead);
+  }
+
+  .horizon {
+    position: relative;
+  }
+
+  .controls {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    margin-bottom: var(--space-8);
+  }
+
+  .play {
+    display: grid;
+    place-items: center;
+    width: var(--site-size-play);
+    height: var(--site-size-play);
+    border: none;
+    border-radius: var(--radius-round);
+    background: var(--color-on-accent);
+    color: var(--site-sun);
+    font-size: var(--site-size-play-icon);
+    cursor: pointer;
+    transition: scale var(--duration-fast);
+  }
+
+  .play:hover:not(:disabled) {
+    scale: var(--scale-hover);
+  }
+
+  .play:disabled {
+    opacity: var(--opacity-disabled);
+    cursor: default;
+  }
+
+  .pause-icon,
+  .is-playing .play-icon {
+    display: none;
+  }
+
+  .is-playing .pause-icon {
+    display: contents;
+  }
+
+  .hint {
+    font-size: var(--site-font-small);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .is-playing .hint {
+    visibility: hidden;
+  }
+
+  .polish {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    margin-left: auto;
+    padding: var(--space-4) var(--space-7) var(--space-4) var(--space-4);
+    border: none;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-on-accent) 14%, transparent);
+    color: var(--color-on-accent);
+    font: inherit;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+  }
+
+  .polish-dot {
+    width: var(--site-size-polish-dot);
+    height: var(--site-size-polish-dot);
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--color-on-accent) 30%, transparent);
+    transition: background var(--site-duration-swap);
+  }
+
+  .polish[aria-checked='true'] .polish-dot {
+    background: var(--site-sun);
+    box-shadow: 0 0 var(--space-6) var(--site-sun);
+  }
+
+  .voice {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: var(--site-size-voice);
+    margin-bottom: calc(var(--site-size-voice) / -2);
+    cursor: pointer;
+  }
+
+  .voice .ahead {
+    fill: color-mix(in srgb, var(--color-on-accent) 35%, transparent);
+  }
+
+  .voice .played {
+    fill: var(--site-sun);
+    clip-path: inset(0 calc((1 - var(--playhead)) * 100%) 0 0);
+  }
+
+  .is-polished .voice .ahead {
+    fill: color-mix(in srgb, var(--color-on-accent) 55%, transparent);
+  }
+
+  .sea {
+    height: var(--site-size-sea);
+    background: var(--site-sea);
+  }
+
+  /* Tablets and phones: no full-screen sky; the sun rises behind the headline. */
+  @media (max-width: 1024px) {
+    .hero {
+      min-height: auto;
+    }
+
+    .hero-text {
+      padding-block: var(--space-12) var(--space-10);
+    }
+
+    .sun {
+      top: var(--space-10);
+      right: -8%;
+      bottom: auto;
+      width: var(--site-size-sun-tablet);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .hero {
+      --site-size-voice: var(--site-size-voice-phone);
+      --site-size-sea: var(--site-size-sea-phone);
+    }
+
+    .sun {
+      right: -12%;
+      width: var(--site-size-sun-phone);
+    }
+
+    .play {
+      width: var(--site-size-play-phone);
+      height: var(--site-size-play-phone);
+    }
+
+    .hint {
+      display: none;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      translate: 0 40%;
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sun {
+      animation: none;
+      transition: none;
+    }
+  }
+</style>

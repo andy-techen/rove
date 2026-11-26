@@ -1,0 +1,494 @@
+---
+// Coming soon: the community. Where the home page is golden hour, this is the evening
+// after: an open mic under a setting sun, singers taking turns along the horizon.
+import Layout from '../layouts/Layout.astro'
+import Icon from '../components/Icon.astro'
+import Updates from '../components/Updates.astro'
+import { wave } from '../wave'
+
+const home = import.meta.env.BASE_URL.replace(/\/?$/, '/')
+
+// Unnamed singers along the horizon, so we don't invent people.
+const SINGER_BARS = 28
+const singers = [3, 8, 13, 21, 34].map((seed) => wave(SINGER_BARS, seed, [[0.04, 0.96]]))
+
+const CLIP_BARS = 40
+const shareWave = wave(CLIP_BARS, 5, [[0.04, 0.96]])
+const feed = [11, 17, 23].map((seed) => wave(CLIP_BARS, seed, [[0.04, 0.96]]))
+// What singers have in common. The ones lit on hover are what you share with others.
+const TASTES = [
+  { name: 'Musical theatre', shared: true },
+  { name: 'Choir', shared: false },
+  { name: 'Karaoke classics', shared: true },
+  { name: 'Acoustic', shared: false },
+  { name: 'Ballads', shared: true }
+]
+---
+
+<Layout
+  title="Community: Rove"
+  description="Coming soon: a place for people who love to sing to share their songs and find people who love the same ones."
+>
+  <section class="evening" data-singers>
+    <div class="sun" aria-hidden="true"></div>
+    <div class="wrap evening-text">
+      <p class="soon">Coming soon</p>
+      <h1>A place to be heard.</h1>
+      <p class="lead">Every voice has a song worth hearing.</p>
+      <a href={`${home}#download`} class="button button-primary">Start singing with Rove</a>
+    </div>
+    <div class="horizon" aria-hidden="true">
+      <div class="singers">
+        {
+          singers.map((values, i) => (
+            <svg
+              viewBox={`0 0 ${SINGER_BARS} 2`}
+              preserveAspectRatio="none"
+              class:list={['singer', { now: i === 0 }]}
+            >
+              {values.map((v, x) => (
+                <rect x={x + 0.2} y={1 - v * 0.95} width="0.6" height={v * 1.9} />
+              ))}
+            </svg>
+          ))
+        }
+      </div>
+      <div class="sea"></div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="coming-title">
+    <div class="wrap">
+      <h2 id="coming-title">What’s coming</h2>
+      <div class="cards">
+        <article class="card">
+          <div class="art share" aria-hidden="true">
+            <span class="play"><Icon name="play" /></span>
+            <div class="share-song">
+              <b>Your song</b>
+              <svg viewBox={`0 0 ${CLIP_BARS} 2`} preserveAspectRatio="none" class="clip-wave">
+                {
+                  ['ahead', 'played'].map((layer) => (
+                    <g class={layer}>
+                      {shareWave.map((v, x) => (
+                        <rect x={x + 0.2} y={1 - v * 0.9} width="0.6" height={v * 1.8} />
+                      ))}
+                    </g>
+                  ))
+                }
+              </svg>
+            </div>
+            <span class="send">
+              <span class="send-arrow"><Icon name="export" /></span>
+              <span class="send-done"><Icon name="check" /></span>
+            </span>
+          </div>
+          <div>
+            <h3>Share your voice</h3>
+            <p class="muted">Post a finished take straight from Rove.</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="art feed" aria-hidden="true">
+            {
+              feed.map((values, i) => (
+                <div class="feed-row" style={`--i: ${i}`}>
+                  <span class="feed-play">
+                    <Icon name="play" />
+                  </span>
+                  <svg
+                    viewBox={`0 0 ${CLIP_BARS} 2`}
+                    preserveAspectRatio="none"
+                    class="clip-wave"
+                  >
+                    {['ahead', 'played'].map((layer) => (
+                      <g class={layer}>
+                        {values.map((v, x) => (
+                          <rect x={x + 0.2} y={1 - v * 0.9} width="0.6" height={v * 1.8} />
+                        ))}
+                      </g>
+                    ))}
+                  </svg>
+                </div>
+              ))
+            }
+          </div>
+          <div>
+            <h3>Discover new voices</h3>
+            <p class="muted">People singing the songs they love, wherever they sing them.</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="art tastes" aria-hidden="true">
+            {
+              TASTES.map((t, i) => (
+                <span class:list={{ shared: t.shared }} style={`--i: ${i}`}>
+                  {t.name}
+                </span>
+              ))
+            }
+          </div>
+          <div>
+            <h3>Find your people</h3>
+            <p class="muted">Singers who love the same songs you do.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <Updates />
+</Layout>
+
+<script>
+  import { cycleState } from '../features'
+
+  // Phones can't hover, so each card plays its trick as it scrolls into view.
+  if (matchMedia('(hover: none)').matches) {
+    const wake = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) e.target.classList.toggle('awake', e.isIntersecting)
+      },
+      { threshold: 0.6 }
+    )
+    document.querySelectorAll('.card').forEach((card) => wake.observe(card))
+  }
+
+  // Singers take turns along the horizon, one voice lit at a time.
+  const TURN_MS = 1600
+  const row = document.querySelector('[data-singers] .singers')
+  if (row && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let step = 0
+    setInterval(() => {
+      step++
+      ;[...row.children].forEach((el, i) =>
+        el.classList.toggle('now', cycleState(i, step, row.children.length) === 'now')
+      )
+    }, TURN_MS)
+  }
+</script>
+
+<style>
+  /* ---------- Evening hero ---------- */
+  .evening {
+    position: relative;
+    display: grid;
+    overflow: hidden;
+    background: linear-gradient(var(--site-evening-sky-top), var(--site-evening-sky-bottom));
+    color: var(--site-evening-text);
+  }
+
+  .sun {
+    position: absolute;
+    right: 14%;
+    bottom: calc(var(--site-size-sea) - var(--site-size-sun) / 2);
+    width: var(--site-size-sun);
+    aspect-ratio: 1;
+    border-radius: var(--radius-round);
+    background: var(--site-evening-sun);
+    box-shadow: 0 0 var(--site-size-sun-glow) var(--site-size-sun-glow-spread)
+      color-mix(in srgb, var(--site-evening-sun) 35%, transparent);
+    animation: set var(--site-duration-sunrise) var(--site-ease) both;
+  }
+
+  .evening-text {
+    position: relative;
+    display: grid;
+    justify-items: start;
+    gap: var(--space-9);
+    padding-block: var(--site-section) var(--space-12);
+  }
+
+  .soon {
+    margin-bottom: calc(var(--space-6) * -1);
+    color: var(--site-evening-sun);
+    font-size: var(--site-font-small);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  h1 {
+    max-width: 9ch;
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+  }
+
+  .lead {
+    max-width: var(--site-width-text);
+    font-size: var(--site-font-lead);
+  }
+
+  .horizon {
+    position: relative;
+  }
+
+  /* Several voices side by side, straddling the horizon like the home page's one. */
+  .singers {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--site-size-singers-gap);
+    margin-bottom: calc(var(--site-size-singers) / -2);
+    padding-inline: var(--site-gutter);
+  }
+
+  .singer {
+    width: 100%;
+    height: var(--site-size-singers);
+    fill: color-mix(in srgb, var(--site-evening-text) 22%, transparent);
+    transition: fill var(--site-duration-slide) var(--site-ease);
+  }
+
+  .singer.now {
+    fill: var(--site-evening-sun);
+  }
+
+  .sea {
+    position: relative;
+    height: var(--site-size-sea);
+    background: var(--site-evening-sea);
+  }
+
+  /* ---------- What's coming ---------- */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-8);
+    margin-top: var(--space-12);
+  }
+
+  .card p {
+    margin-top: var(--space-4);
+  }
+
+  .art {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  /* A clip's waveform: dim ahead of the playhead, full behind it. Cards play theirs on
+     hover (or as they scroll into view on a phone) by running --p from 0 to 1. */
+  .clip-wave {
+    --p: 0;
+    width: 100%;
+    height: var(--site-size-lane-wave);
+  }
+
+  .clip-wave .ahead {
+    fill: color-mix(in srgb, var(--color-wave-vocal) 35%, transparent);
+  }
+
+  .clip-wave .played {
+    fill: var(--color-wave-vocal);
+    clip-path: inset(0 calc((1 - var(--p)) * 100%) 0 0);
+  }
+
+  .play,
+  .feed-play {
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-round);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  /* Share: your song plays through, then goes out with a tick. */
+  .share {
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-raised);
+  }
+
+  .play {
+    width: var(--site-size-feature-icon);
+    height: var(--site-size-feature-icon);
+    font-size: var(--size-icon-primary);
+  }
+
+  .share-song {
+    display: grid;
+    gap: var(--space-3);
+    font-size: var(--site-font-small);
+  }
+
+  .send {
+    display: grid;
+    color: var(--color-accent-text);
+    font-size: var(--size-icon-primary);
+  }
+
+  .send > span {
+    grid-area: 1 / 1;
+  }
+
+  .send-done {
+    opacity: 0;
+    scale: 0.5;
+  }
+
+  .card:is(:hover, .awake) .share .clip-wave {
+    animation: play-through var(--site-duration-play) linear both;
+  }
+
+  .card:is(:hover, .awake) .send-arrow {
+    animation: send-off var(--site-duration-slide) var(--site-ease) var(--site-duration-play) both;
+  }
+
+  .card:is(:hover, .awake) .send-done {
+    animation: arrive var(--site-duration-slide) var(--site-ease)
+      calc(var(--site-duration-play) + var(--site-duration-swap)) both;
+  }
+
+  /* Discover: a few singers' clips, playing one after another like a playlist. */
+  .feed-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: var(--space-5);
+  }
+
+  .feed-play {
+    width: var(--site-size-polish-dot);
+    height: var(--site-size-polish-dot);
+    font-size: var(--size-icon-secondary);
+    opacity: var(--opacity-fade-line);
+    transition: opacity var(--site-duration-swap);
+  }
+
+  .card:is(:hover, .awake) .feed-row .clip-wave {
+    animation: play-through var(--site-duration-play) linear
+      calc(var(--i) * var(--site-duration-play)) both;
+  }
+
+  .card:is(:hover, .awake) .feed-row .feed-play {
+    animation: turn-on var(--site-duration-play) steps(1)
+      calc(var(--i) * var(--site-duration-play)) both;
+  }
+
+  /* Find your people: tastes, the ones you share with others lighting up. */
+  .tastes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .tastes span {
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-raised);
+    color: var(--color-text-muted);
+    font-size: var(--site-font-small);
+    font-weight: var(--font-weight-semibold);
+    transition:
+      background var(--site-duration-swap),
+      color var(--site-duration-swap);
+    transition-delay: calc(var(--i) * var(--site-stagger-knob));
+  }
+
+  .card:is(:hover, .awake) .tastes .shared {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  @media (max-width: 1024px) {
+    .cards {
+      grid-template-columns: 1fr;
+      max-width: var(--site-width-text);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .sun {
+      right: -6%;
+      width: var(--site-size-sun-phone);
+    }
+
+    .singers {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .singer:nth-child(n + 4) {
+      display: none;
+    }
+  }
+
+  @keyframes play-through {
+    from {
+      --p: 0;
+    }
+
+    to {
+      --p: 1;
+    }
+  }
+
+  @keyframes send-off {
+    to {
+      opacity: 0;
+      translate: 0 calc(var(--space-6) * -1);
+    }
+  }
+
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      scale: 0.5;
+    }
+
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  /* Lit while its clip plays. */
+  @keyframes turn-on {
+    from {
+      opacity: 1;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes set {
+    from {
+      translate: 0 -30%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sun {
+      animation: none;
+    }
+
+    .singer,
+    .tastes span {
+      transition: none;
+    }
+
+    .card .clip-wave,
+    .card .send-arrow,
+    .card .feed-play {
+      animation: none !important;
+    }
+
+    .card:is(:hover, .awake) .clip-wave {
+      --p: 1;
+    }
+  }
+</style>
+
+<style is:global>
+  /* How far a card's clip has played, so it can animate. */
+  @property --p {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+</style>

@@ -21,6 +21,8 @@ env:
 
 permissions:
   contents: write
+  # To rebuild the website once the release is out.
+  actions: write
 
 jobs:
   mac:
@@ -97,5 +99,14 @@ jobs:
         run: |
           gh release delete "$TAG" --yes 2>/dev/null || true
           gh release create "$TAG" dist/*.dmg --title "Rove $TAG" --notes-file release-notes.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # The website's download buttons link to this release's .dmg files, so rebuild it.
+      # A release made with the workflow's own token doesn't trigger other workflows,
+      # but starting one by hand does.
+      - name: Update the website
+        continue-on-error: true
+        run: gh workflow run site.yml --ref main
         env:
           GH_TOKEN: ${{ github.token }}

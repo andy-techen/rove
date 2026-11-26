@@ -51,6 +51,26 @@ Other scripts: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build:m
 
 In dev mode macOS attributes microphone permission to the app that launched `npm run dev` (Terminal, iTerm, VS Code), not to Rove. Run it from one of those and allow access once. If the meter stays flat, check System Settings > Privacy & Security > Microphone.
 
+## Website
+
+The landing page lives in `site/`: an [Astro](https://astro.build) site that shares the
+app's design tokens, icons and logo. GitHub Actions (`.github/workflows/site.yml`)
+publishes it to GitHub Pages when it changes on main and after every release, so the
+download buttons always point at the newest `.dmg`.
+
+```bash
+cd site
+npm install
+npm run dev
+```
+
+Before the first deploy, set Settings → Pages → Source to **GitHub Actions**. The "Get
+updates" form appears once `BUTTONDOWN_USER` in `site/src/site.ts` is set.
+
+The demo in the hero plays a synthesised placeholder until a real recording is added:
+put a backing, lead and harmony file (same length, made to loop) in `site/public/demo/`
+and list them in `DEMO_AUDIO` in `site/src/site.ts`.
+
 ## Releases
 
 GitHub Actions (`.github/workflows/release.yml`) checks the code, builds a `.dmg` for each

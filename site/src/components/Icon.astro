@@ -1,0 +1,43 @@
+---
+import {
+  FILLED_ICONS,
+  STROKE_ICONS,
+  type IconName
+} from '@app/renderer/src/components/ui/Icon/icons'
+
+// The app's icon set, so the site and the app speak the same visual language.
+interface Props {
+  name: IconName
+}
+
+const { name } = Astro.props
+const stroke = name in STROKE_ICONS
+const d = stroke
+  ? STROKE_ICONS[name as keyof typeof STROKE_ICONS]
+  : FILLED_ICONS[name as keyof typeof FILLED_ICONS]
+---
+
+<svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+  {
+    stroke ? (
+      <path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    ) : (
+      <path d={d} fill="currentColor" />
+    )
+  }
+</svg>
+
+<style>
+  .icon {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+  }
+</style>

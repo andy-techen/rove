@@ -1,0 +1,53 @@
+---
+import { latestDownload } from '../release'
+
+const download = await latestDownload()
+---
+
+<!-- By here the home page has turned to evening: the sun sets behind the download. -->
+<section id="download" class="section" aria-labelledby="download-title">
+  <div class="wrap evening">
+    <div class="setting-sun" aria-hidden="true"></div>
+    <h2 id="download-title">Get Rove for your Mac</h2>
+    <p class="lead">Free to download, free to sing.</p>
+    <!-- Every Mac sold for years has Apple silicon, so it's the one big button; Intel
+         Mac owners usually know they have one, and get a quiet link. -->
+    <a class="button button-primary" href={download.appleSilicon}>Download for Mac</a>
+    <p class="small muted">
+      {download.version && <>Version {download.version}. </>}
+      On an older Intel Mac? <a href={download.intel}>Download for Intel</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .evening {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-8);
+    padding-top: calc(var(--site-size-setting-sun) / 2 + var(--space-8));
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .setting-sun {
+    position: absolute;
+    top: 0;
+    width: var(--site-size-setting-sun);
+    max-width: 90%;
+    aspect-ratio: 1;
+    border-radius: var(--radius-round);
+    background: radial-gradient(var(--site-sun-set) 40%, var(--site-sky-bottom) 70%);
+    mask: linear-gradient(black 50%, transparent 50%);
+  }
+
+  h2 {
+    position: relative;
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: var(--site-font-lead);
+  }
+</style>

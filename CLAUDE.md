@@ -29,12 +29,17 @@ src/
     components/        One folder per component; shared building blocks in ui/
     styles/            Design tokens and base styles
 docs/                  Brand, design, development, testing and architecture
+site/                  The website (Astro, GitHub Pages); shares the app's tokens, icons, logo
 ```
 
 ## Working in this repo
 
 - `npm run dev` — the app, restarting on main/preload changes.
 - `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+- The website is its own package: `cd site && npm run dev` (or `npm run build`, which
+  type-checks it). It imports the app's `tokens.css`, icons and wordmark through
+  `@app/`, so its colours follow the app's; its larger type scale and page sizes are in
+  `site/src/styles/site.css`.
 - A pre-commit hook (husky + lint-staged) lints and formats staged files and runs the
   typecheck; a commit with lint or type errors is rejected. Don't bypass it.
 - Microphone access in development is attributed to the app that launched

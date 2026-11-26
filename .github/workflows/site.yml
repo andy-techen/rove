@@ -1,0 +1,62 @@
+name: Website
+
+# Builds the website in site/ and publishes it to GitHub Pages. It runs when the site
+# or the app files it shares (tokens, icons, the logo) change on main, after each
+# release (so the download buttons point at the new .dmg files), or by hand.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'src/renderer/src/styles/tokens.css'
+      - 'src/renderer/src/components/ui/Icon/icons.ts'
+      - 'src/renderer/src/components/ui/Logo/**'
+      - '.github/workflows/site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; a newer one replaces any still waiting.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - run: npm ci
+
+      # The token lets the build read the latest release without hitting the API's
+      # anonymous rate limit.
+      - run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

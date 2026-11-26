@@ -1,0 +1,45 @@
+---
+import iconUrl from '@app/renderer/src/components/ui/Logo/icon.svg'
+import {
+  WORDMARK,
+  WORDMARK_STROKE,
+  WORDMARK_VIEWBOX
+} from '@app/renderer/src/components/ui/Logo/wordmark'
+---
+
+<span class="logo" role="img" aria-label="Rove">
+  <img class="logo-icon" src={iconUrl.src} alt="" />
+  <svg class="logo-word" viewBox={WORDMARK_VIEWBOX} aria-hidden="true">
+    {
+      WORDMARK.map((d) => (
+        <path
+          d={d}
+          fill="none"
+          stroke="currentColor"
+          stroke-width={WORDMARK_STROKE}
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      ))
+    }
+  </svg>
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--color-text);
+  }
+
+  .logo-icon {
+    width: var(--site-size-logo-icon);
+    height: var(--site-size-logo-icon);
+  }
+
+  .logo-word {
+    width: auto;
+    height: var(--site-size-logo-word);
+  }
+</style>

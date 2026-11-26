@@ -1,0 +1,216 @@
+---
+import '@app/renderer/src/styles/tokens.css'
+import '@fontsource/fredoka/600.css'
+import '../styles/site.css'
+import iconUrl from '@app/renderer/src/components/ui/Logo/icon.svg'
+import Logo from '../components/Logo.astro'
+import { JOIN_FORM_URL } from '../site'
+
+interface Props {
+  title: string
+  description: string
+  /** A class for <body>: `dusk` turns the page from afternoon to evening as it scrolls. */
+  bodyClass?: string
+}
+
+const { title, description, bodyClass } = Astro.props
+// BASE_URL is '/rove' with no trailing slash, so add one before joining paths.
+const home = import.meta.env.BASE_URL.replace(/\/?$/, '/')
+const onCommunity = Astro.url.pathname.replace(/\/$/, '').endsWith('/community')
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href={iconUrl.src} />
+    <meta name="color-scheme" content="light dark" />
+  </head>
+  <body class={bodyClass}>
+    <header class="site-header">
+      <div class="wrap site-header-inner">
+        <a href={home} class="home"><Logo /></a>
+        <nav aria-label="Main">
+          <a href={`${home}#features`} class="nav-features">Features</a>
+          <a href={`${home}community/`} aria-current={onCommunity ? 'page' : undefined}>
+            Community
+          </a>
+          <a href={`${home}#download`} class="button button-primary nav-download">Download</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap site-footer-inner">
+        <Logo />
+        <p class="small muted">Made by and for people who love to sing.</p>
+        <form class="join" action={JOIN_FORM_URL || undefined} method="post">
+          <label for="join-email" class="small muted">Join the community</label>
+          <div class="join-field">
+            <input
+              id="join-email"
+              type="email"
+              name="email"
+              required
+              autocomplete="email"
+              placeholder="Your email"
+            />
+            <button type="submit" class="button button-primary" disabled={!JOIN_FORM_URL}>
+              Join
+            </button>
+          </div>
+        </form>
+      </div>
+    </footer>
+    <script>
+      // Reveal sections as they scroll in. Skipped for reduced motion.
+      const items = document.querySelectorAll('[data-reveal]')
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('reveal-ready')
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue
+              entry.target.classList.add('revealed')
+              observer.unobserve(entry.target)
+            }
+          },
+          { rootMargin: '0px 0px -10% 0px' }
+        )
+        items.forEach((item) => observer.observe(item))
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--site-layer-header);
+    background: color-mix(in srgb, var(--color-bg) 85%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: var(--size-hairline) solid var(--color-border);
+  }
+
+  .site-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--site-header);
+  }
+
+  .home {
+    display: flex;
+    text-decoration: none;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-9);
+    font-size: var(--site-font-small);
+  }
+
+  nav a:not(.button) {
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  nav a:not(.button):hover,
+  nav a[aria-current='page'] {
+    color: var(--color-text);
+  }
+
+  /* Phones only have room for two links beside the logo. */
+  @media (max-width: 480px) {
+    nav {
+      gap: var(--space-7);
+    }
+
+    .nav-features {
+      display: none;
+    }
+  }
+
+  .nav-download {
+    min-height: auto;
+    padding-block: var(--space-4);
+    padding-inline: var(--space-8);
+  }
+
+  .site-footer {
+    padding-block: var(--space-12);
+    border-top: var(--size-hairline) solid var(--color-border);
+  }
+
+  .site-footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-6) var(--space-9);
+  }
+
+  .join {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-7);
+    margin-inline-start: auto;
+  }
+
+  /* The field and its button read as one pill, with the button tucked inside. */
+  .join-field {
+    display: flex;
+    flex: 1 1 var(--site-size-join-field);
+    padding: var(--space-2);
+    border: var(--size-hairline) solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    transition: border-color var(--duration-fast);
+  }
+
+  .join-field:focus-within {
+    border-color: var(--color-accent);
+  }
+
+  .join-field input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-inline: var(--space-7);
+    border: none;
+    background: none;
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--site-font-small);
+  }
+
+  .join-field input:focus-visible {
+    outline: none;
+  }
+
+  .join-field .button {
+    min-height: var(--size-control-md);
+    padding-inline: var(--space-8);
+    font-size: var(--site-font-small);
+  }
+
+  .join-field .button:disabled {
+    opacity: var(--opacity-disabled);
+    cursor: default;
+  }
+
+  @media (max-width: 480px) {
+    .join {
+      flex-basis: 100%;
+    }
+  }
+</style>
