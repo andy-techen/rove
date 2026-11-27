@@ -13,6 +13,7 @@ import { registerSeparationIpc } from './ipc/separation'
 import { registerWishlistIpc } from './ipc/wishlist'
 import { registerCatalogIpc } from './ipc/catalog'
 import { registerVoiceIpc } from './ipc/voice'
+import { registerInputVolumeIpc } from './ipc/inputVolume'
 import { registerLicenseIpc, reportLicense } from './ipc/license'
 import { APP_ORIGIN, registerAppScheme, serveApp } from './appProtocol'
 import {
@@ -113,6 +114,7 @@ app.whenReady().then(async () => {
   registerWishlistIpc()
   registerCatalogIpc()
   registerVoiceIpc()
+  registerInputVolumeIpc()
   await registerLicenseIpc()
 
   createWindow()

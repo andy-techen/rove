@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { analysePitch, hzToMidi } from '../pitch/pitch'
-import { changeSpeedAndPitch, detectBeat, detectTempo } from './stretch'
+import { changeSpeedAndPitch, detectBeat } from './stretch'
 
 const SR = 48000
 
@@ -50,10 +50,10 @@ function speedingClicks(fromBpm: number, toBpm: number, seconds: number) {
   return { audio: out, times }
 }
 
-describe('detectTempo', () => {
+describe('detectBeat', () => {
   it.each([96, 120, 140])('hears %i BPM in a click track', async (bpm) => {
-    const found = await detectTempo({ channels: [clicks(bpm, 20)], sampleRate: SR })
-    expect(found).not.toBeNull()
+    const found = (await detectBeat({ channels: [clicks(bpm, 20)], sampleRate: SR }))?.bpm
+    expect(found).toBeDefined()
     expect(Math.abs(found! - bpm)).toBeLessThan(1)
   })
 
@@ -65,7 +65,7 @@ describe('detectTempo', () => {
   })
 
   it('hears no tempo in silence', async () => {
-    expect(await detectTempo({ channels: [new Float32Array(SR * 5)], sampleRate: SR })).toBeNull()
+    expect(await detectBeat({ channels: [new Float32Array(SR * 5)], sampleRate: SR })).toBeNull()
   })
 })
 

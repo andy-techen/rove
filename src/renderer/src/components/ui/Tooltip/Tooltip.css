@@ -20,6 +20,8 @@
   font-size: var(--font-size-caption);
   line-height: var(--line-height);
   box-shadow: var(--shadow-raised);
+  /* Lines of even length, so the box can shrink to fit them (Tooltip.tsx). */
+  text-wrap: balance;
   pointer-events: none;
   animation: tooltip-in var(--duration-fast) ease;
 }

@@ -26,6 +26,8 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
     captureShortcutKeys: vi.fn(async () => {}),
     requestMicAccess: vi.fn(async () => true),
     openMicSettings: vi.fn(async () => {}),
+    getInputVolume: vi.fn(async () => null),
+    setInputVolume: vi.fn(async () => null),
     chooseProjectFolder: vi.fn(async () => null),
     listSongs: vi.fn(async () => []),
     openSongbookSong: vi.fn(async (folder: string) => ({

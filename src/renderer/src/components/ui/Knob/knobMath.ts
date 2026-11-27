@@ -7,8 +7,9 @@ const START_DEG = 135
 const SWEEP_DEG = 270
 const HALF_TURN_DEG = 180
 
-// Pixels of vertical drag that turn a knob from one end to the other.
-export const DRAG_PX = 160
+// Pixels of drag that turn a knob from one end to the other: a short flick, so a knob
+// low in the window still has room to go all the way up.
+export const DRAG_PX = 100
 // Within this share of the range, a centred knob clicks onto its centre.
 export const DETENT = 0.04
 
@@ -42,10 +43,17 @@ export function arcPath(from: number, to: number, radius: number): string {
   return `M ${fixed(a.x)} ${fixed(a.y)} A ${radius} ${radius} 0 ${large} 1 ${fixed(b.x)} ${fixed(b.y)}`
 }
 
-/** The value after dragging `upPx` pixels up (negative: down) from `from`. */
-export function dragValue(from: number, upPx: number, range: KnobRange): number {
+/**
+ * How far a drag has turned a knob, in px: up and right both turn it up, down and left
+ * down, so there's room to turn it whichever way the pointer has space.
+ */
+export const dragTravel = (from: { x: number; y: number }, to: { x: number; y: number }): number =>
+  from.y - to.y + (to.x - from.x)
+
+/** The value after `travelPx` of drag (`dragTravel`; negative turns it down) from `from`. */
+export function dragValue(from: number, travelPx: number, range: KnobRange): number {
   const span = range.max - range.min
-  const raw = from + (upPx / DRAG_PX) * span
+  const raw = from + (travelPx / DRAG_PX) * span
   const stepped = Math.round((raw - range.min) / range.step) * range.step + range.min
   const value = Math.max(range.min, Math.min(range.max, stepped))
   if (range.centre !== undefined && Math.abs(value - range.centre) <= DETENT * span) {

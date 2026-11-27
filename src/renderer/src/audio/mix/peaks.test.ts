@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { PeakAccumulator } from './peaks'
+import { PeakAccumulator, waveScale } from './peaks'
+import { dbToGain } from '../dsp/units'
 
 describe('PeakAccumulator', () => {
   const acc = (): PeakAccumulator => {
@@ -36,5 +37,22 @@ describe('PeakAccumulator', () => {
   it('stops at the end of the audio', () => {
     const peaks = acc().resample(3, 2)
     expect(Array.from(peaks.slice(4))).toEqual([0, 0])
+  })
+})
+
+describe('waveScale', () => {
+  it('fills the lane at a quiet vocal’s loudest moment, as for loud music', () => {
+    expect(waveScale(0.25) * 0.25).toBeCloseTo(1)
+    expect(waveScale(1)).toBe(1)
+  })
+
+  it('doesn’t blow up near-silence into a wall of room noise', () => {
+    expect(waveScale(0.001)).toBeCloseTo(1 / dbToGain(-30))
+  })
+
+  it('reads the loudest sample either way from zero', () => {
+    const peaks = new PeakAccumulator(2)
+    peaks.push(Float32Array.from([0.1, -0.6, 0.3, 0.2]))
+    expect(peaks.peak).toBeCloseTo(0.6)
   })
 })

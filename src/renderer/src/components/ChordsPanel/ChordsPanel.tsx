@@ -5,6 +5,7 @@ import { activeChordIndex } from '../../state/chords/chords'
 import { chordName } from '../../state/chords/noteNames'
 import { formatDuration } from '../../state/song/project'
 import { HelpTip } from '../ui/HelpTip'
+import { useShortcuts } from '../../state/commands/shortcuts'
 import { IconButton } from '../ui/IconButton'
 import { cx } from '../ui/cx'
 import { scrollWithin } from '../ui/scrollWithin'
@@ -35,6 +36,7 @@ export function ChordsPanel({
   onSeek,
   onClose
 }: Props): React.JSX.Element {
+  const shortcuts = useShortcuts()
   const active = chords ? activeChordIndex(chords, position) : -1
   const current = chords?.[active]
   const upcoming = chords?.find((c, i) => i > active && c.start > position && c.chord)
@@ -60,7 +62,12 @@ export function ChordsPanel({
           {t('chords.title')}
           <HelpTip text={fromChart ? t('chords.yours') : t('chords.detected')} />
         </h2>
-        <IconButton icon="hidePanel" label={t('chords.hide')} onClick={onClose} />
+        <IconButton
+          icon="hidePanel"
+          label={t('chords.hide')}
+          title={shortcuts.label(t('chords.hide'), 'toggleChords')}
+          onClick={onClose}
+        />
       </header>
 
       {message ? (

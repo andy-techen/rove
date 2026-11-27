@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { describeInputError, pickInputDevice, playsOutLoud } from './devices'
+import {
+  describeInputError,
+  isSystemInput,
+  loadLearnedLatency,
+  pickInputDevice,
+  playsOutLoud,
+  saveLearnedLatency,
+  setupKey
+} from './devices'
 
 const device = (deviceId: string): MediaDeviceInfo => ({ deviceId }) as MediaDeviceInfo
 
@@ -60,5 +68,32 @@ describe('describeInputError', () => {
 
   it('falls back to a generic message for unknown errors', () => {
     expect(describeInputError(new Error('boom'))).toBe("Couldn't open that microphone.")
+  })
+})
+
+describe('learned latency', () => {
+  const output = (label: string): MediaDeviceInfo =>
+    ({ deviceId: 'default', label, kind: 'audiooutput' }) as MediaDeviceInfo
+
+  it('remembers a delay for each mic and output pair', () => {
+    const bluetooth = setupKey('default', [output('AirPods')])
+    saveLearnedLatency(bluetooth, 0.14)
+    expect(loadLearnedLatency(bluetooth)).toBe(0.14)
+    expect(loadLearnedLatency(setupKey('default', [output('Headphones')]))).toBe(0)
+  })
+})
+
+describe('isSystemInput', () => {
+  const input = (deviceId: string, groupId: string): MediaDeviceInfo =>
+    ({ deviceId, groupId, kind: 'audioinput' }) as MediaDeviceInfo
+  const inputs = [input('default', 'mac'), input('builtin', 'mac'), input('rode', 'usb')]
+
+  it('is the Mac’s current input, picked as Default or by name', () => {
+    expect(isSystemInput(inputs, 'default')).toBe(true)
+    expect(isSystemInput(inputs, 'builtin')).toBe(true)
+  })
+
+  it('isn’t another mic', () => {
+    expect(isSystemInput(inputs, 'rode')).toBe(false)
   })
 })

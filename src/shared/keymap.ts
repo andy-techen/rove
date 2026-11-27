@@ -40,8 +40,15 @@ export const KEYMAP = {
   moveTrackUp: { group: 'edit', accelerator: 'CmdOrCtrl+Alt+Up' },
   moveTrackDown: { group: 'edit', accelerator: 'CmdOrCtrl+Alt+Down' },
   deselect: { group: 'edit', accelerator: 'Escape', menu: false },
+  previousTrack: { group: 'edit', accelerator: 'Up', menu: false },
+  nextTrack: { group: 'edit', accelerator: 'Down', menu: false },
+  // Nine keys in one row of the Shortcuts table; fixed, like a gesture (trackKeys.ts).
+  selectTrackNumber: { group: 'edit', accelerator: 'CmdOrCtrl+1–9', gesture: true },
   playPause: { group: 'playback', accelerator: 'Space' },
+  // Beside Redo take (⌘⇧R).
+  record: { group: 'playback', accelerator: 'CmdOrCtrl+R' },
   stopPlayback: { group: 'playback', accelerator: 'CmdOrCtrl+.' },
+  restartTake: { group: 'playback', accelerator: 'CmdOrCtrl+Shift+R' },
   goToStart: { group: 'playback', accelerator: 'CmdOrCtrl+Left' },
   goToEnd: { group: 'playback', accelerator: 'CmdOrCtrl+Right' },
   previousEdge: { group: 'playback', accelerator: 'Left' },
@@ -58,8 +65,6 @@ export const KEYMAP = {
 export type ShortcutId = keyof typeof KEYMAP
 
 export const SHORTCUT_IDS = Object.keys(KEYMAP) as ShortcutId[]
-
-export const SHORTCUT_GROUPS: ShortcutGroup[] = ['file', 'edit', 'playback', 'view']
 
 /** Every shortcut's current keys. */
 export type Keymap = Record<ShortcutId, string>

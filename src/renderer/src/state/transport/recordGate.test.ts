@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canChangeLyrics, canStartRecording } from './recordGate'
+import { canChangeLyrics, canStartRecording, recordTarget } from './recordGate'
 
 const ready = {
   mode: 'idle' as const,
@@ -36,5 +36,26 @@ describe('canChangeLyrics', () => {
   it('waits while a take is being saved, so the change is not lost under it', () => {
     expect(canChangeLyrics('saving', false)).toBe(false)
     expect(canChangeLyrics('idle', true)).toBe(false)
+  })
+})
+
+describe('recordTarget', () => {
+  const lanes = [
+    { id: 'song', role: 'backing' as const, imported: true },
+    { id: 'lead', role: 'vocal' as const, imported: false },
+    { id: 'harmony', role: 'vocal' as const, imported: false }
+  ]
+
+  it('records on the selected vocal', () => {
+    expect(recordTarget(lanes, 'harmony')).toBe('harmony')
+  })
+
+  it('falls back to the first vocal when the selection can’t take a recording', () => {
+    expect(recordTarget(lanes, 'song')).toBe('lead')
+    expect(recordTarget(lanes, null)).toBe('lead')
+  })
+
+  it('has nowhere to record without a vocal track', () => {
+    expect(recordTarget([lanes[0]], null)).toBeNull()
   })
 })

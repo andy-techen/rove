@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { t } from '@shared/copy'
 import { SongLyrics, formatOffset, isTimed } from '../../state/lyrics/lyrics'
 import { HelpTip } from '../ui/HelpTip'
+import { useShortcuts } from '../../state/commands/shortcuts'
 import { IconButton } from '../ui/IconButton'
 import { LyricsSearch } from './LyricsSearch'
 import { LyricsView } from './LyricsView'
@@ -35,6 +36,7 @@ export function LyricsPanel({
   onNudge,
   onClose
 }: Props): React.JSX.Element {
+  const shortcuts = useShortcuts()
   const [searching, setSearching] = useState(false)
   const shown = searching ? null : lyrics
   const showSearch = !shown
@@ -60,7 +62,12 @@ export function LyricsPanel({
             onClick={() => setSearching(!showSearch)}
           />
         )}
-        <IconButton icon="hidePanel" label={t('lyrics.hide')} onClick={onClose} />
+        <IconButton
+          icon="hidePanel"
+          label={t('lyrics.hide')}
+          title={shortcuts.label(t('lyrics.hide'), 'toggleLyrics')}
+          onClick={onClose}
+        />
       </header>
 
       {!shown ? (

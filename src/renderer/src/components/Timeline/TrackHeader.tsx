@@ -2,6 +2,8 @@ import { DragEvent } from 'react'
 import { t } from '@shared/copy'
 import { TRACK_NAME_MAX_LENGTH, TrackRole } from '../../state/song/project'
 import { SelectMode, selectMode } from '../../state/editing/trackSelection'
+import { useShortcuts } from '../../state/commands/shortcuts'
+import { IconButton } from '../ui/IconButton'
 import { NameField } from '../ui/NameField'
 import { RecordButton } from '../ui/RecordButton'
 import { Tooltip } from '../ui/Tooltip'
@@ -11,6 +13,8 @@ interface Props {
   detail: string
   role: TrackRole
   recording: boolean
+  /** Its place among the lanes, from 1 at the top: ⌘ and this number selects it. */
+  place: number
   /** Some other track is recording, or recording isn't possible right now. */
   recordDisabled: boolean
   /** Shown as the record button's tooltip when it's disabled; explains why. */
@@ -21,6 +25,8 @@ interface Props {
   onContextMenu(): void
   onRecord(): void
   onStop(): void
+  /** Drops the take in progress and starts it again from where it began. */
+  onRestart(): void
   /** Whether the track can be dragged to a new place right now. */
   draggable: boolean
   onDragStart(e: DragEvent<HTMLDivElement>): void
@@ -41,6 +47,7 @@ export function TrackHeader({
   detail,
   role,
   recording,
+  place,
   recordDisabled,
   recordDisabledReason,
   selected,
@@ -48,6 +55,7 @@ export function TrackHeader({
   onContextMenu,
   onRecord,
   onStop,
+  onRestart,
   draggable,
   onDragStart,
   onDragEnd,
@@ -56,6 +64,7 @@ export function TrackHeader({
   onRename,
   onRenameDone
 }: Props): React.JSX.Element {
+  const shortcuts = useShortcuts()
   return (
     <div
       className="lane-header track-header"
@@ -78,11 +87,13 @@ export function TrackHeader({
         />
       ) : (
         <Tooltip
-          text={
+          text={shortcuts.trackLabel(
+            // A music file's name is often cut off in the lane; this is where it's read whole.
             role === 'vocal'
-              ? t('track.selectVocal', { name })
-              : t('track.selectBacking', { name, detail })
-          }
+              ? t('track.select', { name })
+              : t('track.selectMusic', { name, detail }),
+            place
+          )}
         >
           <button
             type="button"
@@ -96,10 +107,22 @@ export function TrackHeader({
           </button>
         </Tooltip>
       )}
+      {recording && (
+        <IconButton
+          icon="retake"
+          label={t('track.restart', { name })}
+          title={shortcuts.label(t('track.restartTitle'), 'restartTake')}
+          onClick={onRestart}
+        />
+      )}
       <RecordButton
         recording={recording}
         label={recording ? t('track.stop', { name }) : t('track.record', { name })}
-        title={recording ? t('track.stopTitle') : recordDisabled ? recordDisabledReason : undefined}
+        title={
+          recordDisabled && !recording
+            ? recordDisabledReason
+            : shortcuts.label(recording ? t('track.stopTitle') : t('track.recordTitle'), 'record')
+        }
         disabled={!recording && recordDisabled}
         onClick={recording ? onStop : onRecord}
       />

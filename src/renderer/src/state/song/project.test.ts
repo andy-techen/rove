@@ -4,6 +4,9 @@ import {
   Clip,
   Project,
   MIN_CLIP_SEC,
+  canBalanceMusic,
+  lineUpClip,
+  withMusicVolume,
   deleteClip,
   moveClip,
   moveTrack,
@@ -110,6 +113,54 @@ describe('withRecordedClip', () => {
       ['a.wav', 15, 15, 15]
     ])
     expect(spans(p.tracks[1].clips)).toEqual([['b.wav', 0, 0, 30]])
+  })
+})
+
+describe('lineUpClip', () => {
+  const recorded = (start: number) => {
+    const p = withNewTrack(createProject('Song', 48000), 'vocal').project
+    const id = p.tracks[1].id
+    return {
+      id,
+      p: withRecordedClip(p, id, { id: 'take', file: 't.wav', start, offset: 0, duration: 30 })
+    }
+  }
+
+  it('slides a late take earlier by the lag', () => {
+    const { p, id } = recorded(10)
+    expect(spans(lineUpClip(p, id, 'take', 0.14).tracks[1].clips)).toEqual([['t.wav', 9.86, 0, 30]])
+  })
+
+  it('trims what would land before the song starts, keeping the rest in time', () => {
+    const { p, id } = recorded(0.1)
+    const [c] = lineUpClip(p, id, 'take', 0.25).tracks[1].clips
+    expect(c.start).toBe(0)
+    expect(c.offset).toBeCloseTo(0.15)
+    expect(c.duration).toBeCloseTo(29.85)
+  })
+})
+
+describe('canBalanceMusic', () => {
+  const song = () => {
+    const p = withNewTrack(createProject('Song', 48000), 'backing').project
+    const music = { ...p.tracks[1], sourceName: 'song.mp3', volume: 0.5 }
+    return { ...p, tracks: [p.tracks[0], music] }
+  }
+
+  it('lets a lead take set untouched imported music', () => {
+    const p = song()
+    expect(canBalanceMusic(p, p.tracks[0].id)).toBe(true)
+  })
+
+  it('leaves music the singer has already turned up or down', () => {
+    const p = withMusicVolume(song(), 0.3)
+    expect(canBalanceMusic(p, p.tracks[0].id)).toBe(false)
+  })
+
+  it('leaves the music alone for a harmony take', () => {
+    const p = song()
+    const harmony = { ...p.tracks[0], part: 'harmony' as const }
+    expect(canBalanceMusic({ ...p, tracks: [harmony, p.tracks[1]] }, harmony.id)).toBe(false)
   })
 })
 

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { AUTO_LIMITS, TONE_REFERENCE, suggestPolish } from './autoPolish'
+import {
+  AUTO_LIMITS,
+  TONE_REFERENCE,
+  suggestPolish,
+  AutoPolishReason,
+  autoMark
+} from './autoPolish'
 import { POLISH_CONTROLS, defaultPolish, polishParams } from './polish'
 import { PolishReading } from './polishReading'
 
@@ -104,5 +110,36 @@ describe('suggestPolish', () => {
 
   it('gives the same suggestion for the same take', () => {
     expect(lead({ noiseDb: -50, rangeDb: 22 })).toEqual(lead({ noiseDb: -50, rangeDb: 22 }))
+  })
+})
+
+describe('autoMark', () => {
+  const defaults = defaultPolish('lead')
+  const suggestion = (amounts: Partial<typeof defaults>, reasons: AutoPolishReason[]) => ({
+    amounts: { ...defaults, ...amounts },
+    reasons
+  })
+
+  it('says why a knob was turned, while it stays there', () => {
+    const s = suggestion({ deEss: defaults.deEss + 0.2 }, ['sharpS'])
+    expect(autoMark('deEss', s.amounts, s, defaults)).toBe('sharpS')
+  })
+
+  it('drops the mark once the singer moves the knob, or for a knob left alone', () => {
+    const s = suggestion({ deEss: defaults.deEss + 0.2 }, ['sharpS'])
+    expect(autoMark('deEss', { ...s.amounts, deEss: 0.1 }, s, defaults)).toBeNull()
+    expect(autoMark('clarity', s.amounts, s, defaults)).toBeNull()
+  })
+
+  it('says which way when the turn was too small for a reason', () => {
+    const s = suggestion({ space: defaults.space + 0.05 }, ['balanced'])
+    expect(autoMark('space', s.amounts, s, defaults)).toBe('up')
+  })
+
+  it('puts hum down to a lower Warmth only', () => {
+    const lower = suggestion({ warmth: defaults.warmth - 0.1 }, ['hum'])
+    const higher = suggestion({ warmth: defaults.warmth + 0.05 }, ['hum'])
+    expect(autoMark('warmth', lower.amounts, lower, defaults)).toBe('hum')
+    expect(autoMark('warmth', higher.amounts, higher, defaults)).toBe('up')
   })
 })

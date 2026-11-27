@@ -54,6 +54,10 @@ export interface RoveApi {
   captureShortcutKeys(on: boolean): Promise<void>
   requestMicAccess(): Promise<boolean>
   openMicSettings(): Promise<void>
+  /** The Mac's input volume (0–100), or null when the current input has none Rove can set. */
+  getInputVolume(): Promise<number | null>
+  /** Sets the Mac's input volume; resolves to the volume it now has. */
+  setInputVolume(volume: number): Promise<number | null>
   chooseProjectFolder(): Promise<ChosenProject | null>
   /** Every Rove song under the songs folder, newest first, for the Songbook. */
   listSongs(): Promise<SongbookEntry[]>

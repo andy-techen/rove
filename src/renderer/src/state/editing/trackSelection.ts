@@ -71,3 +71,18 @@ export function deletionOf(
   if (focus === 'tracks' && trackIds.length > 0) return { kind: 'tracks', trackIds }
   return null
 }
+
+/**
+ * The track ↑ or ↓ moves to from the one selected (`step` -1 or 1), in lane order:
+ * with none selected, the first or last; at either end it stays.
+ */
+export function adjacentTrack(
+  order: string[],
+  current: string | null,
+  step: -1 | 1
+): string | null {
+  if (order.length === 0) return null
+  const at = current === null ? -1 : order.indexOf(current)
+  if (at === -1) return step === 1 ? order[0] : order[order.length - 1]
+  return order[Math.max(0, Math.min(order.length - 1, at + step))]
+}

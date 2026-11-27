@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CopyKey, t } from '@shared/copy'
 import {
   PARAM_RANGES,
@@ -8,7 +8,12 @@ import {
   defaultPolish,
   polishParams
 } from '../../audio/polish/polish'
-import type { AutoPolishReason } from '../../audio/polish/autoPolish'
+import {
+  AutoMark,
+  AutoPolishReason,
+  PolishSuggestion,
+  autoMark
+} from '../../audio/polish/autoPolish'
 import type { AutoPolishMessage, AutoPolishStatus } from '../../state/processing/useAutoPolish'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
@@ -35,11 +40,17 @@ export interface AutoPolishControl {
   status: AutoPolishStatus
   message: AutoPolishMessage | null
   clipped: boolean
-  /** What Rove heard last time it listened; null before it has. */
-  reasons: AutoPolishReason[] | null
+  /** What Rove heard and set last time it listened; null before it has. */
+  suggestion: PolishSuggestion | null
   /** Listening waits while the song plays or records. */
   disabled: boolean
   onListen(): void
+}
+
+// A knob's sparkle when auto polish turned it too little to give a reason.
+const MARK_COPY: Partial<Record<AutoMark, CopyKey>> = {
+  up: 'polish.auto.turnedUp',
+  down: 'polish.auto.turnedDown'
 }
 
 const AUTO_TITLE: Record<AutoPolishStatus, CopyKey> = {
@@ -58,6 +69,8 @@ interface Props {
   /** `key` groups a slider drag into one undo step. */
   onChange(next: PolishSettings, key?: string): void
   onHide(): void
+  /** Advanced opened and doesn't fit: the panel is this many px short. */
+  onGrow?(missingPx: number): void
 }
 
 const PERCENT = 100
@@ -72,16 +85,31 @@ export function PolishPanel({
   auto,
   locked,
   onChange,
-  onHide
+  onHide,
+  onGrow
 }: Props): React.JSX.Element {
   const [advanced, setAdvanced] = useState(false)
+  const panel = useRef<HTMLElement>(null)
+  // Measured once Advanced is on screen, so the room it needs is known.
+  useEffect(() => {
+    const el = panel.current
+    const missing = el ? el.scrollHeight - el.clientHeight : 0
+    if (advanced && missing > 0) onGrow?.(missing)
+  }, [advanced, onGrow])
   // Reset and the notches always mean the part's defaults, even after auto-polish.
   const sweetSpot = defaultPolish(part)
+  const suggestion = auto?.suggestion ?? null
+  const markOf = (key: (typeof POLISH_CONTROLS)[number]): string | null => {
+    const mark =
+      key === 'tuning' || !suggestion ? null : autoMark(key, polish, suggestion, sweetSpot)
+    return mark && t(MARK_COPY[mark] ?? `polish.auto.reasons.${mark as AutoPolishReason}`)
+  }
   const params = polishParams(polish)
   const overrides = polish.advanced ?? {}
 
   return (
     <Panel
+      ref={panel}
       label={t('polish.label', { name: trackName })}
       title={t('polish.title')}
       subject={trackName}
@@ -94,7 +122,8 @@ export function PolishPanel({
               disabled={locked}
               label={t('polish.switchLabel')}
               hideLabel
-              title={t('polish.compareTitle')}
+              // Says what flipping it does from here, so it reads right either way.
+              title={polish.enabled ? t('polish.compareTitle') : t('polish.turnOnTitle')}
               onChange={(enabled) => onChange({ ...polish, enabled })}
             />
           </span>
@@ -113,14 +142,6 @@ export function PolishPanel({
                 }
                 onClick={auto.onListen}
               />
-              {auto.reasons && (
-                <HelpTip
-                  // One reason reads as a sentence; several as a list.
-                  {...(auto.reasons.length > 1
-                    ? { items: auto.reasons.map((r) => ({ text: t(`polish.auto.reasons.${r}`) })) }
-                    : { text: t(`polish.auto.reasons.${auto.reasons[0]}`) })}
-                />
-              )}
             </>
           )}
           <IconButton
@@ -140,7 +161,7 @@ export function PolishPanel({
         </>
       }
     >
-      {auto?.message && (
+      {auto?.message && (auto.message !== 'done' || auto.clipped) && (
         <p className={cx('polish-status', auto.clipped && 'warning')} role="status">
           {auto.clipped ? t('polish.auto.clipped') : t(`polish.auto.${auto.message}`)}
         </p>
@@ -162,6 +183,7 @@ export function PolishPanel({
                 if (amount !== null) onChange({ ...polish, [key]: amount })
               }}
               disabled={locked}
+              setBy={markOf(key)}
               reset={
                 offSuggested(polish, sweetSpot, key)
                   ? {

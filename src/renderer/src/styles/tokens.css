@@ -181,6 +181,8 @@
 
   /* Motion and emphasis. */
   --duration-fast: 120ms;
+  /* Something arriving, like a message sliding in. */
+  --duration-gentle: 200ms;
   --opacity-disabled: 0.4;
   --opacity-dimmed: 0.5;
   --opacity-muted-clip: 0.4;

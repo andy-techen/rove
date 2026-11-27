@@ -147,7 +147,7 @@ export function TopBar({
                     iconSize="secondary"
                     className="tab-close"
                     label={t('topBar.close', { name: tab.name })}
-                    title={t('topBar.closeTitle')}
+                    title={shortcuts.label(t('topBar.closeTitle'), 'closeSong')}
                     disabled={disabled}
                     onClick={() => onClose(tab.id)}
                   />
@@ -160,6 +160,7 @@ export function TopBar({
           icon="plus"
           iconSize="secondary"
           label={t('topBar.newSong')}
+          title={shortcuts.label(t('topBar.newSong'), 'newSong')}
           disabled={disabled}
           onClick={onNew}
         />

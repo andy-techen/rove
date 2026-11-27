@@ -1,8 +1,9 @@
-import { CSSProperties, useEffect, useRef, useState } from 'react'
+import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import type { ChosenProject } from '../../../../preload/index.d'
 import { getAudioContext } from '../../audio/engine/engine'
 import { Command, onCommand, typingIn } from '../../state/commands/commands'
+import { useTrackNumberKeys } from '../../state/commands/trackKeys'
 import { MenuTarget, contextMenu } from '../../state/commands/contextMenu'
 import { GestureStart, applyClipGesture } from '../../state/editing/clipGestures'
 import { snapGesture } from '../../state/editing/snapping'
@@ -76,9 +77,10 @@ import {
   SelectMode,
   deletionOf,
   selectTracks,
-  tracksActedOn
+  tracksActedOn,
+  adjacentTrack
 } from '../../state/editing/trackSelection'
-import { canChangeLyrics, canStartRecording } from '../../state/transport/recordGate'
+import { canChangeLyrics, canStartRecording, recordTarget } from '../../state/transport/recordGate'
 import { usePlan } from '../../state/license/useFeature'
 import { offersVocals } from '../../state/license/premiumControls'
 import { isEnabled } from '@shared/features'
@@ -120,7 +122,8 @@ import {
   PANEL_MIN_HEIGHT,
   SIDE_WIDTH,
   useBottomPanelHeight,
-  useSidePanelSize
+  useSidePanelSize,
+  grownBy
 } from '../../state/ui/sidePanels'
 import { useElementHeight } from '../../state/ui/useElementHeight'
 import { clickGrid, tempoOfMusic } from '../../state/transport/metronome'
@@ -197,6 +200,12 @@ export function RecordScreen({
   const [chordsOpen, setChordsOpen] = useState(false)
   const panels = useSidePanelSize()
   const bottom = useBottomPanelHeight()
+  const setBottomHeight = bottom.setHeight
+  // A panel that grew (Polish's Advanced) gets the height to show it all, if it was short.
+  const growBottomPanel = useCallback(
+    (missingPx: number) => setBottomHeight((height) => grownBy(height, missingPx)),
+    [setBottomHeight]
+  )
   const sideRef = useRef<HTMLDivElement>(null)
   const sideHeight = useElementHeight(sideRef)
   // Lyrics take half the column until the divider is moved, and always leave chords room.
@@ -208,6 +217,7 @@ export function RecordScreen({
   const transport = useTransport(song, mic.source, {
     latencySec: mic.latencySec,
     outLoud: mic.outLoud,
+    onLinedUp: mic.learnLatency,
     processed,
     parts: chordBacking.parts,
     waiting: waiting || chordBacking.waiting,
@@ -273,6 +283,7 @@ export function RecordScreen({
   const selectedClip =
     selected && open ? findClip(open.data, selected.trackId, selected.clipId) : undefined
   const canSplit = canEdit && !!open && canSplitClips(open.data, selectedClips, position)
+  const lanes = open ? selectLanes(open.data, audio, processed) : []
   const canRecord = canStartRecording({
     mode,
     hasMusic: hasMusicChoice(open?.data, skipBacking),
@@ -511,6 +522,12 @@ export function RecordScreen({
     const at = open.data.tracks.filter((t) => t.role === track.role).indexOf(track)
     moveTrackTo(track.id, at + by)
   }
+  /** Selects one track, as the keys that move between tracks do. */
+  const selectOnlyTrack = (trackId: string): void => {
+    setSelection([])
+    setDeleteFocus('tracks')
+    setSelectedTrackIds([trackId])
+  }
   const selectClip = (clip: ClipRef | null, how: SelectMode): void => {
     if (!clip || !open) return setSelection([])
     // Pressing a clip that's already selected keeps the selection, so it can be
@@ -641,6 +658,25 @@ export function RecordScreen({
       case 'stopPlayback':
         transport.stopPlayback()
         break
+      case 'restartTake':
+        void transport.restartTake()
+        break
+      case 'record': {
+        if (mode === 'recording') {
+          void transport.stop()
+          break
+        }
+        const target = canRecord ? recordTarget(lanes, selectedTrackId) : null
+        if (target) void transport.record(target)
+        break
+      }
+      case 'previousTrack':
+      case 'nextTrack': {
+        const order = lanes.map((lane) => lane.id)
+        const next = adjacentTrack(order, selectedTrackId, action === 'nextTrack' ? 1 : -1)
+        if (next) selectOnlyTrack(next)
+        break
+      }
       case 'goToStart':
         transport.seek(0)
         break
@@ -662,6 +698,11 @@ export function RecordScreen({
     }
   }
 
+  useTrackNumberKeys((number) => {
+    const lane = lanes[number - 1]
+    if (active && lane) selectOnlyTrack(lane.id)
+  })
+
   // The command handler reads the latest render through a ref.
   const command = useRef<(action: Command) => void>(() => {})
   useEffect(() => {
@@ -671,7 +712,6 @@ export function RecordScreen({
   })
   useEffect(() => onCommand((action) => command.current(action)), [])
 
-  const lanes = open ? selectLanes(open.data, audio, processed) : []
   // Hiding the panel remembers the selection it closed on; picking a track or clip
   // (a new selection) brings it back.
   const panelShown = panelHiddenOn !== selectedTrackIds
@@ -794,6 +834,9 @@ export function RecordScreen({
             canRecord={canRecord}
             onRecord={(id) => void transport.record(id)}
             onStop={() => void transport.stop()}
+            onRestartTake={() => void transport.restartTake()}
+            lineUp={transport.lineUp}
+            onLineUp={transport.applyLineUp}
             canEdit={canEdit}
             skipBacking={skipBacking}
             onRecordWithoutMusic={song.recordWithoutMusic}
@@ -1110,7 +1153,7 @@ export function RecordScreen({
                     isEnabled('autoPolish', plan)
                       ? {
                           ...autoPolish,
-                          reasons: polishTrack.polishSuggestion?.reasons ?? null,
+                          suggestion: polishTrack.polishSuggestion ?? null,
                           disabled: !idle,
                           onListen: autoPolish.listen
                         }
@@ -1118,6 +1161,7 @@ export function RecordScreen({
                   }
                   locked={!canEdit}
                   onHide={hidePanel}
+                  onGrow={growBottomPanel}
                   onChange={(next, key) =>
                     song.edit(
                       withTrackPolish(open.data, polishTrack.id, next),

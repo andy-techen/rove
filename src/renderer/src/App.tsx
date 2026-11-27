@@ -4,6 +4,7 @@ import { NewSongDialog } from './components/NewSongDialog'
 import { SongbookDialog } from './components/SongbookDialog'
 import { MicCheck } from './components/MicCheck'
 import { RecordScreen } from './components/RecordScreen'
+import { Snackbar } from './components/ui/Snackbar'
 import { Command, onCommand, useShortcutKeys } from './state/commands/commands'
 import { syncKeymap } from './state/commands/keymap'
 import { hasOnboarded, markOnboarded } from './state/ui/onboarding'
@@ -77,6 +78,7 @@ function App(): React.JSX.Element {
         />
       ))}
       {!showMicCheck && tabs.error && <p className="error app-error">{tabs.error}</p>}
+      <Snackbar />
       {showMicCheck && <MicCheck mic={mic} onboarding={!onboarded} onDone={finishMicCheck} />}
       {dialog.section && (
         <AppDialog section={dialog.section} onSection={dialog.show} onClose={dialog.close} />

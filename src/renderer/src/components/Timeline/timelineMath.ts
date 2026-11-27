@@ -6,12 +6,15 @@ export { PeakAccumulator }
 export function drawPeaks(
   ctx: CanvasRenderingContext2D,
   peaks: Float32Array,
-  height: number
+  height: number,
+  /** Enlarges the waveform (`waveScale`); anything past the lane's edge is cut off. */
+  scale = 1
 ): void {
   const mid = height / 2
+  const fit = (v: number): number => Math.max(-1, Math.min(1, v * scale))
   for (let x = 0; x < peaks.length / 2; x++) {
-    const top = mid - peaks[x * 2 + 1] * mid
-    const bottom = mid - peaks[x * 2] * mid
+    const top = mid - fit(peaks[x * 2 + 1]) * mid
+    const bottom = mid - fit(peaks[x * 2]) * mid
     ctx.fillRect(x, top, 1, Math.max(1, bottom - top))
   }
 }

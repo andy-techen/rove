@@ -3,7 +3,6 @@ import {
   createProject,
   deleteClip,
   moveClip,
-  pasteClip,
   withNewTrack,
   withRecordedClip,
   withTrackChanges,
@@ -54,16 +53,6 @@ describe('clip-edge navigation', () => {
     expect(edgeBefore(song.p, 1, song.id)).toBe(0)
     expect(edgeAfter(song.p, 10, song.id)).toBe(10)
     expect(songEnd(song.p)).toBe(10)
-  })
-})
-
-describe('pasteClip', () => {
-  it('pastes a copy at the playhead, pointing at the same audio', () => {
-    const p = createProject('Song', 48000)
-    const id = p.tracks[0].id
-    const clip = { file: 'a.wav', offset: 1, duration: 3 }
-    const { project, clipId } = pasteClip(p, id, clip, 6)
-    expect(project.tracks[0].clips).toEqual([{ ...clip, id: clipId, start: 6 }])
   })
 })
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { selectTracks, tracksActedOn, deletionOf } from './trackSelection'
+import { selectTracks, tracksActedOn, deletionOf, adjacentTrack } from './trackSelection'
 
 const order = ['b1', 'v1', 'v2', 'v3']
 
@@ -47,5 +47,24 @@ describe('deletionOf', () => {
   it('deletes nothing more once the clicked clip is gone, not its whole track', () => {
     expect(deletionOf(null, null, ['v1'])).toBeNull()
     expect(deletionOf('clip', null, ['v1'])).toBeNull()
+  })
+})
+
+describe('adjacentTrack', () => {
+  const order = ['music', 'lead', 'harmony']
+
+  it('moves up and down the lanes from the selected track', () => {
+    expect(adjacentTrack(order, 'lead', 1)).toBe('harmony')
+    expect(adjacentTrack(order, 'lead', -1)).toBe('music')
+  })
+
+  it('stays put at either end', () => {
+    expect(adjacentTrack(order, 'harmony', 1)).toBe('harmony')
+    expect(adjacentTrack(order, 'music', -1)).toBe('music')
+  })
+
+  it('starts from the top or bottom when nothing is selected', () => {
+    expect(adjacentTrack(order, null, 1)).toBe('music')
+    expect(adjacentTrack(order, null, -1)).toBe('harmony')
   })
 })

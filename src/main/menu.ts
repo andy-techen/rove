@@ -104,7 +104,9 @@ export function installMenu(keymap: Keymap): void {
       label: t('keymap.groups.playback'),
       submenu: [
         shortcut('playPause'),
+        shortcut('record'),
         shortcut('stopPlayback'),
+        shortcut('restartTake'),
         separator,
         shortcut('goToStart'),
         shortcut('goToEnd'),
@@ -135,7 +137,8 @@ export function installMenu(keymap: Keymap): void {
         ...(is.dev
           ? ([
               separator,
-              { role: 'reload' },
+              // ⌘R is Record; reloading the window (development only) moves aside.
+              { role: 'reload', accelerator: 'CmdOrCtrl+Alt+R' },
               { role: 'toggleDevTools' }
             ] satisfies MenuItemConstructorOptions[])
           : [])

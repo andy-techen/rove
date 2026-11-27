@@ -227,6 +227,25 @@ export function startingVolume(role: TrackRole, part?: VocalPart, fromFile = fal
   return part === 'harmony' ? HARMONY_VOLUME : 1
 }
 
+/**
+ * Whether Rove may set the music's volume to suit a take on this track: a lead vocal,
+ * over imported music nobody has turned up or down yet. Once the singer (or Rove) sets
+ * it, it stays theirs.
+ */
+export function canBalanceMusic(project: Project, vocalTrackId: string): boolean {
+  const vocal = project.tracks.find((t) => t.id === vocalTrackId)
+  if (vocal?.role !== 'vocal' || vocal.part === 'harmony') return false
+  const music = project.tracks.filter((t) => t.role === 'backing')
+  const untouched = startingVolume('backing', undefined, true)
+  return music.length > 0 && music.every((t) => !!t.sourceName && t.volume === untouched)
+}
+
+/** Sets every music file's volume (the backing tracks). */
+export const withMusicVolume = (project: Project, volume: number): Project => ({
+  ...project,
+  tracks: project.tracks.map((t) => (t.role === 'backing' ? { ...t, volume } : t))
+})
+
 export function defaultMix(
   project: Project,
   role: TrackRole,
@@ -391,9 +410,9 @@ export function insertClip(clips: Clip[], added: Clip): Clip[] {
 export function withRecordedClip(
   project: Project,
   trackId: string,
-  take: Omit<Clip, 'id'>
+  take: Omit<Clip, 'id'> & { id?: string }
 ): Project {
-  const clip: Clip = { id: crypto.randomUUID(), ...take }
+  const clip: Clip = { ...take, id: take.id ?? crypto.randomUUID() }
   return {
     ...project,
     tracks: project.tracks.map((t) =>
@@ -504,6 +523,26 @@ export function trimClipStart(
   })
 }
 
+/**
+ * Slides a clip `bySec` earlier (later when negative) so it sits in time with the music.
+ * Unlike a drag, a part that would land before the song starts is trimmed off, so the
+ * rest keeps its timing.
+ */
+export function lineUpClip(
+  project: Project,
+  trackId: string,
+  clipId: string,
+  bySec: number
+): Project {
+  const clip = findClip(project, trackId, clipId)
+  if (!clip) return project
+  const start = clip.start - bySec
+  if (start >= 0) return moveClip(project, trackId, clipId, start)
+  return mapClip(project, trackId, clipId, (c) => [
+    { ...c, start: 0, offset: c.offset - start, duration: Math.max(0, c.duration + start) }
+  ])
+}
+
 /** Moves a clip's right edge, up to the end of its audio file. */
 export function trimClipEnd(
   project: Project,
@@ -555,28 +594,6 @@ export function splitClip(project: Project, trackId: string, clipId: string, at:
 
 export function deleteClip(project: Project, trackId: string, clipId: string): Project {
   return mapClip(project, trackId, clipId, () => [])
-}
-
-/**
- * Pastes a copy of a clip at a timeline position, punching out whatever it lands on.
- * The copy points at the same audio file; nothing is duplicated on disk.
- */
-export function pasteClip(
-  project: Project,
-  trackId: string,
-  clip: Omit<Clip, 'id' | 'start'>,
-  at: number
-): { project: Project; clipId: string } {
-  const pasted: Clip = { ...clip, id: crypto.randomUUID(), start: Math.max(0, at) }
-  return {
-    clipId: pasted.id,
-    project: {
-      ...project,
-      tracks: project.tracks.map((t) =>
-        t.id === trackId ? { ...t, clips: insertClip(t.clips, pasted) } : t
-      )
-    }
-  }
 }
 
 /** Fills in lengths for clips saved before they were known (version 1 backing tracks). */

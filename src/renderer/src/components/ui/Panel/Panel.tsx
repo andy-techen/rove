@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, Ref } from 'react'
 import { t } from '@shared/copy'
 import { cx } from '../cx'
 import { IconButton } from '../IconButton'
@@ -16,6 +16,8 @@ interface Props {
   onHide?: () => void
   children: ReactNode
   className?: string
+  /** For a panel that measures itself (whether its content fits). */
+  ref?: Ref<HTMLElement>
 }
 
 /** A titled panel under the timeline (Polish, Music). */
@@ -26,10 +28,11 @@ export function Panel({
   actions,
   onHide,
   children,
-  className
+  className,
+  ref
 }: Props): React.JSX.Element {
   return (
-    <section className={cx('panel', className)} aria-label={label}>
+    <section ref={ref} className={cx('panel', className)} aria-label={label}>
       <header className="panel-header">
         <h2>
           {title}

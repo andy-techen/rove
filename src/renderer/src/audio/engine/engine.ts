@@ -40,6 +40,16 @@ export function openInput(deviceId?: string): Promise<MediaStream> {
   })
 }
 
+/**
+ * How long the system takes to hand the mic's sound to the browser, where it says.
+ * Chromium reports it as the track's `latency` setting, which the DOM types leave out.
+ */
+export function inputLatencyOf(stream: MediaStream): number {
+  const settings: MediaTrackSettings & { latency?: number } =
+    stream.getAudioTracks()[0]?.getSettings() ?? {}
+  return typeof settings.latency === 'number' && settings.latency > 0 ? settings.latency : 0
+}
+
 export function closeInput(stream: MediaStream): void {
   stream.getTracks().forEach((t) => t.stop())
 }

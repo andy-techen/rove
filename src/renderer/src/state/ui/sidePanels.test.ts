@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import {
   BOTTOM_HEIGHT,
+  grownBy,
   SIDE_WIDTH,
   clampBottom,
   clampWidth,
@@ -34,5 +35,19 @@ describe('bottom panel height', () => {
     act(() => first.result.current.setHeight(420))
     first.unmount()
     expect(renderHook(() => useBottomPanelHeight()).result.current.height).toBe(420)
+  })
+})
+
+describe('grownBy', () => {
+  it('grows a panel by what it was short', () => {
+    expect(grownBy(240, 190)).toBe(430)
+  })
+
+  it('never shrinks it', () => {
+    expect(grownBy(500, -40)).toBe(500)
+  })
+
+  it('stays within the usual limits', () => {
+    expect(grownBy(240, 2000)).toBe(BOTTOM_HEIGHT.max)
   })
 })

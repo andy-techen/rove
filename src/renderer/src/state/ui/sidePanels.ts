@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 /** Side panel width in px: room for a line of lyrics, without crowding the timeline. */
 export const SIDE_WIDTH = { min: 240, max: 560, start: 320 }
@@ -60,8 +60,18 @@ export function useSidePanelSize(): {
 export const clampBottom = (px: number): number =>
   Math.max(BOTTOM_HEIGHT.min, Math.min(BOTTOM_HEIGHT.max, px))
 
+/**
+ * The panel's height once it's `missingPx` short of showing everything: that much
+ * taller, within the usual limits, and never shorter than the singer made it.
+ */
+export const grownBy = (current: number, missingPx: number): number =>
+  Math.max(current, clampBottom(current + missingPx))
+
 /** The height of the panel under the timeline, as the singer last dragged it. */
-export function useBottomPanelHeight(): { height: number; setHeight(px: number): void } {
+export function useBottomPanelHeight(): {
+  height: number
+  setHeight: Dispatch<SetStateAction<number>>
+} {
   const [height, setHeight] = useState(() => clampBottom(recall(BOTTOM_KEY) ?? BOTTOM_HEIGHT.start))
   useEffect(() => remember(BOTTOM_KEY, height), [height])
   return { height, setHeight }

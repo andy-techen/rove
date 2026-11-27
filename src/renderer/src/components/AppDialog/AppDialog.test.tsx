@@ -119,8 +119,9 @@ describe('AppDialog shortcuts', () => {
 
   it('lists every shortcut with its keys, in two tables side by side', () => {
     openAt('shortcuts')
-    const row = screen.getByRole('row', { name: new RegExp(t('keymap.redo')) })
-    expect(row).toHaveTextContent('⇧⌘Z')
+    // Its keys follow the name directly, which tells it apart from Redo Take.
+    const redo = new RegExp(`shortcut for ${t('keymap.redo')} \\(`)
+    expect(screen.getByRole('button', { name: redo })).toHaveTextContent('⇧⌘Z')
     expect(screen.getAllByRole('table')).toHaveLength(2)
   })
 

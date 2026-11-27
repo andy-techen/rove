@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
-import { closeInput, getAudioContext, openInput } from './engine'
+import { closeInput, getAudioContext, inputLatencyOf, openInput } from './engine'
 import { describeInputError } from './devices'
 
 interface MicInput {
   source: MediaStreamAudioSourceNode | null
   error: string | null
+  /** The mic's own delay, as the system reports it. */
+  latencySec: number
 }
 
+const CLOSED: MicInput = { source: null, error: null, latencySec: 0 }
+
 export function useMicInput(deviceId: string | null): MicInput {
-  const [input, setInput] = useState<MicInput>({ source: null, error: null })
+  const [input, setInput] = useState<MicInput>(CLOSED)
 
   useEffect(() => {
     if (!deviceId) return
@@ -19,10 +23,14 @@ export function useMicInput(deviceId: string | null): MicInput {
       .then((s) => {
         if (cancelled) return closeInput(s)
         stream = s
-        setInput({ source: getAudioContext().createMediaStreamSource(s), error: null })
+        setInput({
+          source: getAudioContext().createMediaStreamSource(s),
+          error: null,
+          latencySec: inputLatencyOf(s)
+        })
       })
       .catch((err) => {
-        if (!cancelled) setInput({ source: null, error: describeInputError(err) })
+        if (!cancelled) setInput({ ...CLOSED, error: describeInputError(err) })
       })
 
     // Consumers of the source (meter, recorder) each disconnect their own
@@ -30,7 +38,7 @@ export function useMicInput(deviceId: string | null): MicInput {
     return () => {
       cancelled = true
       if (stream) closeInput(stream)
-      setInput({ source: null, error: null })
+      setInput(CLOSED)
     }
   }, [deviceId])
 

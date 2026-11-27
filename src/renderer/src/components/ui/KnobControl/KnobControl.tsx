@@ -4,7 +4,9 @@ import { cx } from '../cx'
 import { HelpTip } from '../HelpTip'
 import { IconButton } from '../IconButton'
 import { Knob, KnobProps } from '../Knob'
+import { Icon } from '../Icon'
 import { NumberField } from '../NumberField'
+import { Tooltip } from '../Tooltip'
 import './KnobControl.css'
 
 interface Props {
@@ -29,6 +31,8 @@ interface Props {
   hideValue?: boolean
   /** Shows a ↶ beside the value that puts the control back, when given. */
   reset?: { label: string; onReset(): void } | null
+  /** A small sparkle after the name saying who set it and why, on hover, when given. */
+  setBy?: string | null
   disabled?: boolean
   knob: Omit<KnobProps, 'label' | 'size' | 'disabled'>
 }
@@ -44,6 +48,7 @@ export function KnobControl({
   lead,
   hideValue,
   reset,
+  setBy,
   disabled,
   knob
 }: Props): React.JSX.Element {
@@ -52,6 +57,13 @@ export function KnobControl({
       <Knob {...knob} size="md" label={label} disabled={disabled} />
       <span className="knob-control-label">
         {label}
+        {setBy && (
+          <Tooltip text={setBy}>
+            <span className="knob-control-set-by" role="img" aria-label={setBy}>
+              <Icon name="sparkle" size="secondary" />
+            </span>
+          </Tooltip>
+        )}
         <HelpTip text={hint} />
       </span>
       <span className="knob-control-value">

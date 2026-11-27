@@ -12,7 +12,7 @@ flowchart LR
   subgraph Main["Main process (Node.js) · src/main"]
     index["index.ts<br/>window, mic permission"]
     menu["menu.ts<br/>native menu bar"]
-    ipc["ipc/<br/>project · export · lyrics<br/>keymap · appearance · voice<br/>license"]
+    ipc["ipc/<br/>project · export · lyrics<br/>keymap · appearance · voice<br/>license · inputVolume"]
   end
 
   subgraph Preload["Preload · src/preload"]

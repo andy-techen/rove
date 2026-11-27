@@ -5,6 +5,7 @@ import { ClipShape } from '../../state/song/selectors'
 import { SelectMode } from '../../state/editing/trackSelection'
 import { useClipPointer } from './useClipPointer'
 import { cx } from '../ui/cx'
+import { Button } from '../ui/Button'
 import { Tooltip } from '../ui/Tooltip'
 import { Waveform } from './Waveform'
 
@@ -23,6 +24,8 @@ export interface Props {
   /** Dragged this far up or down (px) towards another lane; null when not lifted. */
   liftY: number | null
   editable: boolean
+  /** Offers to line a just-recorded take up with the music, on the clip itself. */
+  lineUp?: { title: string; onApply(): void } | null
   /** Pressed: on its own, or ⌘/⇧ to add it to the selection. */
   onSelect(mode: SelectMode): void
   /**
@@ -48,6 +51,7 @@ export function ClipView({
   selected,
   liftY,
   editable,
+  lineUp,
   onSelect,
   onGesture
 }: Props): React.JSX.Element {
@@ -97,6 +101,26 @@ export function ClipView({
           )}
           {fadeOutPx > 0 && <line x1={width - fadeOutPx} y1={0} x2={width} y2={height} />}
         </svg>
+      )}
+      {lineUp && visibleTo > visibleFrom && (
+        <span
+          className="clip-line-up"
+          // Runtime geometry: keeps the offer in view when the clip starts off screen.
+          style={{ '--from': `${visibleFrom}px` } as CSSProperties}
+          // Pressing the offer isn't the start of a drag or a click on the clip.
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button
+            variant="quiet"
+            size="sm"
+            icon="lineUp"
+            title={lineUp.title}
+            onClick={lineUp.onApply}
+          >
+            {t('transport.lineUp.apply')}
+          </Button>
+        </span>
       )}
       {editable && (
         <>

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { PeakAccumulator, overviewOf } from '../../audio/mix/peaks'
+import { PeakAccumulator, overviewOf, waveScale } from '../../audio/mix/peaks'
+import { TARGET_PEAK_DB } from '../../audio/engine/inputLevel'
+import { dbToGain } from '../../audio/dsp/units'
 import { useColorScheme } from '../../state/ui/colorScheme'
 import { drawPeaks } from './timelineMath'
 
@@ -42,7 +44,8 @@ export function Waveform({
     drawPeaks(
       ctx,
       overview.resample(canvas.width, bucketsPerSec / (pxPerSec * dpr), offset * bucketsPerSec),
-      canvas.height
+      canvas.height,
+      waveScale(overview.peak)
     )
   }, [audio, offset, pxPerSec, width, height, scheme])
 
@@ -58,6 +61,10 @@ interface LiveProps {
   viewFrom: number
   viewWidth: number
 }
+
+// A take being sung has no loudest moment yet, and a growing one would make the
+// waveform shrink as it went; it's drawn as if it peaks where the meter aims the singer.
+const LIVE_SCALE = waveScale(dbToGain(TARGET_PEAK_DB))
 
 // Redraws every animation frame from the buckets streamed in so far, so the
 // waveform grows while the singer is still recording.
@@ -94,7 +101,8 @@ export function LiveWaveform({
           bucketsPerSec / (pxPerSec * dpr),
           (viewFrom / pxPerSec) * bucketsPerSec
         ),
-        canvas.height
+        canvas.height,
+        LIVE_SCALE
       )
       raf = requestAnimationFrame(draw)
     }

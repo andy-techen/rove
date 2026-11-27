@@ -1,0 +1,44 @@
+/* Bottom left, away from the panels' controls, and never in the way of a click. */
+.snackbar-host {
+  position: fixed;
+  left: var(--space-7);
+  bottom: var(--space-7);
+  pointer-events: none;
+  /* Over the app, under tooltips (100), which may explain something beside it. */
+  z-index: 50;
+}
+
+/* Inverted like a tooltip, so it reads as a message over the app, not part of a panel. */
+.snackbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  max-width: var(--layout-narrow-max);
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--color-text);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-raised);
+  font-size: var(--font-size-ui);
+  animation: snackbar-in var(--duration-gentle) ease-out;
+}
+
+/* Green: it went well. */
+.snackbar .icon {
+  flex-shrink: 0;
+  color: var(--color-good);
+}
+
+@keyframes snackbar-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-4));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snackbar {
+    animation: none;
+  }
+}

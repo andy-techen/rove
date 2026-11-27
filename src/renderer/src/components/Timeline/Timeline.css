@@ -587,3 +587,14 @@
 .clip.lifted.joined-after {
   box-shadow: none;
 }
+
+/* The line-up offer sits on its take, top left, clear of the trim edge. On the clip's
+   colour the quiet fill wouldn't show, so it takes the raised surface's. */
+.clip-line-up {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--from);
+  margin-left: var(--space-4);
+  --quiet-fill: var(--color-surface);
+  --hover-fill: var(--color-highlight);
+}

@@ -4,6 +4,17 @@ const SAVED_DEVICE_KEY = 'rove.inputDeviceId'
 // Chromium's id for "whatever the system's input is set to".
 const SYSTEM_DEFAULT_ID = 'default'
 
+/**
+ * Whether this is the Mac's current input, the one whose volume Rove can set: "Default",
+ * or the same mic picked by name (Chromium gives both entries the same group).
+ */
+export function isSystemInput(inputs: MediaDeviceInfo[], deviceId: string | null): boolean {
+  if (deviceId === SYSTEM_DEFAULT_ID) return true
+  const system = inputs.find((d) => d.deviceId === SYSTEM_DEFAULT_ID)
+  const chosen = inputs.find((d) => d.deviceId === deviceId)
+  return !!system?.groupId && system.groupId === chosen?.groupId
+}
+
 export function pickInputDevice(
   inputs: MediaDeviceInfo[],
   preferredId: string | null
@@ -37,6 +48,41 @@ export function saveDeviceId(deviceId: string): void {
     localStorage.setItem(SAVED_DEVICE_KEY, deviceId)
   } catch {
     // Remembering the mic is a convenience; losing it just means re-picking.
+  }
+}
+
+const LEARNED_LATENCY_KEY = 'rove.learnedLatency'
+
+/**
+ * Names a recording setup: this mic with the system's current output. The unreported
+ * delay belongs to the pair (the same mic is late with Bluetooth headphones, on time
+ * with wired ones).
+ */
+export function setupKey(inputId: string, outputs: MediaDeviceInfo[]): string {
+  const output = outputs.find((d) => d.deviceId === SYSTEM_DEFAULT_ID) ?? outputs[0]
+  return `${inputId}|${output?.label ?? ''}`
+}
+
+function learnedLatencies(): Record<string, number> {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(LEARNED_LATENCY_KEY) ?? '{}')
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, number>) : {}
+  } catch {
+    return {}
+  }
+}
+
+/** The extra delay Rove learned for this setup from takes the singer lined up. */
+export function loadLearnedLatency(key: string): number {
+  const sec = learnedLatencies()[key]
+  return typeof sec === 'number' && Number.isFinite(sec) ? sec : 0
+}
+
+export function saveLearnedLatency(key: string, sec: number): void {
+  try {
+    localStorage.setItem(LEARNED_LATENCY_KEY, JSON.stringify({ ...learnedLatencies(), [key]: sec }))
+  } catch {
+    // Like the saved mic: losing it only means lining up the next take by hand.
   }
 }
 

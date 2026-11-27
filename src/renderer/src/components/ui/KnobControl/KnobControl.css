@@ -52,3 +52,9 @@
   /* Overhangs the value line instead of growing it, so showing it moves nothing. */
   margin-block: calc(-1 * var(--space-3));
 }
+
+/* Accent text, like the sparkle it repeats: Rove's own suggestion, not the singer's voice. */
+.knob-control-set-by {
+  display: flex;
+  color: var(--color-accent-text);
+}

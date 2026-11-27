@@ -23,6 +23,24 @@ const EDGE_PX = 8
 interface Place {
   left: number
   top: number
+  /** Set when a wrapped tip is narrowed to its widest line. */
+  width?: number
+}
+
+/**
+ * The width that just fits a wrapped tip's lines. A box that wraps keeps its full max
+ * width, leaving a gap beside shorter lines; balanced lines then fit a narrower box.
+ * Undefined when the tip is one line, or the browser can't measure lines (tests).
+ */
+function fittedWidth(tip: HTMLElement): number | undefined {
+  const range = document.createRange()
+  range.selectNodeContents(tip)
+  const lines = typeof range.getClientRects === 'function' ? Array.from(range.getClientRects()) : []
+  if (lines.length < 2) return undefined
+  const style = getComputedStyle(tip)
+  const inside = tip.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+  const widest = Math.ceil(Math.max(...lines.map((line) => line.width)))
+  return widest < inside ? tip.offsetWidth - inside + widest : undefined
 }
 
 /**
@@ -62,13 +80,15 @@ export function Tooltip({ text, content, children }: Props): React.JSX.Element {
     const tip = bubble.current
     if (!open || !target || !tip) return
     const r = target.getBoundingClientRect()
+    const width = content ? undefined : fittedWidth(tip)
+    if (width !== undefined) tip.style.width = `${width}px`
     const w = tip.offsetWidth
     const h = tip.offsetHeight
     const below = r.bottom + GAP_PX
     const top = below + h + EDGE_PX > window.innerHeight ? r.top - GAP_PX - h : below
     const centred = r.left + r.width / 2 - w / 2
     const left = Math.max(EDGE_PX, Math.min(centred, window.innerWidth - w - EDGE_PX))
-    setPlace({ left, top })
+    setPlace({ left, top, width })
   }, [open, text, content])
 
   return (

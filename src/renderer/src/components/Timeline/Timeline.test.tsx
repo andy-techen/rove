@@ -32,6 +32,7 @@ function timelineProps(overrides: Partial<Parameters<typeof Timeline>[0]> = {}) 
     canRecord: true,
     onRecord: vi.fn(),
     onStop: vi.fn(),
+    onRestartTake: vi.fn(),
     canEdit: true,
     skipBacking: false,
     onRecordWithoutMusic: vi.fn(),
@@ -417,5 +418,46 @@ describe('Timeline', () => {
   it('keeps offering instrumentals once the song has one', () => {
     renderTimeline({ tracks: [chordsLane(), lane({})] })
     expect(screen.getByRole('button', { name: t('timeline.addInstrumental') })).toBeEnabled()
+  })
+
+  it('offers to line up a late take on its clip', async () => {
+    const take = {
+      id: 'c1',
+      start: 10,
+      offset: 0,
+      duration: 30,
+      fadeIn: 0,
+      fadeOut: 0,
+      audio: null,
+      joinedBefore: false,
+      joinedAfter: false
+    }
+    const onLineUp = vi.fn()
+    renderTimeline({
+      tracks: [lane({ clips: [take] })],
+      lineUp: { trackId: 'v1', clipId: 'c1', bySec: 0.14 },
+      onLineUp
+    })
+    await userEvent.click(screen.getByRole('button', { name: t('transport.lineUp.apply') }))
+    expect(onLineUp).toHaveBeenCalled()
+  })
+
+  it('redoes the take being recorded from its own lane', async () => {
+    const onRestartTake = vi.fn()
+    renderTimeline({
+      tracks: [lane({})],
+      onRestartTake,
+      recording: {
+        trackId: 'v1',
+        startSec: 0,
+        sec: 2,
+        peaks: new (class {})() as never,
+        sampleRate: 48000
+      }
+    })
+    await userEvent.click(
+      screen.getByRole('button', { name: t('track.restart', { name: 'Vocal 1' }) })
+    )
+    expect(onRestartTake).toHaveBeenCalled()
   })
 })

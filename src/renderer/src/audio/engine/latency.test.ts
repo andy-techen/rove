@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { alignTake } from './latency'
+import { alignTake, estimatedLatency, learnLatency } from './latency'
 
 describe('alignTake', () => {
   it('shifts a take earlier by the latency', () => {
@@ -15,5 +15,23 @@ describe('alignTake', () => {
 
   it('leaves the take alone with no latency', () => {
     expect(alignTake(3, 5, 0)).toEqual({ start: 3, offset: 0, duration: 5 })
+  })
+})
+
+describe('estimatedLatency', () => {
+  it('counts the mic’s delay as well as the output’s', () => {
+    const ctx = { outputLatency: 0.01, baseLatency: 0.005 } as AudioContext
+    expect(estimatedLatency(ctx, 0.008)).toBeCloseTo(0.023)
+  })
+})
+
+describe('learnLatency', () => {
+  it('adds a lined-up take’s lag to what was learned', () => {
+    expect(learnLatency(0.1, 0.03)).toBeCloseTo(0.13)
+  })
+
+  it('never learns an implausible delay', () => {
+    expect(learnLatency(0.4, 0.3)).toBe(0.5)
+    expect(learnLatency(0, -0.3)).toBe(-0.1)
   })
 })

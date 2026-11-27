@@ -56,11 +56,6 @@ export function splitBar(bars: Chord[][], at: number): Chord[][] {
   return first ? replace(bars, at, [first, first]) : bars
 }
 
-/** Empties a bar, so it carries the chord before it on. */
-export const clearBar = (bars: Chord[][], at: number): Chord[][] => replace(bars, at, [])
-
-export const removeBar = (bars: Chord[][], at: number): Chord[][] => bars.filter((_, i) => i !== at)
-
 const inRange = (i: number, first: number, last: number): boolean => i >= first && i <= last
 
 /** One chord for each bar from `first` to `last`. */

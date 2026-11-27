@@ -13,6 +13,7 @@ import {
 import { SETTINGS_CHANNELS } from '@shared/settings'
 import { WISHLIST_CHANNELS } from '@shared/wishlist'
 import { VOICE_CHANNELS } from '@shared/voice'
+import { INPUT_VOLUME_CHANNELS, parseInputVolume } from '@shared/inputVolume'
 import { parseOverrides } from '@shared/keymap'
 import {
   CONTEXT_MENU_CHANNEL,
@@ -78,6 +79,9 @@ const api: RoveApi = {
   },
   requestMicAccess: () => ipcRenderer.invoke('mic:requestAccess'),
   openMicSettings: () => ipcRenderer.invoke('mic:openSettings'),
+  getInputVolume: async () => parseInputVolume(await ipcRenderer.invoke(INPUT_VOLUME_CHANNELS.get)),
+  setInputVolume: async (volume) =>
+    parseInputVolume(await ipcRenderer.invoke(INPUT_VOLUME_CHANNELS.set, volume)),
   chooseProjectFolder: () => ipcRenderer.invoke('project:choose'),
   listSongs: () => ipcRenderer.invoke('project:list'),
   openSongbookSong: (folder) => ipcRenderer.invoke('project:openByName', folder),

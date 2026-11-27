@@ -1,14 +1,10 @@
-import { fft } from '../dsp/fft'
 import { AudioSource } from '../pitch/key'
 import { bufferOf, cachedRender, channelsOf } from '../dsp/renderCache'
-import { downsampleForAnalysis, nextTick } from '../dsp/resample'
+import { nextTick } from '../dsp/resample'
+import { onsetStrength } from '../dsp/onsets'
 
 // --- Tempo ---------------------------------------------------------------------
 
-// Drums and plucks live across the spectrum; above this adds little to finding beats.
-const ONSET_CUTOFF_HZ = 5000
-const ONSET_FFT = 1024
-const ONSET_HOP = 128
 // The tempo is steady through most songs; a minute and a half is plenty to hear it.
 const TEMPO_ANALYSIS_SEC = 90
 const MIN_BPM = 60
@@ -22,47 +18,6 @@ const REFINE_BEATS = 4
 const SEC_PER_MIN = 60
 // Below this much onset energy there are no beats to hear.
 const MIN_ONSET_ENERGY = 1e-3
-const LOG_COMPRESSION = 100
-const FRAMES_PER_CHUNK = 400
-const ONSET_PEAK_SHARE = 0.75
-
-/** How strongly something new starts sounding in each analysis frame (spectral flux). */
-async function onsetStrength(
-  source: AudioSource
-): Promise<{ envelope: Float32Array; rate: number; frameSec(frame: number): number }> {
-  const length = Math.min(source.channels[0]?.length ?? 0, TEMPO_ANALYSIS_SEC * source.sampleRate)
-  const clipped = source.channels.map((c) => c.subarray(0, length))
-  const { data, rate } = downsampleForAnalysis(clipped, source.sampleRate, ONSET_CUTOFF_HZ)
-  const frames = Math.max(0, Math.floor((data.length - ONSET_FFT) / ONSET_HOP))
-  const envelope = new Float32Array(frames)
-  const re = new Float64Array(ONSET_FFT)
-  const im = new Float64Array(ONSET_FFT)
-  const hann = Float64Array.from(
-    { length: ONSET_FFT },
-    (_, i) => 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / ONSET_FFT)
-  )
-  const previous = new Float64Array(ONSET_FFT / 2)
-  for (let f = 0; f < frames; f++) {
-    for (let i = 0; i < ONSET_FFT; i++) re[i] = data[f * ONSET_HOP + i] * hann[i]
-    im.fill(0)
-    fft(re, im)
-    let flux = 0
-    for (let bin = 1; bin < ONSET_FFT / 2; bin++) {
-      const level = Math.log1p(LOG_COMPRESSION * Math.hypot(re[bin], im[bin]))
-      if (f > 0) flux += Math.max(0, level - previous[bin])
-      previous[bin] = level
-    }
-    envelope[f] = flux
-    if ((f + 1) % FRAMES_PER_CHUNK === 0) await nextTick()
-  }
-  return {
-    envelope,
-    rate: rate / ONSET_HOP,
-    // As frames move past a new sound, the Hann window's weight on it rises fastest when
-    // it sits three-quarters of the way in: that frame is where the flux peaks.
-    frameSec: (frame) => (frame * ONSET_HOP + ONSET_FFT * ONSET_PEAK_SHARE) / rate
-  }
-}
 
 function autocorrelation(x: Float32Array, lag: number): number {
   let sum = 0
@@ -94,7 +49,7 @@ export interface Beat {
 
 /** The music's beat, or null when there's no clear one. */
 export async function detectBeat(source: AudioSource): Promise<Beat | null> {
-  const { envelope, rate, frameSec } = await onsetStrength(source)
+  const { envelope, rate, frameSec } = await onsetStrength(source, TEMPO_ANALYSIS_SEC)
   if (envelope.length === 0) return null
   const mean = envelope.reduce((s, x) => s + x, 0) / envelope.length
   if (mean < MIN_ONSET_ENERGY) return null
@@ -163,11 +118,6 @@ function trackBeats(envelope: Float32Array, period: number): number[] {
   const beats: number[] = []
   for (let t = last; t >= 0; t = from[t]) beats.unshift(t)
   return beats
-}
-
-/** The music's tempo in beats per minute, or null when there's no clear beat. */
-export async function detectTempo(source: AudioSource): Promise<number | null> {
-  return (await detectBeat(source))?.bpm ?? null
 }
 
 // --- Speed and pitch -----------------------------------------------------------

@@ -1,3 +1,4 @@
+import { t } from '@shared/copy'
 import { useEffect, useRef, useState } from 'react'
 import { AUTO_POLISH_VERSION, suggestPolish } from '../../audio/polish/autoPolish'
 import { PolishReading, analyseVoice } from '../../audio/polish/polishReading'
@@ -8,6 +9,7 @@ import {
   suggestionIsStale,
   withPolishSuggestion
 } from '../song/polishSuggestion'
+import { showSnack } from '../ui/snackbar'
 
 /** What the auto-polish button can do right now. */
 export type AutoPolishStatus = 'ready' | 'stale' | 'noTakes' | 'listening'
@@ -71,14 +73,18 @@ export function useAutoPolish(
       setOutcome({ trackId: track.id, heard: now ? heardOf(now) : heard, message, clipped })
     if (!song || !now || heardOf(now) !== heard) return report('tryAgain')
     if (!profile) return report('tooShort')
-    edit(
-      withPolishSuggestion(song, now.id, {
-        ...suggestPolish(profile, now.part ?? 'lead'),
-        heard,
-        version: AUTO_POLISH_VERSION
-      })
-    )
+    const suggestion = suggestPolish(profile, now.part ?? 'lead')
+    edit(withPolishSuggestion(song, now.id, { ...suggestion, heard, version: AUTO_POLISH_VERSION }))
     report('done', profile.clipped)
+    // That it worked is a passing note; the knobs' sparkles say what changed. A clipped
+    // take instead keeps its warning in the panel, where the singer can act on it.
+    if (!profile.clipped) {
+      showSnack(
+        suggestion.reasons.includes('balanced')
+          ? t('polish.auto.reasons.balanced')
+          : t('polish.auto.done')
+      )
+    }
   }
 
   const shown =

@@ -14,6 +14,7 @@ import {
   withTrackPolish
 } from '../../state/song/project'
 import { useAutoPolish } from '../../state/processing/useAutoPolish'
+import { Snackbar } from '../ui/Snackbar'
 import { PolishPanel } from '.'
 
 // The hook boundary: what Rove hears is decided here, not by real audio.
@@ -61,11 +62,12 @@ function Harness({ files = ['a.wav'] }: { files?: string[] }) {
         onHide={vi.fn()}
         auto={{
           ...auto,
-          reasons: track.polishSuggestion?.reasons ?? null,
+          suggestion: track.polishSuggestion ?? null,
           disabled: false,
           onListen: auto.listen
         }}
       />
+      <Snackbar />
       <button onClick={() => setHistory((h) => h.slice(0, -1))}>undo</button>
       <button
         onClick={() =>
@@ -80,7 +82,7 @@ function Harness({ files = ['a.wav'] }: { files?: string[] }) {
   )
 }
 
-const knob = (key: 'clarity' | 'cleanup') =>
+const knob = (key: keyof typeof expected) =>
   screen.getByRole('slider', { name: t(`polish.controls.${key}.label`) })
 const percent = (amount: number) => String(Math.round(amount * 100))
 const autoButton = () => screen.getByRole('button', { name: t('polish.auto.label') })
@@ -113,10 +115,22 @@ describe('Auto-polish', () => {
     expect(knob('clarity')).toHaveValue(percent(defaultPolish('lead').clarity))
   })
 
-  it('says what it heard behind a help tip', async () => {
+  it('marks each knob it turned with why, on hover', async () => {
     render(<Harness />)
     await autoPolish()
-    expect(screen.getByRole('button', { name: t('polish.auto.reasons.dull') })).toBeTruthy()
+    expect(screen.getByRole('img', { name: t('polish.auto.reasons.dull') })).toBeTruthy()
+  })
+
+  it('drops a knob’s mark once you turn it yourself', async () => {
+    render(<Harness />)
+    await autoPolish()
+    const mark = () => screen.queryByRole('img', { name: t('polish.auto.reasons.dull') })
+    expect(mark()).toBeTruthy()
+    const name = t('polish.controls.clarity.label')
+    const typed = screen.getByRole('textbox', { name: t('panel.typeValue', { name }) })
+    await userEvent.clear(typed)
+    await userEvent.type(typed, '7{Enter}')
+    expect(mark()).toBeNull()
   })
 
   it('does nothing when a take is recorded', async () => {

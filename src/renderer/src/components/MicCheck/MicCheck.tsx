@@ -1,11 +1,20 @@
 import { useCallback, useState } from 'react'
 import { t } from '@shared/copy'
 import { Microphone } from '../../state/transport/useMicrophone'
+import { AutoLevelStatus, useAutoLevel } from '../../state/transport/useAutoLevel'
+import { isSystemInput } from '../../audio/engine/devices'
 import { DevicePicker } from '../DevicePicker'
 import { InputMeter } from '../InputMeter'
 import { Button } from '../ui/Button'
 import { Logo } from '../ui/Logo'
 import './MicCheck.css'
+
+const LEVEL_MESSAGE: Partial<Record<AutoLevelStatus, string>> = {
+  listening: t('micCheck.level.listening'),
+  set: t('micCheck.level.done'),
+  alreadyRight: t('micCheck.level.alreadyRight'),
+  notHeard: t('micCheck.level.notHeard')
+}
 
 interface Props {
   mic: Microphone
@@ -20,6 +29,15 @@ export function MicCheck({ mic, onboarding, onDone }: Props): React.JSX.Element 
   const [checkedDeviceId, setCheckedDeviceId] = useState<string | null>(null)
   const levelChecked = deviceId !== null && checkedDeviceId === deviceId
   const markChecked = useCallback(() => setCheckedDeviceId(deviceId), [deviceId])
+  const level = useAutoLevel(source, isSystemInput(devices, deviceId))
+  // With a mic Rove can set, setting it is the way on; otherwise singing in the green is.
+  const autoLevel = !!source && level.available
+  const levelSet = level.status === 'set' || level.status === 'alreadyRight'
+  const ready = !onboarding || levelChecked || levelSet
+  const finish = onboarding ? t('micCheck.continue') : t('micCheck.done')
+  const message =
+    LEVEL_MESSAGE[level.status] ??
+    (!ready && source && !autoLevel ? t('micCheck.continueHint') : null)
 
   return (
     <main className="mic-check">
@@ -57,19 +75,40 @@ export function MicCheck({ mic, onboarding, onDone }: Props): React.JSX.Element 
             {inputError && <p className="error">{inputError}</p>}
             {source && <InputMeter source={source} onInRange={markChecked} />}
             <div className="row mic-check-actions">
-              {onboarding ? (
+              {autoLevel && !levelSet ? (
                 <>
-                  <Button disabled={!levelChecked} onClick={onDone}>
-                    {t('micCheck.continue')}
+                  <Button
+                    icon="mic"
+                    title={t('micCheck.level.setTitle')}
+                    disabled={level.status === 'listening'}
+                    onClick={level.start}
+                  >
+                    {t('micCheck.level.set')}
                   </Button>
-                  {!levelChecked && source && (
-                    <span className="muted">{t('micCheck.continueHint')}</span>
+                  {ready && (
+                    <Button variant="secondary" onClick={onDone}>
+                      {finish}
+                    </Button>
                   )}
                 </>
               ) : (
-                <Button onClick={onDone}>{t('micCheck.done')}</Button>
+                <>
+                  <Button disabled={!ready} onClick={onDone}>
+                    {finish}
+                  </Button>
+                  {autoLevel && (
+                    <Button variant="quiet" onClick={level.start}>
+                      {t('micCheck.level.again')}
+                    </Button>
+                  )}
+                </>
               )}
             </div>
+            {message && (
+              <p className="muted mic-check-message" aria-live="polite">
+                {message}
+              </p>
+            )}
           </div>
         )}
       </section>

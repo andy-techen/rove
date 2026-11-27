@@ -24,7 +24,16 @@
     "continueHint": "Sing in the green for a moment to continue.",
     "done": "Done",
     "microphone": "Microphone",
-    "microphoneNumbered": "Microphone {number}"
+    "microphoneNumbered": "Microphone {number}",
+    "level": {
+      "set": "Set my level",
+      "again": "Set it again",
+      "setTitle": "Sing your loudest line and Rove sets your mic for it",
+      "listening": "Sing your loudest line. Rove is setting your mic to suit it…",
+      "done": "Your mic level is set. Sing a little to check you're in the green.",
+      "alreadyRight": "Your level is already about right.",
+      "notHeard": "Didn't catch that. Sing out a little and try again."
+    }
   },
   "meter": {
     "label": "Input level",
@@ -80,7 +89,14 @@
     "discardTake": "Discard take",
     "saveFailed": "Couldn't save that take to your song folder. Check the folder still exists.",
     "recorderFailed": "Couldn't start the recorder.",
-    "engineFailed": "Couldn't start the audio engine."
+    "engineFailed": "Couldn't start the audio engine.",
+    "balanced": "Set the music under your voice. Change it any time with the track's volume.",
+    "lineUp": {
+      "apply": "Line up",
+      "late": "A little behind the music: line it up",
+      "early": "A little ahead of the music: line it up",
+      "done": "Lined up. Your next takes will land in time too."
+    }
   },
   "timeline": {
     "label": "Song timeline",
@@ -114,9 +130,13 @@
     "record": "Record {name}",
     "stop": "Stop recording {name}",
     "stopTitle": "Stop",
+    "recordTitle": "Record",
+    "restart": "Redo the take on {name}",
+    "restartTitle": "Redo",
     "cantRecordImported": "This is a music file. Record on a new track.",
     "cantRecordChords": "This is an instrumental. Record on a new track.",
-    "selectVocal": "Select {name}",
+    "select": "Select {name}",
+    "selectMusic": "Select {name} · {detail}",
     "nameLabel": "Track name",
     "mute": "Mute {name}",
     "unmute": "Unmute {name}",
@@ -133,8 +153,7 @@
     "centre": "Centre",
     "panLeft": "{percent}% left",
     "panRight": "{percent}% right",
-    "volumePercent": "{percent}%",
-    "selectBacking": "{name}: {detail}"
+    "volumePercent": "{percent}%"
   },
   "clip": {
     "trim": "Drag to trim",
@@ -144,7 +163,8 @@
   "polish": {
     "title": "Polish",
     "label": "Polish {name}",
-    "compareTitle": "Compare with the untouched recording",
+    "compareTitle": "Turn off to hear the untouched recording",
+    "turnOnTitle": "Turn on to hear your voice polished",
     "reset": "Reset",
     "resetTitle": "Back to the default settings",
     "resetControl": "Reset {name} to default",
@@ -161,7 +181,8 @@
       "titleStale": "Listen again to include your new takes",
       "titleNoTakes": "Record a take first, then Rove can listen.",
       "listening": "Listening…",
-      "heard": "What Rove heard",
+      "turnedUp": "Auto-polish turned this up a little for your voice.",
+      "turnedDown": "Auto-polish turned this down a little for your voice.",
       "done": "Auto-polished.",
       "tooShort": "Sing a little more, then Rove can listen.",
       "tryAgain": "Your takes changed while Rove listened. Try again.",
@@ -650,6 +671,7 @@
     "songbook": "Songbook…",
     "save": "Save",
     "closeSong": "Close Song",
+    "restartTake": "Redo Take",
     "moveSongLeft": "Move Song Left",
     "moveSongRight": "Move Song Right",
     "undo": "Undo",
@@ -665,6 +687,10 @@
     "moveTrackDown": "Move Track Down",
     "selectAll": "Select All",
     "deselect": "Deselect",
+    "previousTrack": "Select Track Above",
+    "nextTrack": "Select Track Below",
+    "selectTrackNumber": "Select Track 1 to 9",
+    "record": "Record / Stop Recording",
     "playPause": "Play / Pause",
     "stopPlayback": "Stop",
     "goToStart": "Go to Start",

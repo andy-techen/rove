@@ -30,6 +30,7 @@ import { SelectMode, selectMode } from '../../state/editing/trackSelection'
 import { MixChange, TrackMix } from './TrackMix'
 import { LiveWaveform } from './Waveform'
 import { PeakAccumulator } from './timelineMath'
+import type { LineUp } from '../../state/transport/useTransport'
 import { useTimelineView } from './useTimelineView'
 import './Timeline.css'
 
@@ -59,6 +60,10 @@ interface Props {
   canRecord: boolean
   onRecord(trackId: string): void
   onStop(): void
+  onRestartTake(): void
+  /** A just-recorded take that sits off the music; offered on its clip. */
+  lineUp?: LineUp | null
+  onLineUp?(): void
   /** Tracks, clips and mix can be changed (not while recording or saving). */
   canEdit: boolean
   /** The singer chose to record without a backing track. */
@@ -140,6 +145,9 @@ export function Timeline({
   canRecord,
   onRecord,
   onStop,
+  onRestartTake,
+  lineUp,
+  onLineUp,
   canEdit,
   skipBacking,
   onRecordWithoutMusic,
@@ -524,6 +532,9 @@ export function Timeline({
         {...dragHandlers}
       >
         <TrackHeader
+          // Counted across every lane, music first, as ⌘1–⌘9 count them.
+          place={(track.role === 'vocal' ? backingTracks.length : 0) + index + 1}
+          role={track.role}
           draggable={canEdit && !recording}
           onDragStart={(e) => {
             if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
@@ -536,7 +547,6 @@ export function Timeline({
           onRenameDone={() => onRenaming(null)}
           name={track.name}
           detail={isRecording ? formatDuration(recording.sec) : track.detail}
-          role={track.role}
           recording={isRecording}
           // An imported backing track is a single file already laid down: recording
           // on top of it would double what the singer is hearing, so hide the action.
@@ -554,6 +564,7 @@ export function Timeline({
           onContextMenu={() => onContextMenu('track', track.id, null)}
           onRecord={() => onRecord(track.id)}
           onStop={onStop}
+          onRestart={onRestartTake}
         />
         <div
           className="lane-area seekable"
@@ -612,6 +623,15 @@ export function Timeline({
                 includesClip(selectedClips, { trackId: track.id, clipId: c.id }) ? liftY : null
               }
               editable={canEdit && !isRecording}
+              lineUp={
+                canEdit && onLineUp && lineUp?.trackId === track.id && lineUp.clipId === c.id
+                  ? {
+                      title:
+                        lineUp.bySec > 0 ? t('transport.lineUp.late') : t('transport.lineUp.early'),
+                      onApply: onLineUp
+                    }
+                  : null
+              }
               onSelect={(mode) => onSelect({ trackId: track.id, clipId: c.id }, mode)}
               onGesture={(kind, phase, delta, free, clientY) =>
                 clipGesture({ trackId: track.id, clipId: c.id }, kind, phase, delta, free, clientY)

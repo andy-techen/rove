@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { cx } from '../cx'
 import { Tooltip } from '../Tooltip'
-import { DETENT, VIEW, arcPath, dragValue, fractionOf, pointAt } from './knobMath'
+import { DETENT, VIEW, arcPath, dragTravel, dragValue, fractionOf, pointAt } from './knobMath'
 import './Knob.css'
 
 export interface KnobProps {
@@ -38,9 +38,9 @@ const FACE = 30
 const MARKER_R = 4
 
 /**
- * A knob: drag up or down to turn it, arrow keys step it, double-click puts it back
- * (on its centre, else its suggested value). A hidden native range input carries
- * keyboard use and the accessible name, so it reads as a slider.
+ * A knob: drag up or right to turn it up (down or left, down), arrow keys step it,
+ * double-click puts it back (on its centre, else its suggested value). A hidden native
+ * range input carries keyboard use and the accessible name, so it reads as a slider.
  */
 export function Knob({
   value,
@@ -57,7 +57,7 @@ export function Knob({
   disabled,
   className
 }: KnobProps): React.JSX.Element {
-  const drag = useRef<{ y: number; from: number } | null>(null)
+  const drag = useRef<{ x: number; y: number; from: number } | null>(null)
   const range = { min, max, step, centre }
   const f = fractionOf(value, range)
   const atCentre = centre !== undefined && Math.abs(value - centre) <= (DETENT * (max - min)) / 2
@@ -73,12 +73,12 @@ export function Knob({
         if (disabled || e.button !== 0) return
         e.currentTarget.setPointerCapture?.(e.pointerId)
         e.currentTarget.querySelector('input')?.focus({ preventScroll: true })
-        drag.current = { y: e.clientY, from: value }
+        drag.current = { x: e.clientX, y: e.clientY, from: value }
       }}
       onPointerMove={(e) => {
         const d = drag.current
         if (!d) return
-        const next = dragValue(d.from, d.y - e.clientY, range)
+        const next = dragValue(d.from, dragTravel(d, { x: e.clientX, y: e.clientY }), range)
         if (next !== value) onChange(next)
       }}
       onPointerUp={() => {

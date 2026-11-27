@@ -153,6 +153,3 @@ export function eventsFor(timeline: StrumTimeline, feels: ChordFeel[] = []): Str
   }
   return events
 }
-
-/** The "Strum" pattern over a whole chart. */
-export const strumEvents = (timeline: StrumTimeline): StrumEvent[] => eventsFor(timeline)

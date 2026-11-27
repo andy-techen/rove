@@ -26,3 +26,7 @@
 .mic-check-actions {
   font-size: var(--font-size-ui);
 }
+
+.mic-check-message {
+  font-size: var(--font-size-ui);
+}

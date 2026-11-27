@@ -20,6 +20,11 @@ hears.
 - **Hover explains.** Every icon-only control shows a tooltip saying what it does and
   has an accessible name. Use `IconButton`, which requires a `label` and uses it for both.
   Disabled controls dim but keep the arrow cursor, so nothing covers their tooltip.
+- **Tooltips show hotkeys.** When a control's action has a shortcut, its tooltip ends
+  with the keys, no exceptions: `title={shortcuts.label(text, id)}` from
+  `useShortcuts()`, so they follow rebinding. A fixed key counts too: a track's name
+  shows its ⌘1–⌘9 (`shortcuts.trackLabel`). A new shortcut isn't done until the tooltip
+  of every control that does the same thing shows it.
 - **Icon buttons look the same everywhere.** A rounded square with no fill that fills
   on hover and while on (pressed or open). Don't restyle the box per component; only
   colour changes for meaning (accent while playing, red for record). On a raised
@@ -88,22 +93,23 @@ Don't introduce a new size; if nothing fits, the hierarchy probably needs rethin
 
 Reach for these before writing new markup:
 
-| Component      | Use it for                                                                                                               |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `Button`       | Text buttons. `primary`, `secondary`, `quiet` (soft fill), `ghost` (in-place); sizes `md`, `sm`; optional `icon`.        |
-| `IconButton`   | Any icon-only control. `label` is required (accessible name and tooltip).                                                |
-| `RecordButton` | Record on a track: a red dot in a round button that fills red to stop. In a toolbar, use `IconButton` with `recordRing`. |
-| `Icon`         | Inline icons by name; add new glyphs to `Icon/icons.ts`.                                                                 |
-| `Slider`       | Range inputs (lane volume and position, Advanced). `centre` for two-way ones.                                            |
-| `Knob`         | A turnable control. `centre` for ones that go both ways (speed, key).                                                    |
-| `KnobControl`  | A knob with its name, help and value, as panels show it; lay out in a `KnobRow`.                                         |
-| `Panel`        | A titled panel under the timeline (Polish, Music), with header actions.                                                  |
-| `Splitter`     | A draggable edge between areas (side panel width, the lyrics/chords split).                                              |
-| `NumberField`  | A number to type over (Enter applies, Esc reverts); pair it with a slider.                                               |
-| `Switch`       | On/off toggles with a label.                                                                                             |
-| `Select`       | A short list to pick one from (the song key). Native, so the keyboard just works.                                        |
-| `HelpTip`      | A "?" that reveals help on hover or focus: `text` for a sentence; `lines` (steps) and `items` (bullets) for longer help. |
-| `Logo`         | The app icon with the "rove" wordmark (top bar `sm`, full-screen headings `lg`).                                         |
+| Component      | Use it for                                                                                                                                     |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Button`       | Text buttons. `primary`, `secondary`, `quiet` (soft fill), `ghost` (in-place); sizes `md`, `sm`; optional `icon`.                              |
+| `IconButton`   | Any icon-only control. `label` is required (accessible name and tooltip).                                                                      |
+| `RecordButton` | Record on a track: a red dot in a round button that fills red to stop. In a toolbar, use `IconButton` with `recordRing`.                       |
+| `Icon`         | Inline icons by name; add new glyphs to `Icon/icons.ts`.                                                                                       |
+| `Slider`       | Range inputs (lane volume and position, Advanced). `centre` for two-way ones.                                                                  |
+| `Knob`         | A turnable control. `centre` for ones that go both ways (speed, key).                                                                          |
+| `KnobControl`  | A knob with its name, help and value, as panels show it; lay out in a `KnobRow`. `setBy` marks one Rove turned (why, on hover).                |
+| `Panel`        | A titled panel under the timeline (Polish, Music), with header actions.                                                                        |
+| `Splitter`     | A draggable edge between areas (side panel width, the lyrics/chords split).                                                                    |
+| `NumberField`  | A number to type over (Enter applies, Esc reverts); pair it with a slider.                                                                     |
+| `Switch`       | On/off toggles with a label.                                                                                                                   |
+| `Select`       | A short list to pick one from (the song key). Native, so the keyboard just works.                                                              |
+| `HelpTip`      | A "?" that reveals help on hover or focus: `text` for a sentence; `lines` (steps) and `items` (bullets) for longer help.                       |
+| `Snackbar`     | One-off news the singer needn't act on ("Auto-polished."), bottom left: call `showSnack(text)`. Warnings and errors stay beside their control. |
+| `Logo`         | The app icon with the "rove" wordmark (top bar `sm`, full-screen headings `lg`).                                                               |
 
 If a pattern repeats in two places, promote it to `ui/`.
 

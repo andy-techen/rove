@@ -140,6 +140,29 @@ const REASONS: Record<SuggestedControl, [up: AutoPolishReason, down: AutoPolishR
   space: null
 }
 
+/** What a knob's sparkle says: why auto polish turned it, or at least which way. */
+export type AutoMark = AutoPolishReason | 'up' | 'down'
+
+/**
+ * The mark on a control auto polish turned, while it still sits where auto polish left
+ * it; null for one it left alone or the singer has since moved.
+ */
+export function autoMark(
+  key: SuggestedControl,
+  now: PolishAmounts,
+  suggestion: AutoPolish,
+  defaults: PolishAmounts
+): AutoMark | null {
+  const set = suggestion.amounts[key]
+  if (set === defaults[key] || now[key] !== set) return null
+  const up = set > defaults[key]
+  const own = suggestion.reasons.find((r) => REASONS[key]?.includes(r))
+  if (own) return own
+  // Hum explains a lower Warmth (as in reasonsFor), never a higher one.
+  if (key === 'warmth' && !up && suggestion.reasons.includes('hum')) return 'hum'
+  return up ? 'up' : 'down'
+}
+
 function reasonsFor(
   amounts: SuggestedAmounts,
   base: PolishAmounts,

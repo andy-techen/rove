@@ -13,10 +13,10 @@ const listen = () => {
 
 describe('shortcut keys', () => {
   it('runs a rebound shortcut from its new keys, not its old ones', () => {
-    applyOverrides({ previousEdge: 'Up' })
+    applyOverrides({ previousEdge: 'Home' })
     const heard = listen()
     fireEvent.keyDown(window, { key: 'ArrowLeft', code: 'ArrowLeft' })
-    fireEvent.keyDown(window, { key: 'ArrowUp', code: 'ArrowUp' })
+    fireEvent.keyDown(window, { key: 'Home', code: 'Home' })
     expect(heard.mock.calls).toEqual([['previousEdge']])
   })
 

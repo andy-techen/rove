@@ -36,3 +36,23 @@ export function canStartRecording(gate: RecordGate): boolean {
 export function canChangeLyrics(mode: Mode, busy: boolean): boolean {
   return mode !== 'saving' && !busy
 }
+
+/** The lanes the record key can choose from: what each is, in lane order. */
+interface RecordableLane {
+  id: string
+  role: 'vocal' | 'backing' | 'chords'
+  imported: boolean
+}
+
+const canTakeRecording = (lane: RecordableLane): boolean =>
+  lane.role === 'vocal' || (lane.role === 'backing' && !lane.imported)
+
+/**
+ * Where the record key records: the selected track if a take can go on it (a vocal, or
+ * music played in here), otherwise the first vocal. Null when there's nowhere to sing.
+ */
+export function recordTarget(lanes: RecordableLane[], selectedId: string | null): string | null {
+  const selected = lanes.find((lane) => lane.id === selectedId)
+  if (selected && canTakeRecording(selected)) return selected.id
+  return lanes.find((lane) => lane.role === 'vocal')?.id ?? null
+}

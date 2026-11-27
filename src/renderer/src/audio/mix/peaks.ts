@@ -1,3 +1,5 @@
+import { dbToGain } from '../dsp/units'
+
 /** Collects min/max pairs for fixed-size buckets of audio as it streams in. */
 export class PeakAccumulator {
   private pairs: number[] = []
@@ -16,6 +18,13 @@ export class PeakAccumulator {
         this.min = this.max = this.filled = 0
       }
     }
+  }
+
+  /** The loudest sample so far, either way from zero. */
+  get peak(): number {
+    let peak = 0
+    for (const v of this.pairs) peak = Math.max(peak, Math.abs(v))
+    return peak
   }
 
   get bucketCount(): number {
@@ -44,6 +53,14 @@ export class PeakAccumulator {
     return out
   }
 }
+
+// A waveform is drawn to fill its lane at its own loudest moment, so a vocal recorded
+// with healthy headroom (peaking around -12 dB) reads as clearly as mastered music
+// that peaks at 0 dB. Quieter than this peak it's mostly room noise: not blown up.
+const QUIETEST_FILLED_PEAK = dbToGain(-30)
+
+/** How much to enlarge a waveform whose loudest moment is `peak`, for drawing only. */
+export const waveScale = (peak: number): number => 1 / Math.max(peak, QUIETEST_FILLED_PEAK)
 
 // ~5 ms per bucket at 48 kHz: fine enough for any zoom the timeline offers, and a
 // 3-minute song is only ~34k buckets to redraw from while dragging.

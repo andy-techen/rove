@@ -106,6 +106,14 @@ describe('PolishPanel', () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ enabled: false }))
   })
 
+  it('says what the switch will do from where it is', async () => {
+    renderPanel({ ...defaultPolish('lead'), enabled: false })
+    await userEvent.hover(screen.getByRole('switch', { name: t('polish.switchLabel') }))
+    await waitFor(() =>
+      expect(screen.getByRole('tooltip')).toHaveTextContent(t('polish.turnOnTitle'))
+    )
+  })
+
   it('puts one control back to its suggested value', async () => {
     const onChange = renderPanel({ ...defaultPolish('lead'), clarity: 0.9, space: 0.1 })
     const name = t('polish.controls.clarity.label')

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ChordSegment } from '../../audio/music/chords'
-import { eventsFor, guitarNotes, strumEvents } from './strum'
+import { eventsFor, guitarNotes } from './strum'
 
 const C = { root: 0, quality: 'major' } as const
 const G = { root: 7, quality: 'major' } as const
@@ -15,7 +15,7 @@ const twoBars = (
 
 describe('strumEvents', () => {
   it('strums down, down-up, up-down-up in every bar of four', () => {
-    const events = strumEvents(twoBars())
+    const events = eventsFor(twoBars())
     expect(events.slice(0, 6).map((e) => [e.time, e.direction])).toEqual([
       [0, 'down'],
       [1, 'down'],
@@ -28,14 +28,14 @@ describe('strumEvents', () => {
   })
 
   it('plays each chord in its own bar, and strikes a new chord harder', () => {
-    const events = strumEvents(twoBars())
+    const events = eventsFor(twoBars())
     const atFour = events.find((e) => e.time === 4)!
     expect(atFour.notes).toEqual(guitarNotes(G))
     expect(atFour.velocity).toBeGreaterThan(events.find((e) => e.time === 5)!.velocity)
   })
 
   it('stays silent where there is no chord yet', () => {
-    const events = strumEvents(
+    const events = eventsFor(
       twoBars([
         { start: 0, end: 4, chord: null },
         { start: 4, end: 8, chord: G }
@@ -45,7 +45,7 @@ describe('strumEvents', () => {
   })
 
   it('strums only the top strings on the way up, high to low', () => {
-    const up = strumEvents(twoBars()).find((e) => e.direction === 'up')!
+    const up = eventsFor(twoBars()).find((e) => e.direction === 'up')!
     expect(up.notes.every((n) => n.string >= 2)).toBe(true)
     expect(up.notes[0].midi).toBeGreaterThan(up.notes.at(-1)!.midi)
   })
@@ -53,7 +53,7 @@ describe('strumEvents', () => {
   it('counts three to a bar in waltz time', () => {
     const waltz = { ...twoBars(), beatsPerBar: 3, endSec: 6 }
     expect(
-      strumEvents(waltz)
+      eventsFor(waltz)
         .filter((e) => e.time < 3)
         .map((e) => e.time)
     ).toEqual([0, 1, 1.5, 2, 2.5])
@@ -96,7 +96,7 @@ describe('fingerpicking', () => {
 
   it('plays each bar its own way', () => {
     const mixed = eventsFor(twoBars(), ['strum', 'pick'])
-    expect(mixed.filter((e) => e.time < 4)).toEqual(strumEvents(twoBars()).slice(0, 6))
+    expect(mixed.filter((e) => e.time < 4)).toEqual(eventsFor(twoBars()).slice(0, 6))
     expect(mixed.filter((e) => e.time >= 4).every((e) => e.notes.length === 1)).toBe(true)
   })
 })

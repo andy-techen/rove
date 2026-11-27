@@ -2,15 +2,27 @@ import { useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { Recorder, createRecorder, getAudioContext, loadWorklets } from '../../audio/engine/engine'
 import { alignTake } from '../../audio/engine/latency'
+import { MIN_LINE_UP_SEC, musicUnder, takeLag } from '../../audio/engine/lineUp'
+import { balancedMusicVolume } from '../../audio/mix/balance'
 import { Mixer } from '../../audio/mix/mixer'
 import { ScheduledClip, onAllEnded, scheduleClips, stopNodes } from '../../audio/mix/playback'
 import { ClickTrack, scheduleClicks } from '../../audio/mix/click'
 import { encodeWav } from '../../audio/encode/wav'
 import { PeakAccumulator } from '../../audio/mix/peaks'
-import { TrackRole, withRecordedClip } from '../song/project'
+import {
+  Clip,
+  Project,
+  TrackRole,
+  canBalanceMusic,
+  findClip,
+  lineUpClip,
+  withMusicVolume,
+  withRecordedClip
+} from '../song/project'
 import { playbackKey, trackMixes } from '../song/selectors'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
 import { Song } from '../song/useSong'
+import { showSnack } from '../ui/snackbar'
 import { ChordPart } from '../chords/chart'
 import { ClickGrid, clickTimes, countInSec, countInTicks } from './metronome'
 
@@ -40,7 +52,6 @@ interface Session {
   recordTrackId?: string
 }
 
-/** Stops everything a run scheduled: its clips and its clicks. */
 /** Stops a session's audio now, or at `atTime` on the audio clock. */
 function endSession(s: Session, atTime?: number): void {
   stopNodes(s.nodes, atTime)
@@ -51,6 +62,13 @@ function endSession(s: Session, atTime?: number): void {
 export interface Metronome {
   grid: ClickGrid | null
   level: number
+}
+
+/** A just-recorded take that sits off the beat, and how far (seconds; positive is late). */
+export interface LineUp {
+  trackId: string
+  clipId: string
+  bySec: number
 }
 
 export interface Transport {
@@ -76,6 +94,12 @@ export interface Transport {
   seek(sec: number): void
   record(trackId: string): Promise<void>
   stop(): Promise<void>
+  /** Drops the take being recorded, unsaved, and starts it again from the same place. */
+  restartTake(): Promise<void>
+  /** The last take sits off the music; null when it's in time or unclear. */
+  lineUp: LineUp | null
+  /** Moves that take into time, and teaches the delay to later takes. */
+  applyLineUp(): void
   retrySave(): Promise<void>
   discardPending(): void
 }
@@ -103,9 +127,12 @@ export function useTransport(
     parts,
     waiting,
     metronome,
-    outLoud
+    outLoud,
+    onLinedUp
   }: {
     latencySec: number
+    /** A take was lined up by this much: later takes on this setup should be too. */
+    onLinedUp?(bySec: number): void
     /** Sound plays through speakers: the mic isn't played back, or it would howl. */
     outLoud: boolean
     processed: ProcessedAudio
@@ -124,6 +151,7 @@ export function useTransport(
   const [pending, setPending] = useState<PendingTake | null>(null)
   const [recorder, setRecorder] = useState<Recorder | null>(null)
   const [live, setLive] = useState<LiveTake | null>(null)
+  const [offBeat, setOffBeat] = useState<LineUp | null>(null)
   const [masterVolume, setMasterVolume] = useState(1)
   const [masterMuted, setMasterMuted] = useState(false)
   const session = useRef<Session | null>(null)
@@ -285,16 +313,76 @@ export function useTransport(
     setMode('idle')
   }
 
+  /** The take's stretch of the take and of the music under it, as mono samples. */
+  const takeAndMusic = (
+    trackId: string,
+    clip: Pick<Clip, 'start' | 'offset' | 'duration'>,
+    audio: AudioBuffer,
+    roles: TrackRole[]
+  ): { voice: Float32Array; music: Float32Array; sampleRate: number } | null => {
+    const clips = roles.flatMap((role) =>
+      role === 'chords' ? chordClips() : clipsOf(role, trackId)
+    )
+    if (clips.length === 0) return null
+    const { sampleRate } = audio
+    const from = Math.round(clip.offset * sampleRate)
+    const length = Math.min(audio.length - from, Math.round(clip.duration * sampleRate))
+    return {
+      voice: audio.getChannelData(0).subarray(from, from + length),
+      music: musicUnder(clips, clip.start, length, sampleRate),
+      sampleRate
+    }
+  }
+
+  /**
+   * A first take over untouched music sets the music's volume so the voice sits on top,
+   * instead of leaving the singer to find it (and to reach for the Mac's volume).
+   */
+  const withBalance = (
+    project: Project,
+    trackId: string,
+    clip: Pick<Clip, 'start' | 'offset' | 'duration'>,
+    audio: AudioBuffer
+  ): Project | null => {
+    if (!canBalanceMusic(project, trackId)) return null
+    const heard = takeAndMusic(trackId, clip, audio, ['backing'])
+    const volume = heard && balancedMusicVolume(heard.voice, heard.music, heard.sampleRate)
+    return typeof volume === 'number' ? withMusicVolume(project, volume) : null
+  }
+
+  /** Checks a new take against the music under it, and offers to line it up if it's off. */
+  const checkTiming = async (
+    trackId: string,
+    clip: Pick<Clip, 'id' | 'start' | 'offset' | 'duration'>,
+    audio: AudioBuffer
+  ): Promise<void> => {
+    const heard = takeAndMusic(trackId, clip, audio, ['backing', 'chords'])
+    if (!heard) return
+    const { voice, music, sampleRate } = heard
+    const lag = await takeLag({ channels: [voice], sampleRate }, { channels: [music], sampleRate })
+    if (lag !== null && Math.abs(lag) >= MIN_LINE_UP_SEC) {
+      setOffBeat({ trackId, clipId: clip.id, bySec: lag })
+    }
+  }
+
   const persistTake = async (take: PendingTake): Promise<void> => {
     if (!open) return
     let file = take.file
     try {
       file ??= await window.api.saveTake(open.dir, take.wav)
-      const placed = alignTake(take.fromSec, take.audio.duration, latencySec)
-      const data = withRecordedClip(open.data, take.trackId, { file, ...placed })
-      await song.saveProject(data, { file, audio: take.audio })
+      const clip = {
+        id: crypto.randomUUID(),
+        file,
+        ...alignTake(take.fromSec, take.audio.duration, latencySec)
+      }
+      const recorded = withRecordedClip(open.data, take.trackId, clip)
+      const balanced = withBalance(recorded, take.trackId, clip, take.audio)
+      await song.saveProject(balanced ?? recorded, { file, audio: take.audio })
       setPending(null)
       setError(null)
+      if (balanced) showSnack(t('transport.balanced'))
+      // Timing is a suggestion on top of a saved take; if the check fails, nothing's lost.
+      checkTiming(take.trackId, clip, take.audio).catch(() => {})
     } catch {
       setPending({ ...take, file })
       setError(t('transport.saveFailed'))
@@ -327,18 +415,19 @@ export function useTransport(
     setMode('idle')
   }
 
-  const record = async (trackId: string): Promise<void> => {
+  const record = async (trackId: string, from?: number): Promise<void> => {
     if (!recorder || !open) return
     const ctx = getAudioContext()
     await ctx.resume()
     setStatus(null)
     setError(null)
+    setOffBeat(null)
     const { grid, level } = metronome
     // Pressed while the song plays: the music carries straight on into the take, so the
     // singer comes in where they heard it. Playback hands over on the frame the take
     // starts, and there's no count-in: they're already in the song.
     const playing = mode === 'playing' ? session.current : null
-    let fromSec = position
+    let fromSec = from ?? position
     let countIn = 0
     let startAt: number
     if (playing) {
@@ -377,6 +466,17 @@ export function useTransport(
     }
     setLive({ trackId, startSec: fromSec, peaks })
     setMode('recording')
+  }
+
+  const restartTake = async (): Promise<void> => {
+    const s = session.current
+    if (mode !== 'recording' || !s?.recordTrackId || !recorder) return
+    endSession(s)
+    session.current = null
+    setLive(null)
+    // The take so far only lives in memory: it's let go without ever being written.
+    await recorder.stop()
+    await record(s.recordTrackId, s.fromSec)
   }
 
   // Playback ending naturally pauses at the end; the music ending stops a take.
@@ -471,6 +571,17 @@ export function useTransport(
     },
     record,
     stop,
+    restartTake,
+    // Gone once its clip is (undone, deleted or recorded over).
+    lineUp:
+      offBeat && project && findClip(project, offBeat.trackId, offBeat.clipId) ? offBeat : null,
+    applyLineUp: () => {
+      if (!offBeat || !project) return
+      song.edit(lineUpClip(project, offBeat.trackId, offBeat.clipId, offBeat.bySec))
+      onLinedUp?.(offBeat.bySec)
+      setOffBeat(null)
+      showSnack(t('transport.lineUp.done'))
+    },
     retrySave: async () => {
       if (pending) await persistTake(pending)
     },
