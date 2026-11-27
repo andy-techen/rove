@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import type { TakeRef, TakeSummary, VoiceCacheEntry } from '@shared/voice'
+import {
+  VOICE_ANALYSIS_VERSION,
+  type TakeRef,
+  type TakeSummary,
+  type VoiceCacheEntry
+} from '@shared/voice'
 import { Entry, summariseInWorker } from '../../audio/voice'
 
 export type VoiceProfileState =
@@ -47,7 +52,14 @@ export function useVoiceProfile(): VoiceProfileState {
         const kept = new Map<string, VoiceCacheEntry>()
         for (const { ref, summary } of entries) {
           const { folder, file, offsetSec, durationSec } = ref
-          kept.set(keyOf(ref), { folder, file, offsetSec, durationSec, summary })
+          kept.set(keyOf(ref), {
+            folder,
+            file,
+            offsetSec,
+            durationSec,
+            version: VOICE_ANALYSIS_VERSION,
+            summary
+          })
         }
         await voice.saveCache([...kept.values()])
         if (!cancelled) setState({ status: 'ready', entries })

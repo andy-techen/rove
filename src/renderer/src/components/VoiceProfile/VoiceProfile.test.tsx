@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
-import type { VoiceCacheEntry } from '@shared/voice'
+import { VOICE_ANALYSIS_VERSION, type VoiceCacheEntry } from '@shared/voice'
 import type { Entry } from '../../audio/voice'
 import { sungEntry } from '../../state/voice/testEntries'
 import { singingTime } from '../../state/voice/voiceText'
@@ -18,6 +18,7 @@ function renderWith(entries: Entry[]) {
     file: ref.file,
     offsetSec: ref.offsetSec,
     durationSec: ref.durationSec,
+    version: VOICE_ANALYSIS_VERSION,
     summary
   }))
   vi.mocked(window.api.voice.listTakes).mockResolvedValue(entries.map((e) => e.ref))

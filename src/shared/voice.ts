@@ -47,12 +47,19 @@ export interface TakeRef {
   recordedAt: number
 }
 
+/**
+ * Which way of listening made a summary. Raise it when summariseTake changes what it
+ * measures, so takes summarised the old way are listened to again.
+ */
+export const VOICE_ANALYSIS_VERSION = 2
+
 /** A take window's summary, kept so it's never analysed twice. */
 export interface VoiceCacheEntry {
   folder: string
   file: string
   offsetSec: number
   durationSec: number
+  version: number
   summary: TakeSummary
 }
 
@@ -170,6 +177,7 @@ export function parseVoiceCache(raw: unknown): VoiceCacheEntry[] {
       continue
     }
     if (!isSeconds(e.offsetSec) || !isSeconds(e.durationSec)) continue
+    if (e.version !== VOICE_ANALYSIS_VERSION) continue
     const summary = parseSummary(e.summary)
     if (!summary) continue
     entries.push({
@@ -177,6 +185,7 @@ export function parseVoiceCache(raw: unknown): VoiceCacheEntry[] {
       file: e.file,
       offsetSec: e.offsetSec,
       durationSec: e.durationSec,
+      version: VOICE_ANALYSIS_VERSION,
       summary
     })
   }

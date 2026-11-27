@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { LANDING_BINS, TakeSummary, parseVoiceCache, vocalClipsOf } from './voice'
+import {
+  LANDING_BINS,
+  TakeSummary,
+  VOICE_ANALYSIS_VERSION,
+  parseVoiceCache,
+  vocalClipsOf
+} from './voice'
 
 const clip = (file: string, offset = 0, duration = 4) => ({
   id: file,
@@ -69,6 +75,7 @@ const entry = (overrides: Record<string, unknown> = {}) => ({
   file: 'audio/take-001.wav',
   offsetSec: 0,
   durationSec: 5,
+  version: VOICE_ANALYSIS_VERSION,
   summary: summary(),
   ...overrides
 })
@@ -96,7 +103,9 @@ describe('parseVoiceCache', () => {
       'no recorded length (saved before it was measured)',
       entry({ summary: { ...summary(), recordedSec: undefined } })
     ],
-    ['no summary', entry({ summary: null })]
+    ['no summary', entry({ summary: null })],
+    ['an older way of listening', entry({ version: VOICE_ANALYSIS_VERSION - 1 })],
+    ['no version (saved before versions)', entry({ version: undefined })]
   ])('drops an entry with %s', (_name, bad) => {
     expect(parseVoiceCache([bad, entry()])).toEqual([entry()])
   })

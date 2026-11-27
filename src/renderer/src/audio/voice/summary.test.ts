@@ -13,6 +13,15 @@ const voice = (hz: number, seconds: number): Float32Array =>
     const t = (2 * Math.PI * hz * i) / SR
     return 0.25 * Math.sin(t) + 0.12 * Math.sin(2 * t) + 0.06 * Math.sin(3 * t)
   })
+/** A smooth slide from one pitch to another, as when a singer glides between notes. */
+const glide = (fromHz: number, toHz: number, seconds: number): Float32Array => {
+  let phase = 0
+  return Float32Array.from({ length: Math.round(seconds * SR) }, (_, i) => {
+    const at = i / (seconds * SR)
+    phase += (2 * Math.PI * fromHz * Math.pow(toHz / fromHz, at)) / SR
+    return 0.25 * Math.sin(phase) + 0.12 * Math.sin(2 * phase) + 0.06 * Math.sin(3 * phase)
+  })
+}
 const silence = (seconds: number): Float32Array => new Float32Array(Math.round(seconds * SR))
 const join = (...parts: Float32Array[]): Float32Array => {
   const out = new Float32Array(parts.reduce((n, p) => n + p.length, 0))
@@ -20,6 +29,13 @@ const join = (...parts: Float32Array[]): Float32Array => {
   return out
 }
 const whole = { offsetSec: 0, durationSec: 0 }
+const held = (landing: number[]): number => landing.reduce((a, b) => a + b, 0)
+/** The cents each landed note sits at, by the middle of its bin. */
+const landedCents = (landing: number[]): number[] =>
+  landing.flatMap((n, i) =>
+    Array<number>(n).fill(-LANDING_RANGE_CENTS + (i + 0.5) * LANDING_BIN_CENTS)
+  )
+const C4 = 60
 const notes = (noteSec: Record<number, number>): number[] => Object.keys(noteSec).map(Number)
 
 describe('summariseTake', () => {
@@ -60,12 +76,40 @@ describe('summariseTake', () => {
     ).toEqual([A3])
   })
 
-  it('bins a note sung 15 cents sharp by where it lands', async () => {
-    const { landing } = await summariseTake(voice(midiToHz(A3 + 0.15), 0.5), SR, whole)
-    const bin = landing.findIndex((n) => n > 0)
-    expect(landing.reduce((a, b) => a + b)).toBe(1)
-    const centre = -LANDING_RANGE_CENTS + (bin + 0.5) * LANDING_BIN_CENTS
-    expect(Math.abs(centre - 15)).toBeLessThanOrEqual(LANDING_BIN_CENTS)
+  it('bins a note by how far it lands from the rest of the take', async () => {
+    const gap = silence(0.2)
+    const take = join(
+      ...[A3, C4, E4].flatMap((n) => [voice(midiToHz(n), 0.5), gap]),
+      voice(midiToHz(A3 + 0.2), 0.5)
+    )
+    const cents = landedCents((await summariseTake(take, SR, whole)).landing)
+    expect(cents).toHaveLength(4)
+    const spread = Math.max(...cents) - Math.min(...cents)
+    expect(Math.abs(spread - 20)).toBeLessThanOrEqual(LANDING_BIN_CENTS)
+  })
+
+  it("measures held notes against the take's own tuning, not A440", async () => {
+    const detuned = (n: number) => voice(midiToHz(n + 0.35), 0.5)
+    const take = join(detuned(A3), silence(0.2), detuned(C4), silence(0.2), detuned(E4))
+    const cents = landedCents((await summariseTake(take, SR, whole)).landing)
+    expect(cents).toHaveLength(3)
+    for (const c of cents) expect(Math.abs(c)).toBeLessThanOrEqual(LANDING_BIN_CENTS)
+  })
+
+  it('does not count a slide as a held note', async () => {
+    const { landing } = await summariseTake(glide(midiToHz(A3), midiToHz(E4), 1), SR, whole)
+    expect(held(landing)).toBe(0)
+  })
+
+  it('splits notes joined by a slide and measures each on its own', async () => {
+    const take = join(
+      voice(midiToHz(A3), 0.5),
+      glide(midiToHz(A3), midiToHz(E4), 0.25),
+      voice(midiToHz(E4), 0.5)
+    )
+    const cents = landedCents((await summariseTake(take, SR, whole)).landing)
+    expect(cents).toHaveLength(2)
+    for (const c of cents) expect(Math.abs(c)).toBeLessThanOrEqual(LANDING_BIN_CENTS)
   })
 
   it('sums tone over the sung moments only', async () => {

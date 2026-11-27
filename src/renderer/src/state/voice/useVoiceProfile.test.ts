@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { VoiceCacheEntry } from '@shared/voice'
+import { VOICE_ANALYSIS_VERSION, type VoiceCacheEntry } from '@shared/voice'
 import { summariseInWorker } from '../../audio/voice'
 import { sungEntry } from './testEntries'
 import { useVoiceProfile } from './useVoiceProfile'
@@ -14,6 +14,7 @@ const cacheOf = ({ ref, summary }: typeof cached): VoiceCacheEntry => ({
   file: ref.file,
   offsetSec: ref.offsetSec,
   durationSec: ref.durationSec,
+  version: VOICE_ANALYSIS_VERSION,
   summary
 })
 
