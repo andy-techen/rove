@@ -38,6 +38,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
 
       # A run started on GitHub checks the version is new before spending time on a build.
       - name: Check the version is new
@@ -50,6 +53,10 @@ jobs:
           fi
 
       - run: npm ci
+
+      # The website's tests run with the app's, and their tsconfig extends Astro's.
+      - run: npm ci
+        working-directory: site
 
       - name: Check
         run: |
