@@ -33,6 +33,8 @@ export const STROKE_ICONS = {
   reset: 'M4 4v5h5M5.1 15a7.5 7.5 0 1 0 1.6-7.8L4 9',
   // An arrow meeting a line: move the take onto the beat.
   lineUp: 'M5 4v16M19 12H9M13 8l-4 4 4 4',
+  // Two voices starting together at one line: a harmony synced to the lead.
+  syncHarmony: 'M5 4v16M9 8h10M9 16h6',
   // Going round again, with the record dot inside: sing this take again.
   retake: 'M4 4v5h5M5.1 15a7.5 7.5 0 1 0 1.6-7.8L4 9M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4z',
   tune: 'M4 6h9M17 6h3M15 4v4M4 12h3M11 12h9M9 10v4M4 18h11M19 18h1M17 16v4',

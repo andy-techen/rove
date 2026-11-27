@@ -835,9 +835,9 @@ export function RecordScreen({
             onRecord={(id) => void transport.record(id)}
             onStop={() => void transport.stop()}
             onRestartTake={() => void transport.restartTake()}
-            lineUp={transport.lineUp}
-            onLineUp={transport.applyLineUp}
-            onDismissLineUp={transport.dismissLineUp}
+            offer={transport.offer}
+            onApplyOffer={transport.applyOffer}
+            onDismissOffer={transport.dismissOffer}
             canEdit={canEdit}
             skipBacking={skipBacking}
             onRecordWithoutMusic={song.recordWithoutMusic}

@@ -6,6 +6,7 @@ import {
   MIN_CLIP_SEC,
   canBalanceMusic,
   lineUpClip,
+  syncPhrases,
   withMusicVolume,
   deleteClip,
   moveClip,
@@ -137,6 +138,53 @@ describe('lineUpClip', () => {
     expect(c.start).toBe(0)
     expect(c.offset).toBeCloseTo(0.15)
     expect(c.duration).toBeCloseTo(29.85)
+  })
+})
+
+describe('syncPhrases', () => {
+  const harmony = (start: number) => {
+    const p = withNewTrack(createProject('Song', 48000), 'vocal', { part: 'harmony' }).project
+    const id = p.tracks[1].id
+    return {
+      id,
+      p: withRecordedClip(p, id, { id: 'take', file: 'h.wav', start, offset: 0, duration: 10 })
+    }
+  }
+  const phrase = (from: number, to: number, bySec: number) => ({ from, to, bySec })
+
+  it('cuts the take halfway through each pause and moves each phrase to meet the lead', () => {
+    const { p, id } = harmony(10)
+    const phrases = [phrase(1, 3, 0.1), phrase(5, 7, -0.05), phrase(8, 9, 0)]
+    const clips = syncPhrases(p, id, 'take', phrases).tracks[1].clips
+    const rounded = spans(clips).map((s) =>
+      s.map((v) => (typeof v === 'number' ? +v.toFixed(3) : v))
+    )
+    expect(rounded).toEqual([
+      ['h.wav', 9.9, 0, 4],
+      ['h.wav', 14.05, 4, 3.5],
+      ['h.wav', 17.55, 7.55, 2.45]
+    ])
+  })
+
+  it('keeps the phrases together as one group', () => {
+    const { p, id } = harmony(10)
+    const clips = syncPhrases(p, id, 'take', [phrase(1, 3, 0.1), phrase(5, 7, 0)]).tracks[1].clips
+    expect(clips[0].group).toBeDefined()
+    expect(clips[1].group).toBe(clips[0].group)
+  })
+
+  it('gives up the quiet before a phrase rather than overlap the one before it', () => {
+    const { p, id } = harmony(10)
+    const phrases = [phrase(1, 3, -0.2), phrase(3.3, 5, 0.2)]
+    const [first, second] = syncPhrases(p, id, 'take', phrases).tracks[1].clips
+    expect(second.start).toBeCloseTo(first.start + first.duration)
+    expect(second.offset).toBeCloseTo(3.55)
+  })
+
+  it('trims what would land before the song starts, keeping the rest in time', () => {
+    const { p, id } = harmony(0.05)
+    const [c] = syncPhrases(p, id, 'take', [phrase(0, 2, 0.1), phrase(4, 6, 0)]).tracks[1].clips
+    expect([c.start, c.offset]).toEqual([0, expect.closeTo(0.05)])
   })
 })
 

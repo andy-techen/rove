@@ -7,10 +7,19 @@ import { useClipPointer } from './useClipPointer'
 import { cx } from '../ui/cx'
 import { Button } from '../ui/Button'
 import { IconButton } from '../ui/IconButton'
+import type { IconName } from '../ui/Icon'
 import { Tooltip } from '../ui/Tooltip'
 import { Waveform } from './Waveform'
 
 export type GesturePhase = 'start' | 'move' | 'end'
+
+export interface ClipOffer {
+  label: string
+  icon: IconName
+  title: string
+  onApply(): void
+  onDismiss(): void
+}
 
 export interface Props {
   clip: ClipShape
@@ -25,8 +34,8 @@ export interface Props {
   /** Dragged this far up or down (px) towards another lane; null when not lifted. */
   liftY: number | null
   editable: boolean
-  /** Offers to line a just-recorded take up with the music, on the clip itself. */
-  lineUp?: { title: string; onApply(): void; onDismiss(): void } | null
+  /** Offers to fix a just-recorded take's timing (line up, sync), on the clip itself. */
+  offer?: ClipOffer | null
   /** Pressed: on its own, or ⌘/⇧ to add it to the selection. */
   onSelect(mode: SelectMode): void
   /**
@@ -52,7 +61,7 @@ export function ClipView({
   selected,
   liftY,
   editable,
-  lineUp,
+  offer,
   onSelect,
   onGesture
 }: Props): React.JSX.Element {
@@ -103,9 +112,9 @@ export function ClipView({
           {fadeOutPx > 0 && <line x1={width - fadeOutPx} y1={0} x2={width} y2={height} />}
         </svg>
       )}
-      {lineUp && visibleTo > visibleFrom && (
+      {offer && visibleTo > visibleFrom && (
         <span
-          className="clip-line-up"
+          className="clip-offer"
           // Runtime geometry: keeps the offer in view when the clip starts off screen.
           style={{ '--from': `${visibleFrom}px` } as CSSProperties}
           // Pressing the offer isn't the start of a drag or a click on the clip.
@@ -115,17 +124,17 @@ export function ClipView({
           <Button
             variant="quiet"
             size="sm"
-            icon="lineUp"
-            title={lineUp.title}
-            onClick={lineUp.onApply}
+            icon={offer.icon}
+            title={offer.title}
+            onClick={offer.onApply}
           >
-            {t('transport.lineUp.apply')}
+            {offer.label}
           </Button>
           <IconButton
             icon="close"
             iconSize="secondary"
-            label={t('transport.lineUp.dismiss')}
-            onClick={lineUp.onDismiss}
+            label={t('transport.keepTake')}
+            onClick={offer.onDismiss}
           />
         </span>
       )}

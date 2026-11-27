@@ -420,30 +420,43 @@ describe('Timeline', () => {
     expect(screen.getByRole('button', { name: t('timeline.addInstrumental') })).toBeEnabled()
   })
 
+  const take = {
+    id: 'c1',
+    start: 10,
+    offset: 0,
+    duration: 30,
+    fadeIn: 0,
+    fadeOut: 0,
+    audio: null,
+    joinedBefore: false,
+    joinedAfter: false
+  }
+
   it('offers to line up a late take on its clip, or leave it', async () => {
-    const take = {
-      id: 'c1',
-      start: 10,
-      offset: 0,
-      duration: 30,
-      fadeIn: 0,
-      fadeOut: 0,
-      audio: null,
-      joinedBefore: false,
-      joinedAfter: false
-    }
-    const onLineUp = vi.fn()
-    const onDismissLineUp = vi.fn()
+    const onApplyOffer = vi.fn()
+    const onDismissOffer = vi.fn()
     renderTimeline({
       tracks: [lane({ clips: [take] })],
-      lineUp: { trackId: 'v1', clipId: 'c1', bySec: 0.14 },
-      onLineUp,
-      onDismissLineUp
+      offer: { kind: 'lineUp', trackId: 'v1', clipId: 'c1', bySec: 0.14 },
+      onApplyOffer,
+      onDismissOffer
     })
     await userEvent.click(screen.getByRole('button', { name: t('transport.lineUp.apply') }))
-    expect(onLineUp).toHaveBeenCalled()
-    await userEvent.click(screen.getByRole('button', { name: t('transport.lineUp.dismiss') }))
-    expect(onDismissLineUp).toHaveBeenCalled()
+    expect(onApplyOffer).toHaveBeenCalled()
+    await userEvent.click(screen.getByRole('button', { name: t('transport.keepTake') }))
+    expect(onDismissOffer).toHaveBeenCalled()
+  })
+
+  it('offers to sync a harmony take with the lead on its clip', async () => {
+    const onApplyOffer = vi.fn()
+    const phrases = [{ from: 1, to: 3, bySec: 0.1 }]
+    renderTimeline({
+      tracks: [lane({ clips: [take] })],
+      offer: { kind: 'syncHarmony', trackId: 'v1', clipId: 'c1', phrases },
+      onApplyOffer
+    })
+    await userEvent.click(screen.getByRole('button', { name: t('transport.harmonySync.apply') }))
+    expect(onApplyOffer).toHaveBeenCalled()
   })
 
   it('redoes the take being recorded from its own lane', async () => {

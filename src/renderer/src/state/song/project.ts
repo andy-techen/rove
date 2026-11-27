@@ -543,6 +543,63 @@ export function lineUpClip(
   ])
 }
 
+/**
+ * Brings a harmony in time with the lead phrase by phrase: cuts the clip halfway through
+ * each pause and slides each piece `bySec` earlier (later when negative). `phrases` are
+ * in seconds from the clip's start, in order. The pieces stay one group, so the take
+ * still moves as one. Where two pieces would meet, the later one gives up the quiet at
+ * its start; as with lining up, what would land before the song starts is trimmed off.
+ */
+export function syncPhrases(
+  project: Project,
+  trackId: string,
+  clipId: string,
+  phrases: { from: number; to: number; bySec: number }[]
+): Project {
+  const clip = findClip(project, trackId, clipId)
+  if (!clip || phrases.length === 0) return project
+  const group = phrases.length > 1 ? (clip.group ?? crypto.randomUUID()) : clip.group
+  const cuts = phrases.slice(1).map((p, i) => (phrases[i].to + p.from) / 2)
+  const edges = [0, ...cuts, clip.duration]
+  const pieces: Clip[] = []
+  let earliest = 0
+  phrases.forEach((p, i) => {
+    let from = edges[i]
+    let start = clip.start + from - p.bySec
+    if (start < earliest) {
+      from += earliest - start
+      start = earliest
+    }
+    const duration = edges[i + 1] - from
+    if (duration < MIN_CLIP_SEC) return
+    pieces.push({
+      ...clip,
+      id: i === 0 ? clip.id : crypto.randomUUID(),
+      start,
+      offset: clip.offset + from,
+      duration,
+      fadeIn: i === 0 ? clip.fadeIn : 0,
+      fadeOut: i === phrases.length - 1 ? clip.fadeOut : 0,
+      ...(group ? { group } : {})
+    })
+    earliest = start + duration
+  })
+  return {
+    ...project,
+    tracks: project.tracks.map((t) =>
+      t.id === trackId
+        ? {
+            ...t,
+            clips: pieces.reduce(
+              insertClip,
+              t.clips.filter((c) => c.id !== clipId)
+            )
+          }
+        : t
+    )
+  }
+}
+
 /** Moves a clip's right edge, up to the end of its audio file. */
 export function trimClipEnd(
   project: Project,

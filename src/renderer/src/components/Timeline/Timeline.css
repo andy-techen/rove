@@ -590,7 +590,7 @@
 
 /* The line-up offer sits on its take, top left, clear of the trim edge. On the clip's
    colour the quiet fill wouldn't show, so it takes the raised surface's. */
-.clip-line-up {
+.clip-offer {
   position: absolute;
   display: flex;
   align-items: center;

@@ -94,12 +94,17 @@
     "recorderFailed": "Couldn't start the recorder.",
     "engineFailed": "Couldn't start the audio engine.",
     "balanced": "Set the music under your voice. Change it any time with the track's volume.",
+    "keepTake": "Keep this take as it is",
     "lineUp": {
       "apply": "Line up",
-      "dismiss": "Keep this take as it is",
       "late": "A little behind the music: line it up",
       "early": "A little ahead of the music: line it up",
       "done": "Lined up. Your next takes will land in time too."
+    },
+    "harmonySync": {
+      "apply": "Sync to lead",
+      "title": "A few phrases land apart from your lead: sync them up",
+      "done": "In sync with your lead."
     }
   },
   "timeline": {

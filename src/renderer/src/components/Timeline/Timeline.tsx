@@ -19,7 +19,7 @@ import { Button } from '../ui/Button'
 import { IconButton } from '../ui/IconButton'
 import { Tooltip } from '../ui/Tooltip'
 import { cx } from '../ui/cx'
-import { ClipView, GesturePhase } from './ClipView'
+import { ClipOffer, ClipView, GesturePhase } from './ClipView'
 import { ClipBlockView } from './ClipBlockView'
 import { AddChoice, AddTrackRow } from './AddTrackRow'
 import { TrackHeader } from './TrackHeader'
@@ -30,7 +30,7 @@ import { SelectMode, selectMode } from '../../state/editing/trackSelection'
 import { MixChange, TrackMix } from './TrackMix'
 import { LiveWaveform } from './Waveform'
 import { PeakAccumulator } from './timelineMath'
-import type { LineUp } from '../../state/transport/useTransport'
+import type { TakeOffer } from '../../state/transport/useTransport'
 import { useTimelineView } from './useTimelineView'
 import './Timeline.css'
 
@@ -61,10 +61,10 @@ interface Props {
   onRecord(trackId: string): void
   onStop(): void
   onRestartTake(): void
-  /** A just-recorded take that sits off the music; offered on its clip. */
-  lineUp?: LineUp | null
-  onLineUp?(): void
-  onDismissLineUp?(): void
+  /** A just-recorded take whose timing Rove can fix (line up, sync); offered on its clip. */
+  offer?: TakeOffer | null
+  onApplyOffer?(): void
+  onDismissOffer?(): void
   /** Tracks, clips and mix can be changed (not while recording or saving). */
   canEdit: boolean
   /** The singer chose to record without a backing track. */
@@ -123,6 +123,22 @@ interface Props {
   onLaneClick(trackId: string): void
 }
 
+/** How a take offer reads on its clip. */
+function offerCopy(offer: TakeOffer): Pick<ClipOffer, 'label' | 'icon' | 'title'> {
+  if (offer.kind === 'syncHarmony') {
+    return {
+      label: t('transport.harmonySync.apply'),
+      icon: 'syncHarmony',
+      title: t('transport.harmonySync.title')
+    }
+  }
+  return {
+    label: t('transport.lineUp.apply'),
+    icon: 'lineUp',
+    title: offer.bySec > 0 ? t('transport.lineUp.late') : t('transport.lineUp.early')
+  }
+}
+
 const LANE_HEIGHT = 88
 // Pointer travel below this is a click on the timeline, not the start of a box.
 const BOX_THRESHOLD_PX = 4
@@ -147,9 +163,9 @@ export function Timeline({
   onRecord,
   onStop,
   onRestartTake,
-  lineUp,
-  onLineUp,
-  onDismissLineUp,
+  offer,
+  onApplyOffer,
+  onDismissOffer,
   canEdit,
   skipBacking,
   onRecordWithoutMusic,
@@ -625,13 +641,12 @@ export function Timeline({
                 includesClip(selectedClips, { trackId: track.id, clipId: c.id }) ? liftY : null
               }
               editable={canEdit && !isRecording}
-              lineUp={
-                canEdit && onLineUp && lineUp?.trackId === track.id && lineUp.clipId === c.id
+              offer={
+                canEdit && onApplyOffer && offer?.trackId === track.id && offer.clipId === c.id
                   ? {
-                      title:
-                        lineUp.bySec > 0 ? t('transport.lineUp.late') : t('transport.lineUp.early'),
-                      onApply: onLineUp,
-                      onDismiss: () => onDismissLineUp?.()
+                      ...offerCopy(offer),
+                      onApply: onApplyOffer,
+                      onDismiss: () => onDismissOffer?.()
                     }
                   : null
               }

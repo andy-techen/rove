@@ -3,6 +3,7 @@ import { t } from '@shared/copy'
 import { Recorder, createRecorder, getAudioContext, loadWorklets } from '../../audio/engine/engine'
 import { alignTake } from '../../audio/engine/latency'
 import { MIN_LINE_UP_SEC, musicUnder, takeLag } from '../../audio/engine/lineUp'
+import { PhraseTiming, harmonyTiming } from '../../audio/engine/harmonySync'
 import { balancedMusicVolume } from '../../audio/mix/balance'
 import { Mixer } from '../../audio/mix/mixer'
 import { ScheduledClip, onAllEnded, scheduleClips, stopNodes } from '../../audio/mix/playback'
@@ -12,10 +13,12 @@ import { PeakAccumulator } from '../../audio/mix/peaks'
 import {
   Clip,
   Project,
+  Track,
   TrackRole,
   canBalanceMusic,
   findClip,
   lineUpClip,
+  syncPhrases,
   withMusicVolume,
   withRecordedClip
 } from '../song/project'
@@ -64,12 +67,13 @@ export interface Metronome {
   level: number
 }
 
-/** A just-recorded take that sits off the beat, and how far (seconds; positive is late). */
-export interface LineUp {
-  trackId: string
-  clipId: string
-  bySec: number
-}
+/**
+ * A just-recorded take whose timing Rove can fix: one off the beat, by how far (seconds;
+ * positive is late), or a harmony whose phrases land apart from the lead's.
+ */
+export type TakeOffer = { trackId: string; clipId: string } & (
+  { kind: 'lineUp'; bySec: number } | { kind: 'syncHarmony'; phrases: PhraseTiming[] }
+)
 
 export interface Transport {
   mode: Mode
@@ -96,12 +100,15 @@ export interface Transport {
   stop(): Promise<void>
   /** Drops the take being recorded, unsaved, and starts it again from the same place. */
   restartTake(): Promise<void>
-  /** The last take sits off the music; null when it's in time or unclear. */
-  lineUp: LineUp | null
-  /** Moves that take into time, and teaches the delay to later takes. */
-  applyLineUp(): void
+  /** The last take sits off the music or the lead; null when it's in time or unclear. */
+  offer: TakeOffer | null
+  /**
+   * Moves that take into time (lining up also teaches the delay to later takes), or
+   * syncs the harmony's phrases with the lead.
+   */
+  applyOffer(): void
   /** Leaves that take where it is; the offer goes. */
-  dismissLineUp(): void
+  dismissOffer(): void
   retrySave(): Promise<void>
   discardPending(): void
 }
@@ -153,7 +160,7 @@ export function useTransport(
   const [pending, setPending] = useState<PendingTake | null>(null)
   const [recorder, setRecorder] = useState<Recorder | null>(null)
   const [live, setLive] = useState<LiveTake | null>(null)
-  const [offBeat, setOffBeat] = useState<LineUp | null>(null)
+  const [offer, setOffer] = useState<TakeOffer | null>(null)
   const [masterVolume, setMasterVolume] = useState(1)
   const [masterMuted, setMasterMuted] = useState(false)
   const session = useRef<Session | null>(null)
@@ -250,11 +257,15 @@ export function useTransport(
     return () => cancelAnimationFrame(raf)
   }, [mode])
 
-  const clipsOf = (role: TrackRole, excludeTrackId?: string): ScheduledClip[] =>
+  const clipsOf = (
+    role: TrackRole,
+    excludeTrackId?: string,
+    keep: (track: Track) => boolean = () => true
+  ): ScheduledClip[] =>
     !mixer
       ? []
       : (tracks ?? [])
-          .filter((t) => t.role === role && t.id !== excludeTrackId)
+          .filter((t) => t.role === role && t.id !== excludeTrackId && keep(t))
           .flatMap((t) =>
             t.clips.flatMap((c) => {
               const buffer = bufferFor(audio, processed, t.id, c.file)
@@ -353,18 +364,52 @@ export function useTransport(
     return typeof volume === 'number' ? withMusicVolume(project, volume) : null
   }
 
-  /** Checks a new take against the music under it, and offers to line it up if it's off. */
+  /**
+   * A harmony sung over the lead is checked against the lead, phrase by phrase: true when
+   * there was a lead to check against (whether or not anything needs moving).
+   */
+  const checkAgainstLead = (
+    trackId: string,
+    clip: Pick<Clip, 'id' | 'start' | 'offset' | 'duration'>,
+    audio: AudioBuffer
+  ): boolean => {
+    const track = tracks?.find((t) => t.id === trackId)
+    if (track?.role !== 'vocal' || track.part !== 'harmony') return false
+    const lead = clipsOf('vocal', trackId, (t) => t.part !== 'harmony').filter(
+      (c) => c.start < clip.start + clip.duration && c.start + c.duration > clip.start
+    )
+    if (lead.length === 0) return false
+    const { sampleRate } = audio
+    const from = Math.round(clip.offset * sampleRate)
+    const length = Math.min(audio.length - from, Math.round(clip.duration * sampleRate))
+    const harmony = audio.getChannelData(0).subarray(from, from + length)
+    const phrases = harmonyTiming(
+      harmony,
+      musicUnder(lead, clip.start, length, sampleRate),
+      sampleRate
+    )
+    if (phrases) setOffer({ kind: 'syncHarmony', trackId, clipId: clip.id, phrases })
+    return true
+  }
+
+  /**
+   * Checks a new take against what it was sung to, and offers to fix its timing if it's
+   * off: a harmony against the lead, anything else against the music.
+   */
   const checkTiming = async (
     trackId: string,
     clip: Pick<Clip, 'id' | 'start' | 'offset' | 'duration'>,
     audio: AudioBuffer
   ): Promise<void> => {
+    // Syncing with the lead covers any delay the music check would find too, if the lead
+    // is in time; and if it isn't, a harmony should still follow the lead.
+    if (checkAgainstLead(trackId, clip, audio)) return
     const heard = takeAndMusic(trackId, clip, audio, ['backing', 'chords'])
     if (!heard) return
     const { voice, music, sampleRate } = heard
     const lag = await takeLag({ channels: [voice], sampleRate }, { channels: [music], sampleRate })
     if (lag !== null && Math.abs(lag) >= MIN_LINE_UP_SEC) {
-      setOffBeat({ trackId, clipId: clip.id, bySec: lag })
+      setOffer({ kind: 'lineUp', trackId, clipId: clip.id, bySec: lag })
     }
   }
 
@@ -424,7 +469,7 @@ export function useTransport(
     await ctx.resume()
     setStatus(null)
     setError(null)
-    setOffBeat(null)
+    setOffer(null)
     const { grid, level } = metronome
     // Pressed while the song plays: the music carries straight on into the take, so the
     // singer comes in where they heard it. Playback hands over on the frame the take
@@ -576,16 +621,20 @@ export function useTransport(
     stop,
     restartTake,
     // Gone once its clip is (undone, deleted or recorded over).
-    lineUp:
-      offBeat && project && findClip(project, offBeat.trackId, offBeat.clipId) ? offBeat : null,
-    applyLineUp: () => {
-      if (!offBeat || !project) return
-      song.edit(lineUpClip(project, offBeat.trackId, offBeat.clipId, offBeat.bySec))
-      onLinedUp?.(offBeat.bySec)
-      setOffBeat(null)
-      showSnack(t('transport.lineUp.done'))
+    offer: offer && project && findClip(project, offer.trackId, offer.clipId) ? offer : null,
+    applyOffer: () => {
+      if (!offer || !project) return
+      if (offer.kind === 'lineUp') {
+        song.edit(lineUpClip(project, offer.trackId, offer.clipId, offer.bySec))
+        onLinedUp?.(offer.bySec)
+        showSnack(t('transport.lineUp.done'))
+      } else {
+        song.edit(syncPhrases(project, offer.trackId, offer.clipId, offer.phrases))
+        showSnack(t('transport.harmonySync.done'))
+      }
+      setOffer(null)
     },
-    dismissLineUp: () => setOffBeat(null),
+    dismissOffer: () => setOffer(null),
     retrySave: async () => {
       if (pending) await persistTake(pending)
     },
