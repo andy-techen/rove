@@ -590,14 +590,19 @@
 
 /* The line-up offer sits on its take, top left, clear of the trim edge. On the clip's
    colour the quiet fill wouldn't show, so it takes the raised surface's. */
-.clip-offer {
+.take-offer {
   position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  /* Over the clips and the playhead, so it's never cut off or covered. */
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  top: var(--space-2);
-  left: var(--from);
-  margin-left: var(--space-4);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
   --quiet-fill: var(--color-surface);
   --hover-fill: var(--color-highlight);
 }

@@ -19,7 +19,8 @@ import { Button } from '../ui/Button'
 import { IconButton } from '../ui/IconButton'
 import { Tooltip } from '../ui/Tooltip'
 import { cx } from '../ui/cx'
-import { ClipOffer, ClipView, GesturePhase } from './ClipView'
+import { ClipView, GesturePhase } from './ClipView'
+import { TakeOfferBar } from './TakeOfferBar'
 import { ClipBlockView } from './ClipBlockView'
 import { AddChoice, AddTrackRow } from './AddTrackRow'
 import { TrackHeader } from './TrackHeader'
@@ -61,7 +62,7 @@ interface Props {
   onRecord(trackId: string): void
   onStop(): void
   onRestartTake(): void
-  /** A just-recorded take whose timing Rove can fix (line up, sync); offered on its clip. */
+  /** A just-recorded take whose timing Rove can fix (line up, sync); offered on its lane. */
   offer?: TakeOffer | null
   onApplyOffer?(): void
   onDismissOffer?(): void
@@ -121,22 +122,6 @@ interface Props {
   onRenameTrack(trackId: string, name: string): void
   /** An empty spot in a lane was clicked: that track becomes where a paste lands. */
   onLaneClick(trackId: string): void
-}
-
-/** How a take offer reads on its clip. */
-function offerCopy(offer: TakeOffer): Pick<ClipOffer, 'label' | 'icon' | 'title'> {
-  if (offer.kind === 'syncHarmony') {
-    return {
-      label: t('transport.harmonySync.apply'),
-      icon: 'syncHarmony',
-      title: t('transport.harmonySync.title')
-    }
-  }
-  return {
-    label: t('transport.lineUp.apply'),
-    icon: 'lineUp',
-    title: offer.bySec > 0 ? t('transport.lineUp.late') : t('transport.lineUp.early')
-  }
 }
 
 const LANE_HEIGHT = 88
@@ -641,21 +626,19 @@ export function Timeline({
                 includesClip(selectedClips, { trackId: track.id, clipId: c.id }) ? liftY : null
               }
               editable={canEdit && !isRecording}
-              offer={
-                canEdit && onApplyOffer && offer?.trackId === track.id && offer.clipId === c.id
-                  ? {
-                      ...offerCopy(offer),
-                      onApply: onApplyOffer,
-                      onDismiss: () => onDismissOffer?.()
-                    }
-                  : null
-              }
               onSelect={(mode) => onSelect({ trackId: track.id, clipId: c.id }, mode)}
               onGesture={(kind, phase, delta, free, clientY) =>
                 clipGesture({ trackId: track.id, clipId: c.id }, kind, phase, delta, free, clientY)
               }
             />
           ))}
+          {canEdit && onApplyOffer && offer?.trackId === track.id && (
+            <TakeOfferBar
+              offer={offer}
+              onApply={onApplyOffer}
+              onDismiss={() => onDismissOffer?.()}
+            />
+          )}
           {canEdit && track.chords?.[0] && barsGrip(track.chords[0].start)}
           {track.chords?.map((block) => (
             <div

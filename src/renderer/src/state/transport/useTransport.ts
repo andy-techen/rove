@@ -4,7 +4,7 @@ import { Recorder, createRecorder, getAudioContext, loadWorklets } from '../../a
 import { alignTake } from '../../audio/engine/latency'
 import { MIN_LINE_UP_SEC, musicUnder, takeLag } from '../../audio/engine/lineUp'
 import { PhraseTiming, harmonyTiming } from '../../audio/engine/harmonySync'
-import { balancedMusicVolume } from '../../audio/mix/balance'
+import { balancedHarmonyVolume, balancedMusicVolume } from '../../audio/mix/balance'
 import { Mixer } from '../../audio/mix/mixer'
 import { ScheduledClip, onAllEnded, scheduleClips, stopNodes } from '../../audio/mix/playback'
 import { ClickTrack, scheduleClicks } from '../../audio/mix/click'
@@ -15,12 +15,14 @@ import {
   Project,
   Track,
   TrackRole,
+  canBalanceHarmony,
   canBalanceMusic,
   findClip,
   lineUpClip,
   syncPhrases,
   withMusicVolume,
-  withRecordedClip
+  withRecordedClip,
+  withTrackChanges
 } from '../song/project'
 import { playbackKey, trackMixes } from '../song/selectors'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
@@ -72,7 +74,9 @@ export interface Metronome {
  * positive is late), or a harmony whose phrases land apart from the lead's.
  */
 export type TakeOffer = { trackId: string; clipId: string } & (
-  { kind: 'lineUp'; bySec: number } | { kind: 'syncHarmony'; phrases: PhraseTiming[] }
+  | { kind: 'lineUp'; bySec: number }
+  /** What's off against the lead: the phrases' timing, the volume, or both (never neither). */
+  | { kind: 'syncHarmony'; phrases: PhraseTiming[] | null; volume: number | null }
 )
 
 export interface Transport {
@@ -365,8 +369,9 @@ export function useTransport(
   }
 
   /**
-   * A harmony sung over the lead is checked against the lead, phrase by phrase: true when
-   * there was a lead to check against (whether or not anything needs moving).
+   * A harmony sung over the lead is checked against the lead, phrase by phrase, and for
+   * how loud it sits under it: true when there was a lead to check against (whether or
+   * not anything needs changing).
    */
   const checkAgainstLead = (
     trackId: string,
@@ -375,20 +380,34 @@ export function useTransport(
   ): boolean => {
     const track = tracks?.find((t) => t.id === trackId)
     if (track?.role !== 'vocal' || track.part !== 'harmony') return false
-    const lead = clipsOf('vocal', trackId, (t) => t.part !== 'harmony').filter(
-      (c) => c.start < clip.start + clip.duration && c.start + c.duration > clip.start
-    )
-    if (lead.length === 0) return false
+    const overlaps = (c: ScheduledClip): boolean =>
+      c.start < clip.start + clip.duration && c.start + c.duration > clip.start
+    const leads = (tracks ?? []).flatMap((t) => {
+      const clips =
+        t.role === 'vocal' && t.part !== 'harmony'
+          ? clipsOf('vocal', undefined, (v) => v.id === t.id).filter(overlaps)
+          : []
+      return clips.length > 0 ? [{ clips, volume: t.volume }] : []
+    })
+    if (leads.length === 0) return false
     const { sampleRate } = audio
     const from = Math.round(clip.offset * sampleRate)
     const length = Math.min(audio.length - from, Math.round(clip.duration * sampleRate))
     const harmony = audio.getChannelData(0).subarray(from, from + length)
-    const phrases = harmonyTiming(
-      harmony,
-      musicUnder(lead, clip.start, length, sampleRate),
-      sampleRate
-    )
-    if (phrases) setOffer({ kind: 'syncHarmony', trackId, clipId: clip.id, phrases })
+    // The lead as heard: each lead track through its fader.
+    const lead = new Float32Array(length)
+    for (const { clips, volume } of leads) {
+      const sung = musicUnder(clips, clip.start, length, sampleRate)
+      for (let i = 0; i < length; i++) lead[i] += sung[i] * volume
+    }
+    const phrases = harmonyTiming(harmony, lead, sampleRate)
+    const volume =
+      project && canBalanceHarmony(project, trackId)
+        ? balancedHarmonyVolume(harmony, lead, track.volume, sampleRate)
+        : null
+    if (phrases || volume !== null) {
+      setOffer({ kind: 'syncHarmony', trackId, clipId: clip.id, phrases, volume })
+    }
     return true
   }
 
@@ -629,7 +648,9 @@ export function useTransport(
         onLinedUp?.(offer.bySec)
         showSnack(t('transport.lineUp.done'))
       } else {
-        song.edit(syncPhrases(project, offer.trackId, offer.clipId, offer.phrases))
+        const { trackId, clipId, phrases, volume } = offer
+        const synced = phrases ? syncPhrases(project, trackId, clipId, phrases) : project
+        song.edit(volume === null ? synced : withTrackChanges(synced, trackId, { volume }))
         showSnack(t('transport.harmonySync.done'))
       }
       setOffer(null)

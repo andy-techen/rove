@@ -240,6 +240,19 @@ export function canBalanceMusic(project: Project, vocalTrackId: string): boolean
   return music.length > 0 && music.every((t) => !!t.sourceName && t.volume === untouched)
 }
 
+/**
+ * Whether Rove may offer to set this harmony's volume against the lead: only while it's
+ * where it started. Once the singer (or Rove) sets it, it stays theirs.
+ */
+export function canBalanceHarmony(project: Project, trackId: string): boolean {
+  const track = project.tracks.find((t) => t.id === trackId)
+  return (
+    track?.role === 'vocal' &&
+    track.part === 'harmony' &&
+    track.volume === startingVolume('vocal', 'harmony')
+  )
+}
+
 /** Sets every music file's volume (the backing tracks). */
 export const withMusicVolume = (project: Project, volume: number): Project => ({
   ...project,

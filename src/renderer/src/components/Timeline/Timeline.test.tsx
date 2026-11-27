@@ -447,16 +447,36 @@ describe('Timeline', () => {
     expect(onDismissOffer).toHaveBeenCalled()
   })
 
-  it('offers to sync a harmony take with the lead on its clip', async () => {
+  it('offers to sync a harmony take with the lead', async () => {
     const onApplyOffer = vi.fn()
     const phrases = [{ from: 1, to: 3, bySec: 0.1 }]
     renderTimeline({
       tracks: [lane({ clips: [take] })],
-      offer: { kind: 'syncHarmony', trackId: 'v1', clipId: 'c1', phrases },
+      offer: { kind: 'syncHarmony', trackId: 'v1', clipId: 'c1', phrases, volume: null },
       onApplyOffer
     })
     await userEvent.click(screen.getByRole('button', { name: t('transport.harmonySync.apply') }))
     expect(onApplyOffer).toHaveBeenCalled()
+  })
+
+  it.each([
+    [[{ from: 1, to: 3, bySec: 0.1 }], null, 'transport.harmonySync.timing'],
+    [null, 0.5, 'transport.harmonySync.volume'],
+    [[{ from: 1, to: 3, bySec: 0.1 }], 0.5, 'transport.harmonySync.both']
+  ] as const)('says on hover what syncing will change', async (phrases, volume, key) => {
+    renderTimeline({
+      tracks: [lane({ clips: [take] })],
+      offer: {
+        kind: 'syncHarmony',
+        trackId: 'v1',
+        clipId: 'c1',
+        phrases: phrases && [...phrases],
+        volume
+      },
+      onApplyOffer: vi.fn()
+    })
+    await userEvent.hover(screen.getByRole('button', { name: t('transport.harmonySync.apply') }))
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(t(key))
   })
 
   it('redoes the take being recorded from its own lane', async () => {

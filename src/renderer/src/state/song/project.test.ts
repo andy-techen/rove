@@ -5,6 +5,7 @@ import {
   Project,
   MIN_CLIP_SEC,
   canBalanceMusic,
+  canBalanceHarmony,
   lineUpClip,
   syncPhrases,
   withMusicVolume,
@@ -185,6 +186,28 @@ describe('syncPhrases', () => {
     const { p, id } = harmony(0.05)
     const [c] = syncPhrases(p, id, 'take', [phrase(0, 2, 0.1), phrase(4, 6, 0)]).tracks[1].clips
     expect([c.start, c.offset]).toEqual([0, expect.closeTo(0.05)])
+  })
+})
+
+describe('canBalanceHarmony', () => {
+  const song = () => {
+    const p = withNewTrack(createProject('Song', 48000), 'vocal', { part: 'harmony' }).project
+    return { p, lead: p.tracks[0].id, harmony: p.tracks[1].id }
+  }
+
+  it('lets Rove set a harmony whose volume nobody has moved', () => {
+    const { p, harmony } = song()
+    expect(canBalanceHarmony(p, harmony)).toBe(true)
+  })
+
+  it('leaves a harmony whose volume the singer set', () => {
+    const { p, harmony } = song()
+    expect(canBalanceHarmony(withTrackChanges(p, harmony, { volume: 0.5 }), harmony)).toBe(false)
+  })
+
+  it('never sets a lead', () => {
+    const { p, lead } = song()
+    expect(canBalanceHarmony(p, lead)).toBe(false)
   })
 })
 
