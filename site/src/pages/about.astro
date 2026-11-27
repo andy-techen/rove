@@ -402,7 +402,7 @@ const ROADMAP: { title: string; items: string[]; community?: boolean }[] = [
     background: var(--color-accent);
     transform-origin: left;
     scale: 0 1;
-    transition: scale var(--site-duration-glow) var(--site-ease);
+    transition: scale var(--site-duration-path) var(--site-ease);
   }
 
   :global(.reveal-ready) .roadmap:has(.stop.revealed)::after {
@@ -412,9 +412,8 @@ const ROADMAP: { title: string; items: string[]; community?: boolean }[] = [
   :global(.reveal-ready) .stop::before {
     scale: 0;
     transition: scale var(--site-duration-grow) var(--site-ease);
-    transition-delay: calc(
-      var(--reveal-order, 0) * var(--site-duration-swap) + var(--site-duration-swap)
-    );
+    /* Each dot turns on about as the line reaches its stop. */
+    transition-delay: calc(var(--reveal-order, 0) * var(--site-duration-path) / 4);
   }
 
   :global(.reveal-ready) .stop.revealed::before {

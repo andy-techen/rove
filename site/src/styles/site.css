@@ -75,6 +75,8 @@
   --site-duration-grow: 700ms;
   --site-duration-turn: 900ms;
   --site-duration-glow: 1200ms;
+  /* The About page's roadmap line, drawn slowly enough to follow. */
+  --site-duration-path: 2400ms;
   --site-duration-sunrise: 3s;
   --site-duration-play: 1400ms;
   /* One bar of the home page's backing track. */

@@ -4,6 +4,10 @@ import '@fontsource/fredoka/600.css'
 import '../styles/site.css'
 import iconUrl from '@app/renderer/src/components/ui/Logo/icon.svg'
 import Logo from '../components/Logo.astro'
+import Icon from '../components/Icon.astro'
+import tokensCss from '@app/renderer/src/styles/tokens.css?raw'
+import siteCss from '../styles/site.css?raw'
+import { THEME_KEY, pinnedThemes } from '../theme'
 import { JOIN_FORM_URL } from '../site'
 
 interface Props {
@@ -19,6 +23,9 @@ const year = new Date().getFullYear()
 // BASE_URL is '/rove' with no trailing slash, so add one before joining paths.
 const home = import.meta.env.BASE_URL.replace(/\/?$/, '/')
 const path = Astro.url.pathname.replace(/\/$/, '')
+// The home page turns from afternoon to evening as it scrolls, whatever the theme, so
+// it has no theme switch.
+const themeSwitch = bodyClass !== 'dusk'
 const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`) ? 'page' : undefined)
 ---
 
@@ -34,6 +41,16 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/svg+xml" href={iconUrl.src} />
     <meta name="color-scheme" content="light dark" />
+    <!-- Before the page paints, so a chosen theme never flashes the other one. -->
+    <script is:inline define:vars={{ THEME_KEY }}>
+      try {
+        const theme = localStorage.getItem(THEME_KEY)
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
+      } catch {
+        // Storage can be blocked; the site then follows the system.
+      }
+    </script>
+    <style is:inline set:html={pinnedThemes([tokensCss, siteCss])}></style>
   </head>
   <body class={bodyClass}>
     <header class="site-header">
@@ -42,7 +59,21 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
         <nav aria-label="Main">
           <a href={`${home}#features`} class="nav-features">Features</a>
           <a href={`${home}about/`} class="nav-about" aria-current={current('about')}>About</a>
-          <a href={`${home}community/`} aria-current={current('community')}>Community</a>
+          <a href={`${home}community/`} class="nav-community" aria-current={current('community')}
+            >Community</a
+          >
+          {
+            themeSwitch && (
+              <button type="button" class="theme-switch" aria-label="Switch theme">
+                <span class="theme-to-dark">
+                  <Icon name="moon" />
+                </span>
+                <span class="theme-to-light">
+                  <Icon name="sun" />
+                </span>
+              </button>
+            )
+          }
           <a href={`${home}#download`} class="button button-primary nav-download">Download</a>
         </nav>
       </div>
@@ -82,6 +113,36 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
       </div>
     </footer>
     <script>
+      import { THEME_KEY, type Scheme } from '../theme'
+
+      // The theme switch: shows and names the theme it switches to, and remembers the
+      // choice. Until one is made, the site follows the system.
+      const themeSwitch = document.querySelector<HTMLButtonElement>('.theme-switch')
+      if (themeSwitch) {
+        const root = document.documentElement
+        const systemDark = matchMedia('(prefers-color-scheme: dark)')
+        const showing = (): Scheme =>
+          (root.dataset.theme as Scheme | undefined) ?? (systemDark.matches ? 'dark' : 'light')
+        const next = (): Scheme => (showing() === 'dark' ? 'light' : 'dark')
+        const name = (): void => {
+          const label = `Switch to ${next()} mode`
+          themeSwitch.setAttribute('aria-label', label)
+          themeSwitch.title = label
+        }
+        name()
+        systemDark.addEventListener('change', name)
+        themeSwitch.addEventListener('click', () => {
+          const theme = next()
+          root.dataset.theme = theme
+          try {
+            localStorage.setItem(THEME_KEY, theme)
+          } catch {
+            // Not remembered, but still switched for this page.
+          }
+          name()
+        })
+      }
+
       // Reveal sections as they scroll in. Skipped for reduced motion.
       const items = document.querySelectorAll('[data-reveal]')
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -116,6 +177,7 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--space-6);
     height: var(--site-header);
   }
 
@@ -141,14 +203,62 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
     color: var(--color-text);
   }
 
-  /* Phones only have room for two links beside the logo. */
+  /* Phones have room for one more thing beside Download: Community, or the theme switch
+     where there is one. The footer still links to both pages. */
   @media (max-width: 480px) {
     .site-header nav {
       gap: var(--space-7);
     }
 
     .nav-features,
-    .nav-about {
+    .nav-about,
+    .site-header nav:has(.theme-switch) .nav-community {
+      display: none;
+    }
+  }
+
+  /* The theme switch shows the theme it goes to: a moon by day, a sun by night. */
+  .theme-switch {
+    display: grid;
+    place-items: center;
+    width: var(--size-control-md);
+    aspect-ratio: 1;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--color-text-muted);
+    font-size: var(--size-icon-primary);
+    cursor: pointer;
+    transition:
+      background var(--duration-fast),
+      color var(--duration-fast);
+  }
+
+  .theme-switch:hover {
+    background: var(--color-highlight);
+    color: var(--color-text);
+  }
+
+  .theme-to-dark {
+    display: flex;
+  }
+
+  .theme-to-light,
+  :global(:root[data-theme='dark']) .theme-to-dark {
+    display: none;
+  }
+
+  :global(:root[data-theme='dark']) .theme-to-light {
+    display: flex;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .theme-to-light {
+      display: flex;
+    }
+
+    :global(:root:not([data-theme='light'])) .theme-to-dark {
       display: none;
     }
   }
