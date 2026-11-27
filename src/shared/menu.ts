@@ -40,6 +40,8 @@ export const MENU_ACTIONS = [
   'restartTake',
   'goToStart',
   'goToEnd',
+  'skipBack',
+  'skipForward',
   'previousEdge',
   'nextEdge',
   'zoomIn',

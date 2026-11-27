@@ -13,11 +13,11 @@ const listen = () => {
 
 describe('shortcut keys', () => {
   it('runs a rebound shortcut from its new keys, not its old ones', () => {
-    applyOverrides({ previousEdge: 'Home' })
+    applyOverrides({ skipBack: 'Home' })
     const heard = listen()
     fireEvent.keyDown(window, { key: 'ArrowLeft', code: 'ArrowLeft' })
     fireEvent.keyDown(window, { key: 'Home', code: 'Home' })
-    expect(heard.mock.calls).toEqual([['previousEdge']])
+    expect(heard.mock.calls).toEqual([['skipBack']])
   })
 
   it('leaves Space to a focused text field', () => {

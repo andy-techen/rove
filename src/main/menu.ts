@@ -110,6 +110,8 @@ export function installMenu(keymap: Keymap): void {
         separator,
         shortcut('goToStart'),
         shortcut('goToEnd'),
+        shortcut('skipBack'),
+        shortcut('skipForward'),
         shortcut('previousEdge'),
         shortcut('nextEdge')
       ]

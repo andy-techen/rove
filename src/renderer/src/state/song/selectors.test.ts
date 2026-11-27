@@ -19,6 +19,7 @@ import {
   mixdownOf,
   pasteTarget,
   playbackKey,
+  skipTarget,
   songEnd
 } from './selectors'
 
@@ -55,6 +56,29 @@ describe('clip-edge navigation', () => {
     expect(edgeBefore(song.p, 1, song.id)).toBe(0)
     expect(edgeAfter(song.p, 10, song.id)).toBe(10)
     expect(songEnd(song.p)).toBe(10)
+  })
+})
+
+describe('skipping', () => {
+  // A song that ends at 20 s.
+  const song = (() => {
+    let p = createProject('Song', 48000)
+    p = withRecordedClip(p, p.tracks[0].id, { file: 'a.wav', start: 0, offset: 0, duration: 20 })
+    return p
+  })()
+
+  it('skips five seconds back or forward', () => {
+    expect(skipTarget(song, 12, -1)).toBe(7)
+    expect(skipTarget(song, 12, 1)).toBe(17)
+  })
+
+  it('stops at the start and end of the song', () => {
+    expect(skipTarget(song, 3, -1)).toBe(0)
+    expect(skipTarget(song, 18, 1)).toBe(20)
+  })
+
+  it('stays put when skipping forward from past the end', () => {
+    expect(skipTarget(song, 25, 1)).toBe(25)
   })
 })
 

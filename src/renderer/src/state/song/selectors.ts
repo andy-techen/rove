@@ -295,6 +295,15 @@ export function edgeAfter(project: Project, position: number, trackId: string | 
   return later.length ? Math.min(...later) : position
 }
 
+// About one sung line, so ← replays the line just sung (YouTube skips the same).
+const SKIP_SEC = 5
+
+/** Where ← or → lands: five seconds back or on, kept within the song. */
+export function skipTarget(project: Project, position: number, direction: -1 | 1): number {
+  if (direction < 0) return Math.max(0, position - SKIP_SEC)
+  return Math.max(position, Math.min(position + SKIP_SEC, songEnd(project)))
+}
+
 // An export runs at least this far past the last clip, so nothing ends on a hard cut.
 const MIN_EXPORT_TAIL_SEC = 0.5
 

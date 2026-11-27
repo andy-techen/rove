@@ -71,6 +71,7 @@ import {
   hasMusicChoice,
   pasteTarget,
   selectLanes,
+  skipTarget,
   songEnd
 } from '../../state/song/selectors'
 import { Microphone } from '../../state/transport/useMicrophone'
@@ -704,6 +705,10 @@ export function RecordScreen({
         break
       case 'goToEnd':
         if (open) transport.seek(songEnd(open.data))
+        break
+      case 'skipBack':
+      case 'skipForward':
+        if (open) transport.seek(skipTarget(open.data, position, action === 'skipBack' ? -1 : 1))
         break
       case 'previousEdge':
         if (open) transport.seek(edgeBefore(open.data, position, navTrack))

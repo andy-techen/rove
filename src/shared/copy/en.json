@@ -714,6 +714,8 @@
     "stopPlayback": "Stop",
     "goToStart": "Go to Start",
     "goToEnd": "Go to End",
+    "skipBack": "Back 5 Seconds",
+    "skipForward": "Forward 5 Seconds",
     "previousEdge": "Previous Clip Edge",
     "nextEdge": "Next Clip Edge",
     "zoomIn": "Zoom In",
