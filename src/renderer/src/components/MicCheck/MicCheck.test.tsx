@@ -24,6 +24,9 @@ const mic = (overrides: Partial<Microphone>): Microphone => ({
   inputError: null,
   latencySec: 0.02,
   outLoud: false,
+  hearSelf: true,
+  ownMonitoring: false,
+  setHearSelf: vi.fn(),
   paused: false,
   chooseDevice: vi.fn(),
   retryAccess: vi.fn(async () => {}),
@@ -97,5 +100,24 @@ describe('MicCheck', () => {
     vi.useRealTimers()
     await userEvent.click(screen.getByRole('button', { name: t('micCheck.continue') }))
     expect(onDone).toHaveBeenCalled()
+  })
+
+  it('lets the singer stop hearing themselves through Rove', async () => {
+    const m = mic({})
+    render(<MicCheck mic={m} onboarding={false} onDone={vi.fn()} />)
+    await userEvent.click(screen.getByRole('switch', { name: t('micCheck.hearSelf') }))
+    expect(m.setHearSelf).toHaveBeenCalledWith(false)
+  })
+
+  it('explains why Rove stays quiet when the mic plays the singer back itself', () => {
+    const m = mic({ hearSelf: false, ownMonitoring: true })
+    render(<MicCheck mic={m} onboarding={false} onDone={vi.fn()} />)
+    expect(screen.getByRole('switch', { name: t('micCheck.hearSelf') })).not.toBeChecked()
+    expect(screen.getByRole('button', { name: t('micCheck.hearSelfOwnHint') })).toBeInTheDocument()
+  })
+
+  it('hides the choice while sound plays through speakers', () => {
+    render(<MicCheck mic={mic({ outLoud: true })} onboarding={false} onDone={vi.fn()} />)
+    expect(screen.queryByRole('switch', { name: t('micCheck.hearSelf') })).not.toBeInTheDocument()
   })
 })

@@ -35,6 +35,28 @@ export function playsOutLoud(outputs: MediaDeviceInfo[]): boolean {
   return !!current && OUT_LOUD.test(current.label)
 }
 
+// Chromium prefixes the system's current device with this in its label.
+const DEFAULT_PREFIX = /^Default - /
+// The Mac's own mic and headphone jack share a group but don't play the mic back.
+const BUILT_IN = /built-in/i
+
+/**
+ * Whether the system output is the chosen mic itself: headphones plugged into a USB mic
+ * or interface, which plays the singer's voice to them with no delay. Rove playing it
+ * as well would arrive a moment late and sound like an echo.
+ */
+export function monitorsItself(
+  inputs: MediaDeviceInfo[],
+  deviceId: string | null,
+  outputs: MediaDeviceInfo[]
+): boolean {
+  const input = inputs.find((d) => d.deviceId === deviceId)
+  const output = outputs.find((d) => d.deviceId === SYSTEM_DEFAULT_ID) ?? outputs[0]
+  if (!input || !output || BUILT_IN.test(input.label)) return false
+  const name = (d: MediaDeviceInfo): string => d.label.replace(DEFAULT_PREFIX, '')
+  return (!!input.groupId && input.groupId === output.groupId) || name(input) === name(output)
+}
+
 export function loadSavedDeviceId(): string | null {
   try {
     return localStorage.getItem(SAVED_DEVICE_KEY)
@@ -83,6 +105,30 @@ export function saveLearnedLatency(key: string, sec: number): void {
     localStorage.setItem(LEARNED_LATENCY_KEY, JSON.stringify({ ...learnedLatencies(), [key]: sec }))
   } catch {
     // Like the saved mic: losing it only means lining up the next take by hand.
+  }
+}
+
+const HEAR_SELF_KEY = 'rove.hearSelf'
+
+/** Whether the singer chose to hear themselves through Rove on this setup; null if never. */
+export function loadHearSelf(key: string): boolean | null {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(HEAR_SELF_KEY) ?? '{}')
+    const value =
+      parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>)[key] : null
+    return typeof value === 'boolean' ? value : null
+  } catch {
+    return null
+  }
+}
+
+export function saveHearSelf(key: string, on: boolean): void {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(HEAR_SELF_KEY) ?? '{}')
+    const all = parsed && typeof parsed === 'object' ? parsed : {}
+    localStorage.setItem(HEAR_SELF_KEY, JSON.stringify({ ...all, [key]: on }))
+  } catch {
+    // Losing the choice only brings back the default for this setup.
   }
 }
 

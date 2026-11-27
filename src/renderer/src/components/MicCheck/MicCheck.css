@@ -27,6 +27,11 @@
   font-size: var(--font-size-ui);
 }
 
+.mic-check-hear-self {
+  gap: var(--space-3);
+  font-size: var(--font-size-ui);
+}
+
 .mic-check-message {
   font-size: var(--font-size-ui);
 }

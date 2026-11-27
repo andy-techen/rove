@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   describeInputError,
   isSystemInput,
+  loadHearSelf,
   loadLearnedLatency,
+  monitorsItself,
   pickInputDevice,
   playsOutLoud,
+  saveHearSelf,
   saveLearnedLatency,
   setupKey
 } from './devices'
@@ -95,5 +98,44 @@ describe('isSystemInput', () => {
 
   it('isn’t another mic', () => {
     expect(isSystemInput(inputs, 'rode')).toBe(false)
+  })
+})
+
+describe('monitorsItself', () => {
+  const dev = (kind: MediaDeviceKind, deviceId: string, groupId: string, label: string) =>
+    ({ kind, deviceId, groupId, label }) as MediaDeviceInfo
+  const rodeIn = dev('audioinput', 'rode', 'usb', 'RODE NT-USB (19f7:0003)')
+  const builtinIn = dev('audioinput', 'mbp', 'mac', 'MacBook Pro Microphone (Built-in)')
+  const inputs = [dev('audioinput', 'default', 'usb', 'Default - RODE NT-USB'), rodeIn, builtinIn]
+
+  it('spots headphones plugged into the mic itself', () => {
+    const outputs = [dev('audiooutput', 'default', 'usb', 'Default - RODE NT-USB (19f7:0003)')]
+    expect(monitorsItself(inputs, 'rode', outputs)).toBe(true)
+    expect(monitorsItself(inputs, 'default', outputs)).toBe(true)
+  })
+
+  it('matches the mic and output by name when the groups differ', () => {
+    const outputs = [dev('audiooutput', 'default', 'other', 'Default - RODE NT-USB (19f7:0003)')]
+    expect(monitorsItself(inputs, 'rode', outputs)).toBe(true)
+  })
+
+  it('leaves other headphones alone', () => {
+    const outputs = [dev('audiooutput', 'default', 'bt', 'Default - AirPods Pro')]
+    expect(monitorsItself(inputs, 'rode', outputs)).toBe(false)
+  })
+
+  it("doesn't count the Mac's own mic and headphone jack", () => {
+    const outputs = [
+      dev('audiooutput', 'default', 'mac', 'Default - External Headphones (Built-in)')
+    ]
+    expect(monitorsItself(inputs, 'mbp', outputs)).toBe(false)
+  })
+})
+
+describe('hear yourself', () => {
+  it('remembers the choice for each mic and output pair', () => {
+    saveHearSelf('rode|Headphones', false)
+    expect(loadHearSelf('rode|Headphones')).toBe(false)
+    expect(loadHearSelf('rode|AirPods')).toBeNull()
   })
 })

@@ -129,14 +129,14 @@ export function useTransport(
     parts,
     waiting,
     metronome,
-    outLoud,
+    hearSelf,
     onLinedUp
   }: {
     latencySec: number
     /** A take was lined up by this much: later takes on this setup should be too. */
     onLinedUp?(bySec: number): void
-    /** Sound plays through speakers: the mic isn't played back, or it would howl. */
-    outLoud: boolean
+    /** Play the mic back while recording (off through speakers, or it would howl). */
+    hearSelf: boolean
     processed: ProcessedAudio
     /** What the chords track plays, rendered. */
     parts: ChordPart[]
@@ -210,10 +210,11 @@ export function useTransport(
 
   // While recording, the singer hears themselves through the track being recorded,
   // so that track's mute, volume and position (and polish) apply to what they hear.
-  // Through speakers the mic would pick itself up and howl, so they hear only the music.
+  // Through speakers the mic would pick itself up and howl, and a mic that plays the
+  // singer back itself would make this a late second copy, so then they hear only the music.
   const recordingTrackId = live?.trackId ?? null
   useEffect(() => {
-    if (!source || !recordingTrackId || !mixer || outLoud) return
+    if (!source || !recordingTrackId || !mixer || !hearSelf) return
     const gain = source.context.createGain()
     gain.gain.value = MONITOR_GAIN
     source.connect(gain).connect(mixer.input(recordingTrackId))
@@ -221,7 +222,7 @@ export function useTransport(
       source.disconnect(gain)
       gain.disconnect()
     }
-  }, [source, recordingTrackId, mixer, outLoud])
+  }, [source, recordingTrackId, mixer, hearSelf])
 
   /** The metronome from `fromSec` on, ticking from `atTime` (silent while the level is 0). */
   const startClicks = (ctx: AudioContext, fromSec: number, atTime: number): ClickTrack[] => {

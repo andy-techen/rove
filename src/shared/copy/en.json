@@ -25,6 +25,9 @@
     "done": "Done",
     "microphone": "Microphone",
     "microphoneNumbered": "Microphone {number}",
+    "hearSelf": "Hear yourself while recording",
+    "hearSelfHint": "Rove plays your voice in your headphones as you sing, with your sound on it.",
+    "hearSelfOwnHint": "Your headphones are plugged into your mic, which already plays your voice to you. Rove stays quiet so you don't hear an echo.",
     "level": {
       "set": "Set my level",
       "again": "Set it again",

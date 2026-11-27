@@ -6,6 +6,8 @@ import { isSystemInput } from '../../audio/engine/devices'
 import { DevicePicker } from '../DevicePicker'
 import { InputMeter } from '../InputMeter'
 import { Button } from '../ui/Button'
+import { HelpTip } from '../ui/HelpTip'
+import { Switch } from '../ui/Switch'
 import { Logo } from '../ui/Logo'
 import './MicCheck.css'
 
@@ -74,6 +76,20 @@ export function MicCheck({ mic, onboarding, onDone }: Props): React.JSX.Element 
             )}
             {inputError && <p className="error">{inputError}</p>}
             {source && <InputMeter source={source} onInRange={markChecked} />}
+            {!mic.outLoud && (
+              <div className="row mic-check-hear-self">
+                <Switch
+                  checked={mic.hearSelf}
+                  onChange={mic.setHearSelf}
+                  label={t('micCheck.hearSelf')}
+                />
+                <HelpTip
+                  text={
+                    mic.ownMonitoring ? t('micCheck.hearSelfOwnHint') : t('micCheck.hearSelfHint')
+                  }
+                />
+              </div>
+            )}
             <div className="row mic-check-actions">
               {autoLevel && !levelSet ? (
                 <>

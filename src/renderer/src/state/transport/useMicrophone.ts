@@ -2,11 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { closeInput, getAudioContext, listDevices, openInput } from '../../audio/engine/engine'
 import {
+  loadHearSelf,
   loadLearnedLatency,
   loadSavedDeviceId,
+  monitorsItself,
   pickInputDevice,
   playsOutLoud,
   saveDeviceId,
+  saveHearSelf,
   saveLearnedLatency,
   setupKey
 } from '../../audio/engine/devices'
@@ -32,6 +35,14 @@ export interface Microphone {
    * feed back; false with headphones.
    */
   outLoud: boolean
+  /**
+   * Whether Rove plays the mic back while recording. Never through speakers; off by
+   * default when the mic plays the singer back itself; otherwise the singer's choice.
+   */
+  hearSelf: boolean
+  /** The headphones are plugged into the mic itself, which plays the singer back. */
+  ownMonitoring: boolean
+  setHearSelf(on: boolean): void
   /** True when the singer has paused listening; the mic stream is released until resumed. */
   paused: boolean
   chooseDevice(deviceId: string): void
@@ -61,6 +72,14 @@ export function useMicrophone(): Microphone {
   // Read again whenever the mic or the output changes, so each setup keeps its own.
   const stored = useMemo(() => (setup ? loadLearnedLatency(setup) : 0), [setup])
   const learnedSec = learned.setup === setup ? learned.sec : stored
+  const ownMonitoring = monitorsItself(devices, deviceId, outputs)
+  const [hearSelfChoice, setHearSelfChoice] = useState<{ setup: string | null; on: boolean }>({
+    setup: null,
+    on: true
+  })
+  const storedHearSelf = useMemo(() => (setup ? loadHearSelf(setup) : null), [setup])
+  const hearSelf =
+    hearSelfChoice.setup === setup ? hearSelfChoice.on : (storedHearSelf ?? !ownMonitoring)
 
   const refreshDevices = useCallback(async (preferredId: string | null) => {
     const { inputs, outputs } = await listDevices()
@@ -107,6 +126,12 @@ export function useMicrophone(): Microphone {
     inputError,
     latencySec: estimatedLatency(getAudioContext(), inputLatencySec) + learnedSec,
     outLoud,
+    hearSelf: hearSelf && !outLoud,
+    ownMonitoring,
+    setHearSelf: (on) => {
+      if (setup) saveHearSelf(setup, on)
+      setHearSelfChoice({ setup, on })
+    },
     paused,
     chooseDevice: (id) => {
       saveDeviceId(id)
