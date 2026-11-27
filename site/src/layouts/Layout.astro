@@ -150,7 +150,7 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
       const joinStatus = join?.querySelector<HTMLElement>('.join-status')
       if (join?.action && joinStatus) {
         const JOIN_MESSAGES = {
-          success: 'You’re on the list! We’ll email you when the community opens.',
+          success: 'You’re on the list! See you when it opens.',
           invalid: 'That email doesn’t look quite right. Try it again?',
           offline: 'Couldn’t reach the list just now. Try again in a moment.'
         }
