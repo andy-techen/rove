@@ -100,7 +100,7 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
             <input
               id="join-email"
               type="email"
-              name="email"
+              name="email_address"
               required
               autocomplete="email"
               placeholder="Your email"
@@ -109,6 +109,7 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
               Join
             </button>
           </div>
+          <p class="join-status" role="status" aria-live="polite"></p>
         </form>
       </div>
     </footer>
@@ -140,6 +141,45 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
             // Not remembered, but still switched for this page.
           }
           name()
+        })
+      }
+
+      // Join sends the email to Kit in place, so the visitor stays on the page and hears
+      // back here. Without a script, the form still posts and Kit shows its own page.
+      const join = document.querySelector<HTMLFormElement>('form.join')
+      const joinStatus = join?.querySelector<HTMLElement>('.join-status')
+      if (join?.action && joinStatus) {
+        const JOIN_MESSAGES = {
+          success: 'You’re on the list! We’ll email you when the community opens.',
+          invalid: 'That email doesn’t look quite right. Try it again?',
+          offline: 'Couldn’t reach the list just now. Try again in a moment.'
+        }
+        const say = (text: string, failed: boolean): void => {
+          joinStatus.textContent = text
+          joinStatus.classList.toggle('join-failed', failed)
+        }
+        join.addEventListener('submit', async (event) => {
+          event.preventDefault()
+          const button = join.querySelector('button')
+          if (button) button.disabled = true
+          try {
+            const response = await fetch(join.action, {
+              method: 'POST',
+              body: new FormData(join),
+              headers: { Accept: 'application/json' }
+            })
+            const result: { status?: string } = await response.json()
+            if (result.status === 'success') {
+              join.reset()
+              say(JOIN_MESSAGES.success, false)
+            } else {
+              say(JOIN_MESSAGES.invalid, true)
+            }
+          } catch {
+            say(JOIN_MESSAGES.offline, true)
+          } finally {
+            if (button) button.disabled = false
+          }
         })
       }
 
@@ -359,6 +399,19 @@ const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`)
     min-height: var(--size-control-md);
     padding-inline: var(--space-8);
     font-size: var(--site-font-small);
+  }
+
+  .join-status {
+    color: var(--color-accent-text);
+    font-size: var(--site-font-small);
+  }
+
+  .join-status:empty {
+    display: none;
+  }
+
+  .join-status.join-failed {
+    color: var(--color-danger);
   }
 
   .join-field .button:disabled {

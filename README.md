@@ -64,8 +64,9 @@ npm install
 npm run dev
 ```
 
-Before the first deploy, set Settings → Pages → Source to **GitHub Actions**. The "Get
-updates" form appears once `BUTTONDOWN_USER` in `site/src/site.ts` is set.
+Before the first deploy, set Settings → Pages → Source to **GitHub Actions**. The
+footer's Join form sends emails to the community waitlist on Kit, set by `JOIN_FORM_URL`
+in `site/src/site.ts`.
 
 The demo in the hero plays a synthesised placeholder until a real recording is added:
 put a backing, lead and harmony file (same length, made to loop) in `site/public/demo/`
