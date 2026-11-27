@@ -24,4 +24,17 @@ describe('useFeature', () => {
     act(() => listeners.forEach((report) => report({ plan: 'premium', keyHint: '•••• 4d51' })))
     expect(screen.getByText('premium on')).toBeInTheDocument()
   })
+  it('shows premium from the first render when this Mac already has it', () => {
+    vi.mocked(window.api.onLicense).mockImplementation((listener) => {
+      listener({ plan: 'premium', keyHint: '•••• 4d51' })
+      return () => undefined
+    })
+    const seen: string[] = []
+    function FirstRender(): null {
+      seen.push(usePlan())
+      return null
+    }
+    render(<FirstRender />)
+    expect(seen[0]).toBe('premium')
+  })
 })
