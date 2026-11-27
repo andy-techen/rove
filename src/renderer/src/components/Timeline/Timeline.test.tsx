@@ -420,7 +420,7 @@ describe('Timeline', () => {
     expect(screen.getByRole('button', { name: t('timeline.addInstrumental') })).toBeEnabled()
   })
 
-  it('offers to line up a late take on its clip', async () => {
+  it('offers to line up a late take on its clip, or leave it', async () => {
     const take = {
       id: 'c1',
       start: 10,
@@ -433,13 +433,17 @@ describe('Timeline', () => {
       joinedAfter: false
     }
     const onLineUp = vi.fn()
+    const onDismissLineUp = vi.fn()
     renderTimeline({
       tracks: [lane({ clips: [take] })],
       lineUp: { trackId: 'v1', clipId: 'c1', bySec: 0.14 },
-      onLineUp
+      onLineUp,
+      onDismissLineUp
     })
     await userEvent.click(screen.getByRole('button', { name: t('transport.lineUp.apply') }))
     expect(onLineUp).toHaveBeenCalled()
+    await userEvent.click(screen.getByRole('button', { name: t('transport.lineUp.dismiss') }))
+    expect(onDismissLineUp).toHaveBeenCalled()
   })
 
   it('redoes the take being recorded from its own lane', async () => {

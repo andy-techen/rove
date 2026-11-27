@@ -100,6 +100,8 @@ export interface Transport {
   lineUp: LineUp | null
   /** Moves that take into time, and teaches the delay to later takes. */
   applyLineUp(): void
+  /** Leaves that take where it is; the offer goes. */
+  dismissLineUp(): void
   retrySave(): Promise<void>
   discardPending(): void
 }
@@ -582,6 +584,7 @@ export function useTransport(
       setOffBeat(null)
       showSnack(t('transport.lineUp.done'))
     },
+    dismissLineUp: () => setOffBeat(null),
     retrySave: async () => {
       if (pending) await persistTake(pending)
     },

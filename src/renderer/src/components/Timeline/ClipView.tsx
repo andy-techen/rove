@@ -6,6 +6,7 @@ import { SelectMode } from '../../state/editing/trackSelection'
 import { useClipPointer } from './useClipPointer'
 import { cx } from '../ui/cx'
 import { Button } from '../ui/Button'
+import { IconButton } from '../ui/IconButton'
 import { Tooltip } from '../ui/Tooltip'
 import { Waveform } from './Waveform'
 
@@ -25,7 +26,7 @@ export interface Props {
   liftY: number | null
   editable: boolean
   /** Offers to line a just-recorded take up with the music, on the clip itself. */
-  lineUp?: { title: string; onApply(): void } | null
+  lineUp?: { title: string; onApply(): void; onDismiss(): void } | null
   /** Pressed: on its own, or ⌘/⇧ to add it to the selection. */
   onSelect(mode: SelectMode): void
   /**
@@ -120,6 +121,12 @@ export function ClipView({
           >
             {t('transport.lineUp.apply')}
           </Button>
+          <IconButton
+            icon="close"
+            iconSize="secondary"
+            label={t('transport.lineUp.dismiss')}
+            onClick={lineUp.onDismiss}
+          />
         </span>
       )}
       {editable && (

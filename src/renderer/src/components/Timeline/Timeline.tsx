@@ -64,6 +64,7 @@ interface Props {
   /** A just-recorded take that sits off the music; offered on its clip. */
   lineUp?: LineUp | null
   onLineUp?(): void
+  onDismissLineUp?(): void
   /** Tracks, clips and mix can be changed (not while recording or saving). */
   canEdit: boolean
   /** The singer chose to record without a backing track. */
@@ -148,6 +149,7 @@ export function Timeline({
   onRestartTake,
   lineUp,
   onLineUp,
+  onDismissLineUp,
   canEdit,
   skipBacking,
   onRecordWithoutMusic,
@@ -628,7 +630,8 @@ export function Timeline({
                   ? {
                       title:
                         lineUp.bySec > 0 ? t('transport.lineUp.late') : t('transport.lineUp.early'),
-                      onApply: onLineUp
+                      onApply: onLineUp,
+                      onDismiss: () => onDismissLineUp?.()
                     }
                   : null
               }

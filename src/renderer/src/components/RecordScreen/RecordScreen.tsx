@@ -837,6 +837,7 @@ export function RecordScreen({
             onRestartTake={() => void transport.restartTake()}
             lineUp={transport.lineUp}
             onLineUp={transport.applyLineUp}
+            onDismissLineUp={transport.dismissLineUp}
             canEdit={canEdit}
             skipBacking={skipBacking}
             onRecordWithoutMusic={song.recordWithoutMusic}

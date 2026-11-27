@@ -93,6 +93,7 @@
     "balanced": "Set the music under your voice. Change it any time with the track's volume.",
     "lineUp": {
       "apply": "Line up",
+      "dismiss": "Keep this take as it is",
       "late": "A little behind the music: line it up",
       "early": "A little ahead of the music: line it up",
       "done": "Lined up. Your next takes will land in time too."
@@ -132,7 +133,7 @@
     "stopTitle": "Stop",
     "recordTitle": "Record",
     "restart": "Redo the take on {name}",
-    "restartTitle": "Redo",
+    "restartTitle": "Redo take",
     "cantRecordImported": "This is a music file. Record on a new track.",
     "cantRecordChords": "This is an instrumental. Record on a new track.",
     "select": "Select {name}",
