@@ -1,44 +1,57 @@
-# Rove
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <img src="docs/assets/logo-light.svg" alt="Rove" width="320">
+  </picture>
+</p>
 
-![Platform: macOS](https://img.shields.io/badge/platform-macOS-lightgrey?logo=apple)
-![Electron](https://img.shields.io/badge/Electron-47848F?logo=electron&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
-![Web Audio API](https://img.shields.io/badge/Web%20Audio%20API-FF6F00)
-[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+<p align="center">
+  <strong>Sing for the love of it.</strong><br>
+  A desktop app for recording your voice over the songs you love.
+</p>
 
-A beginner-friendly desktop app for recording vocals over a backing track, layering harmonies, and polishing the mix with plain-language controls.
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-macOS-lightgrey?logo=apple" alt="Platform: macOS">
+  <img src="https://img.shields.io/badge/Electron-47848F?logo=electron&logoColor=white" alt="Electron">
+  <img src="https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Web%20Audio%20API-FF6F00" alt="Web Audio API">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License: Apache 2.0"></a>
+</p>
 
-## Who it's for
+<p align="center">
+  <a href="https://andy-techen.github.io/rove/"><strong>Website</strong></a> ·
+  <a href="https://github.com/andy-techen/rove/releases/latest"><strong>Download</strong></a>
+</p>
 
-People who love to sing and want to make something they're proud of, without becoming
-audio engineers. [docs/brand.md](docs/brand.md) has the product principles and how Rove
-should look, sound and feel.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshot-dark.png">
+    <img src="docs/assets/screenshot-light.png" alt="Rove: a song with a backing track, lead and harmony, lyrics following along" width="880">
+  </picture>
+</p>
 
-## Roadmap
+## About
 
-Next up: helping singers find songs that suit them, understanding their voice, sounding
-better with less effort, and sharing what they make. The roadmap itself is tracked on a
-GitHub Project board.
+Rove is a desktop app for people who love to sing: in the car, at karaoke, in a choir,
+alone in their room. It's made for a recording you're proud of, without having to
+become an audio engineer.
 
-## Credits
+- **Sing over any song.** Bring a backing track and record your voice over it.
+- **Layer harmonies.** Stack your own voice into a fuller sound.
+- **Sound your best.** Plain-language controls with good defaults, and nothing that can
+  clip or sound broken.
+- **Never lose a take.** Your recordings are never modified; edits live in the project.
 
-Vocal removal uses [SCNet](https://github.com/starrytong/SCNet) (Tong et al., ICASSP 2024;
-code and pretrained weights MIT, © 2024 starrytong) as exported to ONNX by
-[audiojs](https://huggingface.co/audiojs/scnet), run with
-[@audio/neural-separate](https://github.com/audiojs/neural) and
-[ONNX Runtime Web](https://onnxruntime.ai). Its licence ships with the app in
-`resources/models/scnet/LICENSE`.
+## Install
 
-The piano instrumental plays samples from the
-[Salamander Grand Piano v3](https://github.com/sfzinstruments/SalamanderGrandPiano) by
-Alexander Holm, licensed under
-[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); trimmed and re-encoded, with
-its licence beside them in `src/renderer/src/audio/music/pianoSamples/`.
+Download the latest `.dmg` from
+[Releases](https://github.com/andy-techen/rove/releases/latest): `-arm64` for Apple
+silicon (M1 and later), `-x64` for Intel.
 
-## Stack
-
-Electron + electron-vite, React + TypeScript, Web Audio API with an AudioWorklet for raw PCM capture, electron-builder for packaging.
+> [!NOTE]
+> Rove isn't notarized yet, so macOS blocks the first launch. Open the app once, then go
+> to **System Settings → Privacy & Security** and choose **Open Anyway**.
 
 ## Development
 
@@ -47,46 +60,40 @@ npm install
 npm run dev
 ```
 
-Other scripts: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build:mac`.
+| Command             | What it does                      |
+| ------------------- | --------------------------------- |
+| `npm run dev`       | Run the app with hot reload       |
+| `npm test`          | Run the test suite (Vitest)       |
+| `npm run typecheck` | Type-check main and renderer      |
+| `npm run lint`      | Lint with ESLint                  |
+| `npm run build:mac` | Package `Rove.app` and the `.dmg` |
 
-In dev mode macOS attributes microphone permission to the app that launched `npm run dev` (Terminal, iTerm, VS Code), not to Rove. Run it from one of those and allow access once. If the meter stays flat, check System Settings > Privacy & Security > Microphone.
+In development, macOS attributes microphone access to the app that launched
+`npm run dev` (Terminal, iTerm, VS Code), so allow it there. If the level meter stays
+flat, check **System Settings → Privacy & Security → Microphone**.
 
-## Website
+**Built with** Electron, React, TypeScript and the Web Audio API. The website in
+[`site/`](site) is built with [Astro](https://astro.build).
 
-The landing page lives in `site/`: an [Astro](https://astro.build) site that shares the
-app's design tokens, icons and logo. GitHub Actions (`.github/workflows/site.yml`)
-publishes it to GitHub Pages when it changes on main and after every release, so the
-download buttons always point at the newest `.dmg`.
+## Contributing
 
-```bash
-cd site
-npm install
-npm run dev
-```
+Start with [`CLAUDE.md`](CLAUDE.md), which links the guides every change follows in
+[`docs/`](docs).
 
-Before the first deploy, set Settings → Pages → Source to **GitHub Actions**. The
-footer's Join form sends emails to the community waitlist on Kit, set by `JOIN_FORM_URL`
-in `site/src/site.ts`.
+## Acknowledgements
 
-The demo in the hero plays a synthesised placeholder until a real recording is added:
-put a backing, lead and harmony file (same length, made to loop) in `site/public/demo/`
-and list them in `DEMO_AUDIO` in `site/src/site.ts`.
+- **Vocal removal** uses [SCNet](https://github.com/starrytong/SCNet) (Tong et al.,
+  ICASSP 2024; code and pretrained weights MIT, © 2024 starrytong), as exported to ONNX
+  by [audiojs](https://huggingface.co/audiojs/scnet) and run with
+  [@audio/neural-separate](https://github.com/audiojs/neural) and
+  [ONNX Runtime Web](https://onnxruntime.ai). Its licence ships with the app in
+  `resources/models/scnet/LICENSE`.
+- **The piano** plays samples from the
+  [Salamander Grand Piano v3](https://github.com/sfzinstruments/SalamanderGrandPiano) by
+  Alexander Holm, licensed under
+  [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); trimmed and re-encoded, with
+  its licence in `src/renderer/src/audio/music/pianoSamples/`.
 
-## Releases
+## License
 
-GitHub Actions (`.github/workflows/release.yml`) checks the code, builds a `.dmg` for each
-kind of Mac and publishes them as a GitHub release: `-arm64` for Apple silicon (M1 and
-later), `-x64` for Intel. Start a release either way:
-
-- **On GitHub:** Actions → Release → Run workflow. Pick the branch, type the new version
-  (`1.1.0`) and run it. It tags that commit `v1.1.0` once the build works.
-- **From a terminal:** push a version tag.
-
-```bash
-git tag v1.1.0
-git push origin v1.1.0
-```
-
-The tag sets the app's version. Until the app is signed with a Developer ID and
-notarized, macOS blocks the first launch: open the app once, then go to System Settings >
-Privacy & Security and choose **Open Anyway**.
+[Apache 2.0](LICENSE)

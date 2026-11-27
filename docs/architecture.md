@@ -265,3 +265,29 @@ premium work itself (`requirePlanFor`), so a hidden button is never the only loc
 `electron-vite` bundles the three parts into `out/`; `electron-builder` wraps them with
 Electron into `Rove.app` and a `.dmg` per chip. Pushing a `v*` tag runs
 `.github/workflows/release.yml`, which checks, builds and publishes the release.
+
+### Cutting a release
+
+The workflow builds a `.dmg` for each kind of Mac (`-arm64` for Apple silicon, `-x64` for
+Intel) and publishes them as a GitHub release. Start one either way:
+
+- **On GitHub:** Actions → Release → Run workflow. Pick the branch, type the new version
+  (`1.1.0`) and run it. It tags that commit `v1.1.0` once the build works.
+- **From a terminal:** `git tag v1.1.0 && git push origin v1.1.0`.
+
+The tag sets the app's version. Until the app is signed with a Developer ID and
+notarized, macOS blocks the first launch (Open Anyway in Privacy & Security).
+
+### The website
+
+`site/` is an Astro site that shares the app's design tokens, icons and logo.
+`.github/workflows/site.yml` publishes it to GitHub Pages when it changes on main and
+after every release, so the download buttons always point at the newest `.dmg`
+(Settings → Pages → Source must be **GitHub Actions**). The footer's Join form sends
+emails to the community waitlist on Kit, set by `JOIN_FORM_URL` in `site/src/site.ts`.
+The hero demo plays a synthesised placeholder until a real recording is added: put a
+backing, lead and harmony file (same length, made to loop) in `site/public/demo/` and
+list them in `DEMO_AUDIO` in `site/src/site.ts`.
+
+The README logo (`docs/assets/logo-*.svg`) is the app's `Logo` at size `lg`, one file
+per GitHub theme; regenerate it if the icon or wordmark changes.
