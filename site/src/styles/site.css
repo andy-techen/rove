@@ -6,6 +6,8 @@
   /* Type: bigger than the app, which is a dense desktop tool read up close. */
   /* Headings in Fredoka: round strokes, like the wordmark. */
   --site-font-display: 'Fredoka', var(--font-family);
+  /* For audio jargon on the About page, so it reads as a studio readout. */
+  --site-font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
   --site-font-hero: clamp(56px, 10vw, 136px);
   --site-font-h2: clamp(36px, 6vw, 64px);
   --site-font-lyric: 18px;
@@ -29,7 +31,6 @@
   --site-size-logo-word: 18px;
   --site-size-button: 48px;
   --site-size-input-max: 320px;
-  --site-size-join-field: 260px;
   /* The hero: a sunset whose horizon is the singer's waveform. */
   --site-size-sun: min(24vw, 280px);
   --site-size-sun-tablet: min(40vw, 340px);
@@ -40,9 +41,9 @@
   --site-size-sea-phone: 72px;
   /* Room the controls take above the waveform, so the sun clears them. */
   --site-size-controls: 120px;
-  --site-size-play: 64px;
-  --site-size-play-phone: 52px;
-  --site-size-play-icon: 24px;
+  --site-size-play: 48px;
+  --site-size-play-phone: 44px;
+  --site-size-play-icon: 20px;
   --site-size-polish-dot: 22px;
   --site-size-sun-glow: 120px;
   --site-size-sun-glow-spread: 40px;
@@ -53,7 +54,8 @@
   --site-size-lane-name: 72px;
   --site-size-lane-wave: 26px;
   --site-size-bar-gap: 2px;
-  --site-size-grip: 92px;
+  /* The drawings on the About page's beliefs. */
+  --site-size-belief-art: 80px;
   --site-size-knob: 72px;
   --site-size-knobs-max: 420px;
   --site-size-range: 64px;
@@ -75,6 +77,10 @@
   --site-duration-glow: 1200ms;
   --site-duration-sunrise: 3s;
   --site-duration-play: 1400ms;
+  /* One bar of the home page's backing track. */
+  --site-duration-bar: 1600ms;
+  /* The About page's headphones nod at about 100 beats a minute. */
+  --site-duration-nod: 600ms;
   --site-stagger-knob: 80ms;
   --site-stagger-bar: 20ms;
   --site-tilt-hover: -0.6deg;
@@ -86,6 +92,9 @@
   --site-sky-bottom: #f29a4a;
   --site-sea: #df7f3a;
   --site-sun: #fff8ea;
+  --site-sky-text: var(--color-on-accent);
+  /* The About page's lines: the roadmap's path. */
+  --site-size-rule: 2px;
 
   /* Evening, for the community page: always after sunset, whatever the theme. */
   --site-evening-sky-top: #2b2220;
@@ -102,6 +111,7 @@
     --site-sky-bottom: #b8692a;
     --site-sea: #5a3a24;
     --site-sun: #ffd48a;
+    --site-sky-text: var(--site-evening-text);
   }
 }
 

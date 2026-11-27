@@ -14,9 +14,12 @@ interface Props {
 }
 
 const { title, description, bodyClass } = Astro.props
+// The site is rebuilt on every release, so the year stays current.
+const year = new Date().getFullYear()
 // BASE_URL is '/rove' with no trailing slash, so add one before joining paths.
 const home = import.meta.env.BASE_URL.replace(/\/?$/, '/')
-const onCommunity = Astro.url.pathname.replace(/\/$/, '').endsWith('/community')
+const path = Astro.url.pathname.replace(/\/$/, '')
+const current = (page: string): 'page' | undefined => (path.endsWith(`/${page}`) ? 'page' : undefined)
 ---
 
 <!doctype html>
@@ -38,9 +41,8 @@ const onCommunity = Astro.url.pathname.replace(/\/$/, '').endsWith('/community')
         <a href={home} class="home"><Logo /></a>
         <nav aria-label="Main">
           <a href={`${home}#features`} class="nav-features">Features</a>
-          <a href={`${home}community/`} aria-current={onCommunity ? 'page' : undefined}>
-            Community
-          </a>
+          <a href={`${home}about/`} class="nav-about" aria-current={current('about')}>About</a>
+          <a href={`${home}community/`} aria-current={current('community')}>Community</a>
           <a href={`${home}#download`} class="button button-primary nav-download">Download</a>
         </nav>
       </div>
@@ -50,10 +52,19 @@ const onCommunity = Astro.url.pathname.replace(/\/$/, '').endsWith('/community')
     </main>
     <footer class="site-footer">
       <div class="wrap site-footer-inner">
-        <Logo />
-        <p class="small muted">Made by and for people who love to sing.</p>
+        <div class="footer-brand">
+          <a href={home} class="home"><Logo /></a>
+          <p class="small muted">Made by and for people who love to sing.</p>
+          <div class="footer-meta">
+            <nav class="footer-nav" aria-label="Footer">
+              <a href={`${home}about/`}>About</a>
+              <a href={`${home}community/`}>Community</a>
+            </nav>
+            <p class="muted">© {year} Rove</p>
+          </div>
+        </div>
         <form class="join" action={JOIN_FORM_URL || undefined} method="post">
-          <label for="join-email" class="small muted">Join the community</label>
+          <label for="join-email" class="join-title">Be there when the community opens.</label>
           <div class="join-field">
             <input
               id="join-email"
@@ -113,30 +124,31 @@ const onCommunity = Astro.url.pathname.replace(/\/$/, '').endsWith('/community')
     text-decoration: none;
   }
 
-  nav {
+  .site-header nav {
     display: flex;
     align-items: center;
     gap: var(--space-9);
     font-size: var(--site-font-small);
   }
 
-  nav a:not(.button) {
+  .site-header nav a:not(.button) {
     color: var(--color-text-muted);
     text-decoration: none;
   }
 
-  nav a:not(.button):hover,
-  nav a[aria-current='page'] {
+  .site-header nav a:not(.button):hover,
+  .site-header nav a[aria-current='page'] {
     color: var(--color-text);
   }
 
   /* Phones only have room for two links beside the logo. */
   @media (max-width: 480px) {
-    nav {
+    .site-header nav {
       gap: var(--space-7);
     }
 
-    .nav-features {
+    .nav-features,
+    .nav-about {
       display: none;
     }
   }
@@ -147,34 +159,70 @@ const onCommunity = Astro.url.pathname.replace(/\/$/, '').endsWith('/community')
     padding-inline: var(--space-8);
   }
 
+  /* A band in the cards' warm grey, so the page ends clearly without a marigold tint,
+     which turns brown in the dark theme. */
   .site-footer {
     padding-block: var(--space-12);
     border-top: var(--size-hairline) solid var(--color-border);
+    background: var(--color-surface);
   }
 
+  /* Two columns that weigh the same: who we are on the left, the invitation on the
+     right, both starting from the same top line. */
   .site-footer-inner {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-6) var(--space-9);
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-10) var(--space-12);
   }
 
   .join {
+    display: grid;
+    gap: var(--space-6);
+    width: min(100%, var(--site-size-input-max));
+  }
+
+  .join-title {
+    font-family: var(--site-font-display);
+    font-size: var(--site-font-h3);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .footer-brand {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-6);
+  }
+
+  .footer-meta,
+  .footer-nav {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-4) var(--space-7);
-    margin-inline-start: auto;
+    gap: var(--space-9);
+    white-space: nowrap;
+  }
+
+  /* Fine print under the tagline: a step smaller, so the tagline leads. */
+  .footer-meta {
+    font-size: var(--font-size-caption);
+  }
+
+  .footer-nav a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .footer-nav a:hover {
+    color: var(--color-text);
   }
 
   /* The field and its button read as one pill, with the button tucked inside. */
   .join-field {
     display: flex;
-    flex: 1 1 var(--site-size-join-field);
     padding: var(--space-2);
     border: var(--size-hairline) solid var(--color-border);
     border-radius: var(--radius-pill);
-    background: var(--color-surface);
+    background: var(--color-bg);
     transition: border-color var(--duration-fast);
   }
 
@@ -208,9 +256,4 @@ const onCommunity = Astro.url.pathname.replace(/\/$/, '').endsWith('/community')
     cursor: default;
   }
 
-  @media (max-width: 480px) {
-    .join {
-      flex-basis: 100%;
-    }
-  }
 </style>

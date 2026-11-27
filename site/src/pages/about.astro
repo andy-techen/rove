@@ -1,0 +1,701 @@
+---
+// About: why Rove exists. Golden hour held still, the sun resting on the sea: the time
+// after work when the hours are yours, which is when most of our singers sing.
+import Layout from '../layouts/Layout.astro'
+
+const home = import.meta.env.BASE_URL.replace(/\/?$/, '/')
+
+// Each belief has a small golden-hour drawing of its idea (not a piece of the app: the
+// home page shows those), which plays on hover, or as it scrolls in on a phone.
+const BELIEFS: { art: 'voice' | 'easy' | 'fun'; title: string; text: string }[] = [
+  {
+    art: 'voice',
+    title: 'Your voice is the star.',
+    text: 'Everything in Rove is there to make you sound like you, at your best.'
+  },
+  {
+    art: 'easy',
+    title: 'Easy for anyone.',
+    text: 'You don’t need to know anything about audio. Every control says what you’ll hear, in plain words.'
+  },
+  {
+    art: 'fun',
+    title: 'Singing is for fun.',
+    text: 'No scores, no grades. Just you, a song you love, and a take you’re proud of.'
+  }
+]
+
+// Drawings are in a 200 by 80 box. The orb's quieter neighbours: x, y, radius.
+const DOTS = [
+  [38, 28, 5],
+  [62, 58, 4],
+  [22, 54, 3],
+  [150, 22, 6],
+  [168, 54, 4],
+  [186, 30, 3]
+]
+// What a studio would call a setting, and what Rove calls it instead.
+const JARGON = 'EQ +3 dB @ 200 Hz'
+const PLAIN = 'Warmer'
+
+// The roadmap in the order it's planned: songs that suit you, then sharing, and the
+// community last, where everything else is heading.
+const ROADMAP: { title: string; items: string[]; community?: boolean }[] = [
+  { title: 'Songs for you', items: ['Find songs that suit your voice.'] },
+  { title: 'Ready to share', items: ['Export songs for your phone, and as video.'] },
+  {
+    title: 'The community',
+    items: [
+      'Post a finished take straight from Rove.',
+      'Hear what other people are singing.',
+      'Meet people who sing the same songs you do.'
+    ],
+    community: true
+  }
+]
+---
+
+<Layout
+  title="About: Rove"
+  description="Rove is made by and for people who love to sing, for the hours after work that are yours."
+>
+  <section class="golden">
+    <div class="wrap golden-text">
+      <p class="eyebrow">About Rove</p>
+      <h1>For the hours that are yours.</h1>
+      <p class="lead">
+        Most of us sing after work. Rove is built for that hour or two.
+      </p>
+    </div>
+    <div class="horizon" aria-hidden="true">
+      <div class="sun"></div>
+      <div class="sea">
+        <span style="--i: 0"></span>
+        <span style="--i: 1"></span>
+        <span style="--i: 2"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="why-title">
+    <div class="wrap story">
+      <h2 id="why-title" data-reveal>Why I made it</h2>
+      <div class="story-text" data-reveal style="--reveal-order: 1">
+        <p>
+          I work nine to five, and I love to sing. I always meant to record a few songs for
+          people to hear, but by the time work let go of the day, there was little time and
+          less energy left for learning how to make a voice sound its best. So <q>one day I’ll share a song</q>{' '}
+          stretched into years of one day.
+        </p>
+        <p>
+          I didn’t just want to sing along. I wanted a recording polished until it sounded
+          like me at my best. When I did try, I’d sing the same lines take after
+          take, never sure what to change.
+        </p>
+        <p>
+          So I made Rove to carry the hard part.{' '}
+          <strong>It does the sound engineering, so you can just sing.</strong>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="care-title">
+    <div class="wrap">
+      <h2 id="care-title" data-reveal>What we care about</h2>
+      <ul class="beliefs" role="list">
+        {
+          BELIEFS.map((b, i) => (
+            <li class="belief" data-reveal style={`--reveal-order: ${i}`}>
+              <svg class={`drawing drawing-${b.art}`} viewBox="0 0 200 80" aria-hidden="true">
+                {b.art === 'voice' && (
+                  <>
+                    <circle class="halo" cx="100" cy="40" r="34" />
+                    <circle class="orb" cx="100" cy="40" r="18" />
+                    {DOTS.map(([x, y, r]) => (
+                      <circle class="dot" cx={x} cy={y} r={r} />
+                    ))}
+                  </>
+                )}
+                {b.art === 'easy' && (
+                  <>
+                    <g class="jargon">
+                      <rect x="25" y="25" width="150" height="30" rx="8" />
+                      <text x="100" y="40">{JARGON}</text>
+                    </g>
+                    <g class="plain">
+                      <rect x="48" y="23" width="104" height="34" rx="17" />
+                      <text x="100" y="40">{PLAIN}</text>
+                    </g>
+                  </>
+                )}
+                {b.art === 'fun' && (
+                  <>
+                    <g class="waves">
+                      <path d="M60 46 a10 10 0 0 0 0 16" />
+                      <path d="M51 41 a16 16 0 0 0 0 26" />
+                      <path d="M140 46 a10 10 0 0 1 0 16" />
+                      <path d="M149 41 a16 16 0 0 1 0 26" />
+                    </g>
+                    <g class="headphones">
+                      <path class="band" d="M75 48 V40 a25 25 0 0 1 50 0 V48" />
+                      <rect class="cushion" x="80" y="45" width="5" height="18" rx="2.5" />
+                      <rect class="cushion" x="115" y="45" width="5" height="18" rx="2.5" />
+                      <rect class="cup" x="66" y="41" width="15" height="26" rx="7" />
+                      <rect class="cup" x="119" y="41" width="15" height="26" rx="7" />
+                    </g>
+                  </>
+                )}
+              </svg>
+              <div class="belief-text">
+                <h3>{b.title}</h3>
+                <p class="muted">{b.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="next-title">
+    <div class="wrap">
+      <h2 id="next-title" data-reveal>Where it’s going</h2>
+      <ol class="roadmap" role="list">
+        {
+          ROADMAP.map((stop, i) => (
+            <li
+              class:list={['stop', { community: stop.community }]}
+              data-reveal
+              style={`--reveal-order: ${i}`}
+            >
+              <h3>{stop.title}</h3>
+              <ul role="list">
+                {stop.items.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+              {stop.community && (
+                <a href={`${home}community/`} class="button button-primary">
+                  See what’s coming
+                </a>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  // Phones can't hover, so each belief plays its drawing as it scrolls into view, as the
+  // home page's cards do.
+  if (matchMedia('(hover: none)').matches) {
+    const wake = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) e.target.classList.toggle('awake', e.isIntersecting)
+      },
+      { threshold: 0.6 }
+    )
+    document.querySelectorAll('.belief').forEach((belief) => wake.observe(belief))
+  }
+</script>
+
+<style>
+  .golden {
+    display: grid;
+    overflow: hidden;
+    background: linear-gradient(var(--site-sky-top), var(--site-sky-bottom));
+  }
+
+  .golden-text {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-9);
+    padding-block: var(--site-section) var(--space-12);
+    color: var(--site-sky-text);
+  }
+
+  .eyebrow {
+    margin-bottom: calc(var(--space-6) * -1);
+    font-size: var(--site-font-small);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  h1 {
+    max-width: 11ch;
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+  }
+
+  .lead {
+    max-width: var(--site-width-text);
+    font-size: var(--site-font-lead);
+  }
+
+  /* The sun rests on the horizon, half in the sea, its light rippling on the water. */
+  .horizon {
+    position: relative;
+    display: grid;
+    justify-items: center;
+  }
+
+  .sun {
+    width: var(--site-size-sun);
+    aspect-ratio: 2;
+    border-radius: var(--site-size-sun) var(--site-size-sun) 0 0;
+    background: var(--site-sun);
+    box-shadow: 0 0 var(--site-size-sun-glow) var(--site-size-sun-glow-spread)
+      color-mix(in srgb, var(--site-sun) 35%, transparent);
+  }
+
+  .sea {
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: var(--space-6);
+    width: 100%;
+    height: var(--site-size-sea);
+    padding-top: var(--space-6);
+    background: var(--site-sea);
+  }
+
+  /* Each line of reflected light is narrower than the one above, and drifts. */
+  .sea span {
+    width: calc(var(--site-size-sun) * (0.8 - var(--i) * 0.22));
+    height: var(--space-2);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--site-sun) 70%, transparent);
+    animation: shimmer var(--site-duration-sunrise) ease-in-out infinite alternate;
+    animation-delay: calc(var(--i) * var(--site-duration-swap));
+  }
+
+  /* The story reads like a page of a book: its heading beside it, and the line every
+     singer tells themselves picked out in the round display face. */
+  .story {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: var(--space-12);
+    align-items: start;
+  }
+
+  .story h2 {
+    position: sticky;
+    top: calc(var(--site-header) + var(--space-10));
+  }
+
+  .story-text {
+    display: grid;
+    gap: var(--space-8);
+    max-width: var(--site-width-text);
+    font-size: var(--site-font-lead);
+  }
+
+  .story-text q {
+    color: var(--color-accent-text);
+    font-family: var(--site-font-display);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .story-text strong {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* Sections that follow one another share one gap, not two paddings stacked, so every
+     gap on the page is the same. */
+  .section + .section {
+    padding-top: 0;
+  }
+
+  .beliefs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-8);
+    margin-top: var(--space-12);
+    padding: 0;
+    list-style: none;
+  }
+
+  .beliefs li {
+    display: grid;
+    align-content: space-between;
+    gap: var(--space-10);
+    padding: var(--space-10);
+    border: var(--size-hairline) solid var(--color-border);
+    border-radius: var(--site-radius-card);
+    background: var(--color-surface);
+  }
+
+  .beliefs h3,
+  .stop h3 {
+    font-size: var(--site-font-h3);
+  }
+
+  /* A path from now towards evening: each stop hangs from one line, and the community,
+     where it's heading, is picked out. */
+  .roadmap {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.6fr;
+    gap: var(--space-8);
+    margin-top: var(--space-12);
+    padding: var(--space-10) 0 0;
+    border-top: var(--site-size-rule) solid var(--color-border);
+    list-style: none;
+  }
+
+  .stop {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: var(--space-5);
+    padding: var(--space-10);
+    border-radius: var(--site-radius-card);
+  }
+
+  /* The stop's dot sits on the line above it. */
+  .stop::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--space-10) * -1 - var(--space-3) - var(--site-size-rule) / 2);
+    left: var(--space-10);
+    width: calc(var(--space-3) * 2);
+    aspect-ratio: 1;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent);
+  }
+
+  .stop ul {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    color: var(--color-text-muted);
+    list-style: none;
+  }
+
+  /* The stop it's all heading to: a warm tint and a marigold edge, flat, so it stands
+     out without pulling harder than the story. */
+  .community {
+    border: var(--size-hairline) solid color-mix(in srgb, var(--color-accent) 45%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  }
+
+  .community ul {
+    margin-bottom: var(--space-4);
+  }
+
+  .community .button {
+    justify-self: start;
+  }
+
+  /* Motion, like the other pages' cards, only once the page is ready to reveal (so not
+     under reduced motion): the path lights up from the first stop as it scrolls in, each
+     stop's dot turns on as its stop arrives. */
+  :global(.reveal-ready) .roadmap::after {
+    content: '';
+    position: absolute;
+    top: calc(var(--site-size-rule) * -1);
+    left: 0;
+    width: 100%;
+    height: var(--site-size-rule);
+    background: var(--color-accent);
+    transform-origin: left;
+    scale: 0 1;
+    transition: scale var(--site-duration-glow) var(--site-ease);
+  }
+
+  :global(.reveal-ready) .roadmap:has(.stop.revealed)::after {
+    scale: 1 1;
+  }
+
+  :global(.reveal-ready) .stop::before {
+    scale: 0;
+    transition: scale var(--site-duration-grow) var(--site-ease);
+    transition-delay: calc(
+      var(--reveal-order, 0) * var(--site-duration-swap) + var(--site-duration-swap)
+    );
+  }
+
+  :global(.reveal-ready) .stop.revealed::before {
+    scale: 1;
+  }
+
+  .belief-text {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .drawing {
+    width: 100%;
+    height: var(--site-size-belief-art);
+    overflow: visible;
+  }
+
+  /* Your voice is the star: the orb from the logo, glowing, while the dots around it sit
+     back. */
+  .halo,
+  .orb,
+  .dot {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition:
+      scale var(--site-duration-glow) var(--site-ease),
+      opacity var(--site-duration-glow) var(--site-ease);
+  }
+
+  .halo {
+    fill: var(--color-accent);
+    opacity: 0.15;
+    scale: 0.75;
+  }
+
+  .orb {
+    fill: var(--color-accent);
+  }
+
+  .dot {
+    fill: var(--color-text-muted);
+    opacity: 0.5;
+  }
+
+  .belief:is(:hover, .awake) .halo {
+    opacity: 0.3;
+    scale: 1.15;
+  }
+
+  .belief:is(:hover, .awake) .orb {
+    scale: 1.1;
+  }
+
+  .belief:is(:hover, .awake) .dot {
+    opacity: 0.15;
+  }
+
+  /* Easy for anyone: a studio's setting, in its own jargon, turns into the word for what
+     you'd hear. */
+  .jargon,
+  .plain {
+    transition:
+      opacity var(--site-duration-turn) var(--site-ease),
+      translate var(--site-duration-turn) var(--site-ease);
+  }
+
+  .drawing-easy text {
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  .jargon rect {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 1.5;
+  }
+
+  .jargon text {
+    fill: var(--color-text-muted);
+    font-family: var(--site-font-mono);
+    font-size: var(--font-size-caption);
+  }
+
+  .plain {
+    opacity: 0;
+    translate: 0 8px;
+  }
+
+  .plain rect {
+    fill: var(--color-accent);
+  }
+
+  .plain text {
+    fill: var(--color-on-accent);
+    font-family: var(--site-font-display);
+    font-size: var(--site-font-h3);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .belief:is(:hover, .awake) .jargon {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+
+  .belief:is(:hover, .awake) .plain {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: var(--site-duration-swap);
+  }
+
+  /* Singing is for fun: headphones on, nodding along, the song spilling out of them. */
+  .headphones {
+    transform-box: view-box;
+    transform-origin: 100px 60px;
+  }
+
+  .band {
+    fill: none;
+    stroke: var(--color-text-muted);
+    stroke-width: 5;
+    stroke-linecap: round;
+  }
+
+  .cushion {
+    fill: var(--color-text-muted);
+  }
+
+  .cup {
+    fill: var(--color-accent);
+  }
+
+  .waves path {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    opacity: 0;
+  }
+
+  .belief:is(:hover, .awake) .headphones {
+    animation: nod var(--site-duration-nod) ease-in-out infinite alternate;
+  }
+
+  .belief:is(:hover, .awake) .waves path {
+    animation: wave calc(var(--site-duration-nod) * 2) ease-out infinite;
+  }
+
+  .belief:is(:hover, .awake) .waves path:nth-child(even) {
+    animation-delay: calc(var(--site-duration-nod) / 2);
+  }
+
+  @keyframes nod {
+    from {
+      rotate: -5deg;
+    }
+
+    to {
+      rotate: 5deg;
+    }
+  }
+
+  @keyframes wave {
+    0% {
+      opacity: 0;
+    }
+
+    30% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* The same small tilt as the cards on the other pages. */
+  .beliefs li {
+    transition: rotate var(--site-duration-hover) var(--site-ease);
+  }
+
+  .beliefs li:hover {
+    rotate: var(--site-tilt-hover);
+  }
+
+  /* Without motion, each drawing rests where its trick ends, and the orb sits still. */
+  @media (prefers-reduced-motion: reduce) {
+    .beliefs li,
+    .halo,
+    .orb,
+    .dot,
+    .jargon,
+    .plain {
+      transition: none;
+    }
+
+    .beliefs li:hover {
+      rotate: none;
+    }
+
+    .halo {
+      opacity: 0.3;
+      scale: 1.15;
+    }
+
+    .dot {
+      opacity: 0.15;
+    }
+
+    .jargon {
+      opacity: 0;
+    }
+
+    .plain {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    .waves path {
+      opacity: 0.6;
+    }
+
+    .belief:is(:hover, .awake) :is(.headphones, .waves path) {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .story,
+    .beliefs,
+    .roadmap {
+      grid-template-columns: 1fr;
+    }
+
+    .story {
+      gap: var(--space-8);
+    }
+
+    .story h2 {
+      position: static;
+    }
+
+    /* Stacked, the line runs down the side instead of across the top. */
+    .roadmap {
+      padding: 0 0 0 var(--space-8);
+      border-top: none;
+      border-left: var(--site-size-rule) solid var(--color-border);
+    }
+
+    .stop::before {
+      top: calc(var(--space-10) + var(--space-2));
+      left: calc(var(--space-8) * -1 - var(--space-3) - var(--site-size-rule) / 2);
+    }
+
+    :global(.reveal-ready) .roadmap::after {
+      top: 0;
+      left: calc(var(--site-size-rule) * -1);
+      width: var(--site-size-rule);
+      height: 100%;
+      transform-origin: top;
+      scale: 1 0;
+    }
+
+    .sun {
+      width: var(--site-size-sun-phone);
+    }
+
+    .sea span {
+      width: calc(var(--site-size-sun-phone) * (0.8 - var(--i) * 0.22));
+    }
+  }
+
+  @keyframes shimmer {
+    to {
+      opacity: 0.4;
+      translate: var(--space-6) 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sea span {
+      animation: none;
+    }
+  }
+</style>

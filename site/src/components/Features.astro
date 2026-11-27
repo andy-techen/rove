@@ -12,17 +12,22 @@ const LYRICS = [
   'Nobody here to hear but me',
   'So I sing it like I mean it'
 ]
-// Guitar grips, low E to high E: the fret for each string, -1 muted, 0 open.
-const CHORDS: { name: string; frets: number[] }[] = [
-  { name: 'C', frets: [-1, 3, 2, 0, 1, 0] },
-  { name: 'G', frets: [3, 2, 0, 0, 0, 3] },
-  { name: 'Am', frets: [-1, 0, 2, 2, 1, 0] },
-  { name: 'F', frets: [1, 3, 3, 2, 1, 1] }
-]
-// Chord box geometry, in the grip SVG's units.
-const GRIP = { left: 8, top: 14, string: 10, fret: 13, frets: 4, strings: 6 }
-const stringX = (s: number): number => GRIP.left + s * GRIP.string
-const fretY = (f: number): number => GRIP.top + f * GRIP.fret
+// A backing track made in Rove: a chord for each bar on the guitar, the piano's tune
+// over it, and a beat under both. The beat is sixteen steps, 1 a hit.
+const BAND_CHORDS = ['C', 'G', 'Am', 'F']
+const BEAT = [1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1]
+// The piano's tune, drawn as a soft hill: how far down its row each eighth of the loop
+// sits (0 top, 1 bottom), joined by smooth curves and filled to the floor.
+const TUNE = [0.6, 0.25, 0.45, 0.05, 0.5, 0.2, 0.65, 0.25, 0.5]
+const tuneAt = (i: number): [number, number] => [(i / (TUNE.length - 1)) * 100, TUNE[i] * 100]
+const TUNE_PATH =
+  TUNE.map((_, i) => {
+    const [x, y] = tuneAt(i)
+    if (i === 0) return `M${x} ${y}`
+    const [px, py] = tuneAt(i - 1)
+    const mid = (px + x) / 2
+    return `C${mid} ${py} ${mid} ${y} ${x} ${y}`
+  }).join(' ') + ' V100 H0 Z'
 
 // The knob as the app draws it: a ring, the value along it, a green dot at our pick.
 const RING = 40
@@ -51,6 +56,26 @@ const time = Array.from({ length: NOTES }, (_, i) => {
     <p class="sub">From the first take to the one you share.</p>
 
     <div class="toys">
+      <article class="card toy toy-polish">
+        <div class="art knobs" aria-hidden="true">
+          {
+            KNOBS.map((k, i) => (
+              <figure class="knob" style={`--to: ${k.value}; --i: ${i}`}>
+                <svg viewBox={`0 0 ${VIEW} ${VIEW}`}>
+                  <circle class="face" cx="50" cy="50" r="30" />
+                  <path class="rail" d={RAIL} />
+                  <path class="value" d={RAIL} pathLength="1" />
+                  <circle class="pick" cx={k.dot.x} cy={k.dot.y} r="4" />
+                  <line class="pointer" x1="50" y1="50" x2="50" y2="24" />
+                </svg>
+                <figcaption>{k.name}</figcaption>
+              </figure>
+            ))
+          }
+        </div>
+        <h3>Polish in plain words</h3>
+      </article>
+
       <article class="card toy toy-harmony">
         <div class="art" aria-hidden="true">
           <div class="lane">
@@ -70,46 +95,6 @@ const time = Array.from({ length: NOTES }, (_, i) => {
           {LYRICS.map((line, i) => <li class={i === 0 ? 'now' : undefined}>{line}</li>)}
         </ol>
         <h3>Lyrics at hand</h3>
-      </article>
-
-      <article class="card toy toy-chords" data-cycle>
-        <div class="art chord-now" aria-hidden="true">
-          <div class="grips">
-            {
-              CHORDS.map((c, i) => (
-                <svg viewBox="0 0 66 72" class:list={['grip', { now: i === 0 }]}>
-                  {Array.from({ length: GRIP.frets + 1 }, (_, f) => (
-                    <line
-                      class:list={{ nut: f === 0 }}
-                      x1={stringX(0)}
-                      x2={stringX(GRIP.strings - 1)}
-                      y1={fretY(f)}
-                      y2={fretY(f)}
-                    />
-                  ))}
-                  {Array.from({ length: GRIP.strings }, (_, s) => (
-                    <line x1={stringX(s)} x2={stringX(s)} y1={fretY(0)} y2={fretY(GRIP.frets)} />
-                  ))}
-                  {c.frets.map((f, s) =>
-                    f > 0 ? (
-                      <circle class="finger" cx={stringX(s)} cy={fretY(f - 0.5)} r="3.8" />
-                    ) : f === 0 ? (
-                      <circle class="open" cx={stringX(s)} cy="7" r="2.6" />
-                    ) : (
-                      <text class="mute" x={stringX(s)} y="9.5">
-                        ×
-                      </text>
-                    )
-                  )}
-                </svg>
-              ))
-            }
-          </div>
-          <ol class="chord-strip">
-            {CHORDS.map((c, i) => <li class={i === 0 ? 'now' : undefined}>{c.name}</li>)}
-          </ol>
-        </div>
-        <h3>Chords to follow</h3>
       </article>
 
       <article class="card toy toy-voice">
@@ -137,24 +122,26 @@ const time = Array.from({ length: NOTES }, (_, i) => {
         <h3>Get to know your voice</h3>
       </article>
 
-      <article class="card toy toy-polish">
-        <div class="art knobs" aria-hidden="true">
-          {
-            KNOBS.map((k, i) => (
-              <figure class="knob" style={`--to: ${k.value}; --i: ${i}`}>
-                <svg viewBox={`0 0 ${VIEW} ${VIEW}`}>
-                  <circle class="face" cx="50" cy="50" r="30" />
-                  <path class="rail" d={RAIL} />
-                  <path class="value" d={RAIL} pathLength="1" />
-                  <circle class="pick" cx={k.dot.x} cy={k.dot.y} r="4" />
-                  <line class="pointer" x1="50" y1="50" x2="50" y2="24" />
-                </svg>
-                <figcaption>{k.name}</figcaption>
-              </figure>
-            ))
-          }
+      <article class="card toy toy-band" style={`--bars: ${BAND_CHORDS.length}; --steps: ${BEAT.length}`}>
+        <div class="art band" aria-hidden="true">
+          <b>Guitar</b>
+          <ol class="band-bars">
+            {BAND_CHORDS.map((c, i) => <li style={`--i: ${i}`}>{c}</li>)}
+          </ol>
+          <b>Piano</b>
+          <div class="band-tune">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={TUNE_PATH} /></svg>
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="tune-lit">
+              <path d={TUNE_PATH} />
+            </svg>
+          </div>
+          <b>Drums</b>
+          <div class="band-beat">
+            {BEAT.map((hit, i) => <i class:list={{ hit }} style={`--i: ${i}`} />)}
+          </div>
+          <span class="playhead"></span>
         </div>
-        <h3>Polish in plain words</h3>
+        <h3>Make your own backing track</h3>
       </article>
     </div>
   </div>
@@ -163,14 +150,14 @@ const time = Array.from({ length: NOTES }, (_, i) => {
 <script>
   import { cycleState } from '../features'
 
-  // Lyrics and chords move on as they do in the app while a song plays.
+  // Lyrics move on as they do in the app while a song plays.
   const CYCLE_MS = 1800
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     let step = 0
     setInterval(() => {
       step++
       for (const toy of document.querySelectorAll('[data-cycle]')) {
-        for (const list of toy.querySelectorAll('.lines, .grips, .chord-strip')) {
+        for (const list of toy.querySelectorAll('.lines')) {
           ;[...list.children].forEach((el, i) => {
             const state = cycleState(i, step, list.children.length)
             el.classList.toggle('now', state === 'now')
@@ -211,8 +198,9 @@ const time = Array.from({ length: NOTES }, (_, i) => {
     grid-column: span 2;
   }
 
-  .toy-harmony,
-  .toy-lyrics {
+  /* Polish leads: it's what makes a take sound its best. */
+  .toy-polish,
+  .toy-harmony {
     grid-column: span 3;
   }
 
@@ -291,75 +279,152 @@ const time = Array.from({ length: NOTES }, (_, i) => {
     font-weight: var(--font-weight-semibold);
   }
 
-  /* Chords: how to hold the one to play now, and the ones coming up. */
-  .chord-now {
+  /* Backing track: a piano bar and a beat, which play through as the playhead sweeps. */
+  .band {
+    --loop: calc(var(--site-duration-bar) * var(--bars));
+
+    position: relative;
     grid-template-columns: auto 1fr;
     align-items: center;
-    gap: var(--space-9);
+    gap: var(--space-7) var(--space-6);
   }
 
-  .grips {
+  .band b {
+    color: var(--color-text-muted);
+    font-size: var(--site-font-small);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .band-bars,
+  .band-beat {
     display: grid;
+    gap: var(--space-2);
   }
 
-  .grip {
-    grid-area: 1 / 1;
-    width: var(--site-size-grip);
-    visibility: hidden;
-  }
-
-  .grip.now {
-    visibility: visible;
-  }
-
-  .grip line {
-    stroke: var(--color-text-muted);
-    stroke-width: 1;
-  }
-
-  .grip .nut {
-    stroke: var(--color-text);
-    stroke-width: 3;
-  }
-
-  .grip .finger {
-    fill: var(--color-accent);
-  }
-
-  .grip .open {
-    fill: none;
-    stroke: var(--color-text-muted);
-  }
-
-  .grip .mute {
-    fill: var(--color-text-muted);
-    font-size: 8px;
-    text-anchor: middle;
-  }
-
-  .chord-strip {
-    display: flex;
-    gap: var(--space-4);
+  .band-bars {
+    grid-template-columns: repeat(var(--bars), 1fr);
     padding: 0;
     list-style: none;
   }
 
-  .chord-strip li {
-    padding: var(--space-3) var(--space-5);
-    border-radius: var(--radius-lg);
+  .band-bars li {
+    padding-block: var(--space-3);
+    border-radius: var(--radius-md);
     background: var(--color-surface-raised);
     color: var(--color-text-muted);
     font-weight: var(--font-weight-semibold);
-    transition:
-      background var(--site-duration-swap),
-      color var(--site-duration-swap),
-      scale var(--site-duration-swap) var(--site-ease);
+    text-align: center;
   }
 
-  .chord-strip .now {
+  .band-beat {
+    grid-template-columns: repeat(var(--steps), 1fr);
+    justify-items: center;
+  }
+
+  .band-beat i {
+    width: var(--space-4);
+    aspect-ratio: 1;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-raised);
+  }
+
+  .band-beat .hit {
     background: var(--color-accent);
-    color: var(--color-on-accent);
-    scale: var(--site-scale-now);
+  }
+
+  /* The piano is a tune, not a beat: a soft hill in the shape of the melody, warming up
+     from left to right as the playhead plays it. */
+  .band-tune {
+    display: grid;
+    height: var(--space-10);
+  }
+
+  .band-tune svg {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+  }
+
+  .band-tune path {
+    fill: color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+
+  .tune-lit {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  .band-tune .tune-lit path {
+    fill: var(--color-accent);
+  }
+
+  .toy-band:is(:hover, .awake) .tune-lit {
+    animation: tune-play var(--loop) linear infinite;
+  }
+
+  @keyframes tune-play {
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  /* Placed absolutely in the tracks' column, so it spans both rows without taking a cell
+     from the grid's own layout. */
+  .playhead {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    grid-row: 1 / -1;
+    grid-column: 2;
+    width: var(--site-size-rule);
+    background: var(--color-danger);
+    opacity: 0;
+  }
+
+  .toy-band:is(:hover, .awake) .playhead {
+    opacity: 1;
+    animation: sweep var(--loop) linear infinite;
+  }
+
+  .toy-band:is(:hover, .awake) .band-bars li {
+    animation: bar-on var(--loop) step-end infinite;
+    animation-delay: calc(var(--i) * var(--site-duration-bar));
+  }
+
+  .toy-band:is(:hover, .awake) .band-beat .hit {
+    animation: hit var(--loop) var(--site-ease) infinite;
+    animation-delay: calc(var(--i) * var(--loop) / var(--steps));
+  }
+
+  @keyframes sweep {
+    from {
+      margin-left: 0;
+    }
+
+    to {
+      margin-left: 100%;
+    }
+  }
+
+  @keyframes bar-on {
+    0% {
+      background: var(--color-accent);
+      color: var(--color-on-accent);
+    }
+
+    25% {
+      background: var(--color-surface-raised);
+      color: var(--color-text-muted);
+    }
+  }
+
+  @keyframes hit {
+    0% {
+      scale: 1.8;
+    }
+
+    10% {
+      scale: 1;
+    }
   }
 
   /* Range: time on each note over a keyboard, the comfortable stretch in soft marigold. */
@@ -502,15 +567,14 @@ const time = Array.from({ length: NOTES }, (_, i) => {
     font-weight: var(--font-weight-semibold);
   }
 
-  /* Tablets: two cards to a row, Polish last and across the whole width. */
+  /* Tablets: two cards to a row, Polish first and across the whole width. */
   @media (max-width: 1024px) {
     .toys {
       grid-template-columns: 1fr 1fr;
     }
 
     .toy,
-    .toy-harmony,
-    .toy-lyrics {
+    .toy-harmony {
       grid-column: auto;
     }
 
@@ -535,6 +599,10 @@ const time = Array.from({ length: NOTES }, (_, i) => {
     .hist i,
     .knob {
       transition: none;
+    }
+
+    .toy-band:is(:hover, .awake) :is(.playhead, li, .hit, .tune-lit) {
+      animation: none;
     }
   }
 </style>
