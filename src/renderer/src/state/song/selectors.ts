@@ -7,6 +7,7 @@ import {
   Track,
   TrackRole,
   chordsTracksOf,
+  findClip,
   formatDuration,
   instrumentOf,
   musicOf,
@@ -15,6 +16,7 @@ import {
   tracksOf
 } from './project'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
+import type { ClipRef } from '../editing/clipSets'
 import { beatCells, beatName } from '../chords/beats'
 import { ChartPlace, ChordPart, chartCells, instrumentalTimeline } from '../chords/chart'
 import { chordName } from '../chords/noteNames'
@@ -238,6 +240,27 @@ export function hasMusicChoice(project: Project | undefined, skipBacking: boolea
   return (
     !!project &&
     (tracksOf(project, 'backing').length > 0 || chordsTracksOf(project).length > 0 || skipBacking)
+  )
+}
+
+/** Line up needs a vocal take and music to line it up with. */
+export function canLineUpClip(project: Project, ref: ClipRef): boolean {
+  const track = project.tracks.find((t) => t.id === ref.trackId)
+  const hasMusic =
+    tracksOf(project, 'backing').some((t) => t.clips.length > 0) ||
+    chordsTracksOf(project).some((t) => (t.chart?.bars.length ?? 0) > 0)
+  return track?.role === 'vocal' && !!findClip(project, ref.trackId, ref.clipId) && hasMusic
+}
+
+/** Sync harmony needs a harmony take with a lead take sung under it. */
+export function canSyncHarmonyClip(project: Project, ref: ClipRef): boolean {
+  const track = project.tracks.find((t) => t.id === ref.trackId)
+  const clip = findClip(project, ref.trackId, ref.clipId)
+  if (track?.role !== 'vocal' || track.part !== 'harmony' || !clip) return false
+  return tracksOf(project, 'vocal').some(
+    (t) =>
+      t.part !== 'harmony' &&
+      t.clips.some((c) => c.start < clip.start + clip.duration && c.start + c.duration > clip.start)
   )
 }
 

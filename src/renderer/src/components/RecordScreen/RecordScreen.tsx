@@ -59,10 +59,13 @@ import {
   copyBeats,
   CopiedBeats,
   withoutMyBeat,
-  withInstrument
+  withInstrument,
+  withVocalPart
 } from '../../state/song/project'
 import {
   canExportSong,
+  canLineUpClip,
+  canSyncHarmonyClip,
   edgeAfter,
   edgeBefore,
   hasMusicChoice,
@@ -280,6 +283,8 @@ export function RecordScreen({
     ? selection.filter((ref) => findClip(open.data, ref.trackId, ref.clipId))
     : []
   const selected = selectedClips.at(-1) ?? null
+  // Lining up and syncing act on one take at a time.
+  const oneClip = selectedClips.length === 1 ? selected : null
   const selectedClip =
     selected && open ? findClip(open.data, selected.trackId, selected.clipId) : undefined
   const canSplit = canEdit && !!open && canSplitClips(open.data, selectedClips, position)
@@ -540,6 +545,9 @@ export function RecordScreen({
   const kindOfSelected = open?.data.tracks.filter(
     (t) => t.role === open.data.tracks.find((s) => s.id === selectedTrackId)?.role
   )
+  const selectedVocal = open?.data.tracks.find(
+    (t) => t.id === selectedTrackId && t.role === 'vocal'
+  )
   const placeOfSelected = kindOfSelected?.findIndex((t) => t.id === selectedTrackId) ?? -1
 
   // A right-click picks what it's on first; the menu waits for that render, so it shows
@@ -564,7 +572,10 @@ export function RecordScreen({
             (drumTarget !== null && copiedBeats !== null),
           canSplit,
           canMoveUp: placeOfSelected > 0,
-          canMoveDown: placeOfSelected >= 0 && placeOfSelected < (kindOfSelected?.length ?? 0) - 1
+          canMoveDown: placeOfSelected >= 0 && placeOfSelected < (kindOfSelected?.length ?? 0) - 1,
+          canLineUp: oneClip !== null && canLineUpClip(open.data, oneClip),
+          canSyncHarmony: oneClip !== null && canSyncHarmonyClip(open.data, oneClip),
+          vocalPart: selectedVocal ? (selectedVocal.part ?? 'lead') : null
         })
       )
     }
@@ -628,6 +639,17 @@ export function RecordScreen({
         break
       case 'ungroupClips':
         ungroup()
+        break
+      case 'makeHarmony':
+      case 'makeLead':
+        if (canEdit && open && selectedTrackId) {
+          const part = action === 'makeHarmony' ? 'harmony' : 'lead'
+          song.edit(withVocalPart(open.data, selectedTrackId, part))
+        }
+        break
+      case 'lineUp':
+      case 'syncHarmony':
+        if (canEdit && oneClip) void transport.fixTiming(action, oneClip.trackId, oneClip.clipId)
         break
       case 'moveTrackUp':
         nudgeTrack(-1)

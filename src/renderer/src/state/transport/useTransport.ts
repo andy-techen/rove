@@ -113,6 +113,8 @@ export interface Transport {
   applyOffer(): void
   /** Leaves that take where it is; the offer goes. */
   dismissOffer(): void
+  /** Lines up or syncs a take already on the timeline, straight away. */
+  fixTiming(kind: TakeOffer['kind'], trackId: string, clipId: string): Promise<void>
   retrySave(): Promise<void>
   discardPending(): void
 }
@@ -369,17 +371,16 @@ export function useTransport(
   }
 
   /**
-   * A harmony sung over the lead is checked against the lead, phrase by phrase, and for
-   * how loud it sits under it: true when there was a lead to check against (whether or
-   * not anything needs changing).
+   * How a harmony sits against the lead sung under it: the phrases to move and the
+   * volume to set (each null when it's fine). Null when it isn't a harmony over a lead.
    */
-  const checkAgainstLead = (
+  const leadFix = (
     trackId: string,
-    clip: Pick<Clip, 'id' | 'start' | 'offset' | 'duration'>,
+    clip: Pick<Clip, 'start' | 'offset' | 'duration'>,
     audio: AudioBuffer
-  ): boolean => {
+  ): { phrases: PhraseTiming[] | null; volume: number | null } | null => {
     const track = tracks?.find((t) => t.id === trackId)
-    if (track?.role !== 'vocal' || track.part !== 'harmony') return false
+    if (track?.role !== 'vocal' || track.part !== 'harmony') return null
     const overlaps = (c: ScheduledClip): boolean =>
       c.start < clip.start + clip.duration && c.start + c.duration > clip.start
     const leads = (tracks ?? []).flatMap((t) => {
@@ -389,7 +390,7 @@ export function useTransport(
           : []
       return clips.length > 0 ? [{ clips, volume: t.volume }] : []
     })
-    if (leads.length === 0) return false
+    if (leads.length === 0) return null
     const { sampleRate } = audio
     const from = Math.round(clip.offset * sampleRate)
     const length = Math.min(audio.length - from, Math.round(clip.duration * sampleRate))
@@ -405,10 +406,19 @@ export function useTransport(
       project && canBalanceHarmony(project, trackId)
         ? balancedHarmonyVolume(harmony, lead, track.volume, sampleRate)
         : null
-    if (phrases || volume !== null) {
-      setOffer({ kind: 'syncHarmony', trackId, clipId: clip.id, phrases, volume })
-    }
-    return true
+    return { phrases, volume }
+  }
+
+  /** How late a take sits behind the music (negative when early); null when unclear. */
+  const musicLag = async (
+    trackId: string,
+    clip: Pick<Clip, 'start' | 'offset' | 'duration'>,
+    audio: AudioBuffer
+  ): Promise<number | null> => {
+    const heard = takeAndMusic(trackId, clip, audio, ['backing', 'chords'])
+    if (!heard) return null
+    const { voice, music, sampleRate } = heard
+    return takeLag({ channels: [voice], sampleRate }, { channels: [music], sampleRate })
   }
 
   /**
@@ -422,14 +432,64 @@ export function useTransport(
   ): Promise<void> => {
     // Syncing with the lead covers any delay the music check would find too, if the lead
     // is in time; and if it isn't, a harmony should still follow the lead.
-    if (checkAgainstLead(trackId, clip, audio)) return
-    const heard = takeAndMusic(trackId, clip, audio, ['backing', 'chords'])
-    if (!heard) return
-    const { voice, music, sampleRate } = heard
-    const lag = await takeLag({ channels: [voice], sampleRate }, { channels: [music], sampleRate })
+    const fix = leadFix(trackId, clip, audio)
+    if (fix) {
+      if (fix.phrases || fix.volume !== null) {
+        setOffer({ kind: 'syncHarmony', trackId, clipId: clip.id, ...fix })
+      }
+      return
+    }
+    const lag = await musicLag(trackId, clip, audio)
     if (lag !== null && Math.abs(lag) >= MIN_LINE_UP_SEC) {
       setOffer({ kind: 'lineUp', trackId, clipId: clip.id, bySec: lag })
     }
+  }
+
+  // The song as it is now, for fixes that land after an analysis (an edit made while
+  // it ran isn't lost).
+  const latest = useRef(project)
+  useEffect(() => {
+    latest.current = project
+  })
+
+  /**
+   * Fixes a take's timing. Lining up a just-recorded take also teaches the delay to later
+   * takes; an older take may have been sung on another setup, so it doesn't.
+   */
+  const applyFix = (fix: TakeOffer, justRecorded: boolean): void => {
+    const now = latest.current
+    if (!now || !findClip(now, fix.trackId, fix.clipId)) return
+    if (fix.kind === 'lineUp') {
+      song.edit(lineUpClip(now, fix.trackId, fix.clipId, fix.bySec))
+      if (justRecorded) onLinedUp?.(fix.bySec)
+      showSnack(t(justRecorded ? 'transport.lineUp.done' : 'transport.lineUp.doneOne'))
+    } else {
+      const { trackId, clipId, phrases, volume } = fix
+      const synced = phrases ? syncPhrases(now, trackId, clipId, phrases) : now
+      song.edit(volume === null ? synced : withTrackChanges(synced, trackId, { volume }))
+      showSnack(t('transport.harmonySync.done'))
+    }
+  }
+
+  /** Checks a take on the timeline and fixes it straight away (the right-click menu). */
+  const fixTiming = async (
+    kind: TakeOffer['kind'],
+    trackId: string,
+    clipId: string
+  ): Promise<void> => {
+    const clip = project && findClip(project, trackId, clipId)
+    const take = clip && audio[clip.file]
+    if (!clip || !take) return
+    if (kind === 'syncHarmony') {
+      const fix = leadFix(trackId, clip, take)
+      if (!fix) return
+      if (!fix.phrases && fix.volume === null) return showSnack(t('transport.harmonySync.inSync'))
+      return applyFix({ kind, trackId, clipId, ...fix }, false)
+    }
+    const lag = await musicLag(trackId, clip, take)
+    if (lag === null) showSnack(t('transport.lineUp.unclear'))
+    else if (Math.abs(lag) < MIN_LINE_UP_SEC) showSnack(t('transport.lineUp.inTime'))
+    else applyFix({ kind, trackId, clipId, bySec: lag }, false)
   }
 
   const persistTake = async (take: PendingTake): Promise<void> => {
@@ -642,19 +702,10 @@ export function useTransport(
     // Gone once its clip is (undone, deleted or recorded over).
     offer: offer && project && findClip(project, offer.trackId, offer.clipId) ? offer : null,
     applyOffer: () => {
-      if (!offer || !project) return
-      if (offer.kind === 'lineUp') {
-        song.edit(lineUpClip(project, offer.trackId, offer.clipId, offer.bySec))
-        onLinedUp?.(offer.bySec)
-        showSnack(t('transport.lineUp.done'))
-      } else {
-        const { trackId, clipId, phrases, volume } = offer
-        const synced = phrases ? syncPhrases(project, trackId, clipId, phrases) : project
-        song.edit(volume === null ? synced : withTrackChanges(synced, trackId, { volume }))
-        showSnack(t('transport.harmonySync.done'))
-      }
+      if (offer) applyFix(offer, true)
       setOffer(null)
     },
+    fixTiming,
     dismissOffer: () => setOffer(null),
     retrySave: async () => {
       if (pending) await persistTake(pending)

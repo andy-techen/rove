@@ -99,14 +99,18 @@
       "apply": "Line up",
       "late": "A little behind the music: line it up",
       "early": "A little ahead of the music: line it up",
-      "done": "Lined up. Your next takes will land in time too."
+      "done": "Lined up. Your next takes will land in time too.",
+      "doneOne": "Lined up with the music.",
+      "inTime": "Already in time with the music.",
+      "unclear": "Couldn't hear the beat clearly, so it stays as it is."
     },
     "harmonySync": {
       "apply": "Sync harmony",
       "timing": "Moves each phrase to meet your lead",
       "volume": "Sets the volume just under your lead",
       "both": "Moves each phrase to meet your lead and sets the volume just under it",
-      "done": "Synced with your lead."
+      "done": "Synced with your lead.",
+      "inSync": "Already with your lead."
     }
   },
   "timeline": {
@@ -142,8 +146,8 @@
     "stop": "Stop recording {name}",
     "stopTitle": "Stop",
     "recordTitle": "Record",
-    "restart": "Redo the take on {name}",
-    "restartTitle": "Redo take",
+    "restart": "Retake on {name}",
+    "restartTitle": "Retake",
     "cantRecordImported": "This is a music file. Record on a new track.",
     "cantRecordChords": "This is an instrumental. Record on a new track.",
     "select": "Select {name}",
@@ -310,7 +314,11 @@
     "shortcuts": "Keyboard Shortcuts…",
     "checkMicrophone": "Check Microphone…",
     "renameTrack": "Rename Track",
-    "removeTrack": "Remove Track"
+    "removeTrack": "Remove Track",
+    "lineUp": "Line Up with the Music",
+    "syncHarmony": "Sync Harmony with the Lead",
+    "makeHarmony": "Make Harmony",
+    "makeLead": "Make Lead"
   },
   "appDialog": {
     "sections": "Sections",
@@ -682,7 +690,7 @@
     "songbook": "Songbook…",
     "save": "Save",
     "closeSong": "Close Song",
-    "restartTake": "Redo Take",
+    "restartTake": "Retake",
     "moveSongLeft": "Move Song Left",
     "moveSongRight": "Move Song Right",
     "undo": "Undo",

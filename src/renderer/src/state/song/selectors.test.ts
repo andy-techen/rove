@@ -11,6 +11,8 @@ import {
 import { polishParams } from '../../audio/polish/polish'
 import {
   backingTitle,
+  canLineUpClip,
+  canSyncHarmonyClip,
   edgeAfter,
   edgeBefore,
   joinGroups,
@@ -138,5 +140,54 @@ describe('joinGroups', () => {
   it('keeps a clip from outside the group between them as its own clip', () => {
     const { blocks } = joinGroups([clip('a', 0, 'g'), clip('x', 2), clip('b', 4, 'g')])
     expect(blocks).toEqual([])
+  })
+})
+
+describe("fixing a take's timing", () => {
+  // A lead take from 0–30 s and a harmony take from 10–20 s, with or without music.
+  const song = (withMusic: boolean) => {
+    let p = withNewTrack(createProject('Song', 48000), 'vocal', { part: 'harmony' }).project
+    const [lead, harmony] = p.tracks
+    p = withRecordedClip(p, lead.id, { id: 'l', file: 'l.wav', start: 0, offset: 0, duration: 30 })
+    p = withRecordedClip(p, harmony.id, {
+      id: 'h',
+      file: 'h.wav',
+      start: 10,
+      offset: 0,
+      duration: 10
+    })
+    if (withMusic) {
+      const { project, track } = withNewTrack(p, 'backing')
+      p = withRecordedClip(project, track.id, {
+        id: 'm',
+        file: 'm.wav',
+        start: 0,
+        offset: 0,
+        duration: 60
+      })
+    }
+    return {
+      p,
+      lead: { trackId: lead.id, clipId: 'l' },
+      harmony: { trackId: harmony.id, clipId: 'h' }
+    }
+  }
+
+  it('lines up a vocal take only when there is music to line it up with', () => {
+    const withMusic = song(true)
+    expect(canLineUpClip(withMusic.p, withMusic.lead)).toBe(true)
+    const { p, lead } = song(false)
+    expect(canLineUpClip(p, lead)).toBe(false)
+  })
+
+  it('syncs a harmony take with a lead take under it', () => {
+    const { p, harmony, lead } = song(false)
+    expect(canSyncHarmonyClip(p, harmony)).toBe(true)
+    expect(canSyncHarmonyClip(p, lead)).toBe(false)
+  })
+
+  it('has nothing to sync a harmony with where no lead was sung', () => {
+    const { p, harmony } = song(false)
+    expect(canSyncHarmonyClip(moveClip(p, harmony.trackId, 'h', 40), harmony)).toBe(false)
   })
 })

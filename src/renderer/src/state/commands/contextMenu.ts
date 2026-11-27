@@ -1,4 +1,5 @@
 import { ContextMenuItem, MenuAction } from '@shared/menu'
+import type { VocalPart } from '../song/project'
 
 /** What was right-clicked: a clip, an empty spot in a lane, or a track's name. */
 export type MenuTarget = 'clip' | 'lane' | 'track'
@@ -14,13 +15,41 @@ export interface MenuState {
   canSplit: boolean
   canMoveUp: boolean
   canMoveDown: boolean
+  /** The clicked clip is a vocal take with music to line it up with. */
+  canLineUp: boolean
+  /** The clicked clip is a harmony take with a lead under it. */
+  canSyncHarmony: boolean
+  /** The selected track's part, when it's a vocal track. */
+  vocalPart: VocalPart | null
 }
 
 // Each menu's rows in order; null is a divider.
 const ROWS: Record<MenuTarget, (MenuAction | null)[]> = {
-  clip: ['cut', 'copy', 'paste', null, 'split', 'deleteClip', null, 'groupClips', 'ungroupClips'],
+  clip: [
+    'cut',
+    'copy',
+    'paste',
+    null,
+    'split',
+    'deleteClip',
+    null,
+    'lineUp',
+    'syncHarmony',
+    null,
+    'groupClips',
+    'ungroupClips'
+  ],
   lane: ['paste', null, 'moveTrackUp', 'moveTrackDown'],
-  track: ['renameTrack', null, 'moveTrackUp', 'moveTrackDown', null, 'removeTrack']
+  track: [
+    'renameTrack',
+    'makeHarmony',
+    'makeLead',
+    null,
+    'moveTrackUp',
+    'moveTrackDown',
+    null,
+    'removeTrack'
+  ]
 }
 
 /** The rows a right-click menu shows, dimming what can't be done now. */
@@ -37,9 +66,18 @@ export function contextMenu(target: MenuTarget, s: MenuState): ContextMenuItem[]
     moveTrackUp: s.canEdit && s.canMoveUp,
     moveTrackDown: s.canEdit && s.canMoveDown,
     renameTrack: s.canEdit,
-    removeTrack: s.canEdit
+    removeTrack: s.canEdit,
+    lineUp: s.canEdit && s.canLineUp,
+    syncHarmony: s.canEdit && s.canSyncHarmony,
+    makeHarmony: s.canEdit,
+    makeLead: s.canEdit
   }
-  return ROWS[target].map((action) =>
-    action ? { action, enabled: enabled[action] ?? false } : 'separator'
-  )
+  // Only the part a track can switch to is shown, and none on a music track.
+  const shown: Partial<Record<MenuAction, boolean>> = {
+    makeHarmony: s.vocalPart === 'lead',
+    makeLead: s.vocalPart === 'harmony'
+  }
+  return ROWS[target]
+    .filter((action) => action === null || (shown[action] ?? true))
+    .map((action) => (action ? { action, enabled: enabled[action] ?? false } : 'separator'))
 }

@@ -45,7 +45,7 @@ export const KEYMAP = {
   // Nine keys in one row of the Shortcuts table; fixed, like a gesture (trackKeys.ts).
   selectTrackNumber: { group: 'edit', accelerator: 'CmdOrCtrl+1–9', gesture: true },
   playPause: { group: 'playback', accelerator: 'Space' },
-  // Beside Redo take (⌘⇧R).
+  // Beside Retake (⌘⇧R).
   record: { group: 'playback', accelerator: 'CmdOrCtrl+R' },
   stopPlayback: { group: 'playback', accelerator: 'CmdOrCtrl+.' },
   restartTake: { group: 'playback', accelerator: 'CmdOrCtrl+Shift+R' },

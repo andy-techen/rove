@@ -154,7 +154,11 @@ const isShortcut = (action: MenuAction): action is MenuAction & ShortcutId => ac
 // Actions only right-click menus offer; they have no shortcut, so they're named here.
 const CONTEXT_ONLY_LABELS = {
   renameTrack: 'menu.renameTrack',
-  removeTrack: 'menu.removeTrack'
+  removeTrack: 'menu.removeTrack',
+  lineUp: 'menu.lineUp',
+  syncHarmony: 'menu.syncHarmony',
+  makeHarmony: 'menu.makeHarmony',
+  makeLead: 'menu.makeLead'
 } as const
 
 /**

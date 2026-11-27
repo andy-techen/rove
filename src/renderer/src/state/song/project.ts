@@ -385,6 +385,28 @@ export function withTrackChanges(
   }
 }
 
+/**
+ * Makes a vocal track a lead or a harmony. Volume, pan and Polish the singer hasn't
+ * changed move to the new part's starting settings; anything they set stays theirs.
+ */
+export function withVocalPart(project: Project, trackId: string, part: VocalPart): Project {
+  const track = project.tracks.find((t) => t.id === trackId)
+  if (track?.role !== 'vocal') return project
+  const was = track.part ?? 'lead'
+  if (was === part) return project
+  const others = { ...project, tracks: project.tracks.filter((t) => t.id !== trackId) }
+  const fresh = defaultMix(others, 'vocal', part)
+  const untouched = defaultMix(others, 'vocal', was)
+  const samePolish = JSON.stringify(polishOf(track)) === JSON.stringify(defaultPolish(was))
+  const changed = withTrackChanges(project, trackId, {
+    part,
+    ...(track.volume === untouched.volume ? { volume: fresh.volume } : {}),
+    // A harmony's pan alternates sides, so any starting side counts as untouched.
+    ...(Math.abs(track.pan) === Math.abs(untouched.pan) ? { pan: fresh.pan } : {})
+  })
+  return samePolish ? withTrackPolish(changed, trackId, defaultPolish(part)) : changed
+}
+
 const clipEnd = (c: Clip): number => c.start + c.duration
 
 /**

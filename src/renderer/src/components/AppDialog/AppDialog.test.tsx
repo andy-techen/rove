@@ -119,7 +119,7 @@ describe('AppDialog shortcuts', () => {
 
   it('lists every shortcut with its keys, in two tables side by side', () => {
     openAt('shortcuts')
-    // Its keys follow the name directly, which tells it apart from Redo Take.
+    // Its keys follow the name directly, so the pattern matches Redo alone.
     const redo = new RegExp(`shortcut for ${t('keymap.redo')} \\(`)
     expect(screen.getByRole('button', { name: redo })).toHaveTextContent('⇧⌘Z')
     expect(screen.getAllByRole('table')).toHaveLength(2)

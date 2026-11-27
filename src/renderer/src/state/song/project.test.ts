@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PolishSettings } from '../../audio/polish/polish'
+import { PolishSettings, defaultPolish } from '../../audio/polish/polish'
 import {
   Clip,
   Project,
@@ -42,6 +42,8 @@ import {
   withRecordedClip,
   withTrackAudio,
   withTrackChanges,
+  withVocalPart,
+  withTrackPolish,
   withVocalsBack,
   withoutVocals
 } from './project'
@@ -272,6 +274,35 @@ describe('withTrackChanges', () => {
       [false, 1],
       [true, 0.3]
     ])
+  })
+})
+
+describe('withVocalPart', () => {
+  const lead = () => {
+    const p = createProject('Song', 48000)
+    return { p, id: p.tracks[0].id }
+  }
+
+  it("turns a lead into a harmony with a harmony's starting mix and polish", () => {
+    const { p, id } = lead()
+    const [track] = withVocalPart(p, id, 'harmony').tracks
+    expect(track).toMatchObject({ part: 'harmony', volume: 0.7, polish: defaultPolish('harmony') })
+    expect(Math.abs(track.pan)).toBeCloseTo(0.35)
+  })
+
+  it('keeps the mix and polish the singer set', () => {
+    const { p, id } = lead()
+    const mixed = withTrackChanges(p, id, { volume: 0.4, pan: 0.2 })
+    const tweaked = withTrackPolish(mixed, id, { ...defaultPolish('lead'), space: 0.9 })
+    const [track] = withVocalPart(tweaked, id, 'harmony').tracks
+    expect(track).toMatchObject({ volume: 0.4, pan: 0.2 })
+    expect(track.polish?.space).toBe(0.9)
+  })
+
+  it('turns a harmony back into a lead', () => {
+    const { p, id } = lead()
+    const [track] = withVocalPart(withVocalPart(p, id, 'harmony'), id, 'lead').tracks
+    expect(track).toMatchObject({ part: 'lead', volume: 1, pan: 0, polish: defaultPolish('lead') })
   })
 })
 
