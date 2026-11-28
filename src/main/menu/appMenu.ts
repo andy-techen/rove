@@ -1,32 +1,27 @@
-import {
-  app,
-  BrowserWindow,
-  ipcMain,
-  Menu,
-  MenuItemConstructorOptions,
-  WebContents
-} from 'electron'
+import { app, BrowserWindow, Menu, MenuItemConstructorOptions } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { t } from '@shared/copy'
-import { KEYMAP, Keymap, ShortcutId, isInAppAccelerator } from '@shared/preferences/keymap'
-import { RECENT_SONGS } from '@shared/constants'
-import { ContextMenuItem, DockChoice, MenuAction, MENU_CHANNELS } from '@shared/preferences/menu'
+import { Keymap, ShortcutId, isInAppAccelerator } from '@shared/preferences/keymap'
+import { MenuAction, MENU_CHANNELS } from '@shared/preferences/menu'
 import { THEMES } from '@shared/preferences/appearance'
-import { currentTheme, setTheme } from './ipc/preferences/appearance'
-import { listSongbook } from './ipc/songs/songbook'
+import { currentTheme, setTheme } from '../ipc/preferences/appearance'
+import { separator } from './separator'
 
 /** Sends a menu choice to the focused window; the renderer decides what it means. */
 function send(action: MenuAction): void {
   BrowserWindow.getFocusedWindow()?.webContents.send(MENU_CHANNELS.action, action)
 }
 
-const separator: MenuItemConstructorOptions = { type: 'separator' }
-
 let installed: Keymap | null = null
 
 /** Rebuilds the menu with the current shortcuts, after something it shows has changed. */
 export function refreshMenu(): void {
   if (installed) installMenu(installed)
+}
+
+/** The shortcuts the menu bar shows, so right-click menus can show the same keys. */
+export function installedKeymap(): Keymap | null {
+  return installed
 }
 
 /** The native menu bar, rebuilt whenever shortcuts change. The window's own bar holds the songs. */
@@ -161,103 +156,4 @@ export function installMenu(keymap: Keymap): void {
     { role: 'windowMenu' }
   ]
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
-}
-
-let showForDock: (() => Promise<BrowserWindow>) | null = null
-// A choice made with no window open, waiting for the new window to take it.
-let pending: DockChoice | null = null
-
-/**
- * Right-clicking Rove in the Dock: pick up a recent song, or start or find one, without
- * hunting for the window. `showWindow` brings the window forward, or opens one.
- */
-export function installDockMenu(showWindow: () => Promise<BrowserWindow>): void {
-  showForDock = showWindow
-  ipcMain.handle(MENU_CHANNELS.pendingChoice, () => {
-    const choice = pending
-    pending = null
-    return choice
-  })
-  void refreshDockMenu()
-}
-
-/** Carries out a Dock menu choice in the window, which comes forward for it. */
-async function choose(choice: DockChoice, showWindow: () => Promise<BrowserWindow>): Promise<void> {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    pending = choice
-    await showWindow()
-    return
-  }
-  const window = await showWindow()
-  if ('action' in choice) window.webContents.send(MENU_CHANNELS.action, choice.action)
-  else window.webContents.send(MENU_CHANNELS.openSong, choice.folder)
-}
-
-/** Rebuilds the Dock menu's recent songs, after the songs may have changed. */
-export async function refreshDockMenu(): Promise<void> {
-  const showWindow = showForDock
-  if (!app.dock || !showWindow) return
-  const click = (choice: DockChoice) => (): void => void choose(choice, showWindow)
-  const item = (label: string, action: MenuAction): MenuItemConstructorOptions => ({
-    label,
-    click: click({ action })
-  })
-  // The Dock menu is a list to glance at, so a failed read just leaves the songs out.
-  const recent = (await listSongbook().catch(() => [])).slice(0, RECENT_SONGS)
-  const songs = recent.map((song): MenuItemConstructorOptions => ({
-    label: song.name,
-    click: click({ folder: song.folder })
-  }))
-  // A dimmed row titles the songs, as Music's Dock menu does over Recently Played; a
-  // macOS section header (type 'header') would draw it smaller and bold instead.
-  const recentHeader: MenuItemConstructorOptions = {
-    label: t('menu.recentSongs'),
-    enabled: false
-  }
-  app.dock.setMenu(
-    Menu.buildFromTemplate([
-      item(t('keymap.newSong'), 'newSong'),
-      item(t('keymap.open'), 'open'),
-      item(t('keymap.songbook'), 'songbook'),
-      ...(songs.length ? [separator, recentHeader, ...songs] : [])
-    ])
-  )
-}
-
-const isShortcut = (action: MenuAction): action is MenuAction & ShortcutId => action in KEYMAP
-
-// Actions only right-click menus offer; they have no shortcut, so they're named here.
-const CONTEXT_ONLY_LABELS = {
-  renameTrack: 'menu.renameTrack',
-  removeTrack: 'menu.removeTrack',
-  lineUp: 'menu.lineUp',
-  syncHarmony: 'menu.syncHarmony',
-  makeHarmony: 'menu.makeHarmony',
-  makeLead: 'menu.makeLead'
-} as const
-
-/**
- * Shows a right-click menu over the window that asked. Rows show their shortcuts as the
- * menu bar does; a choice comes back on the menu channel, like a menu-bar click.
- */
-export function showContextMenu(sender: WebContents, items: ContextMenuItem[]): void {
-  const window = BrowserWindow.fromWebContents(sender)
-  if (!window || items.length === 0) return
-  const template = items.map((item): MenuItemConstructorOptions => {
-    if (item === 'separator') return separator
-    const { action, enabled } = item
-    const click = (): void => sender.send(MENU_CHANNELS.action, action)
-    if (isShortcut(action)) {
-      return {
-        label: t(`keymap.${action}`),
-        accelerator: installed?.[action],
-        registerAccelerator: false,
-        enabled,
-        click
-      }
-    }
-    const label = CONTEXT_ONLY_LABELS[action as keyof typeof CONTEXT_ONLY_LABELS]
-    return { label: label ? t(label) : action, enabled, click }
-  })
-  Menu.buildFromTemplate(template).popup({ window })
 }

@@ -11,7 +11,7 @@ small, typed `window.api` to the page.
 flowchart LR
   subgraph Main["Main process (Node.js) · src/main"]
     index["index.ts<br/>window, mic permission"]
-    menu["menu.ts<br/>native menu bar"]
+    menu["menu/<br/>menu bar · Dock · right-click"]
     ipc["ipc/<br/>project · export · lyrics<br/>keymap · appearance · voice<br/>license · inputVolume"]
   end
 
