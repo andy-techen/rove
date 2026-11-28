@@ -1,12 +1,11 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
+import { MS_PER_SEC } from '@shared/units'
 import { createMeter } from '../../audio/engine/engine'
+import { GOOD_DB, LOUD_DB, METER_FLOOR_DB } from '../../audio/mix/constants'
 import {
-  GOOD_DB,
-  LOUD_DB,
   LevelCheck,
   LevelZone,
-  METER_FLOOR_DB,
   RecentPeak,
   levelZone,
   meterFill,
@@ -14,8 +13,6 @@ import {
 } from '../../audio/mix/meter'
 import { gainToDb } from '../../audio/dsp/units'
 import './InputMeter.css'
-
-const MS_PER_SEC = 1000
 
 // The green "aim here" band behind the bar.
 const SWEET_SPOT_STYLE = {

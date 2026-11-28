@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { t } from '@shared/copy'
-import type { WishlistItem } from '@shared/wishlist'
+import type { WishlistItem } from '@shared/preferences/wishlist'
 import { NewSongDialog } from '../NewSongDialog'
 import { IconButton } from '../ui/IconButton'
 import { matchesSearch } from './search'

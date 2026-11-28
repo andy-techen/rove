@@ -1,4 +1,5 @@
-import { LANDING_BINS, TakeSummary } from '@shared/voice'
+import { TakeSummary } from '@shared/songs/voice'
+import { LANDING_BINS } from '@shared/songs/constants'
 import type { Entry } from '../../audio/voice'
 
 interface Sung {

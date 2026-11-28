@@ -3,11 +3,7 @@ import gateWorkletUrl from '../worklets/gate-worklet.ts?worker&url'
 import recorderWorkletUrl from '../worklets/recorder-worklet.ts?worker&url'
 import { RECORDER_PROCESSOR, RecorderCommand, RecorderEvent } from '../worklets/messages'
 import { concatSamples } from '../encode/wav'
-
-// 48 kHz: the standard rate for video and most audio interfaces, and plenty for voice.
-export const SAMPLE_RATE = 48000
-// Analyser window for the level meter: ~43 ms at 48 kHz, enough to catch a peak.
-const METER_FFT_SIZE = 2048
+import { SAMPLE_RATE, METER_FFT_SIZE } from './constants'
 
 let context: AudioContext | null = null
 

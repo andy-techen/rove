@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { CopyKey, t } from '@shared/copy'
+import { PERCENT } from '@shared/units'
 import {
   PARAM_RANGES,
   POLISH_CONTROLS,
@@ -34,6 +35,7 @@ import {
   withOverride,
   withoutOverride
 } from './polishFormat'
+import { ADVANCED_STEPS } from './constants'
 import './PolishPanel.css'
 
 /** The auto-polish button and what it last did. */
@@ -79,9 +81,6 @@ interface Props {
   onGrow?(missingPx: number): void
 }
 
-const PERCENT = 100
-// Advanced sliders move in 1/200ths of their range: fine enough, not fiddly.
-const ADVANCED_STEPS = 200
 const PARAMS = Object.keys(PARAM_RANGES) as PolishParam[]
 
 export function PolishPanel({

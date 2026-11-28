@@ -1,27 +1,27 @@
 import { CSSProperties, useState } from 'react'
 import { t } from '@shared/copy'
 import type { VoiceProfile } from '../../audio/voice'
-import { noteWithOctave } from '../../state/chords/noteNames'
+import { noteWithOctave } from '../../state/chords/theory/noteNames'
 import type { KeyRange, SongView } from '../../state/voice/voiceView'
 import { Button } from '../ui/Button'
 import { Segmented, SegmentedOption } from '../ui/Segmented'
 import { Keyboard } from './Keyboard'
-import { KEYBOARD_HEIGHT, KeyScale, keyScale } from './keyboardGeometry'
+import {
+  BARS_HEIGHT,
+  BAR_GAP,
+  BAR_LABEL_INSET,
+  BAR_LABEL_Y,
+  KEYBOARD_GAP,
+  KEYBOARD_HEIGHT,
+  ROW_BAR,
+  ROW_HEIGHT,
+  SONGS_SHOWN,
+  SONG_NAME_GAP,
+  SONG_NAME_WIDTH
+} from './constants'
+import { KeyScale, keyScale } from './keyboardGeometry'
 import { Measured } from './Measured'
 import { NoteButton } from './NoteButton'
-
-const BARS_HEIGHT = 90
-const BAR_GAP = 2
-const LABEL_INSET = 4
-const LABEL_Y = 12
-const ROW_HEIGHT = 18
-const ROW_BAR = 10
-const KEYBOARD_GAP = 6
-// Enough songs to compare at a glance; the rest wait behind Show all.
-const SONGS_SHOWN = 6
-// Song names sit in a column beside their bars, cut short with an ellipsis past this.
-const SONG_NAME_WIDTH = 120
-const SONG_NAME_GAP = 12
 
 const note = (n: number | null): string => (n === null ? '–' : noteWithOctave(n))
 
@@ -55,13 +55,13 @@ function NoteTime({
             width={(high - low + 1) * keyWidth}
             height={BARS_HEIGHT}
           />
-          <text className="voice-chart-label" x={x(low) + LABEL_INSET} y={LABEL_Y}>
+          <text className="voice-chart-label" x={x(low) + BAR_LABEL_INSET} y={BAR_LABEL_Y}>
             {t('voice.comfortBand')}
           </text>
         </g>
       )}
       {profile.noteTime.map(({ note: n, sec }) => {
-        const barHeight = (sec / most) * (BARS_HEIGHT - LABEL_Y - LABEL_INSET)
+        const barHeight = (sec / most) * (BARS_HEIGHT - BAR_LABEL_Y - BAR_LABEL_INSET)
         return (
           <rect
             key={n}

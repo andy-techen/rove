@@ -1,4 +1,5 @@
 import { Clip } from '../song/project'
+import { TIME_PRECISION } from '../song/project/constants'
 import { ClipGestureKind, GestureStart } from './clipGestures'
 
 /** What a drag can snap to, from the timeline as it's shown. */
@@ -19,8 +20,7 @@ export interface Snapped {
 }
 
 // Rounds away float dust so a snapped time compares equal to the target.
-const PRECISION = 1e6
-const tidy = (sec: number): number => Math.round(sec * PRECISION) / PRECISION
+const tidy = (sec: number): number => Math.round(sec * TIME_PRECISION) / TIME_PRECISION
 
 const movingClips = (start: GestureStart): Clip[] =>
   start.moving?.length ? start.moving : [start.clip]

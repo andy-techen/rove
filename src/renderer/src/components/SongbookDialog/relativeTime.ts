@@ -1,9 +1,5 @@
 import { t } from '@shared/copy'
-
-const MINUTE = 60_000
-const HOUR = 60 * MINUTE
-const DAY = 24 * HOUR
-const WEEK = 7 * DAY
+import { DAY, HOUR, WEEK } from './constants'
 
 /** A short, human label like "today" or "3 days ago". */
 export function relativeTime(modifiedAt: number, now: number = Date.now()): string {

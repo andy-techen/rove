@@ -1,10 +1,12 @@
 import { t } from '@shared/copy'
+import { PERCENT } from '@shared/units'
 import { gainToSlider, sliderToGain } from '../../audio/mix/mixer'
 import { cx } from '../ui/cx'
 import { Icon } from '../ui/Icon'
 import { IconButton } from '../ui/IconButton'
 import { Slider } from '../ui/Slider'
 import { Tooltip } from '../ui/Tooltip'
+import { CENTRE_TOLERANCE, PAN_STEP_PERCENT } from './constants'
 
 export interface MixChange {
   volume?: number
@@ -22,11 +24,6 @@ interface Props {
   locked: boolean
   onMix(change: MixChange): void
 }
-
-const PERCENT = 100
-const PAN_STEP_PERCENT = 5
-// Pans within this distance of the middle read as "Centre".
-const CENTRE_TOLERANCE = 0.05
 
 const panLabel = (pan: number): string => {
   if (Math.abs(pan) < CENTRE_TOLERANCE) return t('track.centre')

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { t } from '@shared/copy'
 import { IconButton } from '../ui/IconButton'
-import { Theme, nextTheme } from '@shared/appearance'
+import { Theme, nextTheme } from '@shared/preferences/appearance'
 import { useTheme } from '../../state/ui/colorScheme'
 import { IconName } from '../ui/Icon'
 import { Logo } from '../ui/Logo'

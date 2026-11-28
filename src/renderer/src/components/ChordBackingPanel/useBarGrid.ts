@@ -1,5 +1,5 @@
 import { KeyboardEvent, useEffect, useRef } from 'react'
-import { ChartPlace, barRange } from '../../state/chords/chart'
+import { ChartPlace, barRange } from '../../state/chords/chart/chart'
 
 interface Options {
   /** How many bars there are. */

@@ -3,6 +3,8 @@ import { PitchTrack, analysePitch, hzToMidi } from './pitch'
 import { bufferOf, cachedRender, channelsOf } from '../dsp/renderCache'
 import { hann } from '../dsp/fft'
 import { clamp } from '../dsp/units'
+import { MAX_CORRECTION_SEMITONES, HYSTERESIS_SEMITONES, GRAIN_HOP_SEC } from './constants'
+import { SEMITONES_PER_OCTAVE } from '@shared/units'
 
 /** How hard and how fast to pull notes in tune, and which notes count as in tune. */
 export interface Tuning {
@@ -13,13 +15,6 @@ export interface Tuning {
   /** Allowed pitch classes (0 = C). */
   scale: readonly number[]
 }
-
-// Tuning fixes notes; it never moves one far enough to change the melody.
-const MAX_CORRECTION_SEMITONES = 1
-// A note has to drift this much closer to a neighbour before the target switches,
-// so vibrato across the midpoint doesn't flicker between two notes.
-const HYSTERESIS_SEMITONES = 0.15
-const SEMITONES = 12
 
 /**
  * How much to scale the pitch at each hop of a pitch track: 1 leaves it, 2^(1/12)
@@ -52,14 +47,10 @@ export function correctionRatios(track: PitchTrack, tuning: Tuning): Float32Arra
       target = null
     }
     correction += follow * (wanted - correction)
-    ratios[i] = 2 ** (correction / SEMITONES)
+    ratios[i] = 2 ** (correction / SEMITONES_PER_OCTAVE)
   }
   return ratios
 }
-
-// Grains of 20 ms overlapping by half: short enough to follow a changing note, long
-// enough to hold a couple of periods of a low voice.
-const GRAIN_HOP_SEC = 0.01
 
 /**
  * Re-pitches a take, keeping its timing: overlapping grains each read the original a

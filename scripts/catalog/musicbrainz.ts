@@ -3,10 +3,10 @@
 // review rather than guessing, because a wrong recording means wrong lyrics timing,
 // key and length later on.
 
+import { MS_PER_SEC, SEC_PER_MIN } from '../../src/shared/units'
+import { SAME_TAKE_SEC, SEARCH_LIMIT } from './constants'
+
 const API = 'https://musicbrainz.org/ws/2'
-const SEARCH_LIMIT = 25
-/** Recordings closer than this are treated as the same take (remaster, reissue). */
-const SAME_TAKE_SEC = 3
 
 export interface MbRecording {
   id: string
@@ -95,7 +95,7 @@ export function pickRecording(candidates: MbRecording[], title: string, artist: 
 
 /** The biggest group of recordings within SAME_TAKE_SEC of one of them. */
 function largestSameTake(timed: MbRecording[]): MbRecording[] {
-  const sec = (r: MbRecording): number => (r.length ?? 0) / 1000
+  const sec = (r: MbRecording): number => (r.length ?? 0) / MS_PER_SEC
   return timed
     .map((center) => timed.filter((r) => Math.abs(sec(r) - sec(center)) <= SAME_TAKE_SEC))
     .reduce((best, group) => (group.length > best.length ? group : best))
@@ -115,8 +115,8 @@ export function describeCandidates(candidates: MbRecording[]): string[] {
 
 function formatLength(ms: number | null | undefined): string {
   if (!ms) return '-:--'
-  const sec = Math.round(ms / 1000)
-  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
+  const sec = Math.round(ms / MS_PER_SEC)
+  return `${Math.floor(sec / SEC_PER_MIN)}:${String(sec % SEC_PER_MIN).padStart(2, '0')}`
 }
 
 /** Undated releases sort last, so the earliest known release wins. */

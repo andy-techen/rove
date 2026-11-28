@@ -1,5 +1,14 @@
-import { PianoEvent } from '../../state/chords/pianoPart'
+import { PianoEvent } from '../../state/chords/instruments/pianoPart'
 import { nextTick } from '../dsp/resample'
+import {
+  EVENTS_PER_CHUNK,
+  PIANO_NOTE_LEVEL,
+  RELEASE_SEC,
+  RESTRIKE_SEC,
+  ONSET_LEVEL,
+  ONSET_LEAD_SEC
+} from './constants'
+import { SEMITONES_PER_OCTAVE } from '@shared/units'
 
 /** Each sampled note's sound, by MIDI note, at the render's sample rate. */
 export type PianoSamples = ReadonlyMap<number, Float32Array>
@@ -11,25 +20,6 @@ const SAMPLE_URLS = import.meta.glob<string>('./pianoSamples/*.m4a', {
   import: 'default',
   eager: true
 })
-
-// Each voice's level: a bass note and a four-note chord struck together stay under full
-// scale, and the piano sits about as loud as the guitar's fingerpicking.
-const NOTE_LEVEL = 0.18
-// How long a note takes to die away once its key, or the pedal, is let go: a damper
-// settling on the string.
-const RELEASE_SEC = 0.25
-// A key struck again while still sounding stops its last note; a short fade keeps that
-// from clicking.
-const RESTRIKE_SEC = 0.02
-/** How long the last chord rings after the chart ends. */
-export const PIANO_RING_OUT_SEC = 2
-const EVENTS_PER_CHUNK = 64
-// Where a note starts: within 40 dB of its loudest, less a moment so the hammer's attack
-// is kept. AAC adds a few milliseconds of silence before the sound (encoder priming),
-// which would otherwise make every note late.
-const ONSET_LEVEL = 0.01
-const ONSET_LEAD_SEC = 0.001
-const SEMITONES_PER_OCTAVE = 12
 
 /** The sample a note is played from: the closest in pitch. */
 export function nearestSample(midi: number, roots: number[]): number {
@@ -119,7 +109,7 @@ export async function renderPiano(
       release: start + Math.round(event.holdSec * sampleRate),
       sample: samples.get(root) as Float32Array,
       rate: 2 ** ((event.midi - root) / SEMITONES_PER_OCTAVE),
-      gain: NOTE_LEVEL * event.velocity
+      gain: PIANO_NOTE_LEVEL * event.velocity
     }
     const ringing = keys.get(event.midi)
     if (ringing) play(ringing, start + restrikeFrames)

@@ -2,15 +2,15 @@
 // down by `range` dB rather than muting it, so breaths and tails don't chop off.
 import { dbToGain } from '../dsp/units'
 import { GATE_PROCESSOR } from './messages'
-
-const ATTACK_SEC = 0.002
-const RELEASE_SEC = 0.08
-const OPEN_SEC = 0.003
-const CLOSE_SEC = 0.12
-// Stays open briefly after the voice drops, so word endings aren't clipped.
-const HOLD_SEC = 0.05
-const DEFAULT_THRESHOLD_DB = -60
-const DEFAULT_RANGE_DB = -25
+import {
+  ATTACK_SEC,
+  RELEASE_SEC,
+  OPEN_SEC,
+  CLOSE_SEC,
+  HOLD_SEC,
+  DEFAULT_THRESHOLD_DB,
+  DEFAULT_RANGE_DB
+} from './constants'
 
 const coeff = (seconds: number): number => Math.exp(-1 / (seconds * sampleRate))
 

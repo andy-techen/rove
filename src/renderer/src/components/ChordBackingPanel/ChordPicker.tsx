@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { t } from '@shared/copy'
+import { PITCH_CLASSES } from '@shared/units'
 import { CHORD_QUALITIES, Chord } from '../../audio/music/chords'
-import { PITCH_CLASSES } from '../../audio/pitch/key'
-import { chordsMatching, sameChord } from '../../state/chords/chordText'
-import { chordName, noteName } from '../../state/chords/noteNames'
+import { chordsMatching, sameChord } from '../../state/chords/theory/chordText'
+import { chordName, noteName } from '../../state/chords/theory/noteNames'
 import { raised } from '../ui/Raised'
 import { SearchField } from '../ui/SearchField'
 import { Segmented, SegmentedOption } from '../ui/Segmented'
 import { cx } from '../ui/cx'
+import { MATCHES_SHOWN } from './constants'
 
-// As many matches as fit one row of the picker.
-const MATCHES_SHOWN = 8
 const ROOTS = Array.from({ length: PITCH_CLASSES }, (_, i) => i)
 
 export interface ChordSuggestions {

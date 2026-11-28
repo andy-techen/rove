@@ -1,6 +1,6 @@
 import { t } from '@shared/copy'
-import { noteWithOctave } from '../../state/chords/noteNames'
-import { previewNote } from '../../state/chords/preview'
+import { noteWithOctave } from '../../state/chords/theory/noteNames'
+import { previewNote } from '../../state/chords/instruments/preview'
 import { Icon } from '../ui/Icon'
 
 /** A note name that plays the note on the piano when clicked; a dash when there's none. */

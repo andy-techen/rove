@@ -1,4 +1,5 @@
 import { FILLED_ICONS, IconName, STROKE_ICONS } from './icons'
+import { STROKE_WIDTH } from './constants'
 import './Icon.css'
 
 /**
@@ -11,7 +12,6 @@ interface Props {
   name: IconName
   size?: IconSize
 }
-const STROKE_WIDTH = 2
 
 export function Icon({ name, size = 'primary' }: Props): React.JSX.Element {
   const stroke = name in STROKE_ICONS

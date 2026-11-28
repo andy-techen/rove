@@ -3,31 +3,25 @@
 import { fft, hann as hannWindow } from './fft'
 import { gainToDb } from './units'
 import { percentile } from './stats'
-
-export const FRAME = 2048
-export const HOP = FRAME / 2
+import {
+  FRAME,
+  HOP,
+  VOICED_BAND,
+  SIBILANT_BAND,
+  HUM_BAND,
+  DE_ESS_BAND,
+  BODY_BAND,
+  MID_BAND,
+  PRESENCE_BAND,
+  AIR_BAND,
+  SILENCE_DB,
+  SINGING_OVER_ROOM_DB,
+  SINGING_UNDER_LOUD_DB,
+  VOICED_SHARE,
+  PERCENT
+} from './constants'
 
 export type Band = readonly [number, number]
-
-// Bands, in Hz. The mixer's de-esser splits at DE_ESS_BAND's lower edge.
-export const VOICED_BAND: Band = [80, 5000]
-export const SIBILANT_BAND: Band = [5000, Infinity]
-export const HUM_BAND: Band = [0, 150]
-export const DE_ESS_BAND: Band = [6000, Infinity]
-export const BODY_BAND: Band = [150, 400]
-export const MID_BAND: Band = [1000, 2000]
-export const PRESENCE_BAND: Band = [2500, 5000]
-export const AIR_BAND: Band = [8000, 12000]
-
-// Below this the whole recording is silence.
-const SILENCE_DB = -70
-// Singing sits at least this far over the room, and within this far of the loudest moments.
-export const SINGING_OVER_ROOM_DB = 10
-const SINGING_UNDER_LOUD_DB = 30
-// Share of a frame's energy that marks it as voiced.
-const VOICED_SHARE = 0.5
-
-const PERCENT = { loud: 0.95, roomGuess: 0.1 }
 
 export interface Frame {
   db: number

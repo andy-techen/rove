@@ -1,12 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { dbToGain } from '../dsp/units'
 import { tone as toneAt } from '../../test/signals'
-import {
-  HARMONY_UNDER_LEAD_DB,
-  VOICE_OVER_MUSIC_DB,
-  balancedHarmonyVolume,
-  balancedMusicVolume
-} from './balance'
+import { balancedHarmonyVolume, balancedMusicVolume } from './balance'
+import { HARMONY_UNDER_LEAD_DB, VOICE_OVER_MUSIC_DB } from './constants'
 
 const RATE = 48000
 // A second holds several of loudness's 400 ms gating blocks.

@@ -1,5 +1,7 @@
 import { Beat } from '../../audio/music/stretch'
+import { SEC_PER_MIN } from '@shared/units'
 import { Project, musicOf, tracksOf } from '../song/project'
+import { BEATS_PER_BAR } from './constants'
 
 export interface Click {
   /** Timeline seconds. */
@@ -18,10 +20,6 @@ export interface ClickGrid {
   /** Beats in a bar, when known (a chord chart says); heard music is taken as 4. */
   beatsPerBar?: number
 }
-
-// Most songs a beginner sings along to are in 4/4.
-const BEATS_PER_BAR = 4
-const SEC_PER_MIN = 60
 
 /**
  * The music's beat as an instrumental's tempo: its average bpm, and where its first beat

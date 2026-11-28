@@ -1,24 +1,24 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { EXPORT_CHANNELS } from '@shared/exportFormats'
-import { LYRICS_CHANNELS } from '@shared/lyrics'
-import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/appearance'
-import { CATALOG_CHANNELS } from '@shared/catalog'
+import { LYRICS_CHANNELS } from '@shared/online/lyrics'
+import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/preferences/appearance'
+import { CATALOG_CHANNELS } from '@shared/online/catalog'
 import {
   FREE_STATUS,
   LICENSE_CHANNELS,
   LicenseStatus,
   parseActivationResult,
   parseLicenseStatus
-} from '@shared/license'
-import { SETTINGS_CHANNELS } from '@shared/settings'
-import { WISHLIST_CHANNELS } from '@shared/wishlist'
-import { VOICE_CHANNELS } from '@shared/voice'
-import { TASTE_CHANNELS } from '@shared/polishTaste'
-import { INPUT_VOLUME_CHANNELS, parseInputVolume } from '@shared/inputVolume'
-import { parseOverrides } from '@shared/keymap'
-import { MIC_CHANNELS } from '@shared/mic'
-import { PROJECT_CHANNELS } from '@shared/project'
-import { SEPARATION_MODEL_CHANNEL } from '@shared/separation'
+} from '@shared/license/license'
+import { SETTINGS_CHANNELS } from '@shared/preferences/settings'
+import { WISHLIST_CHANNELS } from '@shared/preferences/wishlist'
+import { VOICE_CHANNELS } from '@shared/songs/voice'
+import { TASTE_CHANNELS } from '@shared/preferences/polishTaste'
+import { INPUT_VOLUME_CHANNELS, parseInputVolume } from '@shared/preferences/inputVolume'
+import { parseOverrides } from '@shared/preferences/keymap'
+import { MIC_CHANNELS } from '@shared/songs/mic'
+import { PROJECT_CHANNELS } from '@shared/songs/project'
+import { SEPARATION_MODEL_CHANNEL } from '@shared/songs/separation'
 import {
   CONTEXT_MENU_CHANNEL,
   FULL_SCREEN_CHANNEL,
@@ -27,7 +27,7 @@ import {
   NATIVE_EDIT_CHANNEL,
   CLIPBOARD_TEXT_CHANNEL,
   isMenuAction
-} from '@shared/menu'
+} from '@shared/preferences/menu'
 import type { RoveApi } from './index.d'
 
 type Subscribe<T> = (listener: (value: T) => void) => () => void

@@ -1,5 +1,6 @@
 import { t } from '@shared/copy'
-import { LyricsResult } from '@shared/lyrics'
+import { LyricsResult } from '@shared/online/lyrics'
+import { MS_PER_SEC, SEC_PER_MIN } from '@shared/units'
 
 export interface LyricLine {
   /** Seconds into the song the line is sung; null when the lyrics have no timing. */
@@ -23,8 +24,6 @@ export interface SongLyrics {
 // [mm:ss.xx] — LRC timestamps; hundredths and thousandths are both common.
 const TIMESTAMP = /\[(\d+):(\d{1,2}(?:\.\d+)?)\]/g
 const OFFSET_TAG = /^\[offset:\s*([+-]?\d+)\]/im
-const SEC_PER_MIN = 60
-const MS_PER_SEC = 1000
 
 /** Reads timed (LRC) or plain lyrics. Several blank lines in a row count as one break. */
 export function parseLyricsText(text: string): LyricLine[] {

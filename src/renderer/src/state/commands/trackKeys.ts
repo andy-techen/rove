@@ -1,10 +1,8 @@
 import { useEffect, useRef } from 'react'
+import { NUMBERED_TRACKS } from './constants'
 
 /** The keys that pick a track by number. */
 type TrackKey = Pick<KeyboardEvent, 'code' | 'metaKey' | 'ctrlKey' | 'altKey' | 'shiftKey'>
-
-/** ⌘1–⌘9: only the first nine tracks have a key (shortcut `selectTrackNumber`). */
-export const NUMBERED_TRACKS = 9
 
 /**
  * Which track ⌘1–⌘9 (Ctrl elsewhere) picks, counting lanes from 1 at the top; null for

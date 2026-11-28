@@ -1,5 +1,5 @@
 // What the page and the voice profile worker say to each other.
-import type { TakeSummary } from '@shared/voice'
+import type { TakeSummary } from '@shared/songs/voice'
 import type { TakeWindow } from './summary'
 
 export interface SummariseRequest {

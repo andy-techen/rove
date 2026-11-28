@@ -1,10 +1,9 @@
-import { Plan, isEnabled } from '@shared/features'
+import { Plan, isEnabled } from '@shared/license/features'
 import { SongKey, scaleOf } from '../../audio/pitch/key'
 import { polishParams } from '../../audio/polish/polish'
 import { Tuning } from '../../audio/pitch/tuning'
+import { MS_PER_SEC } from '@shared/units'
 import { Track, polishOf } from '../song/project'
-
-const MS_PER_SEC = 1000
 
 /**
  * How a track's takes are tuned, or null when they play as sung. Tuning is premium: on

@@ -1,5 +1,15 @@
-import { MIN_LINE_UP_SEC } from './lineUp'
 import { parabolicOffset } from '../dsp/peakFit'
+import {
+  MIN_LINE_UP_SEC,
+  FRAME_SEC,
+  PAUSE_BELOW_LOUD_DB,
+  LOUD_PERCENTILE,
+  FLOOR_DB,
+  MIN_PAUSE_SEC,
+  MIN_PHRASE_SEC,
+  MAX_SHIFT_SEC,
+  MIN_MATCH
+} from './constants'
 
 /** A stretch of singing between pauses, in seconds from the start of the take. */
 export interface Phrase {
@@ -11,24 +21,6 @@ export interface Phrase {
 export interface PhraseTiming extends Phrase {
   bySec: number
 }
-
-// Fine enough to place a word's start; coarse enough to be quick over a whole take.
-const FRAME_SEC = 0.01
-// Anything this far below the take's loud parts counts as a pause, so breaths and room
-// noise don't join two phrases.
-const PAUSE_BELOW_LOUD_DB = 30
-const LOUD_PERCENTILE = 0.95
-const FLOOR_DB = -80
-// A gap shorter than this is a breath between words, not the end of a phrase.
-const MIN_PAUSE_SEC = 0.2
-// Shorter sounds are a click or a breath, not singing.
-const MIN_PHRASE_SEC = 0.15
-// Harmonies sung against the lead drift by a word's consonant, not a beat; looking
-// further would start matching the lead's next word.
-const MAX_SHIFT_SEC = 0.2
-// How alike the harmony's rise and fall must be to the lead's at the best shift, as a
-// correlation, before Rove trusts it. Words sung together score well above this.
-const MIN_MATCH = 0.5
 
 /** How loud each frame is, in dB. */
 function levels(samples: Float32Array, sampleRate: number): Float32Array {

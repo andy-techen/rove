@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { TasteExample } from '@shared/polishTaste'
-import { TONE_REFERENCE, ruledPolish, suggestPolish } from './autoPolish'
+import { TasteExample } from '@shared/preferences/polishTaste'
+import { ruledPolish, suggestPolish } from './autoPolish'
+import { MAX_LEAN, TONE_REFERENCE } from './constants'
 import { PolishReading } from './polishReading'
-import { MAX_LEAN, learnTaste } from './taste'
+import { learnTaste } from './taste'
 
 const reading: PolishReading = {
   voiceDb: -18,

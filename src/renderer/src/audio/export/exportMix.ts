@@ -1,5 +1,6 @@
 import type { ExportFormat } from '@shared/exportFormats'
-import { SAMPLE_RATE, loadWorklets } from '../engine/engine'
+import { loadWorklets } from '../engine/engine'
+import { SAMPLE_RATE } from '../engine/constants'
 import { integratedLoudness, levelGainDb, withPeakCeiling } from './loudness'
 import { Mixer, TrackMix } from '../mix/mixer'
 import { encodeMp3 } from '../encode/mp3'
@@ -8,20 +9,10 @@ import { dbToGain } from '../dsp/units'
 import { encodeWav } from '../encode/wav'
 import { encodeMp4 } from '../encode/mp4'
 import { VIDEO_HEIGHT, VIDEO_WIDTH, VideoScene, drawVideoFrame, frameKey } from './videoFrame'
+import { STREAMING_LUFS, PEAK_CEILING_DB, STEREO } from './constants'
 
 export type { ExportFormat }
 export type ExportLoudness = 'streaming' | 'asMixed'
-
-/**
- * Integrated loudness to aim for. Spotify, YouTube, Instagram and TikTok all turn songs
- * to about -14 LUFS, so a mix levelled there plays as mixed, and anything louder is only
- * turned down again.
- * https://support.spotify.com/us/artists/article/loudness-normalization/
- */
-const STREAMING_LUFS = -14
-// Headroom for MP3 encoding and cheap converters, which overshoot a 0 dBFS peak.
-const PEAK_CEILING_DB = -1
-const STEREO = 2
 
 export interface MixdownTrack extends TrackMix {
   clips: {

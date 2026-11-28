@@ -1,8 +1,10 @@
 import { CSSProperties, MouseEvent } from 'react'
 import { t } from '@shared/copy'
 import { BeatsPerBar, MyBeat, PAD_DRUMS, PadDrum, PadHit } from '../../state/song/project'
-import { SNAP_BEATS, tidyBeat, withHit } from '../../state/chords/beats'
+import { tidyBeat, withHit } from '../../state/chords/instruments/beats'
+import { SNAP_BEATS } from '../../state/chords/instruments/constants'
 import { cx } from '../ui/cx'
+import { BEAT_SHOWN } from './constants'
 import { PAD_KEY_CODES, keyLabel } from './padKeys'
 
 interface Props {
@@ -21,8 +23,6 @@ interface Props {
 }
 
 const SIXTEENTHS_PER_BEAT = 1 / SNAP_BEATS
-// Beats shown to a hundredth: a sixteenth reads "beat 1.75", and a loose tap no finer.
-const BEAT_SHOWN = 100
 
 /**
  * A lane for each drum across one bar, with its hits where they play. Click a lane to

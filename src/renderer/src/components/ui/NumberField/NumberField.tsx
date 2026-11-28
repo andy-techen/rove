@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { cx } from '../cx'
+import { SCROLL_PER_STEP_PX } from './constants'
 import './NumberField.css'
 
 interface Props {
@@ -17,10 +18,6 @@ interface Props {
   /** Nudges the value one step up (1) or down (-1): scrolling over it, or the arrow keys. */
   onStep?(direction: 1 | -1): void
 }
-
-// A trackpad sends a stream of small scrolls; this much scrolling makes one step, so a
-// flick moves the value a few steps rather than dozens.
-const SCROLL_PER_STEP_PX = 40
 
 /**
  * A compact number to type over: Enter or leaving the field applies it, Esc puts the

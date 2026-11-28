@@ -1,6 +1,28 @@
 import { midiToHz } from '../pitch/pitch'
 import { nextTick } from '../dsp/resample'
 import { seededNoise } from '../dsp/noise'
+import {
+  EVENTS_PER_CHUNK,
+  PLUCK_SEC,
+  LOW_RING_SEC,
+  LOW_STRING_HZ,
+  DECADES_IN_60DB,
+  PICK_SMOOTHING,
+  GUITAR_NOISE_SEED,
+  SEED_STEPS,
+  DOWN_SPREAD_SEC,
+  UP_SPREAD_SEC,
+  GUITAR_NOTE_LEVEL,
+  DOUBLE_CENTS,
+  DOUBLE_DELAY_SEC,
+  DOUBLE_LEVEL,
+  WARMTH_HZ,
+  WARMTH,
+  DAMP_SEC,
+  BODY_SMOOTHING,
+  DOUBLE_VOICE
+} from './constants'
+import { CENTS_PER_SEMITONE } from '@shared/units'
 
 /** One string sounding in a strum. Strings count from the low E (0) to the high E (5). */
 export interface StrumNote {
@@ -23,20 +45,6 @@ export interface StrumEvent {
 // shorter than one 128-frame render quantum, which would cap the pitch near 375 Hz.
 // https://webaudio.github.io/web-audio-api/#DelayNode (cycles and minimum delay)
 
-/** How long a single pluck rings before it's cut. */
-const PLUCK_SEC = 3
-// How long the lowest string takes to die away by 60 dB; higher strings ring shorter.
-const LOW_RING_SEC = 3.5
-const LOW_STRING_HZ = 82
-// A 60 dB fall is three powers of ten in amplitude.
-const DECADES_IN_60DB = 3
-// Softens the noise burst, like a soft pick or a thumb: a warm, round tone. Brighter
-// settings sound harsh, and their strong upper harmonics blur which chord is playing.
-const PICK_SMOOTHING = 0.93
-const NOISE_SEED = 2718
-// A doubled note gets its own noise burst, so the two voices don't sound like one.
-const SEED_STEPS = 100
-
 /** One string plucked at `midi` (a fraction is a little sharp), peak 1, ringing for PLUCK_SEC. */
 function synthPluck(midi: number, sampleRate: number): Float32Array {
   const hz = midiToHz(midi)
@@ -51,7 +59,7 @@ function synthPluck(midi: number, sampleRate: number): Float32Array {
   const loss = 10 ** (-DECADES_IN_60DB / (ringSec * hz))
 
   const loop = new Float32Array(period)
-  const noise = seededNoise(NOISE_SEED + Math.round(midi * SEED_STEPS))
+  const noise = seededNoise(GUITAR_NOISE_SEED + Math.round(midi * SEED_STEPS))
   let prev = 0
   for (let i = 0; i < period; i++) {
     prev = prev * PICK_SMOOTHING + noise() * (1 - PICK_SMOOTHING)
@@ -89,31 +97,6 @@ export function pluck(midi: number, sampleRate: number): Float32Array {
   }
   return made
 }
-
-// A strum isn't instant: the pick crosses the strings one after another.
-const DOWN_SPREAD_SEC = 0.012
-const UP_SPREAD_SEC = 0.008
-// Each voice's level in the mix: six strings, each doubled, stay under full scale.
-const NOTE_LEVEL = 0.16
-// Every note is played twice, the second a touch sharp and a moment late, as when a part
-// is double-tracked: the two beat gently against each other and the guitar sounds full
-// rather than thin.
-const DOUBLE_CENTS = 7
-const DOUBLE_DELAY_SEC = 0.009
-const DOUBLE_LEVEL = 0.75
-const CENTS_PER_SEMITONE = 100
-// A guitar body's warmth: the low end, under about 250 Hz, lifted by half again.
-const WARMTH_HZ = 250
-const WARMTH = 0.5
-// A string struck again stops its last note; a short fade keeps that from clicking.
-const DAMP_SEC = 0.01
-// Takes the top off, like a guitar's body does.
-const BODY_SMOOTHING = 0.35
-/** How long the last chord rings after the chart ends. */
-export const RING_OUT_SEC = 2
-const EVENTS_PER_CHUNK = 64
-// The doubled voice of a string is held under its own key, beside the string's.
-const DOUBLE_VOICE = 0.5
 
 interface Sounding {
   start: number
@@ -154,7 +137,7 @@ export async function renderStrums(
     const lead = ((event.notes.length - 1) * spread + DOUBLE_DELAY_SEC) / 2
     event.notes.forEach((note, i) => {
       const start = Math.max(0, Math.round((event.time - fromSec - lead + i * spread) * sampleRate))
-      const gain = NOTE_LEVEL * event.velocity
+      const gain = GUITAR_NOTE_LEVEL * event.velocity
       const voices: [number, Sounding][] = [
         [note.string, { start, sample: pluck(note.midi, sampleRate), gain }],
         [

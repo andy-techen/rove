@@ -1,4 +1,5 @@
 import { clamp } from '../dsp/units'
+import { MAKEUP_SHARE, MAKEUP_MAX_DB, SPEC_MAKEUP_SHARE } from './constants'
 
 /** The plain-language controls, each 0..1. */
 export interface PolishAmounts {
@@ -128,11 +129,6 @@ const SLIDER_MAP: Record<
 export const controlOf = (param: PolishParam): PolishControl =>
   param === 'makeupDb' ? 'smoothness' : SLIDER_MAP[param].control
 
-// Makeup restores roughly half the level the compressor takes away, so turning
-// Smoothness up doesn't make the voice suddenly quieter; never more than this.
-const MAKEUP_SHARE = 0.5
-const MAKEUP_MAX_DB = 12
-
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * clamp(t, 0, 1)
 /** Keeps a parameter inside its safe range, however it was set. */
 export const clampParam = (key: PolishParam, value: number): number =>
@@ -165,14 +161,6 @@ export function polishParams(settings: PolishSettings): PolishParams {
     Object.entries(merged).map(([k, v]) => [k, clampParam(k as keyof PolishParams, v as number)])
   ) as PolishParams
 }
-
-/**
- * Web Audio's compressor adds its own makeup gain, (1/fullRangeGain)^0.6 per the
- * spec: 60% of the reduction a full-scale signal would get. Rove subtracts it so
- * "Makeup gain" means the total, and quiet room noise isn't lifted twice.
- * https://webaudio.github.io/web-audio-api/#DynamicsCompressorOptions-processing
- */
-const SPEC_MAKEUP_SHARE = 0.6
 
 export function builtInMakeupDb(thresholdDb: number, ratio: number): number {
   return SPEC_MAKEUP_SHARE * -thresholdDb * (1 - 1 / ratio)

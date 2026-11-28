@@ -6,6 +6,7 @@ import { useShortcuts } from '../../state/commands/shortcuts'
 import { IconButton } from '../ui/IconButton'
 import { LyricsSearch } from './LyricsSearch'
 import { LyricsView } from './LyricsView'
+import { NUDGE_SEC } from './constants'
 import './LyricsPanel.css'
 
 interface Props {
@@ -21,9 +22,6 @@ interface Props {
   onNudge(bySec: number): void
   onClose(): void
 }
-
-// A quarter second is small enough to line words up by ear, big enough to hear.
-const NUDGE_SEC = 0.25
 
 /** The song’s words beside the timeline, found online and following the playhead. */
 export function LyricsPanel({

@@ -11,9 +11,9 @@ import {
   guitarFeel,
   pianoFeel
 } from '../../state/song/project'
-import { ChartPlace } from '../../state/chords/chart'
+import { ChartPlace } from '../../state/chords/chart/chart'
+import { MAX_CHORDS_PER_BAR } from '../../state/chords/chart/constants'
 import {
-  MAX_CHORDS_PER_BAR,
   addBar,
   chordBefore,
   clearBars,
@@ -23,9 +23,9 @@ import {
   splitBar,
   transposeBars,
   withChordAt
-} from '../../state/chords/chartBars'
-import { sameChord } from '../../state/chords/chordText'
-import { chordName } from '../../state/chords/noteNames'
+} from '../../state/chords/chart/chartBars'
+import { sameChord } from '../../state/chords/theory/chordText'
+import { chordName } from '../../state/chords/theory/noteNames'
 import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'

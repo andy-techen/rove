@@ -6,13 +6,7 @@ import {
   Output,
   QUALITY_HIGH
 } from 'mediabunny'
-
-/**
- * Frames per second. The picture only changes when a lyric line does, but social apps
- * expect a normal frame rate; a constant 24 plays everywhere, and a still frame costs
- * almost nothing to encode.
- */
-const FRAME_RATE = 24
+import { FRAME_RATE } from './constants'
 
 /**
  * Encodes the mix with a picture as an H.264/AAC MP4, the pairing every phone and social

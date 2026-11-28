@@ -1,12 +1,6 @@
 import { Mp3Encoder } from '@breezystack/lamejs'
 import { clamp } from '../dsp/units'
-
-// 320 kbps CBR: the top MP3 rate, so the smaller file costs as little quality as MP3 can.
-const MP3_KBPS = 320
-// LAME works in 1152-sample frames; whole frames per chunk keep its buffers tidy.
-const MP3_FRAME = 1152
-const FRAMES_PER_CHUNK = 64
-const INT16_MAX = 0x7fff
+import { MP3_KBPS, MP3_FRAME, FRAMES_PER_CHUNK, INT16_MAX } from './constants'
 
 const toInt16 = (samples: Float32Array): Int16Array =>
   Int16Array.from(samples, (s) => clamp(s, -1, 1) * INT16_MAX)

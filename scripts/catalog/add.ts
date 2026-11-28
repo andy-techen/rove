@@ -1,5 +1,9 @@
 import type { DatabaseSync } from 'node:sqlite'
-import type { CatalogGenre, CatalogLanguage, CatalogSongType } from '../../src/shared/catalog'
+import type {
+  CatalogGenre,
+  CatalogLanguage,
+  CatalogSongType
+} from '../../src/shared/online/catalog'
 import { isChinese, toTraditional } from './chinese'
 import { creditOf, describeCandidates, FetchJson, lookupRecording } from './musicbrainz'
 import { findDuplicate, findReviewRow, saveSong, SongInput } from './store'

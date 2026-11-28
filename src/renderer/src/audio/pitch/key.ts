@@ -3,6 +3,14 @@ import { hzToMidi } from './pitch'
 import { downsampleForAnalysis, nextTick } from '../dsp/resample'
 import { AudioSource } from '../dsp/audioSource'
 import { mean } from '../dsp/stats'
+import {
+  CHROMA_MIN_HZ,
+  CHROMA_MAX_HZ,
+  FFT_SIZE,
+  CHROMA_FRAMES_PER_CHUNK,
+  MIN_CHROMA
+} from './constants'
+import { PITCH_CLASSES } from '@shared/units'
 
 export type KeyMode = 'major' | 'minor'
 
@@ -12,7 +20,6 @@ export interface SongKey {
   mode: KeyMode
 }
 
-export const PITCH_CLASSES = 12
 export const KEY_MODES: KeyMode[] = ['major', 'minor']
 
 const SCALE_STEPS: Record<KeyMode, number[]> = {
@@ -98,13 +105,6 @@ export function keyFromChroma(chroma: number[]): SongKey | null {
   return bestScore > 0 ? best : null
 }
 
-// Notes below and above this range are mostly drums, rumble and hiss.
-const CHROMA_MIN_HZ = 80
-const CHROMA_MAX_HZ = 2000
-// ~0.34 s at the analysis rate: fine enough to tell neighbouring low notes apart.
-const FFT_SIZE = 4096
-const FRAMES_PER_CHUNK = 20
-
 /** Adds up how strongly each pitch class sounds through some audio. */
 async function addChroma(source: AudioSource, chroma: number[]): Promise<void> {
   const { data, rate } = downsampleForAnalysis(source.channels, source.sampleRate, CHROMA_MAX_HZ)
@@ -121,12 +121,9 @@ async function addChroma(source: AudioSource, chroma: number[]): Promise<void> {
     for (let bin = lowBin; bin <= highBin; bin++) {
       chroma[pitchClass(hzToMidi((bin * rate) / FFT_SIZE))] += Math.hypot(re[bin], im[bin])
     }
-    if (++frame % FRAMES_PER_CHUNK === 0) await nextTick()
+    if (++frame % CHROMA_FRAMES_PER_CHUNK === 0) await nextTick()
   }
 }
-
-// Less total energy than this across a song means there's nothing to hear a key in.
-const MIN_CHROMA = 1e-3
 
 /** Listens to some audio (the music, or the vocals if there's no music) and names its key. */
 export async function detectKey(sources: AudioSource[]): Promise<SongKey | null> {

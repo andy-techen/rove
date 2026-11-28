@@ -5,8 +5,8 @@ import {
   handledInApp,
   matchesAccelerator,
   yieldsToControls
-} from '@shared/keymap'
-import { MenuAction } from '@shared/menu'
+} from '@shared/preferences/keymap'
+import { MenuAction } from '@shared/preferences/menu'
 import { keyboardFocus } from '../ui/focusRing'
 import { currentKeymap } from './keymap'
 

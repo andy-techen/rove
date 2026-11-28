@@ -1,24 +1,8 @@
-import { LANDING_BIN_CENTS, LANDING_RANGE_CENTS, TakeRef, TakeSummary } from '@shared/voice'
-import { AIR_BAND, BODY_BAND, Band, PRESENCE_BAND, densityDb } from '../dsp/voiceBands'
+import { TakeRef, TakeSummary } from '@shared/songs/voice'
+import { LANDING_BIN_CENTS, LANDING_RANGE_CENTS } from '@shared/songs/constants'
+import { densityDb } from '../dsp/voiceBands'
 import { emptySummary } from './summary'
-
-// The comfort zone is where most of the singing sits: the notes below which 5% and
-// above which 5% of the sung time falls, so a stray low or high note doesn't stretch it.
-const COMFORT_PERCENT = { low: 0.05, high: 0.95 }
-// A held note within this many cents of the note counts as landing on it. Most
-// listeners don't hear a held note as out of tune until it's 20–25 cents off.
-const LANDED_CENTS = 20
-
-/**
- * Where each tone measure (per Hz, relative to 1–2 kHz) sits from 0 to 1. Centred on
- * auto polish's TONE_REFERENCE, so a typical voice lands mid-scale. Starting values;
- * tune by ear across voices and mics.
- */
-const TONE_RANGE_DB: Record<keyof Tone, { band: Band; low: number; high: number }> = {
-  body: { band: BODY_BAND, low: -5, high: 25 },
-  brightness: { band: PRESENCE_BAND, low: -23, high: 7 },
-  air: { band: AIR_BAND, low: -45, high: -5 }
-}
+import { COMFORT_PERCENT, LANDED_CENTS, TONE_RANGE_DB, MONTHS_PER_YEAR } from './constants'
 
 export interface Tone {
   /** Light (0) to rich (1): the low body of the voice. */
@@ -143,8 +127,6 @@ export interface MonthSummary {
   month: number
   summary: TakeSummary
 }
-
-const MONTHS_PER_YEAR = 12
 
 /**
  * Summaries by calendar month of recording (local time), oldest first. Months with no

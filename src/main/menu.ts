@@ -1,10 +1,10 @@
 import { app, BrowserWindow, Menu, MenuItemConstructorOptions, WebContents } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { t } from '@shared/copy'
-import { KEYMAP, Keymap, ShortcutId, isInAppAccelerator } from '@shared/keymap'
-import { ContextMenuItem, MENU_CHANNEL, MenuAction } from '@shared/menu'
-import { THEMES } from '@shared/appearance'
-import { currentTheme, setTheme } from './ipc/appearance'
+import { KEYMAP, Keymap, ShortcutId, isInAppAccelerator } from '@shared/preferences/keymap'
+import { ContextMenuItem, MENU_CHANNEL, MenuAction } from '@shared/preferences/menu'
+import { THEMES } from '@shared/preferences/appearance'
+import { currentTheme, setTheme } from './ipc/preferences/appearance'
 
 /** Sends a menu choice to the focused window; the renderer decides what it means. */
 function send(action: MenuAction): void {

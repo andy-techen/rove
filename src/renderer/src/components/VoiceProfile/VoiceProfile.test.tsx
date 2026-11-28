@@ -2,14 +2,15 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
-import { VOICE_ANALYSIS_VERSION, type VoiceCacheEntry } from '@shared/voice'
+import { type VoiceCacheEntry } from '@shared/songs/voice'
+import { VOICE_ANALYSIS_VERSION } from '@shared/songs/constants'
 import type { Entry } from '../../audio/voice'
 import { sungEntry } from '../../state/voice/testEntries'
 import { singingTime } from '../../state/voice/voiceText'
-import { previewNote } from '../../state/chords/preview'
+import { previewNote } from '../../state/chords/instruments/preview'
 import { VoiceProfile } from '.'
 
-vi.mock('../../state/chords/preview', () => ({ previewNote: vi.fn() }))
+vi.mock('../../state/chords/instruments/preview', () => ({ previewNote: vi.fn() }))
 
 /** Songs already listened to, so the profile shows straight from the cache. */
 function renderWith(entries: Entry[]) {

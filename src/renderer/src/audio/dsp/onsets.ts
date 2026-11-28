@@ -1,14 +1,14 @@
 import { fft, hann as hannWindow } from './fft'
 import { downsampleForAnalysis, nextTick } from './resample'
 import { AudioSource } from './audioSource'
-
-// Drums, plucks and sung consonants live across the spectrum; above this adds little.
-const ONSET_CUTOFF_HZ = 5000
-const ONSET_FFT = 1024
-const ONSET_HOP = 128
-const LOG_COMPRESSION = 100
-const FRAMES_PER_CHUNK = 400
-const ONSET_PEAK_SHARE = 0.75
+import {
+  ONSET_CUTOFF_HZ,
+  ONSET_FFT,
+  ONSET_HOP,
+  LOG_COMPRESSION,
+  FRAMES_PER_CHUNK,
+  ONSET_PEAK_SHARE
+} from './constants'
 
 /** How strongly something new starts sounding in each analysis frame (spectral flux). */
 export async function onsetStrength(

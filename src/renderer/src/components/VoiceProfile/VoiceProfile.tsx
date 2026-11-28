@@ -1,6 +1,7 @@
 import { CSSProperties, useMemo } from 'react'
 import { t } from '@shared/copy'
-import { VOICE_UNLOCK_SEC } from '@shared/voice'
+import { SEC_PER_MIN } from '@shared/units'
+import { VOICE_UNLOCK_SEC } from '@shared/songs/constants'
 import { useVoiceProfile } from '../../state/voice/useVoiceProfile'
 import { singingTime } from '../../state/voice/voiceText'
 import { voiceView } from '../../state/voice/voiceView'
@@ -11,8 +12,6 @@ import { RangeCard } from './RangeCard'
 import { ToneScales } from './ToneScales'
 import { TotalsCards } from './TotalsCards'
 import './VoiceProfile.css'
-
-const SEC_PER_MIN = 60
 
 /** Before there's enough singing to say anything: how far along the singer is. */
 function Locked({ sungSec }: { sungSec: number }): React.JSX.Element {

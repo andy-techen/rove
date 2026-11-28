@@ -1,4 +1,5 @@
-import { LANDING_BINS, TakeRef, TakeSummary } from '@shared/voice'
+import { TakeRef, TakeSummary } from '@shared/songs/voice'
+import { LANDING_BINS } from '@shared/songs/constants'
 import { describe, expect, it } from 'vitest'
 import { byMonth, bySong, combine, profileOf } from './profile'
 import { emptySummary } from './summary'

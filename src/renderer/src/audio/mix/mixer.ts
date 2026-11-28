@@ -7,8 +7,38 @@ import {
 } from '../polish/polish'
 import { GATE_PROCESSOR } from '../worklets/messages'
 import { clamp, dbToGain, gainToDb } from '../dsp/units'
-import { DE_ESS_BAND } from '../dsp/voiceBands'
 import { seededNoise } from '../dsp/noise'
+import {
+  RAMP_SEC,
+  BASS_HZ,
+  BRIGHTNESS_HZ,
+  BUTTERWORTH_Q,
+  LOW_CUT_START_HZ,
+  WARMTH_HZ,
+  WARMTH_Q,
+  PRESENCE_HZ,
+  PRESENCE_Q,
+  AIR_HZ,
+  COMP_KNEE_DB,
+  COMP_ATTACK_SEC,
+  COMP_RELEASE_SEC,
+  DE_ESS_SPLIT_HZ,
+  DE_ESS_RATIO,
+  DE_ESS_KNEE_DB,
+  DE_ESS_ATTACK_SEC,
+  DE_ESS_RELEASE_SEC,
+  REVERB_PREDELAY_SEC,
+  IR_STEPS_PER_SEC,
+  IR_LEVEL,
+  E_FOLDS_IN_60DB,
+  NOISE_SEED,
+  LIMITER_THRESHOLD_DB,
+  LIMITER_RATIO,
+  LIMITER_ATTACK_SEC,
+  LIMITER_RELEASE_SEC,
+  SLIDER_MIN_DB,
+  SLIDER_MAX_DB
+} from './constants'
 
 export interface TrackMix {
   role: 'vocal' | 'backing'
@@ -22,48 +52,6 @@ export interface TrackMix {
   /** Backing tracks only: the music's bass and brightness, in dB. */
   tone?: { bassDb: number; brightnessDb: number }
 }
-
-// Music tone: shelves low and high enough to read as "bass" and "brightness".
-const BASS_HZ = 120
-const BRIGHTNESS_HZ = 5000
-
-// Smooths changes so dragging a slider during playback doesn't click.
-const RAMP_SEC = 0.015
-
-// Filters. A Q of 1/√2 is a Butterworth response: flat, no resonant bump.
-const BUTTERWORTH_Q = Math.SQRT1_2
-const LOW_CUT_START_HZ = 90
-const WARMTH_HZ = 250
-const WARMTH_Q = 0.9
-const PRESENCE_HZ = 3500
-const PRESENCE_Q = 1
-const AIR_HZ = 10000
-
-// Smoothness compressor: soft knee and vocal-friendly timing.
-const COMP_KNEE_DB = 10
-const COMP_ATTACK_SEC = 0.005
-const COMP_RELEASE_SEC = 0.15
-
-// De-esser: compress only the band above the split, fast enough to catch an "s".
-const DE_ESS_SPLIT_HZ = DE_ESS_BAND[0]
-const DE_ESS_RATIO = 6
-const DE_ESS_KNEE_DB = 3
-const DE_ESS_ATTACK_SEC = 0.001
-const DE_ESS_RELEASE_SEC = 0.05
-
-// Reverb: a generated room. Impulses are cached in steps of 1/IR_STEPS_PER_SEC s.
-const REVERB_PREDELAY_SEC = 0.015
-const IR_STEPS_PER_SEC = 5
-const IR_LEVEL = 0.5
-// ln(1000): the exponent at which the tail has fallen 60 dB (the usual "decay time").
-const E_FOLDS_IN_60DB = Math.log(1000)
-const NOISE_SEED = 12345
-
-// Safety limiter: just under full scale, effectively brick-wall.
-const LIMITER_THRESHOLD_DB = -1
-const LIMITER_RATIO = 20
-const LIMITER_ATTACK_SEC = 0.001
-const LIMITER_RELEASE_SEC = 0.1
 
 type Setter = (param: AudioParam, value: number) => void
 
@@ -344,11 +332,6 @@ export class Mixer {
     return this.chains.get(trackId)?.input ?? this.master
   }
 }
-
-// The volume slider is laid out in decibels so equal slider moves sound like equal
-// changes in loudness: the bottom is silent, about 87% of the way is unity, the top is +6 dB.
-const SLIDER_MIN_DB = -40
-const SLIDER_MAX_DB = 6
 
 export function sliderToGain(position: number): number {
   if (position <= 0) return 0

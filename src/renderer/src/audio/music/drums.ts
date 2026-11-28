@@ -1,12 +1,23 @@
-import type { DrumHit, DrumVoice } from '../../state/chords/beats'
+import type { DrumHit, DrumVoice } from '../../state/chords/instruments/beats'
 import { seededNoise } from '../dsp/noise'
+import {
+  DRUM_NOISE_SEED,
+  KICK,
+  SNARE,
+  HAT,
+  OPEN_HAT,
+  RIM,
+  CLAP,
+  TOM,
+  CRASH,
+  LEVEL,
+  CEILING
+} from './constants'
 
 // Each drum is synthesised once per sample rate: a few short sounds, so no samples ship.
 
-const NOISE_SEED = 1618
-
 function noise(length: number): Float32Array {
-  const next = seededNoise(NOISE_SEED)
+  const next = seededNoise(DRUM_NOISE_SEED)
   return Float32Array.from({ length }, () => next())
 }
 
@@ -22,22 +33,6 @@ function highPassed(samples: Float32Array, hz: number, sampleRate: number): Floa
 
 const decay = (n: number, sampleRate: number, sec: number): number =>
   Math.exp(-n / (sampleRate * sec))
-
-// Kick: a low sine that drops in pitch as it dies, the thump of a bass drum.
-const KICK = { sec: 0.45, fromHz: 140, toHz: 48, sweepSec: 0.05, decaySec: 0.14 }
-// Snare: a short tone for the drum, under a burst of noise for the wires.
-const SNARE = { sec: 0.25, hz: 190, toneSec: 0.04, wiresSec: 0.07, wiresHz: 1500, tone: 0.5 }
-// Hats: high, bright noise; closed is a tick, open rings a little.
-const HAT = { sec: 0.08, decaySec: 0.018, hz: 7000 }
-const OPEN_HAT = { sec: 0.4, decaySec: 0.12, hz: 6000 }
-// Rim: a short knock, for quiet bars.
-const RIM = { sec: 0.05, hz: 1700, decaySec: 0.008, click: 0.4 }
-// Clap: a few hands a moment apart, then the room.
-const CLAP = { sec: 0.3, hz: 1200, burstGapSec: 0.011, bursts: 3, burstSec: 0.004, tailSec: 0.06 }
-// Tom: a tuned drum, a fifth or so above the kick, that sags in pitch as it rings.
-const TOM = { sec: 0.5, fromHz: 190, toHz: 120, sweepSec: 0.08, decaySec: 0.18 }
-// Crash: a big wash of bright noise that takes a while to die.
-const CRASH = { sec: 1.6, hz: 4500, decaySec: 0.55 }
 
 function synth(voice: DrumVoice, sampleRate: number): Float32Array {
   const frames = (sec: number): number => Math.round(sec * sampleRate)
@@ -119,28 +114,8 @@ export function drum(voice: DrumVoice, sampleRate: number): Float32Array {
   return sound
 }
 
-// Each drum's level in the kit. Quiet beside the guitar, and the hats quieter still: the
-// voice is the star. Even every drum struck at once, full force, stays well under 1.
-const LEVEL: Record<DrumVoice, number> = {
-  kick: 0.34,
-  snare: 0.22,
-  clap: 0.16,
-  rim: 0.12,
-  hat: 0.06,
-  openHat: 0.06,
-  tom: 0.22,
-  crash: 0.08
-}
-
 /** A drum's level in the kit, for playing it outside a render (the beat pad's loop). */
 export const drumLevel = (voice: DrumVoice): number => LEVEL[voice]
-
-// The loudest a render may be. Every drum at once, hard, could pass it, so a render that
-// would is turned down as a whole: quieter, never clipped.
-const CEILING = 0.9
-
-/** The longest any drum rings, so a render can leave room after its last bar. */
-export const DRUM_TAIL_SEC = CRASH.sec
 
 /** Plays drum hits into a buffer starting at `fromSec` on the timeline. */
 export function renderDrums(

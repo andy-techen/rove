@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react'
-import {
-  VOICE_ANALYSIS_VERSION,
-  type TakeRef,
-  type TakeSummary,
-  type VoiceCacheEntry
-} from '@shared/voice'
+import { type TakeRef, type TakeSummary, type VoiceCacheEntry } from '@shared/songs/voice'
+import { VOICE_ANALYSIS_VERSION } from '@shared/songs/constants'
 import { Entry, summariseInWorker } from '../../audio/voice'
 
 export type VoiceProfileState =

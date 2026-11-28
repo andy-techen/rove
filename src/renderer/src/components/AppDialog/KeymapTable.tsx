@@ -10,7 +10,7 @@ import {
   checkAccelerator,
   isGesture,
   withBinding
-} from '@shared/keymap'
+} from '@shared/preferences/keymap'
 import { saveOverrides, useKeymap } from '../../state/commands/keymap'
 import { useShortcuts } from '../../state/commands/shortcuts'
 import { IconButton } from '../ui/IconButton'

@@ -1,7 +1,8 @@
 import { useRef } from 'react'
 import { cx } from '../cx'
 import { Tooltip } from '../Tooltip'
-import { DETENT, VIEW, arcPath, dragTravel, dragValue, fractionOf, pointAt } from './knobMath'
+import { CENTRE, DETENT, FACE, MARKER_R, POINTER, RING, VIEW } from './constants'
+import { arcPath, dragTravel, dragValue, fractionOf, pointAt } from './knobMath'
 import './Knob.css'
 
 export interface KnobProps {
@@ -30,12 +31,6 @@ export interface KnobProps {
   disabled?: boolean
   className?: string
 }
-
-const CENTRE = VIEW / 2
-const RING = 40
-const POINTER = 26
-const FACE = 30
-const MARKER_R = 4
 
 /**
  * A knob: drag up or right to turn it up (down or left, down), arrow keys step it,

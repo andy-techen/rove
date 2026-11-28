@@ -1,21 +1,20 @@
 import { t } from '@shared/copy'
 import { Chord } from '../../audio/music/chords'
-import { gripOf } from '../../state/chords/guitarShapes'
-import { chordName } from '../../state/chords/noteNames'
-
-// The chord box, in its own units: six strings across, four frets down, with room
-// above for open and muted marks and to the left for the starting fret.
-const STRINGS = 6
-const FRETS = 4
-const LEFT = 16
-const TOP = 14
-const STRING_GAP = 10
-const FRET_GAP = 13
-const WIDTH = LEFT + STRING_GAP * (STRINGS - 1) + 6
-const HEIGHT = TOP + FRET_GAP * FRETS + 4
-const DOT_R = 3.6
-const MARK_R = 2.6
-const MARK_Y = TOP - 7
+import { gripOf } from '../../state/chords/instruments/guitarShapes'
+import { chordName } from '../../state/chords/theory/noteNames'
+import {
+  DOT_R,
+  FRETS,
+  FRET_GAP,
+  HEIGHT,
+  LEFT,
+  MARK_R,
+  MARK_Y,
+  STRINGS,
+  STRING_GAP,
+  TOP,
+  WIDTH
+} from './constants'
 
 const x = (string: number): number => LEFT + string * STRING_GAP
 const fretMid = (fret: number): number => TOP + (fret - 0.5) * FRET_GAP

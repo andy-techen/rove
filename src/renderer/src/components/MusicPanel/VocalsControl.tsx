@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { t } from '@shared/copy'
+import { PERCENT } from '@shared/units'
 import type { VocalsState } from '../../state/processing/useVocalRemoval'
 import { IconButton } from '../ui/IconButton'
 import { Tooltip } from '../ui/Tooltip'
@@ -12,8 +13,6 @@ interface Props {
   onCancel(): void
   onPutBack(): void
 }
-
-const PERCENT = 100
 
 /** The Music panel's header control for taking the singing out of the song. */
 export function VocalsControl({

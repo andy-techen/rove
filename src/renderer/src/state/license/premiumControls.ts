@@ -1,4 +1,4 @@
-import { Plan, isEnabled } from '@shared/features'
+import { Plan, isEnabled } from '@shared/license/features'
 import type { VocalsState } from '../processing/useVocalRemoval'
 
 /**

@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-  AUTO_LIMITS,
-  TONE_REFERENCE,
-  suggestPolish,
-  AutoPolishReason,
-  autoMark
-} from './autoPolish'
+import { suggestPolish, AutoPolishReason, autoMark } from './autoPolish'
+import { AUTO_LIMITS, TONE_REFERENCE } from './constants'
 import { POLISH_CONTROLS, defaultPolish, polishParams } from './polish'
 import { PolishReading } from './polishReading'
 

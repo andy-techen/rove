@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { decodeAudio, getAudioContext } from '../../audio/engine/engine'
-import type { ChosenProject } from '@shared/project'
+import type { ChosenProject } from '@shared/songs/project'
 import {
   Project,
   VocalPart,
@@ -11,6 +11,7 @@ import {
   withTrackAudio
 } from './project'
 import { History, emptyHistory, pushHistory, redoHistory, undoHistory } from './history'
+import { SAVE_DELAY_MS } from './constants'
 
 /** An audio file just added to the song, already decoded. */
 export interface NewAudio {
@@ -61,8 +62,6 @@ export interface Song {
 async function loadAudio(dir: string, file: string): Promise<AudioBuffer> {
   return decodeAudio(await window.api.readAudio(dir, file))
 }
-
-const SAVE_DELAY_MS = 400
 
 /** One open song (one tab): its project, decoded audio, and undo history. */
 export function useSong(initial: ChosenProject): Song {

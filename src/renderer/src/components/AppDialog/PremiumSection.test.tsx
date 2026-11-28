@@ -2,8 +2,8 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
-import { LicenseStatus } from '@shared/license'
-import { PREMIUM_FEATURES } from '@shared/premiumFeatures'
+import { LicenseStatus } from '@shared/license/license'
+import { PREMIUM_FEATURES } from '@shared/license/premiumFeatures'
 import { PremiumSection } from './PremiumSection'
 
 const PREMIUM: LicenseStatus = { plan: 'premium', keyHint: '•••• 4d51' }

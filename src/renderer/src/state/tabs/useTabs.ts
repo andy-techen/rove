@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
-import type { ChosenProject } from '@shared/project'
+import type { ChosenProject } from '@shared/songs/project'
 import { moveItem } from './tabOrder'
 
 export interface Tab {

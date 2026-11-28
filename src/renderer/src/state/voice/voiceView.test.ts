@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { VOICE_UNLOCK_SEC } from '@shared/voice'
+import { VOICE_UNLOCK_SEC } from '@shared/songs/constants'
 import { sungEntry } from './testEntries'
 import { voiceView } from './voiceView'
 

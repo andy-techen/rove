@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { VOICE_ANALYSIS_VERSION, type VoiceCacheEntry } from '@shared/voice'
+import { type VoiceCacheEntry } from '@shared/songs/voice'
+import { VOICE_ANALYSIS_VERSION } from '@shared/songs/constants'
 import { summariseInWorker } from '../../audio/voice'
 import { sungEntry } from './testEntries'
 import { useVoiceProfile } from './useVoiceProfile'

@@ -1,4 +1,4 @@
-import { ContextMenuItem, MenuAction } from '@shared/menu'
+import { ContextMenuItem, MenuAction } from '@shared/preferences/menu'
 import type { VocalPart } from '../song/project'
 
 /** What was right-clicked: a clip, an empty spot in a lane, or a track's name. */

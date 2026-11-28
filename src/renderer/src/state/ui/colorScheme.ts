@@ -1,11 +1,10 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import type { Theme } from '@shared/appearance'
+import type { Theme } from '@shared/preferences/appearance'
+import { DEFAULT_SCHEME } from './constants'
 
 export type ColorScheme = 'light' | 'dark'
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
-// The design tokens are dark unless the system (or the app's theme) asks for light.
-const DEFAULT_SCHEME: ColorScheme = 'dark'
 
 const query = (): MediaQueryList | null => window.matchMedia?.(DARK_QUERY) ?? null
 

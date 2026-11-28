@@ -1,11 +1,10 @@
 import type { FetchJson } from './musicbrainz'
+import { TOP_TRACKS } from './constants'
 
 // Deezer's public API (no key): an artist's most played tracks, and each track's ISRC.
 // https://developers.deezer.com/api
 
 const API = 'https://api.deezer.com'
-/** How far down an artist's top tracks to look for enough plain studio songs. */
-const TOP_TRACKS = 30
 
 export interface DeezerTrack {
   id: number

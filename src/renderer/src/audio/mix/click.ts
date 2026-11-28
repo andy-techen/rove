@@ -1,13 +1,5 @@
+import { RAMP_SEC, ACCENT_HZ, BEAT_HZ, CLICK_SEC, DECAY_SEC, CLICK_LEVEL } from './constants'
 // The metronome's sound: a short, soft tick, higher on the first beat of a bar.
-
-const ACCENT_HZ = 1600
-const BEAT_HZ = 1000
-const CLICK_SEC = 0.05
-// Fast decay keeps the tick short and out of the way of the voice.
-const DECAY_SEC = 0.008
-const CLICK_LEVEL = 0.6
-// Smooths a level change so turning the knob mid-tick doesn't crackle.
-const LEVEL_RAMP_SEC = 0.015
 
 const sounds = new WeakMap<BaseAudioContext, { accent: AudioBuffer; beat: AudioBuffer }>()
 
@@ -63,7 +55,7 @@ export function scheduleClicks(
   })
   return {
     nodes,
-    setLevel: (next) => gain.gain.setTargetAtTime(next, ctx.currentTime, LEVEL_RAMP_SEC),
+    setLevel: (next) => gain.gain.setTargetAtTime(next, ctx.currentTime, RAMP_SEC),
     stop: (atTime) => {
       if (atTime === undefined) {
         for (const node of nodes) {

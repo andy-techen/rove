@@ -1,9 +1,6 @@
 // Changed copies of recordings (tuned vocals, music at a new speed or key), made once
 // and remembered. The recordings themselves are never touched.
-
-// The last few versions of each recording, so moving a slider back and forth is instant
-// without holding every version ever made (each is a full copy of the audio).
-const KEEP_VERSIONS = 3
+import { KEEP_VERSIONS } from './constants'
 
 const versions = new WeakMap<AudioBuffer, Map<string, Promise<AudioBuffer>>>()
 

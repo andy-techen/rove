@@ -1,10 +1,8 @@
 import { useEffect } from 'react'
 import { dismissSnack, useSnack } from '../../../state/ui/snackbar'
 import { Icon } from '../Icon'
+import { SHOW_MS } from './constants'
 import './Snackbar.css'
-
-// Long enough to read a sentence; short enough not to linger over the song.
-const SHOW_MS = 4000
 
 /** Where one-off messages appear (`showSnack`): bottom left, for a few seconds. */
 export function Snackbar(): React.JSX.Element {

@@ -2,6 +2,13 @@ import { onsetStrength } from '../dsp/onsets'
 import { AudioSource } from '../dsp/audioSource'
 import { parabolicOffset } from '../dsp/peakFit'
 import { mean, median } from '../dsp/stats'
+import {
+  ANALYSIS_SEC,
+  EARLIEST_SEC,
+  LATEST_SEC,
+  MIN_CORRELATION,
+  MIN_PROMINENCE
+} from './constants'
 
 /** A piece of music as it plays on the timeline (a backing clip, the chords). */
 export interface MusicClip {
@@ -35,20 +42,6 @@ export function musicUnder(
   }
   return out
 }
-
-// A take's first minute and a half is plenty: the delay stays the same all the way.
-const ANALYSIS_SEC = 90
-// How far to look. Singers are rarely early by much; a late take can be late by a
-// Bluetooth headphone's quarter second. Wider would start matching the beat before.
-const EARLIEST_SEC = -0.1
-const LATEST_SEC = 0.3
-// How clearly the voice's starts must follow the music's at the best lag, as a
-// correlation, and how far that must stand above the typical lag's. Measured on real
-// takes: a take 140 ms late scored 0.2 against a typical 0.06.
-const MIN_CORRELATION = 0.1
-const MIN_PROMINENCE = 0.05
-/** Below this, a take is in time: too little to hear, so nothing is offered. */
-export const MIN_LINE_UP_SEC = 0.02
 
 const centred = (x: Float32Array): Float32Array => {
   const average = mean(x)

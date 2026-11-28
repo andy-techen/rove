@@ -6,9 +6,8 @@ import {
   isGenre,
   isLanguage,
   isSongType
-} from '@shared/catalog'
-
-const DEFAULT_LIMIT = 100
+} from '@shared/online/catalog'
+import { DEFAULT_LIMIT } from './constants'
 
 interface SongRow {
   id: number

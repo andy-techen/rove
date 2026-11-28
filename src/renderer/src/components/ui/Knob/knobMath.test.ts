@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { DRAG_PX, arcPath, dragTravel, dragValue, pointAt } from './knobMath'
+import { DRAG_PX } from './constants'
+import { arcPath, dragTravel, dragValue, pointAt } from './knobMath'
 
 const volume = { min: 0, max: 100, step: 1 }
 const key = { min: -6, max: 6, step: 1, centre: 0 }

@@ -1,18 +1,16 @@
 import { t } from '@shared/copy'
-import { LANDING_BIN_CENTS, LANDING_RANGE_CENTS } from '@shared/voice'
-import { LABEL_DESCENT } from './keyboardGeometry'
+import { LANDING_BIN_CENTS, LANDING_RANGE_CENTS } from '@shared/songs/constants'
+import {
+  BAND_LABEL_Y,
+  BIN_GAP,
+  HEADROOM,
+  HEIGHT,
+  LABEL_DESCENT,
+  LABEL_GAP,
+  ON_NOTE_CENTS,
+  TENTHS
+} from './constants'
 import { Measured } from './Measured'
-
-const BIN_GAP = 2
-const HEIGHT = 110
-const LABEL_GAP = 16
-// Room above the tallest bar for the band's label, so the band shows over every bar
-// as the comfort zone does on the range chart.
-const BAND_LABEL_Y = 12
-const HEADROOM = 18
-// The soft band in the middle: as close as most listeners hear as on the note.
-const ON_NOTE_CENTS = 20
-const TENTHS = 10
 
 interface Props {
   landing: number[]

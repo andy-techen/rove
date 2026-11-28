@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { MAX_PX_PER_SEC } from './constants'
 import {
-  MAX_PX_PER_SEC,
   followPlayhead,
   formatTick,
   minorStep,

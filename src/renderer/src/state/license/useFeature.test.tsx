@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import type { LicenseStatus } from '@shared/license'
+import type { LicenseStatus } from '@shared/license/license'
 import { useFeature, usePlan } from './useFeature'
 
 function Probe(): React.JSX.Element {

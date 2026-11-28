@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { BOTTOM_HEIGHT, grownBy, useBottomPanelHeight, useSidePanelSize } from './sidePanels'
+import { grownBy, useBottomPanelHeight, useSidePanelSize } from './sidePanels'
+import { BOTTOM_HEIGHT } from './constants'
 
 describe('panel sizes', () => {
   it('remembers the side width and bottom height for next time', () => {

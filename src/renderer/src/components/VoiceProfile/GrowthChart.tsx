@@ -1,21 +1,22 @@
 import { t } from '@shared/copy'
-import { noteWithOctave } from '../../state/chords/noteNames'
+import { PITCH_CLASSES } from '@shared/units'
+import { noteWithOctave } from '../../state/chords/theory/noteNames'
 import { monthLabel } from '../../state/voice/voiceText'
 import type { KeyRange, MonthView } from '../../state/voice/voiceView'
-import { LABEL_DESCENT } from './keyboardGeometry'
+import {
+  AXIS_LABEL_NUDGE,
+  AXIS_WIDTH,
+  BAR_WIDTH,
+  C,
+  DOT_LABEL_GAP,
+  DOT_RADIUS,
+  LABEL_DESCENT,
+  MAX_MONTHS,
+  MONTH_LABEL_GAP,
+  PLOT_HEIGHT,
+  PLOT_TOP
+} from './constants'
 import { Measured } from './Measured'
-
-// A year at a glance; older months scroll off the left.
-const MAX_MONTHS = 12
-const AXIS_WIDTH = 36
-const PLOT_TOP = 16
-const PLOT_HEIGHT = 170
-const MONTH_LABEL_GAP = 18
-const BAR_WIDTH = 16
-const DOT_RADIUS = 4
-const DOT_LABEL_GAP = 8
-const C = 0
-const AXIS_LABEL_NUDGE = 4
 
 interface Props {
   months: MonthView[]
@@ -30,7 +31,7 @@ function Chart({ months, keys, width }: Props & { width: number }): React.JSX.El
   // A note's centre, higher notes higher up.
   const y = (note: number): number => PLOT_TOP + (keys.high - note + 0.5) * perNote
   const octaves = Array.from({ length: keys.high - keys.low + 1 }, (_, i) => keys.low + i).filter(
-    (n) => n % 12 === C
+    (n) => n % PITCH_CLASSES === C
   )
   const labels = shown.map((m, i) => monthLabel(m.year, m.month, i === 0))
   const height = PLOT_TOP + PLOT_HEIGHT + MONTH_LABEL_GAP + LABEL_DESCENT

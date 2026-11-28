@@ -1,7 +1,11 @@
 import { DatabaseSync } from 'node:sqlite'
 import { migrate } from '../../src/main/catalog/schema'
 import { buildSearchText } from '../../src/main/catalog/searchText'
-import type { CatalogGenre, CatalogLanguage, CatalogSongType } from '../../src/shared/catalog'
+import type {
+  CatalogGenre,
+  CatalogLanguage,
+  CatalogSongType
+} from '../../src/shared/online/catalog'
 
 // Writes to the catalog. Only the curation scripts use this; the app opens the file
 // read-only (src/main/ipc/catalog.ts).

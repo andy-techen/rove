@@ -1,22 +1,7 @@
-import { TASTE_CONTROLS, TasteExample } from '@shared/polishTaste'
+import { TASTE_CONTROLS, TasteExample } from '@shared/preferences/polishTaste'
 import { Taste, ruledPolish } from './autoPolish'
 import { clamp } from '../dsp/units'
-
-/** The furthest the singer's taste leans a control from what the rules say. */
-export const MAX_LEAN = 0.15
-// Each song back counts this much less than the one after it, so a new mic or room
-// takes over within a dozen or so songs.
-const DECAY = 0.85
-// How many songs' worth of "the rules were right" every lean starts from, so one song
-// can't swing the next much on its own.
-const PRIOR_SONGS = 2
-// Leans smaller than this are left out: under a step on the knob, nobody would hear it.
-const MIN_LEAN = 0.01
-const STEPS = 100
-
-// More noise reduction raises the gate, which on another take could cut soft singing;
-// only less is learned.
-const MOST: Partial<Record<keyof Taste, number>> = { cleanup: 0 }
+import { STEPS, MAX_LEAN, DECAY, PRIOR_SONGS, MIN_LEAN, MOST } from './constants'
 
 /**
  * How the singer likes Polish, learned from where they left the knobs on tracks auto

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { AUTO_POLISH_VERSION, PolishSuggestion } from '../../audio/polish/autoPolish'
+import { PolishSuggestion } from '../../audio/polish/autoPolish'
+import { AUTO_POLISH_VERSION } from '../../audio/polish/constants'
 import { Project, createProject, polishOf, withRecordedClip, withTrackChanges } from './project'
 import { heardOf, heardWindows, suggestionIsStale, withPolishSuggestion } from './polishSuggestion'
 

@@ -1,14 +1,7 @@
-import type { DrumHit } from '../../state/chords/beats'
+import type { DrumHit } from '../../state/chords/instruments/beats'
 import { scheduleClicks, ClickTrack } from '../mix/click'
 import { drum, drumLevel } from './drums'
-
-// Bars are scheduled a little ahead of time, on a timer that wakes often enough never to
-// leave a gap: the usual way to keep Web Audio in time without a worklet.
-const LOOKAHEAD_SEC = 0.2
-const WAKE_MS = 25
-// Time to set the first bar up before it sounds.
-const START_DELAY_SEC = 0.1
-const CLICK_LEVEL = 0.5
+import { LOOKAHEAD_SEC, WAKE_MS, START_DELAY_SEC, CLICK_LEVEL } from './constants'
 
 export interface BeatLoopOptions {
   secPerBeat: number

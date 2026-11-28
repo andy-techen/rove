@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PianoEvent } from '../../state/chords/pianoPart'
+import { PianoEvent } from '../../state/chords/instruments/pianoPart'
 import { nearestSample, onsetOf, renderPiano } from './piano'
 import { midiToHz } from '../pitch/pitch'
 import { tone } from '../../test/signals'

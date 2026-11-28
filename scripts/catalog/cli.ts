@@ -9,7 +9,7 @@ import {
   isGenre,
   isLanguage,
   isSongType
-} from '../../src/shared/catalog'
+} from '../../src/shared/online/catalog'
 import { addSong, AddRequest, AddResult } from './add'
 import { cachedFetchJson } from './http'
 import { ArtistPick, importArtist } from './importArtists'

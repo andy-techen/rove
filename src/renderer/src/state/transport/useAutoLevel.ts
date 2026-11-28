@@ -2,10 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createMeter } from '../../audio/engine/engine'
 import { nextInputVolume } from '../../audio/engine/inputLevel'
 import { gainToDb } from '../../audio/dsp/units'
-
-// Long enough to sing a big line; short enough to stay a quick check.
-const LISTEN_MS = 5000
-const READ_EVERY_MS = 50
+import { LISTEN_MS, READ_EVERY_MS } from './constants'
 
 export type AutoLevelStatus = 'idle' | 'listening' | 'set' | 'alreadyRight' | 'notHeard'
 

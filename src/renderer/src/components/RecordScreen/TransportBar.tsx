@@ -1,5 +1,6 @@
 import { t } from '@shared/copy'
-import { formatClock, formatMillis } from '../../state/song/project'
+import { PERCENT } from '@shared/units'
+import { formatClock, formatMillis } from '../../state/ui/format'
 import { useShortcuts } from '../../state/commands/shortcuts'
 import { gainToSlider, sliderToGain } from '../../audio/mix/mixer'
 import { InputMeter } from '../InputMeter'
@@ -41,8 +42,6 @@ interface Props {
   /** The metronome and the song's tempo, behind one button after the levels. */
   beat?: React.ComponentProps<typeof Beat> | null
 }
-
-const PERCENT = 100
 
 /** Play/pause and stop, the time, the input level, and the edit tools. */
 export function TransportBar(props: Props): React.JSX.Element {

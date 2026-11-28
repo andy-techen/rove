@@ -1,7 +1,6 @@
-import { VOICE_UNLOCK_SEC } from '@shared/voice'
+import { VOICE_UNLOCK_SEC } from '@shared/songs/constants'
+import { SEMITONES_PER_OCTAVE } from '@shared/units'
 import { Entry, VoiceProfile, byMonth, bySong, combine, profileOf } from '../../audio/voice'
-
-const SEMITONES = 12
 
 /** The notes the charts' keyboard spans: whole octaves, C to B. */
 export interface KeyRange {
@@ -55,8 +54,8 @@ function keyRangeOf(profiles: VoiceProfile[]): KeyRange {
   const low = Math.min(...notes)
   const high = Math.max(...notes)
   return {
-    low: Math.floor(low / SEMITONES) * SEMITONES,
-    high: Math.floor(high / SEMITONES) * SEMITONES + SEMITONES - 1
+    low: Math.floor(low / SEMITONES_PER_OCTAVE) * SEMITONES_PER_OCTAVE,
+    high: Math.floor(high / SEMITONES_PER_OCTAVE) * SEMITONES_PER_OCTAVE + SEMITONES_PER_OCTAVE - 1
   }
 }
 

@@ -1,6 +1,7 @@
 import { CSSProperties } from 'react'
 import { cx } from '../cx'
 import { Tooltip } from '../Tooltip'
+import { DETENT } from './constants'
 import './Slider.css'
 
 interface Props {
@@ -26,9 +27,6 @@ interface Props {
   className?: string
   onDoubleClick?(): void
 }
-
-// Within this share of the range, a centred slider settles exactly on its centre.
-const DETENT = 0.06
 
 export function Slider({
   value,

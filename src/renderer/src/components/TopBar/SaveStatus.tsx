@@ -3,9 +3,7 @@ import { saveDetail, saveLabel } from '../../state/song/saveStatus'
 import { SaveState } from '../../state/song/useSong'
 import { cx } from '../ui/cx'
 import { Tooltip } from '../ui/Tooltip'
-
-// "Saved 3 min ago" only needs refreshing this often.
-const REFRESH_MS = 15_000
+import { REFRESH_MS } from './constants'
 
 /** "Saving…" / "Saved just now" / "Saved 5 min ago", with the exact time on hover. */
 export function SaveStatus({ state }: { state: SaveState }): React.JSX.Element {

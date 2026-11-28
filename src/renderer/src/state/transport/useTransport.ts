@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { Recorder, createRecorder, getAudioContext, loadWorklets } from '../../audio/engine/engine'
 import { alignTake } from '../../audio/engine/latency'
-import { MIN_LINE_UP_SEC, musicUnder, takeLag } from '../../audio/engine/lineUp'
+import { musicUnder, takeLag } from '../../audio/engine/lineUp'
+import { MIN_LINE_UP_SEC } from '../../audio/engine/constants'
 import { PhraseTiming, harmonyTiming } from '../../audio/engine/harmonySync'
 import { balancedHarmonyVolume, balancedMusicVolume } from '../../audio/mix/balance'
 import { Mixer } from '../../audio/mix/mixer'
@@ -10,6 +11,14 @@ import { ScheduledClip, onAllEnded, scheduleClips, stopNodes } from '../../audio
 import { ClickTrack, scheduleClicks } from '../../audio/mix/click'
 import { encodeWav } from '../../audio/encode/wav'
 import { PeakAccumulator } from '../../audio/mix/peaks'
+import {
+  EDIT_SETTLE_MS,
+  LIVE_BUCKET_SAMPLES,
+  MIN_TAKE_SEC,
+  MONITOR_GAIN,
+  PLAY_LEAD_SEC,
+  START_LEAD_SEC
+} from './constants'
 import {
   Clip,
   Project,
@@ -28,7 +37,7 @@ import { playbackKey, trackMixes } from '../song/selectors'
 import { ProcessedAudio, bufferFor } from '../processing/processedAudio'
 import { Song } from '../song/useSong'
 import { showSnack } from '../ui/snackbar'
-import { ChordPart } from '../chords/chart'
+import { ChordPart } from '../chords/chart/chart'
 import { ClickGrid, clickTimes, countInSec, countInTicks } from './metronome'
 
 export type Mode = 'idle' | 'playing' | 'recording' | 'saving'
@@ -118,20 +127,6 @@ export interface Transport {
   retrySave(): Promise<void>
   discardPending(): void
 }
-
-// Scheduling slightly ahead lets the recorder's start message reach the audio
-// thread before the frame the music starts on.
-const START_LEAD_SEC = 0.2
-const PLAY_LEAD_SEC = 0.05
-const MIN_TAKE_SEC = 0.5
-// 10 ms of audio per live-waveform bucket at 48 kHz.
-const LIVE_BUCKET_SAMPLES = 480
-// The live mic sits a little under the mix so it doesn't overpower the music.
-const MONITOR_GAIN = 0.8
-
-// An edit made while playing is heard once it settles, so dragging a clip restarts
-// playback once on release rather than on every pointer move.
-const EDIT_SETTLE_MS = 150
 
 export function useTransport(
   song: Song,

@@ -15,11 +15,14 @@ below keep the codebase from building up debt; follow them for every change.
 ```
 src/
   main/                Electron main process (file system, dialogs, permissions)
-    ipc/               One file per IPC area, plus pure helpers with tests
+    ipc/               IPC handlers by area: songs, preferences, license, online, and
+                       files (atomic writes, JSON stores, zips, dialogs)
   preload/             The window.api bridge (thin; types in index.d.ts)
-  shared/              Used by both main and renderer
+  shared/              Used by both main and renderer, by area: songs, preferences,
+                       license, online
+    units.ts           Unit conversions (ms per second, semitones per octave, …)
     copy/en.json       Every user-facing string
-    constants.ts       Constants both sides need
+    constants.ts       Other values both sides need
   renderer/src/
     audio/             Web Audio, by area: engine, mix, polish, pitch, music, voice,
                        separation, export, encode, dsp, worklets

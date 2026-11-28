@@ -1,18 +1,25 @@
-import type { PolishReading } from '@shared/polishTaste'
+import type { PolishReading } from '@shared/preferences/polishTaste'
 import { nextTick } from '../dsp/resample'
+import { Frame, analyseFrame, densityDb, singingTest } from '../dsp/voiceBands'
 import {
   AIR_BAND,
   BODY_BAND,
   FRAME,
-  Frame,
   HOP,
   PRESENCE_BAND,
-  SINGING_OVER_ROOM_DB,
-  analyseFrame,
-  densityDb,
-  singingTest
-} from '../dsp/voiceBands'
+  SINGING_OVER_ROOM_DB
+} from '../dsp/constants'
 import { percentile } from '../dsp/stats'
+import {
+  FRAMES_PER_CHUNK,
+  SIBILANT_SHARE,
+  HUM_SHARE,
+  MIN_SINGING_SEC,
+  MIN_SIBILANT_FRAMES,
+  CLIP_LEVEL,
+  CLIP_RUN,
+  PERCENT
+} from './constants'
 
 export type { PolishReading }
 
@@ -22,26 +29,6 @@ export interface HeardWindow {
   offsetSec: number
   /** 0 means to the end of the file (older projects). */
   durationSec: number
-}
-
-// Frames analysed between pauses that let the window repaint.
-const FRAMES_PER_CHUNK = 400
-
-const SIBILANT_SHARE = 0.5
-// Hum: most of the energy between lines sits below this.
-const HUM_SHARE = 0.5
-// Fewer seconds of singing than this is too little to set anything from.
-const MIN_SINGING_SEC = 5
-const MIN_SIBILANT_FRAMES = 5
-// A take clipped where this many samples in a row sit at full scale.
-const CLIP_LEVEL = 0.999
-const CLIP_RUN = 3
-
-const PERCENT = {
-  soft: 0.1,
-  median: 0.5,
-  loud: 0.95,
-  room: 0.2
 }
 
 /** The played part of a take, mixed to mono. */

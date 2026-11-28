@@ -1,4 +1,4 @@
-import { heardOfClips } from '@shared/polishTaste'
+import { heardOfClips } from '@shared/preferences/polishTaste'
 import { PolishSuggestion } from '../../audio/polish/autoPolish'
 import { HeardWindow } from '../../audio/polish/polishReading'
 import { Project, Track, polishOf } from './project'

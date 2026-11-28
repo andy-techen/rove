@@ -6,22 +6,24 @@ import { clamp } from '../dsp/units'
 import { bufferOf, cachedRender, channelsOf } from '../dsp/renderCache'
 import { lowpass, nextTick } from '../dsp/resample'
 import { onsetStrength } from '../dsp/onsets'
+import {
+  TEMPO_ANALYSIS_SEC,
+  MIN_BPM,
+  MAX_BPM,
+  PREFERRED_BPM,
+  PREFERENCE_OCTAVES,
+  REFINE_BEATS,
+  MIN_ONSET_ENERGY,
+  BEAT_TIGHTNESS,
+  FRAME_SEC,
+  SEEK_SEC,
+  GUIDE_STEP,
+  FRAMES_PER_YIELD,
+  ANTI_ALIAS_SHARE
+} from './constants'
+import { SEC_PER_MIN, SEMITONES_PER_OCTAVE } from '@shared/units'
 
 // --- Tempo ---------------------------------------------------------------------
-
-// The tempo is steady through most songs; a minute and a half is plenty to hear it.
-const TEMPO_ANALYSIS_SEC = 90
-const MIN_BPM = 60
-const MAX_BPM = 200
-// Songs cluster around 120 BPM. Weighting toward it settles half- and double-time
-// mix-ups the way a listener would (Ellis, "Beat Tracking by Dynamic Programming").
-const PREFERRED_BPM = 120
-const PREFERENCE_OCTAVES = 1
-// Reading the beat across four of them pins the tempo far finer than one beat could.
-const REFINE_BEATS = 4
-const SEC_PER_MIN = 60
-// Below this much onset energy there are no beats to hear.
-const MIN_ONSET_ENERGY = 1e-3
 
 function autocorrelation(x: Float32Array, lag: number): number {
   let sum = 0
@@ -77,10 +79,6 @@ export async function detectBeat(source: AudioSource): Promise<Beat | null> {
   return { bpm: (SEC_PER_MIN * rate) / fine, firstBeatSec: times[0], times }
 }
 
-// How firmly beats keep to the song's tempo: high enough to step over a fill or a
-// rest, low enough to follow a band that speeds up or drags.
-const BEAT_TIGHTNESS = 400
-
 /**
  * Finds each beat (as an onset-envelope frame): the chain of strong onsets, about a
  * beat apart, that scores best overall. Dynamic programming after Ellis, "Beat
@@ -121,19 +119,6 @@ function trackBeats(envelope: Float32Array, period: number): number[] {
 }
 
 // --- Speed and pitch -----------------------------------------------------------
-
-// WSOLA: overlapping 50 ms frames, each nudged by up to 10 ms to line up with what
-// came before, so beats and notes stay clean at a new speed.
-// https://www.researchgate.net/publication/2391829 (Verhelst & Roelands, 1993)
-const FRAME_SEC = 0.05
-const SEEK_SEC = 0.01
-// Lining frames up uses a thinned-out copy: alignment needs the shape, not the detail.
-const GUIDE_STEP = 8
-const FRAMES_PER_YIELD = 200
-const SEMITONES = 12
-// Raising the pitch reads the audio faster, which would fold its top octave back
-// down as noise; a low-pass just under the new Nyquist stops that.
-const ANTI_ALIAS_SHARE = 0.45
 
 /** Changes length by `factor` (2 is twice as long) without changing pitch. */
 async function timeStretch(
@@ -231,7 +216,7 @@ export async function changeSpeedAndPitch(
   speed: number,
   semitones: number
 ): Promise<Float32Array<ArrayBuffer>[]> {
-  const pitch = 2 ** (semitones / SEMITONES)
+  const pitch = 2 ** (semitones / SEMITONES_PER_OCTAVE)
   const stretched = await timeStretch(channels, sampleRate, pitch / speed)
   if (pitch === 1) return stretched
   return stretched.map((channel) => {

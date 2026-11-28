@@ -1,3 +1,4 @@
+import { LEARNED_MIN_SEC, LEARNED_MAX_SEC } from './constants'
 /** Where a take belongs on the timeline once the round-trip delay is removed. */
 export function alignTake(
   fromSec: number,
@@ -19,11 +20,6 @@ export function alignTake(
 export function estimatedLatency(ctx: AudioContext, inputSec = 0): number {
   return (ctx.outputLatency || 0) + (ctx.baseLatency || 0) + inputSec
 }
-
-// Bluetooth headphones can add a quarter of a second or more that macOS doesn't report;
-// anything past these is more likely a misheard take than a real delay.
-const LEARNED_MIN_SEC = -0.1
-const LEARNED_MAX_SEC = 0.5
 
 /**
  * The extra delay to remove from takes on this mic and output, after the singer lined

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { t } from '@shared/copy'
-import { tapTempo } from '../../state/chords/chartBars'
+import { MS_PER_SEC, PERCENT } from '@shared/units'
+import { tapTempo } from '../../state/chords/chart/chartBars'
 import { BeatsPerBar, SongTempo } from '../../state/song/project'
 import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
@@ -11,6 +12,7 @@ import { Segmented } from '../ui/Segmented'
 import { cx } from '../ui/cx'
 import { Slider } from '../ui/Slider'
 import { useOutsideClose } from '../ui/useOutsideClose'
+import { BPM_SHOWN } from './constants'
 import './Beat.css'
 
 interface Props {
@@ -37,9 +39,6 @@ interface Props {
 
 // Most songs count in fours; waltzes in threes.
 const COUNTS: BeatsPerBar[] = [4, 3]
-const PERCENT = 100
-const BPM_SHOWN = 10
-const MS_PER_SEC = 1000
 
 /**
  * The beat, in one place: the metronome, and the song's tempo and count. A button in the

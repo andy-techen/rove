@@ -1,8 +1,6 @@
 // Runs on the audio thread, bundled separately (see loadWorklets in ../engine/engine.ts).
 import { RECORDER_PROCESSOR, RecorderCommand, RecorderEvent } from './messages'
-
-// ~85 ms at 48 kHz: batching keeps cross-thread message traffic low.
-const CHUNK_SIZE = 4096
+import { CHUNK_SIZE } from './constants'
 
 class RecorderProcessor extends AudioWorkletProcessor {
   private startFrame: number | null = null

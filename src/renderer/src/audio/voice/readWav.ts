@@ -2,13 +2,14 @@
 // Audio, so a Worker can decode them. Chunks are walked rather than assuming the
 // canonical 44-byte header, so a file with extra chunks (LIST, fact) still reads.
 // http://soundfile.sapp.org/doc/WaveFormat/
-
-const PCM_FORMAT = 1
-const BITS = 16
-const BYTES_PER_SAMPLE = BITS / 8
-const FULL_SCALE = 0x8000
-const RIFF_HEADER_BYTES = 12
-const CHUNK_HEADER_BYTES = 8
+import { PCM_FORMAT } from '../encode/constants'
+import {
+  BITS,
+  BYTES_PER_SAMPLE,
+  CHUNK_HEADER_BYTES,
+  FULL_SCALE,
+  RIFF_HEADER_BYTES
+} from './constants'
 
 export interface DecodedWav {
   /** Mixed to mono. */

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { FeatureId, Plan, isEnabled } from '@shared/features'
-import { FREE_STATUS, LicenseStatus } from '@shared/license'
+import { FeatureId, Plan, isEnabled } from '@shared/license/features'
+import { FREE_STATUS, LicenseStatus } from '@shared/license/license'
 
 /** The plan right now: `onLicense` reports it as soon as it's subscribed. */
 function currentLicense(): LicenseStatus {

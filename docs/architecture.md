@@ -58,7 +58,7 @@ flowchart TB
   screen --> processed["useProcessedAudio<br/>tuned and re-pitched copies"]
   screen --> mic["useMicrophone<br/>device, live input"]
 
-  song --> ops["song/project.ts<br/>pure edits: add, trim, split…"]
+  song --> ops["song/project/<br/>pure edits: add, trim, split…"]
   screen --> selectors["song/selectors.ts<br/>what each lane shows"]
 
   transport --> mixer["mix/mixer.ts<br/>per-track gain, pan, polish chain"]
@@ -131,7 +131,7 @@ so they work offline afterwards.
 
 Explore in the Songbook searches a curated catalog,
 `resources/catalog/catalog.sqlite`. The main process opens it read-only with Node's
-built-in `node:sqlite` (`ipc/catalog.ts`, queries in `main/catalog/query.ts`), so
+built-in `node:sqlite` (`ipc/online/catalog.ts`, queries in `main/catalog/query.ts`), so
 searching never goes online. Songs still waiting for review are hidden.
 
 The database file is the source of truth: there's no seed file to build it from.
@@ -160,7 +160,7 @@ flowchart LR
   music --> chroma["music/chords.ts · detectChords<br/>chromagram per beat"]
   beat --> chroma
   chroma --> match["match 24 major/minor chords<br/>+ Viterbi smoothing"]
-  match --> timeline["state/chords/chords.ts · chordTimeline<br/>mapped onto the song's clips"]
+  match --> timeline["state/chords/heard/chords.ts · chordTimeline<br/>mapped onto the song's clips"]
   timeline --> panel["ChordsPanel<br/>now / next + guitar grip"]
   beat --> click["transport/metronome.ts · clickGrid<br/>clicks on the tracked beats"]
 ```
@@ -171,8 +171,8 @@ doesn't analyse the song again.
 ## Voice profile: every take, read through the main process
 
 The voice profile (range, tone, pitch accuracy) listens to the vocal clips on every
-Songbook song, open or not. The main process (`ipc/voice.ts`) does the file work; the
-contract is `src/shared/voice.ts`.
+Songbook song, open or not. The main process (`ipc/songs/voice.ts`) does the file work; the
+contract is `src/shared/songs/voice.ts`.
 
 - `voice:listTakes` reads each song's `project.json` and lists its vocal clips, lead and
   harmony (`vocalClipsOf`), with the take's mtime as when it was sung. Clips whose file
@@ -195,9 +195,9 @@ When the singer moves the knobs afterwards, the gap between where they left them
 the rules say for that reading is what Rove learns from. Nothing else is stored: the
 songs are the data, so undoing, re-recording or deleting a song changes what it learns.
 
-- `taste:listExamples` (`ipc/taste.ts`, gated on `autoPolish`) reads every Songbook
+- `taste:listExamples` (`ipc/preferences/taste.ts`, gated on `autoPolish`) reads every Songbook
   `project.json` and keeps the polished vocal tracks that still play what was heard and
-  have Polish on (`tasteExamplesOf` in `src/shared/polishTaste.ts`), newest song first.
+  have Polish on (`tasteExamplesOf` in `src/shared/preferences/polishTaste.ts`), newest song first.
 - `audio/polish/taste.ts` (`learnTaste`) turns them into a small lean per control: a
   recency-weighted average of the singer's moves, pulled toward none while there are few
   songs, capped at `MAX_LEAN`, and never toward more noise reduction. Moves are measured
@@ -258,9 +258,9 @@ their original songs, which were never touched.
 
 ## Free and premium: one list, checked in both processes
 
-`src/shared/premiumFeatures.ts` lists the premium features (vocal removal, auto polish
+`src/shared/license/premiumFeatures.ts` lists the premium features (vocal removal, auto polish
 and tuning); everything else is free. The main process keeps the license key
-(`main/ipc/license.ts`, in `userData/license.json`): with a key the plan is premium,
+(`main/ipc/license/license.ts`, in `userData/license.json`): with a key the plan is premium,
 without one it's free. It sends the plan and a hint of the key to the window as the
 theme is sent, once on load and again on each change. Keys are checked through a
 `LicenseService`, a fake for now that Lemon Squeezy's license API will replace. The

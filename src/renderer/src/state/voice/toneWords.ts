@@ -1,14 +1,11 @@
 import { t } from '@shared/copy'
 import type { Tone } from '../../audio/voice'
+import { BALANCED_WITHIN, MIDDLE } from './constants'
 
 export type Lean = 'low' | 'balanced' | 'high'
 export type ToneLeans = Record<keyof Tone, Lean>
 
 export const TONE_SCALES = ['body', 'brightness', 'air'] as const
-
-// Within this of the middle, a voice is balanced on that scale rather than leaning.
-const BALANCED_WITHIN = 0.15
-const MIDDLE = 0.5
 
 /** Which end of each scale the voice leans to. Both ends are good, just different. */
 export function toneLeans(tone: Tone): ToneLeans {

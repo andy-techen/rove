@@ -1,9 +1,4 @@
-// Analysis (pitch, key) only needs the low end of a voice or song, so it runs on a
-// copy filtered and thinned out to roughly this rate: far less work, same answer.
-const ANALYSIS_RATE = 12000
-// Two passes of a Butterworth low-pass keep content above the new Nyquist from
-// folding back down as false notes.
-const PASSES = 2
+import { ANALYSIS_RATE, PASSES } from './constants'
 
 /** Runs a second-order low-pass (RBJ cookbook, Butterworth Q) over `x` in place. */
 export function lowpass(x: Float32Array, sampleRate: number, cutoffHz: number): void {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { t } from '@shared/copy'
-import type { SongbookEntry } from '@shared/project'
+import type { SongbookEntry } from '@shared/songs/project'
 import { NewSongDialog } from '../NewSongDialog'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { IconButton } from '../ui/IconButton'

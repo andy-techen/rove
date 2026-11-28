@@ -1,6 +1,24 @@
 import { PolishAmounts, amountFor, defaultPolish } from './polish'
 import { PolishReading } from './polishReading'
 import { clamp } from '../dsp/units'
+import {
+  STEPS,
+  AUTO_LIMITS,
+  TONE_REFERENCE,
+  SIBILANCE_REFERENCE_DB,
+  GATE_OVER_ROOM_DB,
+  GATE_UNDER_SOFT_DB,
+  USUAL_RANGE_DB,
+  MARGIN_PER_RANGE_DB,
+  MARGIN_LIMITS,
+  TONE_NUDGE,
+  CLARITY_NUDGE,
+  SIBILANCE_NUDGE,
+  PRESENCE_WEIGHT,
+  HUM_WARMTH,
+  REASON_STEP,
+  TASTE_MARK_STEP
+} from './constants'
 
 /** Auto polish sets every control but Tuning, which changes the singing itself. */
 export type SuggestedAmounts = Omit<PolishAmounts, 'tuning'>
@@ -35,53 +53,13 @@ export interface AutoPolish {
   taste?: Taste
 }
 
-/**
- * How far auto polish will turn each control, narrower than 0..1, so an odd take can't
- * push a knob to an extreme. Noise reduction may go to 0: in a quiet room, less gating
- * keeps breaths and word endings natural.
- */
-export const AUTO_LIMITS: Record<SuggestedControl, { min: number; max: number }> = {
-  cleanup: { min: 0, max: 0.85 },
-  clarity: { min: 0.15, max: 0.75 },
-  warmth: { min: 0.1, max: 0.8 },
-  smoothness: { min: 0.2, max: 0.85 },
-  space: { min: 0, max: 0.5 },
-  deEss: { min: 0.2, max: 0.8 }
-}
-
-/**
- * The tone we expect from a voice, per Hz relative to 1–2 kHz (see `PolishReading`).
- * A starting point to tune by ear across voices and mics, not a rule.
- */
-export const TONE_REFERENCE = { bodyDb: 10, presenceDb: -8, airDb: -25 }
-/** How sharp "s" sounds usually are: their band's level against the voice's. */
-const SIBILANCE_REFERENCE_DB = -12
-
-// The gate opens this far above the room, but never closer than this under soft singing.
-const GATE_OVER_ROOM_DB = 6
-const GATE_UNDER_SOFT_DB = 10
-// Evenness: with this much spread between soft and strong, compression starts at the
-// voice's typical level; each dB more starts it this much lower.
-const USUAL_RANGE_DB = 15
-const MARGIN_PER_RANGE_DB = 0.4
-const MARGIN_LIMITS = { min: -6, max: 3 }
-
 /** A bounded step from a reference: nothing inside the dead zone, then a slope, capped. */
-interface Nudge {
+export interface Nudge {
   deadDb: number
   perDb: number
   up: number
   down: number
 }
-const TONE_NUDGE: Nudge = { deadDb: 3, perDb: 0.04, up: 0.25, down: 0.25 }
-const CLARITY_NUDGE: Nudge = { ...TONE_NUDGE, down: 0.2 }
-const SIBILANCE_NUDGE: Nudge = { deadDb: 3, perDb: 0.03, up: 0.3, down: 0.2 }
-// Clarity is mostly presence; air adds a little.
-const PRESENCE_WEIGHT = 0.7
-const HUM_WARMTH = -0.15
-// A control that moved at least this far gets its reason told.
-const REASON_STEP = 0.1
-const STEPS = 100
 
 /** How far to move a control, for a measure `shortBy` dB under its reference. */
 function nudge(shortBy: number, n: Nudge): number {
@@ -173,10 +151,6 @@ const REASONS: Record<SuggestedControl, [up: AutoPolishReason, down: AutoPolishR
 /** What a knob's sparkle says: why auto polish turned it, or at least which way. */
 export type AutoMark = AutoPolishReason | 'up' | 'down' | 'tasteUp' | 'tasteDown'
 
-// The singer's taste names a knob once it moved it at least this far; a smaller lean
-// just tops up whatever the rules said.
-const TASTE_MARK_STEP = 0.05
-
 /**
  * The mark on a control auto polish turned, while it still sits where auto polish left
  * it; null for one it left alone or the singer has since moved.
@@ -215,9 +189,6 @@ function reasonsFor(
   if (hum) reasons.push('hum')
   return reasons.length ? reasons : ['balanced']
 }
-
-/** Bumped when the rules change, so a stored suggestion can say which rules made it. */
-export const AUTO_POLISH_VERSION = 1
 
 /** A suggestion as stored on a vocal track in `project.json`. */
 export interface PolishSuggestion extends AutoPolish {

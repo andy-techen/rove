@@ -1,5 +1,6 @@
 import { CSSProperties, MouseEvent, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
+import { MS_PER_SEC } from '@shared/units'
 import {
   BEAT_NAME_MAX_LENGTH,
   BEAT_PARTS,
@@ -13,10 +14,11 @@ import {
   mineOf,
   nextBeatNumber
 } from '../../state/song/project'
-import { ChartPlace } from '../../state/chords/chart'
-import { repeatLine } from '../../state/chords/chartBars'
-import { SNAP_BEATS, beatName, hitsFrom } from '../../state/chords/beats'
-import { useBeatRecorder } from '../../state/chords/useBeatRecorder'
+import { ChartPlace } from '../../state/chords/chart/chart'
+import { repeatLine } from '../../state/chords/chart/chartBars'
+import { beatName, hitsFrom } from '../../state/chords/instruments/beats'
+import { SNAP_BEATS } from '../../state/chords/instruments/constants'
+import { useBeatRecorder } from '../../state/chords/instruments/useBeatRecorder'
 import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
@@ -55,8 +57,6 @@ interface Props {
   place: ChartPlace
   onPlace(place: ChartPlace): void
 }
-
-const MS_PER_SEC = 1000
 
 /** Setting an instrumental's drums: how busy each bar is, within the song's groove. */
 export function BeatsEditor({

@@ -1,11 +1,22 @@
 import { fft, hann as hannWindow } from '../dsp/fft'
 import { channelsOf } from '../dsp/renderCache'
 import { beatOf } from './stretch'
-import { PITCH_CLASSES, pitchClass } from '../pitch/key'
+import { pitchClass } from '../pitch/key'
+import { PITCH_CLASSES } from '@shared/units'
 import { AudioSource } from '../dsp/audioSource'
 import { hzToMidi } from '../pitch/pitch'
 import { downsampleForAnalysis, nextTick } from '../dsp/resample'
 import { dbToGain } from '../dsp/units'
+import {
+  CUTOFF_HZ,
+  LOW_HZ,
+  HOP,
+  BLOCK_SEC,
+  CHANGE_COST,
+  NO_CHORD_SCORE,
+  FRAMES_PER_CHUNK
+} from './constants'
+import { SILENCE_DB, FFT_SIZE } from '../pitch/constants'
 
 /** The kinds of chord a chart can hold, in the order the chord picker lists them. */
 export const CHORD_QUALITIES = ['major', 'minor', '7', 'maj7', 'm7', 'sus2', 'sus4', 'dim'] as const
@@ -37,22 +48,6 @@ export interface ChordSegment {
   end: number
   chord: Chord | null
 }
-
-// Chords live in the bass and middle; above this is mostly cymbals and breath.
-const CUTOFF_HZ = 2000
-const LOW_HZ = 60
-const FFT_SIZE = 4096
-const HOP = 1024
-// Without a beat to follow, chords are judged half a second at a time.
-const BLOCK_SEC = 0.5
-// Quieter than this, there's nothing to name.
-const SILENCE_DB = -50
-// What it costs to change chord between blocks: enough to stop a passing note
-// flipping the name back and forth, small enough to follow real changes.
-const CHANGE_COST = 0.12
-// How well a block must fit some chord to be named at all.
-const NO_CHORD_SCORE = 0.55
-const FRAMES_PER_CHUNK = 200
 
 const CHORDS: Chord[] = (['major', 'minor'] as const).flatMap((quality) =>
   Array.from({ length: PITCH_CLASSES }, (_, root) => ({ root, quality }))

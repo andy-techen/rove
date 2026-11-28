@@ -1,22 +1,16 @@
-export const METER_FLOOR_DB = -60
+import {
+  METER_FLOOR_DB,
+  CLIP_DB,
+  LOUD_DB,
+  GOOD_DB,
+  QUIET_DB,
+  FALL_DB_PER_SEC,
+  LEVEL_CHECK_SEC,
+  MAX_COUNTED_FRAME_SEC,
+  HINT_WINDOW_SEC
+} from './constants'
 
 export type LevelZone = 'silent' | 'quiet' | 'good' | 'loud' | 'clip'
-
-// Zone floors in dBFS. They aim a beginner at peaks around -12 dBFS: enough signal
-// to work with, with headroom for the loudest notes before the 16-bit capture clips.
-export const CLIP_DB = -1
-export const LOUD_DB = -6
-export const GOOD_DB = -24
-export const QUIET_DB = -45
-
-// Peak meter falls at this rate after a peak, so the bar is readable.
-const FALL_DB_PER_SEC = 24
-// Time singing in the green before the level counts as checked.
-const LEVEL_CHECK_SEC = 1.5
-// Longest frame gap counted toward that time (animation pauses in hidden windows).
-const MAX_COUNTED_FRAME_SEC = 0.5
-// How far back hints look for the loudest moment.
-const HINT_WINDOW_SEC = 2.5
 
 export function meterFill(db: number): number {
   return Math.min(1, Math.max(0, (db - METER_FLOOR_DB) / -METER_FLOOR_DB))

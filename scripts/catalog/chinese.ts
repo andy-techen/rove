@@ -1,5 +1,5 @@
 import * as OpenCC from 'opencc-js'
-import type { CatalogLanguage } from '../../src/shared/catalog'
+import type { CatalogLanguage } from '../../src/shared/online/catalog'
 
 // Chinese songs are shown in traditional characters, whatever script MusicBrainz or
 // Deezer spell them in; the simplified spelling stays an alias so search still finds it.

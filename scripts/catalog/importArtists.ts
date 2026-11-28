@@ -1,5 +1,9 @@
 import type { DatabaseSync } from 'node:sqlite'
-import type { CatalogGenre, CatalogLanguage, CatalogSongType } from '../../src/shared/catalog'
+import type {
+  CatalogGenre,
+  CatalogLanguage,
+  CatalogSongType
+} from '../../src/shared/online/catalog'
 import { addSong, AddResult } from './add'
 import { isOtherVersion, topTracks, trackIsrc } from './deezer'
 import type { FetchJson } from './musicbrainz'

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { CatalogSong } from '@shared/catalog'
+import type { CatalogSong } from '@shared/online/catalog'
 import { t } from '@shared/copy'
 import { Explore } from './Explore'
 

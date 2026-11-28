@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { cx } from '../cx'
+import { KEY_STEP_PX, SHIFT_STEPS } from './constants'
 import './Splitter.css'
 
 interface Props {
@@ -15,10 +16,6 @@ interface Props {
   onChange(value: number): void
   className?: string
 }
-
-// Arrow keys move the edge by this many pixels; with Shift, much further.
-const KEY_STEP_PX = 16
-const SHIFT_STEPS = 4
 
 /** A draggable edge between two areas. Also moves with the arrow keys once focused. */
 export function Splitter({

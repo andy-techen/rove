@@ -1,35 +1,19 @@
-import {
-  LANDING_BIN_CENTS,
-  LANDING_BINS,
-  LANDING_RANGE_CENTS,
-  TakeRef,
-  TakeSummary
-} from '@shared/voice'
+import { TakeRef, TakeSummary } from '@shared/songs/voice'
+import { LANDING_BIN_CENTS, LANDING_BINS, LANDING_RANGE_CENTS } from '@shared/songs/constants'
 import { analyseFrames, singingTest } from '../dsp/voiceBands'
 import { mean, median } from '../dsp/stats'
 import { analysePitch, hzToMidi } from '../pitch/pitch'
+import {
+  HELD_NOTE_SEC,
+  NOTE_CHANGE_SEMITONES,
+  NOTE_DRIFT_SEMITONES,
+  NOTE_EDGE_SHARE,
+  STEADY_SEMITONES
+} from './constants'
+import { CENTS_PER_SEMITONE } from '@shared/units'
 
 /** The part of a take that plays. durationSec 0 means to the end. */
 export type TakeWindow = Pick<TakeRef, 'offsetSec' | 'durationSec'>
-
-// A note has to be held this long to count towards range, time on each note and
-// landing: shorter runs are slides, ornaments and the odd octave slip in the pitch
-// tracker, which would stretch the range with notes the singer passes through rather
-// than sings.
-const HELD_NOTE_SEC = 0.15
-// A jump bigger than this between hops is a new note, not vibrato or drift.
-const NOTE_CHANGE_SEMITONES = 0.7
-// Wandering further than this from where a run has sat so far is a new note too: a
-// singer gliding between notes never jumps from one hop to the next, so the jump test
-// alone would join the notes and measure the slide. Wide enough for vibrato.
-const NOTE_DRIFT_SEMITONES = 0.6
-// A note's first and last moments are the scoop into it and the fall away; landing
-// listens to the steady middle.
-const NOTE_EDGE_SHARE = 0.25
-// A held note whose steady middle still moves this far from one half to the other is
-// a slide, not a note, so it says nothing about where the singer lands.
-const STEADY_SEMITONES = 0.25
-const CENTS_PER_SEMITONE = 100
 
 export function emptySummary(): TakeSummary {
   return {

@@ -1,4 +1,5 @@
 import { t } from '@shared/copy'
+import { PERCENT } from '@shared/units'
 import { SongKey } from '../../audio/pitch/key'
 import {
   MUSIC_SEMITONES_MAX,
@@ -6,7 +7,7 @@ import {
   MUSIC_TONE_MAX_DB,
   MusicSettings
 } from '../../state/song/project'
-import { keyName } from '../../state/chords/noteNames'
+import { keyName } from '../../state/chords/theory/noteNames'
 import { IconButton } from '../ui/IconButton'
 import { KnobControl, KnobRow } from '../ui/KnobControl'
 import { parseTypedNumber } from '../ui/NumberField'
@@ -42,8 +43,6 @@ interface Props {
 }
 
 type ToneField = 'bassDb' | 'brightnessDb'
-
-const PERCENT = 100
 
 /** Speed and key for the backing music, shown when a music track is selected. */
 export function MusicPanel({

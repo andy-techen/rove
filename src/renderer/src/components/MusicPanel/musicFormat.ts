@@ -1,8 +1,7 @@
 import { t } from '@shared/copy'
+import { PERCENT } from '@shared/units'
 import { MUSIC_SEMITONES_MAX } from '../../state/song/project'
 import { parseTypedNumber } from '../ui/NumberField'
-
-const PERCENT = 100
 
 export const speedPercent = (speed: number): number => Math.round(speed * PERCENT)
 

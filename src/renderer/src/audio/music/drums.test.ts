@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DrumHit, DrumVoice } from '../../state/chords/beats'
+import { DrumHit, DrumVoice } from '../../state/chords/instruments/beats'
 import { renderDrums } from './drums'
 
 const RATE = 48000

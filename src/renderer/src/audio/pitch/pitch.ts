@@ -2,9 +2,21 @@ import { downsampleForAnalysis, nextTick } from '../dsp/resample'
 import { dbToGain } from '../dsp/units'
 import { hann as hannWindow } from '../dsp/fft'
 import { parabolicOffset } from '../dsp/peakFit'
-
-/** How often the sung pitch is measured. */
-export const PITCH_HOP_SEC = 0.01
+import {
+  PITCH_HOP_SEC,
+  MIN_F0_HZ,
+  MAX_F0_HZ,
+  ANALYSIS_CUTOFF_HZ,
+  WINDOW_SEC,
+  YIN_THRESHOLD,
+  SILENCE_DB,
+  PITCH_FRAMES_PER_CHUNK,
+  MISSING_FUNDAMENTAL_RATIO,
+  SPECTRUM_SEC,
+  A4_HZ,
+  A4_MIDI
+} from './constants'
+import { SEMITONES_PER_OCTAVE } from '@shared/units'
 
 /** The sung pitch over a take: one value per hop, in hertz, 0 where nothing is sung. */
 export interface PitchTrack {
@@ -12,36 +24,10 @@ export interface PitchTrack {
   f0: Float32Array
 }
 
-// The range of singing voices, from a low bass to a high soprano.
-const MIN_F0_HZ = 70
-const MAX_F0_HZ = 1100
-// Harmonics above this don't help find the fundamental.
-const ANALYSIS_CUTOFF_HZ = 2000
-// Long enough to hold a couple of periods of the lowest note.
-const WINDOW_SEC = 0.025
-// YIN's aperiodicity threshold: below it, a lag counts as the period. 0.1–0.2 is
-// usual; higher accepts breathier voices at the risk of octave mistakes.
-// http://audition.ens.fr/adc/pdf/2002_JASA_YIN.pdf
-const YIN_THRESHOLD = 0.15
-// Quieter than this is room noise, not singing.
-const SILENCE_DB = -50
-const FRAMES_PER_CHUNK = 500
-// When the vocal folds fall into a two-cycle pattern (a rough or creaky note), YIN can
-// take two cycles for one and read the note an octave low. A real fundamental always
-// carries some energy, so if the sound at the found pitch is this far under the sound
-// an octave up, the found pitch isn't there and the note is the octave above. Set on
-// recorded takes: it caught three quarters of the octave-low readings and touched no
-// pitch that sounded where it was read.
-const MISSING_FUNDAMENTAL_RATIO = 0.1
-// Long enough to tell the lowest note from its octave in the spectrum.
-const SPECTRUM_SEC = 0.128
-
-const A4_HZ = 440
-const A4_MIDI = 69
-const SEMITONES = 12
-
-export const hzToMidi = (hz: number): number => A4_MIDI + SEMITONES * Math.log2(hz / A4_HZ)
-export const midiToHz = (midi: number): number => A4_HZ * 2 ** ((midi - A4_MIDI) / SEMITONES)
+export const hzToMidi = (hz: number): number =>
+  A4_MIDI + SEMITONES_PER_OCTAVE * Math.log2(hz / A4_HZ)
+export const midiToHz = (midi: number): number =>
+  A4_HZ * 2 ** ((midi - A4_MIDI) / SEMITONES_PER_OCTAVE)
 
 /**
  * YIN pitch of the window starting at `start`: the period as a fractional lag in
@@ -150,7 +136,7 @@ export async function analysePitch(samples: Float32Array, sampleRate: number): P
       const centre = Math.round(i * PITCH_HOP_SEC * rate)
       f0[i] = hz && fundamentalMissing(data, centre, hann, hz, rate) ? 2 * hz : hz
     }
-    if ((i + 1) % FRAMES_PER_CHUNK === 0) await nextTick()
+    if ((i + 1) % PITCH_FRAMES_PER_CHUNK === 0) await nextTick()
   }
   return { hopSec: PITCH_HOP_SEC, f0: smoothGlitches(f0) }
 }

@@ -1,8 +1,9 @@
 import { CSSProperties, DragEvent, ReactNode, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { ClipGestureKind } from '../../state/editing/clipGestures'
-import { TrackRole, VocalPart, formatDuration, sameGroup } from '../../state/song/project'
-import { ChartPlace, barRange } from '../../state/chords/chart'
+import { TrackRole, VocalPart, sameGroup } from '../../state/song/project'
+import { formatDuration } from '../../state/ui/format'
+import { ChartPlace, barRange } from '../../state/chords/chart/chart'
 import { indexForSlot } from '../../state/tabs/tabOrder'
 import {
   ClipRef,
@@ -33,6 +34,7 @@ import { LiveWaveform } from './Waveform'
 import { PeakAccumulator } from './timelineMath'
 import type { TakeOffer } from '../../state/transport/useTransport'
 import { useTimelineView } from './useTimelineView'
+import { CLIP_HEIGHT, CLIP_INSET, DRAG_THRESHOLD_PX, LANE_HEIGHT, SNAP_PX } from './constants'
 import './Timeline.css'
 
 export interface LiveRecording {
@@ -124,14 +126,6 @@ interface Props {
   onLaneClick(trackId: string): void
 }
 
-const LANE_HEIGHT = 88
-// Pointer travel below this is a click on the timeline, not the start of a box.
-const BOX_THRESHOLD_PX = 4
-// Gap between a clip and the top and bottom of its lane.
-const CLIP_INSET = 6
-const CLIP_HEIGHT = LANE_HEIGHT - CLIP_INSET * 2
-// A clip edge this close (on screen) to something worth lining up with snaps onto it.
-const SNAP_PX = 8
 const LAYOUT = {
   '--lane-height': `${LANE_HEIGHT}px`,
   '--clip-inset': `${CLIP_INSET}px`
@@ -320,7 +314,7 @@ export function Timeline({
           const d = barsDrag.current
           if (!d || pxPerSec <= 0) return
           if (!d.moved) {
-            if (Math.abs(e.clientX - d.x0) < BOX_THRESHOLD_PX) return
+            if (Math.abs(e.clientX - d.x0) < DRAG_THRESHOLD_PX) return
             d.moved = true
             onMoveBars('start', 0, SNAP_PX / pxPerSec)
           }
@@ -365,7 +359,7 @@ export function Timeline({
     onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
       if (!box) return
       const moved =
-        box.moved || Math.hypot(e.clientX - box.x0, e.clientY - box.y0) >= BOX_THRESHOLD_PX
+        box.moved || Math.hypot(e.clientX - box.x0, e.clientY - box.y0) >= DRAG_THRESHOLD_PX
       setBox({ ...box, x1: e.clientX, y1: e.clientY, moved })
     },
     onPointerUp: () => {

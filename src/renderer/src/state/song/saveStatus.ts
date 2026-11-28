@@ -1,11 +1,10 @@
 import { t } from '@shared/copy'
+import { MIN_PER_HOUR, MS_PER_SEC, SEC_PER_MIN } from '@shared/units'
 import { SaveState } from './useSong'
+import { JUST_NOW_MS } from './constants'
 
-const SEC = 1000
-const MIN = 60 * SEC
-const HOUR = 60 * MIN
-// Within this long, "just now" reads better than a count of seconds.
-const JUST_NOW_MS = 10 * SEC
+const MIN = SEC_PER_MIN * MS_PER_SEC
+const HOUR = MIN_PER_HOUR * MIN
 
 const clock = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' })
 

@@ -1,18 +1,8 @@
 import { clamp } from '../dsp/units'
+import { PCM_FORMAT, BITS_PER_BYTE, HEADER_BYTES, FMT_CHUNK_BYTES, FULL_SCALE } from './constants'
 
 // Takes are 16-bit mono; exports are 24-bit stereo for headroom in mastering.
 export type BitDepth = 16 | 24
-const PCM_FORMAT = 1
-const BITS_PER_BYTE = 8
-// The canonical 44-byte RIFF/WAVE header; the offsets below follow its layout.
-// http://soundfile.sapp.org/doc/WaveFormat/
-const HEADER_BYTES = 44
-const FMT_CHUNK_BYTES = 16
-// Largest positive and negative integer sample at each depth.
-const FULL_SCALE: Record<BitDepth, { positive: number; negative: number }> = {
-  16: { positive: 0x7fff, negative: 0x8000 },
-  24: { positive: 0x7fffff, negative: 0x800000 }
-}
 
 /** PCM WAV from one buffer per channel (interleaved on write); clamps to full scale. */
 export function encodeWav(

@@ -1,4 +1,5 @@
 import { t } from '@shared/copy'
+import { PERCENT } from '@shared/units'
 import { parseTypedNumber } from '../ui/NumberField'
 import {
   PARAM_RANGES,
@@ -7,10 +8,8 @@ import {
   PolishSettings,
   clampParam
 } from '../../audio/polish/polish'
+import { DECIMAL_BELOW } from './constants'
 
-const PERCENT = 100
-// Small values (under 10) get one decimal so a few tenths of a dB are visible.
-const DECIMAL_BELOW = 10
 // Units written straight after the number ("35%", "3.3:1") rather than after a space.
 const ATTACHED_UNITS = ['%', ':1']
 

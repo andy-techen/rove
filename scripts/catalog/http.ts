@@ -2,12 +2,10 @@ import { createHash } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
+import { MIN_GAP_MS, RETRY_DELAYS_MS } from './constants'
 
-// MusicBrainz asks for at most one request per second and a User-Agent that names the
-// app and a way to reach us: https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
-const MIN_GAP_MS = 1100
-/** When it answers 503 (too fast, or busy, which is common), back off up to a minute. */
-const RETRY_DELAYS_MS = [2000, 4000, 8000, 16_000, 30_000, 60_000]
+// MusicBrainz asks for a User-Agent that names the app and a way to reach us:
+// https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
 const USER_AGENT = 'Rove/0.1 ( https://github.com/andy-techen/rove )'
 
 /**

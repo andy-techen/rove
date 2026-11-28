@@ -1,4 +1,4 @@
-import type { TakeSummary } from '@shared/voice'
+import type { TakeSummary } from '@shared/songs/voice'
 import type { SummariseReply, SummariseRequest } from './messages'
 import type { TakeWindow } from './summary'
 import VoiceWorker from './voice.worker?worker'

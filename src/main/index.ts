@@ -3,30 +3,28 @@ import { join } from 'path'
 import { electronApp, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { setUpAbout } from './about'
-import { registerProjectIpc } from './ipc/project'
-import { registerExportIpc } from './ipc/export'
-import { registerLyricsIpc } from './ipc/lyrics'
-import { registerAppearanceIpc, reportTheme } from './ipc/appearance'
-import { registerKeymapIpc } from './ipc/keymap'
-import { registerSettingsIpc } from './ipc/settings'
-import { registerSeparationIpc } from './ipc/separation'
-import { registerWishlistIpc } from './ipc/wishlist'
-import { registerCatalogIpc } from './ipc/catalog'
-import { registerTasteIpc } from './ipc/taste'
-import { registerVoiceIpc } from './ipc/voice'
-import { registerInputVolumeIpc } from './ipc/inputVolume'
-import { registerLicenseIpc, reportLicense } from './ipc/license'
+import { registerProjectIpc } from './ipc/songs/project'
+import { registerExportIpc } from './ipc/songs/export'
+import { registerLyricsIpc } from './ipc/online/lyrics'
+import { registerAppearanceIpc, reportTheme } from './ipc/preferences/appearance'
+import { registerKeymapIpc } from './ipc/preferences/keymap'
+import { registerSettingsIpc } from './ipc/preferences/settings'
+import { registerSeparationIpc } from './ipc/songs/separation'
+import { registerWishlistIpc } from './ipc/preferences/wishlist'
+import { registerCatalogIpc } from './ipc/online/catalog'
+import { registerTasteIpc } from './ipc/preferences/taste'
+import { registerVoiceIpc } from './ipc/songs/voice'
+import { registerInputVolumeIpc } from './ipc/preferences/inputVolume'
+import { registerLicenseIpc, reportLicense } from './ipc/license/license'
 import { APP_ORIGIN, registerAppScheme, serveApp } from './appProtocol'
 import {
   CLIPBOARD_TEXT_CHANNEL,
   FULL_SCREEN_CHANNEL,
   NATIVE_EDIT_CHANNEL,
   NATIVE_EDITS
-} from '@shared/menu'
-import { MIC_CHANNELS } from '@shared/mic'
-
-// Opening size, and the smallest that still fits the timeline and mixer.
-const WINDOW = { width: 900, height: 670, minWidth: 640, minHeight: 480 }
+} from '@shared/preferences/menu'
+import { MIC_CHANNELS } from '@shared/songs/mic'
+import { WINDOW } from './constants'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({

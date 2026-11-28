@@ -1,6 +1,7 @@
 import { t } from '@shared/copy'
 import { useEffect, useRef, useState } from 'react'
-import { AUTO_POLISH_VERSION, suggestPolish } from '../../audio/polish/autoPolish'
+import { suggestPolish } from '../../audio/polish/autoPolish'
+import { AUTO_POLISH_VERSION } from '../../audio/polish/constants'
 import { PolishReading, analyseVoice } from '../../audio/polish/polishReading'
 import { learnTaste } from '../../audio/polish/taste'
 import { Project } from '../song/project'

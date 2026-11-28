@@ -1,13 +1,7 @@
 import type { SeparateRequest, SeparationReply } from './messages'
 import SeparationWorker from './separation.worker?worker'
 import { clamp } from '../dsp/units'
-
-// Segments start every half segment: half the work of the model's usual quarter, for
-// about 0.1 dB less separation (measured by @audio/neural-separate on MUSDB18).
-const SEGMENT_STEP = 0.5
-// Past 8 threads the model gains nothing on Apple silicon, and the app keeps two cores free.
-const MAX_THREADS = 8
-const SPARE_CORES = 2
+import { SEGMENT_STEP, MAX_THREADS, SPARE_CORES } from './constants'
 
 export interface RemoveVocalsOptions {
   /** 0 to 1, as the model works through the song. */

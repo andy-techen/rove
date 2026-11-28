@@ -1,4 +1,4 @@
-import { LANDING_BIN_CENTS, LANDING_RANGE_CENTS } from '@shared/voice'
+import { LANDING_BIN_CENTS, LANDING_RANGE_CENTS } from '@shared/songs/constants'
 import { describe, expect, it } from 'vitest'
 import { midiToHz } from '../pitch/pitch'
 import { summariseTake } from './summary'

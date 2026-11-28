@@ -1,15 +1,10 @@
-import { noteWithOctave } from '../../state/chords/noteNames'
-import { previewNote } from '../../state/chords/preview'
+import { noteWithOctave } from '../../state/chords/theory/noteNames'
+import { previewNote } from '../../state/chords/instruments/preview'
+import { PITCH_CLASSES } from '@shared/units'
+import { C, KEY_GAP, KEY_HEIGHT, KEY_LABEL_INSET, KEY_LABEL_Y } from './constants'
 import type { KeyScale } from './keyboardGeometry'
 
-const KEY_HEIGHT = 24
-const LABEL_Y = 37
-const LABEL_INSET = 2
-// Keys are told apart by a sliver of background between them, not an outline, as the
-// rest of the app separates shapes; without it two white keys (E and F) would merge.
-const KEY_GAP = 1
 const BLACK_KEYS = new Set([1, 3, 6, 8, 10])
-const C = 0
 
 /**
  * A strip of piano keys, labelled at each C, so a singer can see where notes sit without
@@ -33,9 +28,14 @@ export function Keyboard({ scale, y }: { scale: KeyScale; y: number }): React.JS
         />
       ))}
       {notes
-        .filter((note) => note % 12 === C)
+        .filter((note) => note % PITCH_CLASSES === C)
         .map((note) => (
-          <text key={note} className="voice-chart-label" x={x(note) + LABEL_INSET} y={LABEL_Y}>
+          <text
+            key={note}
+            className="voice-chart-label"
+            x={x(note) + KEY_LABEL_INSET}
+            y={KEY_LABEL_Y}
+          >
             {noteWithOctave(note)}
           </text>
         ))}

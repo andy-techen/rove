@@ -1,7 +1,8 @@
 ---
 // What Rove does, shown with small pieces of the app drawn as the app draws them. Each
 // card plays its trick on hover, or as it scrolls into view on a phone.
-import { VIEW, arcPath, pointAt } from '@app/renderer/src/components/ui/Knob/knobMath'
+import { VIEW } from '@app/renderer/src/components/ui/Knob/constants'
+import { arcPath, pointAt } from '@app/renderer/src/components/ui/Knob/knobMath'
 import { wave } from '../wave'
 
 const laneWave = wave(36, 9, [[0.04, 0.96]])

@@ -1,7 +1,7 @@
 import { t } from '@shared/copy'
-import { ShortcutId, formatKeys } from '@shared/keymap'
+import { ShortcutId, formatKeys } from '@shared/preferences/keymap'
 import { useKeymap } from './keymap'
-import { NUMBERED_TRACKS } from './trackKeys'
+import { NUMBERED_TRACKS } from './constants'
 
 interface Shortcuts {
   /** Any keys as this platform writes them. */

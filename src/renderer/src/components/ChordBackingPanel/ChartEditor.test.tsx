@@ -5,9 +5,9 @@ import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { Chord } from '../../audio/music/chords'
 import { ChordChart, ChordFeel, feelsOf } from '../../state/song/project'
-import { chartFromText } from '../../state/chords/chordText'
-import { chordsInKey } from '../../state/chords/keyChords'
-import { chordName } from '../../state/chords/noteNames'
+import { chartFromText } from '../../state/chords/theory/chordText'
+import { chordsInKey } from '../../state/chords/theory/keyChords'
+import { chordName } from '../../state/chords/theory/noteNames'
 import { ChartEditor } from './ChartEditor'
 
 const chartOf = (text: string): ChordChart => ({ bars: chartFromText(text).bars })

@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Plan } from '@shared/features'
+import { Plan } from '@shared/license/features'
 import { SongKey } from '../../audio/pitch/key'
 import { hasRender } from '../../audio/dsp/renderCache'
 import { changeMusicBuffer, musicKey } from '../../audio/music/stretch'
 import { tuneBuffer, tuningKey } from '../../audio/pitch/tuning'
 import { Project, musicOf } from '../song/project'
 import { tuningOf } from './tuning'
+import { RENDER_DEBOUNCE_MS } from './constants'
 
 /** Changed copies of recordings, by track id and then clip file. */
 export type ProcessedAudio = Record<string, Record<string, AudioBuffer>>
-
-// Waits for a slider to settle before rendering, so a drag doesn't queue up renders.
-const RENDER_DEBOUNCE_MS = 250
 
 interface Job {
   trackId: string

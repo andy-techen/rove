@@ -1,4 +1,16 @@
+import { SEC_PER_MIN } from '@shared/units'
 import { PeakAccumulator } from '../../audio/mix/peaks'
+import {
+  FOLLOW_EDGE,
+  FOLLOW_LANDING,
+  MAX_PX_PER_SEC,
+  MINOR_STEPS,
+  MIN_TICK_GAP_PX,
+  MIN_TIMELINE_SEC,
+  TAIL_ROOM,
+  TICK_PRECISION,
+  TICK_STEPS
+} from './constants'
 
 export { PeakAccumulator }
 
@@ -18,36 +30,6 @@ export function drawPeaks(
     ctx.fillRect(x, top, 1, Math.max(1, bottom - top))
   }
 }
-
-// Labelled ruler steps, from a tenth of a second (zoomed right in) to five minutes,
-// each with the finer step its unlabelled marks fall on.
-const TICK_STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300]
-const MINOR_STEPS: Record<number, number> = {
-  0.1: 0.02,
-  0.2: 0.05,
-  0.5: 0.1,
-  1: 0.2,
-  2: 0.5,
-  5: 1,
-  10: 2,
-  15: 5,
-  30: 5,
-  60: 10,
-  120: 30,
-  300: 60
-}
-// Tick times are rounded to this, so 0.1 + 0.2 lands on 0.3 and keys stay stable.
-const TICK_PRECISION = 1000
-const SEC_PER_MIN = 60
-// Ruler labels stay at least this far apart so they never crowd.
-const MIN_TICK_GAP_PX = 64
-// An empty song still shows this much timeline to sing into.
-const MIN_TIMELINE_SEC = 30
-// A little room past the last clip, so there's space to keep singing.
-const TAIL_ROOM = 1.05
-// Following playback: page ahead when the playhead passes 90% of the view, landing it 10% in.
-const FOLLOW_EDGE = 0.9
-const FOLLOW_LANDING = 0.1
 
 /** The smallest "round" ruler interval that keeps labels at least `minGapPx` apart. */
 export function pickTickStep(pxPerSec: number, minGapPx = MIN_TICK_GAP_PX): number {
@@ -78,9 +60,6 @@ export function formatTick(sec: number, step: number): string {
 export function timelineLength(endTimes: number[], minSec = MIN_TIMELINE_SEC): number {
   return Math.max(minSec, ...endTimes.map((t) => t * TAIL_ROOM))
 }
-
-// Zoomed all the way in, one pixel is 2.5 ms: close enough to trim a breath.
-export const MAX_PX_PER_SEC = 400
 
 export function clampScroll(scrollX: number, contentWidth: number, viewWidth: number): number {
   return Math.max(0, Math.min(scrollX, contentWidth - viewWidth))

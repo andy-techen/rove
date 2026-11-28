@@ -9,14 +9,7 @@ import {
   zoomAround
 } from './timelineMath'
 import { Command, onCommand } from '../../state/commands/commands'
-
-// Each ⌘= / ⌘− press zooms by this factor.
-const ZOOM_STEP = 1.5
-// How strongly a wheel/pinch delta zooms; tuned so a trackpad pinch feels natural.
-const WHEEL_ZOOM_SENSITIVITY = 0.01
-// While recording, the timeline grows in steps this long so the scale (and every
-// waveform) isn't recomputed on each animation frame.
-const RECORDING_GROWTH_SEC = 30
+import { RECORDING_GROWTH_SEC, WHEEL_ZOOM_SENSITIVITY, ZOOM_STEP } from './constants'
 
 export interface TimelineView {
   areaRef: RefObject<HTMLDivElement | null>

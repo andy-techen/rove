@@ -1,7 +1,5 @@
 import { t } from '@shared/copy'
-
-const SEC_PER_MIN = 60
-const MIN_PER_HOUR = 60
+import { MIN_PER_HOUR, SEC_PER_MIN } from '@shared/units'
 
 /**
  * "41 s", "3 min", "1 min 20 s", "1 h 5 min": a length of singing or recording, rounded

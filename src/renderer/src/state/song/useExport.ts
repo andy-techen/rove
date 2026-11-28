@@ -5,7 +5,7 @@ import { processProject } from '../processing/processedAudio'
 import { songKeyOf } from '../processing/songKey'
 import { usePlan } from '../license/useFeature'
 import { Song } from './useSong'
-import { ChordPart } from '../chords/chart'
+import { ChordPart } from '../chords/chart/chart'
 import { SongLyrics } from '../lyrics/lyrics'
 import { VideoOptions, VideoScene } from '../../audio/export/videoFrame'
 

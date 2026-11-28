@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { LyricsResult } from '@shared/lyrics'
+import { LyricsResult } from '@shared/online/lyrics'
 
 export type LyricsSearchState =
   | { status: 'idle' }

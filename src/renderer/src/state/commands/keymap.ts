@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { Keymap, KeymapOverrides, effectiveKeymap } from '@shared/keymap'
+import { Keymap, KeymapOverrides, effectiveKeymap } from '@shared/preferences/keymap'
 
 interface KeymapState {
   keymap: Keymap

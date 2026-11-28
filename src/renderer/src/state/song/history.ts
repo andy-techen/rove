@@ -1,11 +1,11 @@
+import { LIMIT } from './constants'
+
 export interface History<T> {
   past: T[]
   future: T[]
   /** Key of the most recent edit, so a run of same-key edits undoes as one step. */
   lastKey?: string
 }
-
-const LIMIT = 100
 
 export const emptyHistory: History<never> = { past: [], future: [] }
 

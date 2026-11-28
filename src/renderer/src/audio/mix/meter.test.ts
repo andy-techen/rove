@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-  LevelCheck,
-  METER_FLOOR_DB,
-  RecentPeak,
-  levelZone,
-  meterFill,
-  nextDisplayDb
-} from './meter'
+import { LevelCheck, RecentPeak, levelZone, meterFill, nextDisplayDb } from './meter'
+import { METER_FLOOR_DB } from './constants'
 
 describe('meterFill', () => {
   it('spans the floor to 0 dB and clamps outside it', () => {

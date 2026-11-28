@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { keyboardFocus } from '../../../state/ui/focusRing'
+import { EDGE_PX, GAP_PX, SHOW_DELAY_MS } from './constants'
 import './Tooltip.css'
 
 interface Props {
@@ -13,12 +14,6 @@ interface Props {
   content?: ReactNode
   children: ReactNode
 }
-
-// Long enough not to flash while the pointer passes over; short enough to feel immediate.
-const SHOW_DELAY_MS = 350
-// Space between the control and its tooltip, and between the tooltip and the window edge.
-const GAP_PX = 6
-const EDGE_PX = 8
 
 interface Place {
   left: number

@@ -1,19 +1,13 @@
 import { dbToGain, gainToDb } from '../dsp/units'
 import { mean } from '../dsp/stats'
-
-// Loudness to ITU-R BS.1770-4 / EBU R128, as streaming services measure it.
-// https://www.itu.int/rec/R-REC-BS.1770
-const BLOCK_SEC = 0.4
-// Blocks overlap by 75%, so a new one starts every 100 ms.
-const BLOCKS_PER_WINDOW = 4
-const ABSOLUTE_GATE_LUFS = -70
-const RELATIVE_GATE_LU = -10
-// Offsets the K-weighting filter's gain at 1 kHz, so a 1 kHz tone reads its RMS level.
-const LOUDNESS_OFFSET = -0.691
-
-// Never boost a mix more than this to reach the target: a near-silent song would
-// otherwise come out as amplified hiss.
-const MAX_BOOST_DB = 20
+import {
+  BLOCK_SEC,
+  BLOCKS_PER_WINDOW,
+  ABSOLUTE_GATE_LUFS,
+  RELATIVE_GATE_LU,
+  LOUDNESS_OFFSET,
+  MAX_BOOST_DB
+} from './constants'
 
 type Biquad = [b0: number, b1: number, b2: number, a1: number, a2: number]
 

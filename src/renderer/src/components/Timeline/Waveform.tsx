@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { PeakAccumulator, overviewOf, waveScale } from '../../audio/mix/peaks'
-import { TARGET_PEAK_DB } from '../../audio/engine/inputLevel'
+import { TARGET_PEAK_DB } from '../../audio/engine/constants'
 import { dbToGain } from '../../audio/dsp/units'
 import { useColorScheme } from '../../state/ui/colorScheme'
 import { drawPeaks } from './timelineMath'

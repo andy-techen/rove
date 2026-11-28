@@ -13,8 +13,9 @@
   what's allowed.
 - **Selectors** (`state/song/selectors.ts`) derive view data from the project: what each
   timeline lane shows, whether Split is possible, whether recording can start.
-- **Project operations** (`state/song/project.ts`) are pure functions that return a new
-  project: add a track, punch in a take, trim, split, fade.
+- **Project operations** (`state/song/project/`, one file per area: tracks, clips, music,
+  chords, tempo, parse; types and constants beside them) are pure functions that return
+  a new project: add a track, punch in a take, trim, split, fade.
 - **Hooks own side effects**: `useSong` (one open song, undo history, saving),
   `useTabs`, `useTransport` (playback and recording), `useMicrophone`.
 - **Audio maths** (`audio/`) is pure where possible: slider-to-parameter mapping,
@@ -38,8 +39,8 @@ if it already exists anywhere, import it, moving it to a shared home if needed.
   in a second file.
 - **One value, one definition.** When two modules must agree (the de-esser's split
   and `DE_ESS_BAND`), one imports the other's constant. A comment saying the two
-  "match" is a sign that one should import the other. Unit constants (`SEC_PER_MIN`,
-  `MS_PER_SEC`, `PITCH_CLASSES`) are imported, not redeclared.
+  "match" is a sign that one should import the other. Unit constants are imported
+  from `src/shared/units.ts`, not redeclared.
 - **A list and its type come from one place:** `const GROOVES = ['rock', …] as const`
   then `type GrooveId = (typeof GROOVES)[number]`, never a union beside an array that
   must be kept in step by hand.
@@ -54,6 +55,9 @@ if it already exists anywhere, import it, moving it to a shared home if needed.
 - A file past ~500 lines, or one that needs `// --- Section ---` banners, wants
   splitting by area (a folder with an `index.ts` keeps imports unchanged). A banner is
   where the split goes.
+- A folder past ~20 files (code and tests together) wants splitting into sub-areas the
+  same way: `main/ipc/` holds `songs/`, `preferences/`, `license/`, `online/` and
+  `files/`. Tests stay next to their code.
 - Export only what another file imports. Types that appear in an exported signature
   are the exception.
 - Don't keep code alive for its tests. When a feature goes, remove everything it
@@ -85,7 +89,7 @@ Import components through their folder (`'../Timeline'`), not deep paths.
 
 ## Shortcuts and commands
 
-- Every shortcut lives in `src/shared/keymap.ts` with its default keys. The native
+- Every shortcut lives in `src/shared/preferences/keymap.ts` with its default keys. The native
   menu, the renderer's key handling, tooltips and the Shortcuts table all read from it, so
   a new shortcut is one entry there plus a `keymap.<id>` copy key.
 - People can rebind shortcuts in the app dialog's Shortcuts section. Their changes are overrides stored in
@@ -100,9 +104,9 @@ Import components through their folder (`'../Timeline'`), not deep paths.
 ## Premium features
 
 - Premium is a one-time purchase. Which features it holds is one list,
-  `PREMIUM_FEATURES` in `src/shared/premiumFeatures.ts`; everything else is free and never
+  `PREMIUM_FEATURES` in `src/shared/license/premiumFeatures.ts`; everything else is free and never
   gated. Taking a feature off the list makes each gate on it fail the typecheck.
-- The main process owns the license (`main/ipc/license.ts`, saved in
+- The main process owns the license (`main/ipc/license/license.ts`, saved in
   `userData/license.json`): premium with a key, free without. It sends the plan to the
   window.
   The renderer reads it with `useFeature(id)` (`state/license/useFeature.ts`) to show a
@@ -110,7 +114,7 @@ Import components through their folder (`'../Timeline'`), not deep paths.
 - Gate in both places: where the main process does a premium feature's work, it calls
   `requirePlanFor(id)` first (handing over the vocal removal model does), so hiding a
   button is never the only lock.
-- Keys are checked by a `LicenseService` (`main/ipc/licenseService.ts`). For now it's a
+- Keys are checked by a `LicenseService` (`main/ipc/license/licenseService.ts`). For now it's a
   fake: nothing goes online, any key of 8 or more characters activates, and anything
   shorter is turned down so the error can be tried. Lemon Squeezy replaces it there,
   and nothing else changes. To test, activate any key in Settings ▸ Rove Premium, and
@@ -121,8 +125,20 @@ Import components through their folder (`'../Timeline'`), not deep paths.
 ## Constants, not magic numbers
 
 - Any number with a meaning (timings, thresholds, sizes, limits, defaults) gets a named
-  constant: module-local if one file uses it, `src/shared/constants.ts` if both
-  processes do.
+  constant, and it lives in a constants file, not in a list at the top of the file that
+  uses it:
+  - **Units** (`MS_PER_SEC`, `SEC_PER_MIN`, `PERCENT`, `SEMITONES_PER_OCTAVE`,
+    `CENTS_PER_SEMITONE`, `PITCH_CLASSES`) are in `src/shared/units.ts`. Import them;
+    never declare one again.
+  - **An area's values** (its thresholds, limits, defaults and tuning) are in that
+    area's `constants.ts`: `audio/pitch/constants.ts`, `state/chords/constants.ts`,
+    `components/Timeline/constants.ts`. Group them under short comments by what they
+    tune.
+  - **Values both processes need** are in `src/shared/constants.ts`.
+  - A value used by two areas moves to the lower of them (the one the other already
+    imports from) or to `src/shared/`, never copied.
+- A literal may stay inline only when naming it would say nothing more than the code
+  around it: a loop bound over an array's length, an index, an identity.
 - Mapping tables (like the polish slider ranges) are data: keep them in one readable
   table, not scattered literals.
 - Comment the _why_ when a value isn't self-explanatory.
@@ -152,11 +168,11 @@ workarounds (with a link) are worth a comment; restating the code isn't.
 - Tuning plays and exports tuned copies held in memory (`audio/pitch/tuning.ts`); the
   recordings on disk stay as sung.
 - Every file under `userData` or a song folder is written with `writeAtomically`
-  (`main/ipc/writeAtomically.ts`), never a bare `fs.writeFile` or a hand-made temp
+  (`main/ipc/files/writeAtomically.ts`), never a bare `fs.writeFile` or a hand-made temp
   name.
 - IPC channel names live in a `*_CHANNELS` const in `src/shared/`, used by both main
   and preload; payload types and input cleaning (`cleanText`) live there too, never
   written again on one side.
-- Only the main process goes online (lyrics search, `main/ipc/lyrics.ts`), and only
+- Only the main process goes online (lyrics search, `main/ipc/online/lyrics.ts`), and only
   with words the singer typed. Validate what comes back (`parseSearchResults`).
 - `project.json` is written to a temp file and renamed, so a crash can't half-write it.
