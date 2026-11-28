@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { t } from '@shared/copy'
 import { EXPORT_FORMATS, ExportFormat } from '@shared/exportFormats'
 import { ExportLoudness } from '../../audio/export/exportMix'
-import { VideoOptions } from '../../audio/export/videoFrame'
+import { DEFAULT_LYRICS_STYLE, VideoOptions } from '../../audio/export/videoFrame'
 import { SongLyrics } from '../../state/lyrics/lyrics'
 import { ExportOptions, ExportState } from '../../state/song/useExport'
 import { Button } from '../ui/Button'
@@ -19,7 +19,8 @@ const PERCENT = 100
 const DEFAULT_VIDEO: VideoOptions = {
   background: { kind: 'blank', id: 'goldenHour' },
   texts: [],
-  lyrics: false
+  lyrics: false,
+  lyricsStyle: DEFAULT_LYRICS_STYLE
 }
 
 interface Props {

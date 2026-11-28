@@ -1,5 +1,6 @@
 import { RefObject, useEffect, useRef, useState } from 'react'
 import { VideoOptions, VideoScene } from '../../audio/export/videoFrame'
+import { FONT_IDS, FontId, installedFonts } from '../../audio/export/videoFonts'
 import { SongLyrics, lineStart } from '../../state/lyrics/lyrics'
 
 /** The singer's own picture, kept while the export dialog is open so they can switch back. */
@@ -60,6 +61,7 @@ export function sceneFor(
           ? { kind: 'picture', image }
           : { kind: 'blank', id: 'evening' },
     texts: value.texts,
+    lyricsStyle: value.lyricsStyle,
     lyrics: value.lyrics ? lyrics : null
   }
 }
@@ -68,4 +70,21 @@ export function sceneFor(
 export function previewTime(lyrics: SongLyrics | null): number {
   const first = lyrics?.lines.find((line) => line.text && line.time !== null)
   return (first && lineStart(first, lyrics?.offsetSec ?? 0)) ?? 0
+}
+
+// Big enough that a font's own widths show over rounding.
+const PROBE_PX = 48
+let installed: FontId[] | null = null
+
+/** The fonts this machine has, found once: fonts don't come and go while Rove runs. */
+export function fontsOnThisMachine(): FontId[] {
+  if (installed) return installed
+  const ctx = document.createElement('canvas').getContext('2d')
+  // jsdom can't measure text, so it offers every font.
+  if (!ctx) return FONT_IDS
+  installed = installedFonts((text, family) => {
+    ctx.font = `${PROBE_PX}px ${family}`
+    return ctx.measureText(text).width
+  })
+  return installed
 }

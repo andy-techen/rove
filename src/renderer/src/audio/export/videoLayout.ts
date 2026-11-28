@@ -174,3 +174,89 @@ export function stepSize(size: number, sizes: readonly number[], by: 1 | -1): nu
   )
   return sizes[Math.min(sizes.length - 1, Math.max(0, nearest + by))]
 }
+
+/** How a block's lines line up with each other. */
+export const ALIGNS = ['left', 'center', 'right'] as const
+export type Align = (typeof ALIGNS)[number]
+
+/** The alignment after `align`, round to the first again: one button steps through them. */
+export function nextAlign(align: Align): Align {
+  return ALIGNS[(ALIGNS.indexOf(align) + 1) % ALIGNS.length]
+}
+
+/** Where lines are drawn from, for a block `width` wide centred on `x`. */
+export function lineAnchor(x: number, width: number, align: Align): number {
+  if (align === 'left') return x - width / 2
+  if (align === 'right') return x + width / 2
+  return x
+}
+
+/** The centre of a block `width` wide whose lines are drawn from `anchor`. */
+export function blockCentre(anchor: number, width: number, align: Align): number {
+  if (align === 'left') return anchor + width / 2
+  if (align === 'right') return anchor - width / 2
+  return anchor
+}
+
+/**
+ * A column of text held by its aligned edge (left lines by their left edge, and so on), so
+ * lines of different lengths keep that edge still. Keeps the edge where the column has at
+ * least `minWidth` inside the margins, and says how wide its lines may run.
+ */
+export function anchoredColumn(
+  x: number,
+  align: Align,
+  frame: { width: number; margin: number },
+  minWidth: number
+): { anchor: number; wrapWidth: number } {
+  const { width, margin } = frame
+  const clamp = (value: number, min: number, max: number): number =>
+    Math.min(max, Math.max(min, value))
+  if (align === 'left') {
+    const anchor = clamp(x, margin, width - margin - minWidth)
+    return { anchor, wrapWidth: width - margin - anchor }
+  }
+  if (align === 'right') {
+    const anchor = clamp(x, margin + minWidth, width - margin)
+    return { anchor, wrapWidth: anchor - margin }
+  }
+  const anchor = clamp(x, margin + minWidth / 2, width - margin - minWidth / 2)
+  return { anchor, wrapWidth: 2 * Math.min(anchor - margin, width - margin - anchor) }
+}
+
+/** The left and right edges of a column of text, in video pixels. */
+export interface Edges {
+  left: number
+  right: number
+}
+
+/** The edges of a column `width` wide whose lines are drawn from `anchor`. */
+export function columnEdges(anchor: number, width: number, align: Align): Edges {
+  const left = lineAnchor(blockCentre(anchor, width, align), width, 'left')
+  return { left, right: left + width }
+}
+
+/** Where a column's lines are drawn from, given its edges. */
+export function anchorOf(edges: Edges, align: Align): number {
+  const width = edges.right - edges.left
+  return lineAnchor(edges.left + width / 2, width, align)
+}
+
+/**
+ * A column with one `side` dragged to `to`: the other side stays still, and the column
+ * stays inside the margins and at least `minWidth` wide.
+ */
+export function moveEdge(
+  edges: Edges,
+  side: 'left' | 'right',
+  to: number,
+  frame: { width: number; margin: number },
+  minWidth: number
+): Edges {
+  if (side === 'right') {
+    const right = Math.min(frame.width - frame.margin, Math.max(edges.left + minWidth, to))
+    return { left: edges.left, right }
+  }
+  const left = Math.max(frame.margin, Math.min(edges.right - minWidth, to))
+  return { left, right: edges.right }
+}

@@ -20,6 +20,10 @@ hears.
 - **Hover explains.** Every icon-only control shows a tooltip saying what it does and
   has an accessible name. Use `IconButton`, which requires a `label` and uses it for both.
   Disabled controls dim but keep the arrow cursor, so nothing covers their tooltip.
+- **Tooltips are short.** A few words saying what the control does, as a verb
+  ("Change the font", "Drag to resize"), not how it works or why. A second gesture gets
+  its own short sentence ("Double-click to fit."). Anything longer is help: put it
+  behind a `HelpTip`.
 - **Tooltips show hotkeys.** When a control's action has a shortcut, its tooltip ends
   with the keys, no exceptions: `title={shortcuts.label(text, id)}` from
   `useShortcuts()`, so they follow rebinding. A fixed key counts too: a track's name
