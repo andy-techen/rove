@@ -65,11 +65,14 @@ describe('searchCatalog', () => {
     expect(names(db, { query: '' })).toEqual(['Dreams'])
   })
 
-  it('returns the total alongside the capped items', () => {
+  it('returns a page of results with the total', () => {
     const db = catalog(dreams, shallow, yueliang)
-    const result = searchCatalog(db, { query: '', limit: 2 })
-    expect(result.items).toHaveLength(2)
-    expect(result.total).toBe(3)
+    const first = searchCatalog(db, { query: '', limit: 2 })
+    const next = searchCatalog(db, { query: '', limit: 2, offset: 2 })
+    expect([...first.items, ...next.items].map((s) => s.name).sort()).toEqual(
+      ['Dreams', 'Shallow', '月亮代表我的心'].sort()
+    )
+    expect(next.total).toBe(3)
   })
 
   it('returns a song in the shape the app shows', () => {

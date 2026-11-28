@@ -71,11 +71,13 @@ export interface CatalogSearchOptions {
   /** Only songs LRCLIB has synced lyrics for. */
   syncedLyrics?: boolean
   limit?: number
+  /** Results to skip: the ones already shown, when loading the next page. */
+  offset?: number
 }
 
 export interface CatalogSearchResult {
   items: CatalogSong[]
-  /** Items found before `limit`, so the UI can say "500 more" if the list is long. */
+  /** Every match, before `limit` and `offset`, so the UI knows whether more pages follow. */
   total: number
 }
 
@@ -107,7 +109,8 @@ export function parseSearchOptions(raw: unknown): CatalogSearchOptions {
     ...(genres.length && { genres }),
     ...(tags.length && { tags }),
     ...(r.syncedLyrics === true && { syncedLyrics: true }),
-    ...(typeof r.limit === 'number' && r.limit > 0 && { limit: Math.floor(r.limit) })
+    ...(typeof r.limit === 'number' && r.limit > 0 && { limit: Math.floor(r.limit) }),
+    ...(typeof r.offset === 'number' && r.offset > 0 && { offset: Math.floor(r.offset) })
   }
 }
 

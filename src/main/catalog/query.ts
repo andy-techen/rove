@@ -64,9 +64,9 @@ export function searchCatalog(
   const rows = db
     .prepare(
       `SELECT id, title, artist, aliases, language, song_type, genre, duration_sec, has_synced_lyrics
-       ${from} ORDER BY popularity DESC NULLS LAST, title, id LIMIT ?`
+       ${from} ORDER BY popularity DESC NULLS LAST, title, id LIMIT ? OFFSET ?`
     )
-    .all(...params, options.limit ?? DEFAULT_LIMIT) as unknown as SongRow[]
+    .all(...params, options.limit ?? DEFAULT_LIMIT, options.offset ?? 0) as unknown as SongRow[]
 
   const tags = tagsFor(
     db,

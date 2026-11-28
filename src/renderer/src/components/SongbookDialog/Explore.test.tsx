@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CatalogSong } from '@shared/online/catalog'
 import { t } from '@shared/copy'
+import { scrollIntoView } from '../../test/intersection'
 import { Explore } from './Explore'
 
 const dreams: CatalogSong = {
@@ -78,6 +79,18 @@ describe('Explore', () => {
     expect(screen.getAllByRole('checkbox').map((box) => box.getAttribute('value'))).toEqual([
       'rock'
     ])
+  })
+
+  it('loads the next page when the end of the list scrolls into view', async () => {
+    vi.mocked(window.api.searchCatalog).mockImplementation(async ({ offset }) =>
+      offset ? { items: [yueliang], total: 2 } : { items: [dreams], total: 2 }
+    )
+    const { container } = render(<Explore />)
+    await screen.findByText('Dreams')
+    scrollIntoView(container.querySelector('.explore-list-end')!)
+    expect(await screen.findByText(yueliang.name)).toBeInTheDocument()
+    expect(screen.getByText('Dreams')).toBeInTheDocument()
+    expect(container.querySelector('.explore-list-end')).not.toBeInTheDocument()
   })
 
   it('passes the search query to the catalog as the singer types', async () => {

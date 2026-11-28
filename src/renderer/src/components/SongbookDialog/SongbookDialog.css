@@ -156,6 +156,11 @@
   flex-shrink: 0;
 }
 
+/* Marks the end of the loaded results; scrolling it into view loads the next page. */
+.explore-list-end {
+  height: var(--size-hairline);
+}
+
 .explore-results {
   flex: 1;
   min-height: 0;

@@ -3,6 +3,7 @@ import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
 import { applyOverrides } from '../state/commands/keymap'
 import { createFakeApi } from './fakeApi'
+import { installIntersectionObserver } from './intersection'
 
 afterEach(() => {
   cleanup()
@@ -26,6 +27,8 @@ class FixedResizeObserver {
   }
 }
 globalThis.ResizeObserver ??= FixedResizeObserver as unknown as typeof ResizeObserver
+
+installIntersectionObserver()
 
 // The preload bridge; tests that care about calls replace it with their own fake.
 window.api = createFakeApi()

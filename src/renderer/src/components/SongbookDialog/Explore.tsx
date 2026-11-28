@@ -14,6 +14,7 @@ import { useOutsideClose } from '../ui/useOutsideClose'
 import { IconButton } from '../ui/IconButton'
 import { SearchField } from '../ui/SearchField'
 import { cx } from '../ui/cx'
+import { useOnVisible } from '../../state/ui/useOnVisible'
 
 type State =
   { kind: 'loading' } | { kind: 'ready'; items: CatalogSong[]; total: number } | { kind: 'error' }
@@ -53,18 +54,43 @@ export function Explore(): React.JSX.Element {
   const [adding, setAdding] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // Which search the list shows, so a page that arrives after the search changed is dropped.
+  const searchId = useRef(0)
+  const loadingMore = useRef(false)
+
   useEffect(() => {
     // Keep the previous list visible while the next search resolves, so typing in the
     // search box doesn't flash "loading" between every keystroke.
-    let cancelled = false
+    const id = ++searchId.current
+    loadingMore.current = false
     window.api.searchCatalog(toSearchOptions(query, filters, syncedOnly)).then(
-      (result) => !cancelled && setState({ kind: 'ready', ...result }),
-      () => !cancelled && setState({ kind: 'error' })
+      (result) => id === searchId.current && setState({ kind: 'ready', ...result }),
+      () => id === searchId.current && setState({ kind: 'error' })
     )
-    return () => {
-      cancelled = true
-    }
   }, [query, filters, syncedOnly])
+
+  // Results come a page at a time; the next page loads as the end of the list scrolls in.
+  const loadMore = (): void => {
+    if (state.kind !== 'ready' || state.items.length >= state.total || loadingMore.current) return
+    loadingMore.current = true
+    const id = searchId.current
+    const offset = state.items.length
+    window.api.searchCatalog({ ...toSearchOptions(query, filters, syncedOnly), offset }).then(
+      (page) => {
+        if (id !== searchId.current) return
+        loadingMore.current = false
+        setState((prev) =>
+          prev.kind === 'ready'
+            ? { kind: 'ready', items: [...prev.items, ...page.items], total: page.total }
+            : prev
+        )
+      },
+      () => {
+        if (id === searchId.current) loadingMore.current = false
+      }
+    )
+  }
+  const listEnd = useOnVisible(loadMore)
 
   useEffect(() => {
     let cancelled = false
@@ -256,6 +282,9 @@ export function Explore(): React.JSX.Element {
               )
             })}
           </ul>
+        )}
+        {state.kind === 'ready' && state.items.length < state.total && (
+          <div ref={listEnd} className="explore-list-end" aria-hidden="true" />
         )}
         {error && <p className="songbook-note songbook-error">{error}</p>}
       </div>
