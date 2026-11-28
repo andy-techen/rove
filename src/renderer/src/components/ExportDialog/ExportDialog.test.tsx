@@ -4,8 +4,17 @@ import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import type { SongLyrics } from '../../state/lyrics/lyrics'
 import type { ExportState } from '../../state/song/useExport'
-import { DEFAULT_TEXT_POSITION, WORDS_SIZE, WORDS_SIZES } from '../../audio/export/videoFrame'
-import { stepSize } from '../../audio/export/videoLayout'
+import {
+  DEFAULT_LYRICS_STYLE,
+  DEFAULT_TEXT_POSITION,
+  MARGIN,
+  VIDEO_WIDTH,
+  LYRICS_SIZES,
+  WORDS_SIZE,
+  WORDS_SIZES
+} from '../../audio/export/videoFrame'
+import { DEFAULT_FONT, FontId } from '../../audio/export/videoFonts'
+import { Align, stepSize } from '../../audio/export/videoLayout'
 import { ExportDialog } from '.'
 
 const renderDialog = (
@@ -55,6 +64,11 @@ const addWords = async (text: string) => {
   await userEvent.keyboard('{Escape}')
 }
 
+const alignButton = (side: Align) =>
+  screen.getByRole('button', {
+    name: t('export.video.align', { side: t(`export.video.aligns.${side}`) })
+  })
+
 const videoOf = (props: ReturnType<typeof renderDialog>) => props.onStart.mock.calls[0][0].video
 
 describe('ExportDialog', () => {
@@ -98,7 +112,12 @@ describe('ExportDialog', () => {
     expect(props.onStart).toHaveBeenCalledWith({
       format: 'mp4',
       loudness: 'streaming',
-      video: { background: { kind: 'blank', id: 'goldenHour' }, texts: [], lyrics: false }
+      video: {
+        background: { kind: 'blank', id: 'goldenHour' },
+        texts: [],
+        lyrics: false,
+        lyricsStyle: DEFAULT_LYRICS_STYLE
+      }
     })
   })
 
@@ -217,6 +236,57 @@ describe('ExportDialog', () => {
     expect(videoOf(props).texts[0].size).toBe(stepSize(WORDS_SIZE, WORDS_SIZES, 1))
   })
 
+  it('sets words in a font picked from the bar beside them', async () => {
+    const props = renderDialog()
+    await chooseVideo()
+    await openEditor()
+    await addWords('Hi')
+    await userEvent.click(wordsOnPicture('Hi'))
+    const fontName = (id: FontId) => t(`export.video.fonts.${id}`)
+    const fontButton = screen.getByRole('button', {
+      name: t('export.video.font', { name: fontName(DEFAULT_FONT) })
+    })
+    await userEvent.click(fontButton)
+    expect(fontButton).toHaveAttribute('aria-expanded', 'true')
+    await userEvent.click(screen.getByRole('button', { name: fontName('typewriter') }))
+    await finishEditing()
+    await start()
+    expect(videoOf(props).texts[0].font).toBe('typewriter')
+  })
+
+  it('picks a font for new words before typing them', async () => {
+    const props = renderDialog()
+    await chooseVideo()
+    await openEditor()
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.addWords') }))
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: t('export.video.font', { name: t(`export.video.fonts.${DEFAULT_FONT}`) })
+      })
+    )
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.fonts.typewriter') }))
+    await userEvent.keyboard('Hi{Escape}')
+    await finishEditing()
+    await start()
+    expect(videoOf(props).texts).toEqual([
+      expect.objectContaining({ text: 'Hi', font: 'typewriter' })
+    ])
+  })
+
+  it('narrows words by moving their right edge in', async () => {
+    const props = renderDialog()
+    await chooseVideo()
+    await openEditor()
+    await addWords('Hi')
+    await userEvent.click(wordsOnPicture('Hi'))
+    await userEvent.keyboard('{Escape}')
+    screen.getByRole('separator', { name: t('export.video.wordsEdges.right') }).focus()
+    await userEvent.keyboard('{ArrowLeft}')
+    await finishEditing()
+    await start()
+    expect(videoOf(props).texts[0].width).toBeLessThan(VIDEO_WIDTH - MARGIN * 2)
+  })
+
   it('moves the words in small steps with the arrow keys', async () => {
     const props = renderDialog()
     await chooseVideo()
@@ -239,6 +309,111 @@ describe('ExportDialog', () => {
     await finishEditing()
     await start()
     expect(videoOf(props).lyrics).toBe(true)
+  })
+
+  it('sets the lyrics in a font picked from the lyrics on the picture', async () => {
+    const props = renderDialog({ status: 'idle' }, timedLyrics())
+    await chooseVideo()
+    await openEditor()
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyrics') }))
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyricsOnPicture') }))
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: t('export.video.font', { name: t(`export.video.fonts.${DEFAULT_FONT}`) })
+      })
+    )
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.fonts.kaiti') }))
+    await finishEditing()
+    await start()
+    expect(videoOf(props).lyricsStyle.font).toBe('kaiti')
+  })
+
+  it('makes the lyrics larger and smaller from the bar above them', async () => {
+    const props = renderDialog({ status: 'idle' }, timedLyrics())
+    await chooseVideo()
+    await openEditor()
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyrics') }))
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyricsOnPicture') }))
+    const larger = screen.getByRole('button', { name: t('export.video.lyricsLarger') })
+    await userEvent.click(larger)
+    await userEvent.click(larger)
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyricsSmaller') }))
+    await finishEditing()
+    await start()
+    expect(videoOf(props).lyricsStyle.size).toBe(
+      stepSize(DEFAULT_LYRICS_STYLE.size, LYRICS_SIZES, 1)
+    )
+  })
+
+  it('moves the lyrics with the arrow keys', async () => {
+    const props = renderDialog({ status: 'idle' }, timedLyrics())
+    await chooseVideo()
+    await openEditor()
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyrics') }))
+    screen.getByRole('button', { name: t('export.video.lyricsOnPicture') }).focus()
+    await userEvent.keyboard('{ArrowUp}')
+    await finishEditing()
+    await start()
+    const { position } = videoOf(props).lyricsStyle
+    expect(position.y).toBeLessThan(DEFAULT_LYRICS_STYLE.position.y)
+    expect(position.x).toBe(DEFAULT_LYRICS_STYLE.position.x)
+  })
+
+  it('lines the lyrics up on the right, against the right margin', async () => {
+    const props = renderDialog({ status: 'idle' }, timedLyrics())
+    await chooseVideo()
+    await openEditor()
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyrics') }))
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyricsOnPicture') }))
+    await userEvent.click(alignButton('center'))
+    await finishEditing()
+    await start()
+    const { align, position } = videoOf(props).lyricsStyle
+    expect(align).toBe('right')
+    expect(position.x).toBe((VIDEO_WIDTH - MARGIN) / VIDEO_WIDTH)
+  })
+
+  it('lines words up left, centre or right from the bar beside them', async () => {
+    const props = renderDialog()
+    await chooseVideo()
+    await openEditor()
+    await addWords('Hi')
+    await userEvent.click(wordsOnPicture('Hi'))
+    await userEvent.click(alignButton('center'))
+    await userEvent.click(alignButton('right'))
+    await finishEditing()
+    await start()
+    expect(videoOf(props).texts[0].align).toBe('left')
+  })
+
+  it('narrows the lyrics by moving their right edge in', async () => {
+    const props = renderDialog({ status: 'idle' }, timedLyrics())
+    await chooseVideo()
+    await openEditor()
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyrics') }))
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyricsOnPicture') }))
+    screen.getByRole('separator', { name: t('export.video.lyricsEdges.right') }).focus()
+    await userEvent.keyboard('{ArrowLeft}')
+    await finishEditing()
+    await start()
+    expect(videoOf(props).lyricsStyle.width).toBeLessThan(VIDEO_WIDTH - MARGIN * 2)
+  })
+
+  it('fits the lyrics to the frame again when an edge is double-clicked', async () => {
+    const props = renderDialog({ status: 'idle' }, timedLyrics())
+    await chooseVideo()
+    await openEditor()
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyrics') }))
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyricsOnPicture') }))
+    const edge = screen.getByRole('separator', { name: t('export.video.lyricsEdges.left') })
+    edge.focus()
+    await userEvent.keyboard('{ArrowRight}')
+    await userEvent.dblClick(edge)
+    await finishEditing()
+    await start()
+    const { width, position } = videoOf(props).lyricsStyle
+    expect(width).toBeNull()
+    expect(position.x).toBe(DEFAULT_LYRICS_STYLE.position.x)
   })
 
   it('can’t show lyrics that have no timing', async () => {

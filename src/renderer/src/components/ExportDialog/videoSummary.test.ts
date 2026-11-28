@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { t } from '@shared/copy'
-import type { VideoOptions } from '../../audio/export/videoFrame'
+import { DEFAULT_LYRICS_STYLE, type VideoOptions } from '../../audio/export/videoFrame'
 import { videoSummary } from './videoSummary'
 
 const video = (change: Partial<VideoOptions> = {}): VideoOptions => ({
   background: { kind: 'blank', id: 'sunset' },
   texts: [],
   lyrics: false,
+  lyricsStyle: DEFAULT_LYRICS_STYLE,
   ...change
 })
 

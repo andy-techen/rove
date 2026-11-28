@@ -75,11 +75,57 @@
   cursor: move;
 }
 
+/* The outline straddles the box's edge in every state (focus would push it out), so the
+   resize grips sit right on it. */
+.picture-words,
+.picture-words:focus-visible {
+  outline-offset: calc(var(--size-focus-ring) / -2);
+}
+
 .picture-words:hover {
   outline: var(--size-hairline) dashed var(--color-guide);
 }
 
-.picture-words[data-selected] {
+/* A grip on each side of the chosen words or lyrics: drag it to set how wide they run. It sits on
+   the box's outline, half in and half out, at the middle of that side. */
+.picture-edge {
+  position: absolute;
+  top: calc((var(--top) + var(--height) / 2) * 100%);
+  left: calc(var(--left) * 100%);
+  /* A wider grab area than the line it shows, so a thin grip is still easy to catch. */
+  width: var(--space-5);
+  height: var(--size-control-sm);
+  border-radius: var(--radius-pill);
+  transform: translate(-50%, -50%);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+/* What shows: a thin cream line with a dark edge, so one side of it always stands out,
+   on a cream picture as much as a dark one. */
+.picture-edge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: var(--size-focus-ring);
+  margin: 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--color-thumb);
+  box-shadow: 0 0 0 var(--size-hairline) var(--color-grip-edge);
+}
+
+.picture-edge[data-side='right'] {
+  left: calc((var(--left) + var(--width)) * 100%);
+}
+
+:root:not([data-input='pointer']) .picture-edge:focus-visible {
+  outline: var(--size-focus-ring) solid var(--color-accent);
+}
+
+/* Chosen words keep focus after a click, where the app hides focus rings; they still
+   show they're chosen. */
+.picture-words[data-selected],
+:root[data-input='pointer'] .picture-words[data-selected]:focus-visible {
   outline: var(--size-focus-ring) dashed var(--color-guide);
 }
 
@@ -95,11 +141,13 @@
   background: none;
   color: var(--words-colour);
   caret-color: var(--words-colour);
-  font-family: var(--font-family);
+  font-family: var(--words-font);
   font-size: calc(var(--words-size) * 100cqw / var(--video-width));
+  /* Moves the typed words to where the video draws them, so they don't jump when done. */
+  translate: 0 calc(var(--words-nudge) * 100cqw / var(--video-width));
   font-weight: var(--words-weight);
   line-height: var(--words-line);
-  text-align: center;
+  text-align: var(--words-align);
   white-space: pre-wrap;
   overflow: hidden;
   resize: none;
@@ -107,12 +155,15 @@
 
 /* Colour and remove for the chosen words, just above them (below, near the top). */
 .picture-words-bar {
+  --picture-font-columns: 8;
   --hover-fill: var(--color-highlight);
   --quiet-fill: var(--color-surface);
   position: absolute;
   left: calc((var(--left) + var(--width) / 2) * 100%);
   top: calc(var(--top) * 100%);
   display: flex;
+  /* The fonts open on the side away from the words, so they stay in view. */
+  flex-direction: column-reverse;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2);
@@ -120,12 +171,75 @@
   background: var(--color-surface-raised);
   box-shadow: var(--shadow-raised);
   transform: translate(-50%, calc(-100% - var(--space-3)));
+  /* Set from the bar's measured edges, to keep it inside the picture. */
+  translate: var(--bar-shift) 0;
   cursor: default;
 }
 
 .picture-words-bar[data-below] {
   top: calc((var(--top) + var(--height)) * 100%);
+  flex-direction: column;
   transform: translate(-50%, var(--space-3));
+}
+
+.picture-words-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Latin fonts, then Chinese ones, each a grid of samples with a hairline between. */
+.picture-words-fonts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.picture-words-font-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--picture-font-columns), var(--size-control-sm));
+  gap: var(--space-2);
+}
+
+.picture-words-font-grid + .picture-words-font-grid {
+  padding-top: var(--space-2);
+  border-top: var(--size-hairline) solid var(--color-border);
+}
+
+/* "Aa" in one font: a square that fills on hover, ringed while it's the words' font. */
+.picture-words-sample {
+  display: grid;
+  place-items: center;
+  width: var(--size-control-sm);
+  height: var(--size-control-sm);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--words-font);
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-heavy);
+  cursor: pointer;
+}
+
+.picture-words-sample:hover {
+  background: var(--hover-fill);
+}
+
+.picture-words-sample[aria-pressed='true'] {
+  outline: var(--size-focus-ring) solid var(--color-accent);
+}
+
+:root:not([data-input='pointer']) .picture-words-sample:focus-visible {
+  outline: var(--size-focus-ring) solid var(--color-accent);
+  outline-offset: var(--size-focus-ring);
+}
+
+/* Wide enough for the longest font name, so the bar doesn't jump as the font changes. */
+.picture-words-font {
+  min-width: var(--layout-picture-font-button);
+  font-family: var(--words-font);
 }
 
 .picture-words-bar .picture-swatch {

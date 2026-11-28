@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import type { SongLyrics } from '../../state/lyrics/lyrics'
-import { alignTo, coverCrop, inkFor, lyricsAt, placeBlock, stepSize, wrapText } from './videoLayout'
+import {
+  ALIGNS,
+  alignTo,
+  anchorOf,
+  columnEdges,
+  moveEdge,
+  anchoredColumn,
+  blockCentre,
+  coverCrop,
+  inkFor,
+  lineAnchor,
+  lyricsAt,
+  placeBlock,
+  stepSize,
+  wrapText
+} from './videoLayout'
 
 // Every character is 10 units wide, so widths are easy to reason about.
 const measure = (text: string): number => text.length * 10
@@ -16,12 +31,25 @@ const lyrics = (offsetSec = 0): SongLyrics => ({
 })
 
 describe('coverCrop', () => {
-  it('crops the sides of a wide picture to fill a tall frame', () => {
-    expect(coverCrop(2000, 1000, 9, 16)).toEqual({ x: 718.75, y: 0, width: 562.5, height: 1000 })
-  })
-
-  it('crops the top and bottom of a tall picture to fill a wide frame', () => {
-    expect(coverCrop(1000, 2000, 16, 9)).toEqual({ x: 0, y: 718.75, width: 1000, height: 562.5 })
+  it.each([
+    [
+      'the sides of a wide picture to fill a tall frame',
+      2000,
+      1000,
+      9,
+      16,
+      [718.75, 0, 562.5, 1000]
+    ],
+    [
+      'the top and bottom of a tall picture to fill a wide frame',
+      1000,
+      2000,
+      16,
+      9,
+      [0, 718.75, 1000, 562.5]
+    ]
+  ])('crops %s', (_, width, height, frameWidth, frameHeight, [x, y, w, h]) => {
+    expect(coverCrop(width, height, frameWidth, frameHeight)).toEqual({ x, y, width: w, height: h })
   })
 })
 
@@ -48,30 +76,22 @@ describe('wrapText', () => {
 })
 
 describe('lyricsAt', () => {
-  it('shows the coming line before the first is sung', () => {
-    expect(lyricsAt(lyrics(), 0)).toEqual({ current: '', next: 'First line' })
-  })
-
-  it('shows the line being sung and the next one with words', () => {
-    expect(lyricsAt(lyrics(), 3)).toEqual({ current: 'First line', next: 'Second line' })
-  })
-
-  it('shows only the coming line during a pause', () => {
-    expect(lyricsAt(lyrics(), 6)).toEqual({ current: '', next: 'Second line' })
-  })
-
-  it('follows the timing nudge', () => {
-    expect(lyricsAt(lyrics(2), 3)).toEqual({ current: '', next: 'First line' })
+  it.each([
+    ['the coming line before the first is sung', 0, 0, '', 'First line'],
+    ['the line being sung and the next one with words', 0, 3, 'First line', 'Second line'],
+    ['only the coming line during a pause', 0, 6, '', 'Second line'],
+    ['the coming line when the timing nudge holds the first back', 2, 3, '', 'First line']
+  ])('shows %s', (_, offsetSec, atSec, current, next) => {
+    expect(lyricsAt(lyrics(offsetSec), atSec)).toEqual({ current, next })
   })
 })
 
 describe('inkFor', () => {
-  it('writes dark on a light colour', () => {
-    expect(inkFor('#f7e8c0')).toBe('dark')
-  })
-
-  it('writes light on a dark colour', () => {
-    expect(inkFor('#203040')).toBe('light')
+  it.each([
+    ['#f7e8c0', 'dark'],
+    ['#203040', 'light']
+  ])('writes on %s in %s ink', (colour, ink) => {
+    expect(inkFor(colour)).toBe(ink)
   })
 })
 
@@ -155,5 +175,59 @@ describe('stepSize', () => {
 
   it('steps from the nearest size when between them', () => {
     expect(stepSize(70, sizes, 1)).toBe(96)
+  })
+})
+
+describe('anchoredColumn', () => {
+  const frame = { width: 1000, margin: 100 }
+
+  it('runs left-aligned lines from the edge to the right margin', () => {
+    expect(anchoredColumn(300, 'left', frame, 200)).toEqual({ anchor: 300, wrapWidth: 600 })
+  })
+
+  it('runs right-aligned lines back to the left margin', () => {
+    expect(anchoredColumn(900, 'right', frame, 200)).toEqual({ anchor: 900, wrapWidth: 800 })
+  })
+
+  it('gives centred lines as much room as the nearer margin allows on both sides', () => {
+    expect(anchoredColumn(400, 'center', frame, 200)).toEqual({ anchor: 400, wrapWidth: 600 })
+  })
+
+  it('keeps room for the narrowest column near an edge', () => {
+    expect(anchoredColumn(850, 'left', frame, 200)).toEqual({ anchor: 700, wrapWidth: 200 })
+    expect(anchoredColumn(50, 'center', frame, 200)).toEqual({ anchor: 200, wrapWidth: 200 })
+  })
+})
+
+describe('lineAnchor and blockCentre', () => {
+  it('turn a block’s centre into where its lines start, and back', () => {
+    for (const align of ALIGNS) {
+      expect(blockCentre(lineAnchor(500, 200, align), 200, align)).toBe(500)
+    }
+    expect(lineAnchor(500, 200, 'left')).toBe(400)
+    expect(lineAnchor(500, 200, 'right')).toBe(600)
+  })
+})
+
+describe('moveEdge', () => {
+  const frame = { width: 1000, margin: 100 }
+  const column = { left: 300, right: 700 }
+
+  it('moves one side and keeps the other still', () => {
+    expect(moveEdge(column, 'right', 600, frame, 200)).toEqual({ left: 300, right: 600 })
+    expect(moveEdge(column, 'left', 200, frame, 200)).toEqual({ left: 200, right: 700 })
+  })
+
+  it('stops at the margins and at the narrowest column', () => {
+    expect(moveEdge(column, 'right', 950, frame, 200)).toEqual({ left: 300, right: 900 })
+    expect(moveEdge(column, 'left', 650, frame, 200)).toEqual({ left: 500, right: 700 })
+  })
+})
+
+describe('columnEdges and anchorOf', () => {
+  it.each(ALIGNS)('turn a %s-aligned column’s anchor into its edges, and back', (align) => {
+    const edges = columnEdges(500, 200, align)
+    expect(edges.right - edges.left).toBe(200)
+    expect(anchorOf(edges, align)).toBe(500)
   })
 })

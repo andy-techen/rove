@@ -95,6 +95,10 @@ export const STROKE_ICONS = {
   // Smaller and larger words: a T with a minus or a plus beside it.
   textSmaller: 'M4 8h10M9 8v11M16 6h5',
   textLarger: 'M4 8h10M9 8v11M16 6h5M18.5 3.5v5',
+  // Lining text up: three lines of different lengths, held against one side or the middle.
+  alignLeft: 'M4 6h16M4 12h10M4 18h13',
+  alignCenter: 'M4 6h16M7 12h10M5.5 18h13',
+  alignRight: 'M4 6h16M10 12h10M7 18h13',
   // Snap into line: a box with a guide line running through its centre.
   snap: 'M8 7h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zM12 3v18'
 } as const

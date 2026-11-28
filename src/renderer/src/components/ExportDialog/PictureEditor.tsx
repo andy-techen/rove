@@ -11,6 +11,7 @@ import {
   WORDS_SIZE,
   inkOn
 } from '../../audio/export/videoFrame'
+import { DEFAULT_FONT } from '../../audio/export/videoFonts'
 import { SongLyrics, isTimed } from '../../state/lyrics/lyrics'
 import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
@@ -74,6 +75,9 @@ export function PictureEditor({
       text: '',
       colour: null,
       size: WORDS_SIZE,
+      font: DEFAULT_FONT,
+      align: 'center',
+      width: null,
       position
     }
     setTexts([...texts, box])
@@ -134,6 +138,9 @@ export function PictureEditor({
           onAdd={addWordsAt}
           onChange={updateText}
           onRemove={remove}
+          onLyricsChange={(change) =>
+            onChange({ ...value, lyricsStyle: { ...value.lyricsStyle, ...change } })
+          }
           tools={
             <>
               <IconButton

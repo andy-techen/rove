@@ -1,0 +1,56 @@
+import { CSSProperties } from 'react'
+import { t } from '@shared/copy'
+import { stepSize } from '../../audio/export/videoLayout'
+import { LYRICS_SIZES, LyricsStyle, lyricsEdge } from '../../audio/export/videoFrame'
+import { FontId } from '../../audio/export/videoFonts'
+import { IconButton } from '../ui/IconButton'
+import { AlignButton } from './AlignButton'
+import { PictureBar } from './PictureBar'
+
+interface Props {
+  style: LyricsStyle
+  /** The top of the lyrics, as a share of the frame's height. */
+  top: number
+  placement: CSSProperties
+  fonts: FontId[]
+  onChange(change: Partial<LyricsStyle>): void
+}
+
+/** Font, size and lining up for the lyrics, just above them. */
+export function LyricsBar({ style, top, placement, fonts, onChange }: Props): React.JSX.Element {
+  return (
+    <PictureBar
+      top={top}
+      placement={placement}
+      font={style.font}
+      fonts={fonts}
+      onFont={(font) => onChange({ font })}
+      after={
+        <>
+          <AlignButton
+            align={style.align}
+            // Lined up a new way, the lyrics go to that margin (or the middle), where that
+            // alignment reads best; they can be dragged on from there.
+            onAlign={(align) =>
+              onChange({ align, position: { ...style.position, x: lyricsEdge(align) } })
+            }
+          />
+          <IconButton
+            icon="textSmaller"
+            iconSize="secondary"
+            label={t('export.video.lyricsSmaller')}
+            disabled={style.size <= LYRICS_SIZES[0]}
+            onClick={() => onChange({ size: stepSize(style.size, LYRICS_SIZES, -1) })}
+          />
+          <IconButton
+            icon="textLarger"
+            iconSize="secondary"
+            label={t('export.video.lyricsLarger')}
+            disabled={style.size >= LYRICS_SIZES[LYRICS_SIZES.length - 1]}
+            onClick={() => onChange({ size: stepSize(style.size, LYRICS_SIZES, 1) })}
+          />
+        </>
+      }
+    />
+  )
+}

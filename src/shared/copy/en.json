@@ -793,6 +793,57 @@
       "removeWords": "Remove these words",
       "smaller": "Smaller words",
       "larger": "Larger words",
+      "font": "Font: {name}",
+      "fontTip": "Change the font",
+      "fontSamples": {
+        "latin": "Aa",
+        "chinese": "字"
+      },
+      "fonts": {
+        "clean": "Clean",
+        "classic": "Classic",
+        "elegant": "Elegant",
+        "modern": "Modern",
+        "rounded": "Rounded",
+        "headline": "Headline",
+        "poster": "Poster",
+        "handwritten": "Handwritten",
+        "notebook": "Notebook",
+        "marker": "Marker",
+        "playful": "Playful",
+        "chalk": "Chalk",
+        "script": "Script",
+        "fairytale": "Fairytale",
+        "typewriter": "Typewriter",
+        "heiti": "黑体",
+        "songti": "宋体",
+        "kaiti": "楷体",
+        "yuanti": "圆体",
+        "xingkai": "行楷",
+        "hannotate": "手札体",
+        "hanzipen": "翩翩体",
+        "wawati": "娃娃体",
+        "libian": "隶变",
+        "weibei": "魏碑"
+      },
+      "lyricsOnPicture": "Lyrics",
+      "lyricsEdges": {
+        "left": "Left edge of the lyrics",
+        "right": "Right edge of the lyrics"
+      },
+      "wordsEdges": {
+        "left": "Left edge of the words",
+        "right": "Right edge of the words"
+      },
+      "edgeTip": "Drag to resize. Double-click to fit.",
+      "align": "Line up: {side}",
+      "aligns": {
+        "left": "left",
+        "center": "centre",
+        "right": "right"
+      },
+      "lyricsSmaller": "Smaller lyrics",
+      "lyricsLarger": "Larger lyrics",
       "addWords": "Add words",
       "addWordsTip": "Add words (or click anywhere on the picture)",
       "snap": "Snap into line",
