@@ -1,10 +1,19 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { Mode, Transport } from '../../state/transport/useTransport'
 import type { Microphone } from '../../state/transport/useMicrophone'
-import { Project, createProject, withNewTrack, withRecordedClip } from '../../state/song/project'
+import {
+  Project,
+  createProject,
+  withChartBars,
+  withChordBacking,
+  withNewTrack,
+  withRecordedClip
+} from '../../state/song/project'
+import { chartFromText } from '../../state/chords/theory/chordText'
+import { chordName } from '../../state/chords/theory/noteNames'
 import { createFakeApi, fireMenu } from '../../test/fakeApi'
 import { RecordScreen } from '.'
 
@@ -59,10 +68,15 @@ function song(): Project {
   return withRecordedClip(backing.project, backing.track.id, music)
 }
 
-/** Opens the song with the playhead at `position`; resolves once its tracks show. */
-async function openSong({ position = 2, mode = 'idle' as Mode } = {}) {
+/** The song with an instrumental playing `chart`, written as a chord sheet. */
+function songWithChords(chart: string): Project {
+  const { project, track } = withChordBacking(song(), chartFromText(chart).bars[0][0])
+  return withChartBars(project, track.id, chartFromText(chart).bars)
+}
+
+/** Opens `project` with the playhead at `position`; resolves once its tracks show. */
+async function openSong({ position = 2, mode = 'idle' as Mode, project = song() } = {}) {
   transport.current = fakeTransport(position, mode)
-  const project = song()
   render(
     <RecordScreen
       initial={{ dir: '/songs/Song', name: 'Song', manifest: project }}
@@ -96,6 +110,16 @@ const rightClickTake = (project: Project) =>
   fireEvent.contextMenu(
     document.querySelector(`[data-track="${idOf(project, 'Vocal 1')}"] [data-clip-id]`)!
   )
+
+// The timeline shows the same bars; these are the ones in the Instrumental panel's chart.
+const chordBar = (n: number, chords: string) =>
+  within(screen.getByRole('list', { name: t('chords.bars') })).getByRole('button', {
+    name: t('chords.barLabel', { n, chords })
+  })
+const chartOf = (project: Project) =>
+  project.tracks
+    .find((track) => track.role === 'chords')!
+    .chart!.bars.map((bar) => bar.map(chordName).join(' '))
 
 /** What File ▸ Save writes to project.json. */
 async function saved(): Promise<Project> {
@@ -155,6 +179,19 @@ describe('RecordScreen', () => {
     const starts = clipsOf(await saved(), 'Vocal 1').map((clip) => clip.start)
     expect(starts).toEqual([0, 4])
     expect(transport.current.seek).toHaveBeenCalledWith(8)
+  })
+
+  it('pastes copied chord bars in after the picked ones', async () => {
+    const project = await openSong({ project: songWithChords('| C | F | G |') })
+    const chords = project.tracks.find((track) => track.role === 'chords')!
+    await userEvent.click(trackName(chords.name))
+    await userEvent.click(chordBar(2, 'F'))
+    fireEvent.click(chordBar(3, 'G'), { shiftKey: true })
+    fireMenu('copy')
+    fireMenu('paste')
+    // Paste reads the system clipboard first, in case chords were copied from elsewhere.
+    await waitFor(() => expect(chordBar(5, 'G')).toBeInTheDocument())
+    expect(chartOf(await saved())).toEqual(['C', 'F', 'G', 'F', 'G'])
   })
 
   it('picks a track with ⌘ and its number, so Delete removes that track', async () => {
