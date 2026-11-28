@@ -3,6 +3,7 @@ import type { CatalogGenre, CatalogLanguage, CatalogSong } from '@shared/catalog
 import { t } from '@shared/copy'
 import type { WishlistItem } from '@shared/wishlist'
 import { Icon } from '../ui/Icon'
+import { raised } from '../ui/Raised'
 import { useOutsideClose } from '../ui/useOutsideClose'
 import { IconButton } from '../ui/IconButton'
 import { SearchField } from '../ui/SearchField'
@@ -287,7 +288,11 @@ function FilterDropdown({
         <Icon name="chevronDown" size="secondary" />
       </button>
       {open && (
-        <div className="explore-filter-popover" role="group" aria-label={t(group.labelKey)}>
+        <div
+          className={cx('explore-filter-popover', raised)}
+          role="group"
+          aria-label={t(group.labelKey)}
+        >
           {group.options.map((option) => (
             <label key={option.value} className="explore-filter-option">
               <input

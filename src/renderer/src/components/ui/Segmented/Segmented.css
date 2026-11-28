@@ -1,0 +1,39 @@
+/* The track is a see-through tint and the chosen segment the page colour, so the group
+   reads the same on the page and on a raised surface, in both themes. No accent: the
+   choice is a setting, not the singer's main action. */
+.segmented {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--color-highlight);
+}
+
+.segmented-option {
+  flex: 1;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-ui);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.segmented-option:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.segmented-option[aria-pressed='true'] {
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.segmented-option:disabled {
+  opacity: var(--opacity-disabled);
+  /* The plain arrow: a no-entry cursor would sit over a tooltip saying why. */
+  cursor: default;
+}

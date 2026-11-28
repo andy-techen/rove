@@ -6,6 +6,8 @@ import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
 import { NumberField, parseTypedNumber } from '../ui/NumberField'
+import { raised } from '../ui/Raised'
+import { Segmented } from '../ui/Segmented'
 import { cx } from '../ui/cx'
 import { Slider } from '../ui/Slider'
 import { useOutsideClose } from '../ui/useOutsideClose'
@@ -69,7 +71,7 @@ export function Beat({ click, tempo, locked }: Props): React.JSX.Element {
         onClick={() => setOpen((v) => !v)}
       />
       {open && (
-        <div className="beat-popover" role="group" aria-label={t('beat.title')}>
+        <div className={cx('beat-popover', raised)} role="group" aria-label={t('beat.title')}>
           <div className="beat-row">
             <span className="beat-label">{t('music.click')}</span>
             {/* Off until asked for: the speaker shows muted, and a click turns it on. */}
@@ -133,23 +135,14 @@ export function Beat({ click, tempo, locked }: Props): React.JSX.Element {
               </div>
               <div className="beat-row">
                 <span className="beat-label">{t('beat.count')}</span>
-                <span className="beat-count" role="group" aria-label={t('chords.countLabel')}>
-                  {COUNTS.map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      className={cx(
-                        'beat-count-option',
-                        tempo.value.beatsPerBar === n && 'beat-count-on'
-                      )}
-                      aria-pressed={tempo.value.beatsPerBar === n}
-                      disabled={locked}
-                      onClick={() => tempo.onBeats(n)}
-                    >
-                      {t('chords.countOf', { n })}
-                    </button>
-                  ))}
-                </span>
+                <Segmented
+                  className="beat-count"
+                  label={t('chords.countLabel')}
+                  options={COUNTS.map((n) => ({ value: n, label: t('chords.countOf', { n }) }))}
+                  value={tempo.value.beatsPerBar}
+                  disabled={locked}
+                  onChange={tempo.onBeats}
+                />
                 <HelpTip lines={[t('chords.tempoHelp.what'), t('chords.tempoHelp.unsure')]} />
               </div>
             </>

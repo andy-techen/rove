@@ -1,0 +1,9 @@
+/* A surface raised off the page: a popover, the chord picker. The usual button fills
+   would vanish on it, so its icon, ghost and quiet buttons step theirs off it instead. */
+.raised {
+  --hover-fill: var(--color-highlight);
+  --quiet-fill: var(--color-surface);
+  border: var(--size-hairline) solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}

@@ -52,6 +52,7 @@ export function AppDialog({ section, onSection, onClose }: Props): React.JSX.Ele
       closeLabel={t('appDialog.close')}
       onClose={onClose}
       className="app-dialog"
+      fill
       sizeKey="appDialog"
     >
       <div className="app-dialog-body">

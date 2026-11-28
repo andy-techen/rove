@@ -20,12 +20,6 @@
   margin-bottom: var(--space-8);
 }
 
-/* Only while open: a closed <dialog> must stay display: none. */
-.app-dialog[open] {
-  display: flex;
-  flex-direction: column;
-}
-
 .app-dialog-body {
   display: grid;
   flex: 1;

@@ -29,8 +29,8 @@ hears.
   on hover and while on (pressed or open). Don't restyle the box per component; only
   colour changes for meaning (accent while playing, red for record). On a raised
   surface (a popover, the chord picker), the normal fills wouldn't show, so the surface
-  sets `--hover-fill: var(--color-highlight)` and `--quiet-fill: var(--color-surface)`,
-  and every icon, ghost and quiet button in it follows.
+  takes the `raised` class (`ui/Raised`), which sets `--hover-fill` and `--quiet-fill`;
+  every icon, ghost and quiet button in it follows.
 - **Small actions in a row of controls are `quiet` buttons** ("Tap"): a soft fill, no
   border, so they read as clickable without standing out like `secondary`.
 - **Every dialog resizes.** Any popup can be dragged bigger or smaller by its corner,
@@ -112,19 +112,20 @@ Reach for these before writing new markup:
 | `Slider`       | Range inputs (lane volume and position, Advanced). `centre` for two-way ones.                                                                  |
 | `Knob`         | A turnable control. `centre` for ones that go both ways (speed, key).                                                                          |
 | `KnobControl`  | A knob with its name, help and value, as panels show it; lay out in a `KnobRow`. `setBy` marks one Rove turned (why, on hover).                |
-| `Dialog`       | Every popup: title, close button, Esc to close, resizable from its corner (`sizeKey` remembers the size).                                      |
+| `Dialog`       | Every popup: title, close button, Esc to close, resizable from its corner (`sizeKey` remembers the size); `fill` lays content out to grow.     |
 | `Panel`        | A titled panel under the timeline (Polish, Music), with header actions.                                                                        |
 | `Splitter`     | A draggable edge between areas (side panel width, the lyrics/chords split).                                                                    |
 | `NumberField`  | A number to type over (Enter applies, Esc reverts); pair it with a slider.                                                                     |
 | `Switch`       | On/off toggles with a label.                                                                                                                   |
+| `Segmented`    | A few choices side by side, one on (views, tabs, a count): a `role="group"` of `aria-pressed` buttons. No accent fill.                         |
+| `raised`       | The class for a raised surface (a popover, the chord picker): border, raised fill, and the button fills that show on it (`ui/Raised`).         |
 | `HelpTip`      | A "?" that reveals help on hover or focus: `text` for a sentence; `lines` (steps) and `items` (bullets) for longer help.                       |
 | `Snackbar`     | One-off news the singer needn't act on ("Auto-polished."), bottom left: call `showSnack(text)`. Warnings and errors stay beside their control. |
 | `Logo`         | The app icon with the "rove" wordmark (top bar `sm`, full-screen headings `lg`).                                                               |
 
-If a pattern repeats in two places, promote it to `ui/`. Things that have been copied
-before and should be promoted next time they're needed: a segmented control (a group of
-`aria-pressed` buttons), a popover surface (which also sets the raised-surface fills),
-and click-versus-drag handling with one shared threshold.
+If a pattern repeats in two places, promote it to `ui/`. Something that has been copied
+before and should be promoted next time it's needed: click-versus-drag handling with one
+shared threshold.
 
 ## Accessibility
 

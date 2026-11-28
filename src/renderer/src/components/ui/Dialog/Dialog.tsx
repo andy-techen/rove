@@ -18,6 +18,8 @@ interface Props {
   /** A field to start in, for a dialog that's there to be typed into. */
   initialFocus?: RefObject<HTMLElement | null>
   className?: string
+  /** Lays the content out as a column, so a part of it (a list, a picture) can grow with the dialog. */
+  fill?: boolean
   /** Geometry worked out at run time, as CSS custom properties. */
   style?: CSSProperties
   /** The dialog element, for a caller that measures it. */
@@ -33,6 +35,7 @@ export function Dialog({
   children,
   initialFocus,
   className,
+  fill,
   style,
   dialogRef
 }: Props): React.JSX.Element {
@@ -55,7 +58,7 @@ export function Dialog({
         dialog.current = el
         if (dialogRef) dialogRef.current = el
       }}
-      className={cx('dialog', className)}
+      className={cx('dialog', fill && 'dialog-fill', className)}
       style={{ ...dialogSizeStyle(size, 'dialog'), ...style }}
       aria-label={title}
       tabIndex={-1}

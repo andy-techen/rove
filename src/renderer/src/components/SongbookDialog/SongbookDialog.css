@@ -6,32 +6,9 @@
   overflow: hidden;
 }
 
-/* Only while open: a closed <dialog> must stay display: none. */
-.songbook[open] {
-  display: flex;
-  flex-direction: column;
-}
-
 .songbook-views {
-  display: flex;
-  gap: var(--space-2);
+  align-self: flex-start;
   margin-bottom: var(--space-6);
-}
-
-.songbook-view {
-  padding: var(--space-2) var(--space-5);
-  border: var(--size-hairline) solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-ui);
-  cursor: pointer;
-}
-
-.songbook-view.active {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
 }
 
 /* Scrolling clips whatever reaches past the edge, focus rings included, so the body
@@ -294,18 +271,13 @@
 }
 
 .explore-filter-popover {
-  --hover-fill: var(--color-highlight);
-  --quiet-fill: var(--color-surface);
   position: absolute;
   top: calc(100% + var(--space-2));
   left: 0;
   z-index: 1;
   min-width: 11rem;
   padding: var(--space-3);
-  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface-raised);
-  color: var(--color-text);
   box-shadow: var(--shadow-raised);
 }
 

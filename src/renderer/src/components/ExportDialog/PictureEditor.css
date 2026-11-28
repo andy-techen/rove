@@ -6,12 +6,6 @@
   overflow: hidden;
 }
 
-/* Only while open: a closed <dialog> must stay display: none. */
-.picture-editor[open] {
-  display: flex;
-  flex-direction: column;
-}
-
 .picture-editor-body {
   display: flex;
   flex: 1;

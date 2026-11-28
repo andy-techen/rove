@@ -163,9 +163,6 @@ section.panel.chord-backing-panel {
 }
 
 .chord-picker {
-  /* Raised already, so fills step off it (see docs/design.md). */
-  --hover-fill: var(--color-highlight);
-  --quiet-fill: var(--color-surface);
   min-height: 0;
   max-height: 100%;
   overflow-y: auto;
@@ -173,9 +170,7 @@ section.panel.chord-backing-panel {
   flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-6);
-  border: var(--size-hairline) solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-surface-raised);
 }
 
 .picker-head {
@@ -212,31 +207,6 @@ section.panel.chord-backing-panel {
 /* In this key / All chords: a small two-way switch, either a click away. */
 .picker-tabs {
   display: flex;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-}
-
-.picker-tab {
-  flex: 1;
-  padding: var(--space-2) var(--space-3);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--color-text-muted);
-  font: inherit;
-  font-size: var(--font-size-ui);
-}
-
-.picker-tab:hover {
-  color: var(--color-text);
-}
-
-.picker-tab-on {
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-  font-weight: var(--font-weight-semibold);
 }
 
 .picker-roots {
