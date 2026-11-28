@@ -15,6 +15,7 @@ export function RemoveSongDialog({ name, onRemove, onCancel }: Props): React.JSX
       title={t('songbook.removeTitle', { name })}
       closeLabel={t('songbook.cancel')}
       onClose={onCancel}
+      sizeKey="removeSong"
       className="remove-song"
     >
       <p className="remove-song-warning">{t('songbook.removeWarning')}</p>

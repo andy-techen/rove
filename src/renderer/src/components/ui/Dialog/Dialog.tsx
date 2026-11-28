@@ -1,18 +1,24 @@
 import { CSSProperties, ReactNode, RefObject, useEffect, useRef } from 'react'
 import { IconButton } from '../IconButton'
 import { cx } from '../cx'
+import { dialogSizeStyle, useDialogSize } from '../../../state/ui/dialogSize'
 import './Dialog.css'
 
 interface Props {
   title: string
   /** Accessible name of the close button. */
   closeLabel: string
+  /**
+   * Every dialog can be dragged bigger or smaller by its corner; the size it was dragged
+   * to comes back next time under this name.
+   */
+  sizeKey: string
   onClose(): void
   children: ReactNode
   /** A field to start in, for a dialog that's there to be typed into. */
   initialFocus?: RefObject<HTMLElement | null>
   className?: string
-  /** Geometry worked out at run time, as CSS custom properties (a remembered size). */
+  /** Geometry worked out at run time, as CSS custom properties. */
   style?: CSSProperties
   /** The dialog element, for a caller that measures it. */
   dialogRef?: RefObject<HTMLDialogElement | null>
@@ -22,6 +28,7 @@ interface Props {
 export function Dialog({
   title,
   closeLabel,
+  sizeKey,
   onClose,
   children,
   initialFocus,
@@ -30,6 +37,7 @@ export function Dialog({
   dialogRef
 }: Props): React.JSX.Element {
   const dialog = useRef<HTMLDialogElement>(null)
+  const size = useDialogSize(dialog, sizeKey)
   useEffect(() => {
     const el = dialog.current
     // showModal traps focus and closes on Escape. It would also focus the close button,
@@ -48,7 +56,7 @@ export function Dialog({
         if (dialogRef) dialogRef.current = el
       }}
       className={cx('dialog', className)}
-      style={style}
+      style={{ ...dialogSizeStyle(size, 'dialog'), ...style }}
       aria-label={title}
       tabIndex={-1}
       onClose={onClose}

@@ -64,6 +64,7 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
     chooseExportPath: vi.fn(async (name: string, format: string) => `/Music/${name}.${format}`),
     writeExport: vi.fn(async () => {}),
     revealExport: vi.fn(async () => {}),
+    shareExport: vi.fn(async () => {}),
     searchLyrics: vi.fn(async (): Promise<LyricsResult[]> => []),
     setTheme: vi.fn(async (theme: Theme) => theme),
     readSeparationModel: vi.fn(async () => new Uint8Array()),

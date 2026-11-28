@@ -1,0 +1,234 @@
+/* Big enough to place words by eye; resizes like every dialog, and the picture grows
+   with it. */
+.picture-editor {
+  --dialog-default-width: var(--layout-picture-editor);
+  --dialog-default-height: var(--layout-picture-editor-height);
+  overflow: hidden;
+}
+
+/* Only while open: a closed <dialog> must stay display: none. */
+.picture-editor[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.picture-editor-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-7);
+  min-height: 0;
+}
+
+/* The picture takes all the height it can, at the video's shape, centred with room on
+   both sides for its tools, so it stays in the middle. */
+.picture-stage {
+  --picture-tools-room: calc(var(--size-control-md) + var(--space-6));
+  display: flex;
+  flex: 1;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  container-type: size;
+}
+
+.picture-stage-wrap {
+  position: relative;
+  height: min(100cqh, (100cqw - 2 * var(--picture-tools-room)) * 16 / 9);
+  aspect-ratio: 9 / 16;
+}
+
+/* The tools sit just right of the picture, top-aligned, like a story editor's. */
+.picture-stage-tools {
+  position: absolute;
+  top: 0;
+  left: calc(100% + var(--space-6));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.picture-stage-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+  touch-action: none;
+  /* Click anywhere to type, as on a phone. */
+  cursor: text;
+  /* Sizes inside (the words being typed) scale with the picture. */
+  container-type: size;
+}
+
+/* Each set of words: invisible over the drawn words, so they can be clicked, focused and
+   dragged. Placed as fractions of the frame (--left, --top, --width, --height). */
+.picture-words,
+.picture-words-field {
+  position: absolute;
+  left: calc(var(--left) * 100%);
+  top: calc(var(--top) * 100%);
+  width: calc(var(--width) * 100%);
+  height: calc(var(--height) * 100%);
+  border-radius: var(--radius-md);
+}
+
+.picture-words {
+  cursor: move;
+}
+
+.picture-words:hover {
+  outline: var(--size-hairline) dashed var(--color-guide);
+}
+
+.picture-words[data-selected] {
+  outline: var(--size-focus-ring) dashed var(--color-guide);
+}
+
+:root:not([data-input='pointer']) .picture-words:focus-visible {
+  outline: var(--size-focus-ring) solid var(--color-accent);
+}
+
+/* The words being typed: set like the video draws them, at the picture's scale. */
+.picture-words-field {
+  padding: 0;
+  border: none;
+  outline: var(--size-focus-ring) dashed var(--color-guide);
+  background: none;
+  color: var(--words-colour);
+  caret-color: var(--words-colour);
+  font-family: var(--font-family);
+  font-size: calc(var(--words-size) * 100cqw / var(--video-width));
+  font-weight: var(--words-weight);
+  line-height: var(--words-line);
+  text-align: center;
+  white-space: pre-wrap;
+  overflow: hidden;
+  resize: none;
+}
+
+/* Colour and remove for the chosen words, just above them (below, near the top). */
+.picture-words-bar {
+  --hover-fill: var(--color-highlight);
+  --quiet-fill: var(--color-surface);
+  position: absolute;
+  left: calc((var(--left) + var(--width) / 2) * 100%);
+  top: calc(var(--top) * 100%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-raised);
+  transform: translate(-50%, calc(-100% - var(--space-3)));
+  cursor: default;
+}
+
+.picture-words-bar[data-below] {
+  top: calc((var(--top) + var(--height)) * 100%);
+  transform: translate(-50%, var(--space-3));
+}
+
+.picture-words-bar .picture-swatch {
+  width: var(--size-control-sm);
+  height: var(--size-control-sm);
+}
+
+.picture-stage-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* A smart guide: the line dragged words were pulled onto, shown only while it holds. */
+.picture-guide {
+  position: absolute;
+  pointer-events: none;
+  background: var(--color-snap-guide);
+}
+
+.picture-guide-across {
+  top: 0;
+  bottom: 0;
+  left: calc(var(--at) * 100%);
+  width: var(--size-hairline);
+}
+
+.picture-guide-down {
+  left: 0;
+  right: 0;
+  top: calc(var(--at) * 100%);
+  height: var(--size-hairline);
+}
+
+/* The backgrounds, in a row under the picture. The padding leaves room for the chosen
+   swatch's ring, which would otherwise be cut off at the row's edge. */
+.picture-swatches {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-3);
+  border: none;
+}
+
+/* The fill is the background's own colours or picture, set from data on the element. */
+.picture-swatch {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-control-md);
+  height: var(--size-control-md);
+  border: var(--size-hairline) solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: linear-gradient(var(--swatch-top), var(--swatch-bottom));
+  cursor: pointer;
+}
+
+.picture-swatch-thumb {
+  width: 100%;
+  height: 100%;
+}
+
+.picture-swatch:has(input:checked),
+.picture-swatch-colour[data-picked] {
+  outline: var(--size-focus-ring) solid var(--color-accent);
+  outline-offset: var(--size-hairline);
+}
+
+:root:not([data-input='pointer']) .picture-swatch:has(input:focus-visible) {
+  outline: var(--size-focus-ring) solid var(--color-accent);
+  outline-offset: var(--size-focus-ring);
+}
+
+/* A colour swatch shows the colour it picks; its icon keeps it from reading as a preset. */
+.picture-swatch-colour {
+  background: var(--swatch-colour);
+  color: var(--color-thumb);
+}
+
+.picture-swatch-add {
+  border-style: dashed;
+  background: none;
+  color: var(--color-text-muted);
+}
+
+.picture-swatch-add:hover {
+  background: var(--hover-fill, var(--color-highlight));
+  color: var(--color-text);
+}
+
+.picture-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-7);
+}

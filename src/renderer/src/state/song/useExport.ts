@@ -5,10 +5,30 @@ import { processProject } from '../processing/processedAudio'
 import { songKeyOf } from '../processing/songKey'
 import { Song } from './useSong'
 import { ChordPart } from '../chords/chart'
+import { SongLyrics } from '../lyrics/lyrics'
+import { VideoOptions, VideoScene } from '../../audio/export/videoFrame'
 
 export interface ExportOptions {
   format: ExportFormat
   loudness: ExportLoudness
+  /** The picture, words and lyrics for a video (mp4) export. */
+  video?: VideoOptions
+}
+
+/** Decodes the singer's picture and picks the lyrics to show, ready to draw. */
+async function sceneOf(
+  video: VideoOptions,
+  lyrics: SongLyrics | null | undefined
+): Promise<VideoScene> {
+  const { background } = video
+  return {
+    ...video,
+    background:
+      background.kind === 'picture'
+        ? { kind: 'picture', image: await createImageBitmap(background.file) }
+        : background,
+    lyrics: video.lyrics ? (lyrics ?? null) : null
+  }
 }
 
 export type ExportState =
@@ -22,6 +42,8 @@ export interface Exporter {
   /** Asks where to save, then mixes, levels, encodes and writes the song there. */
   start(options: ExportOptions): Promise<void>
   reveal(): void
+  /** Shares the saved file: AirDrop to a phone, Messages, Mail and so on. */
+  share(): void
   reset(): void
 }
 
@@ -42,7 +64,8 @@ export function useExport(song: Song, parts: ChordPart[]): Exporter {
         const key = await songKeyOf(open.data, song.audio)
         const processed = await processProject(open.data, song.audio, key)
         const { tracks, lengthSec } = mixdownOf(open.data, song.audio, processed, parts)
-        const bytes = await exportMix(tracks, lengthSec, options, (stage) =>
+        const video = options.video && (await sceneOf(options.video, open.data.lyrics))
+        const bytes = await exportMix(tracks, lengthSec, { ...options, video }, (stage) =>
           setState({ status: 'working', stage })
         )
         setState({ status: 'working', stage: { stage: 'saving' } })
@@ -54,6 +77,9 @@ export function useExport(song: Song, parts: ChordPart[]): Exporter {
     },
     reveal: () => {
       if (state.status === 'done') void window.api.revealExport(state.filePath)
+    },
+    share: () => {
+      if (state.status === 'done') void window.api.shareExport(state.filePath)
     },
     reset: () => setState({ status: 'idle' })
   }

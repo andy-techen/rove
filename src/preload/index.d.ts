@@ -105,6 +105,8 @@ export interface RoveApi {
   /** Writes an export to the path just chosen (and only that path). */
   writeExport(filePath: string, bytes: Uint8Array): Promise<void>
   revealExport(filePath: string): Promise<void>
+  /** Opens the Mac's share menu (AirDrop, Messages, Mail…) for a file just exported. */
+  shareExport(filePath: string): Promise<void>
   /** Looks up lyrics online by song and artist; throws when the service can't be reached. */
   searchLyrics(query: string): Promise<LyricsResult[]>
   /** Switches the app (and its native menus and dialogs) to a theme, remembered for next time. */

@@ -108,6 +108,7 @@ const api: RoveApi = {
   chooseExportPath: (name, format) => ipcRenderer.invoke(EXPORT_CHANNELS.choose, name, format),
   writeExport: (filePath, bytes) => ipcRenderer.invoke(EXPORT_CHANNELS.write, filePath, bytes),
   revealExport: (filePath) => ipcRenderer.invoke(EXPORT_CHANNELS.reveal, filePath),
+  shareExport: (filePath) => ipcRenderer.invoke(EXPORT_CHANNELS.share, filePath),
   searchLyrics: (query) => ipcRenderer.invoke(LYRICS_CHANNELS.search, query),
   readSeparationModel: () => ipcRenderer.invoke('separation:model'),
   saveInstrumental: (projectDir, source, wav) =>

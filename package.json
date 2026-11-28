@@ -28,7 +28,8 @@
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",
-    "@electron-toolkit/utils": "^4.0.0"
+    "@electron-toolkit/utils": "^4.0.0",
+    "mediabunny": "1.65.2"
   },
   "devDependencies": {
     "@audio/neural-runtime": "0.2.1",
