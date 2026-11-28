@@ -50,6 +50,9 @@ export interface LiveRecording {
 
 export type { ClipRef }
 
+/** What dragging bar 1 can snap to, from the timeline as it's shown. */
+export type BarDragSnap = Pick<SnapView, 'toleranceSec' | 'playheadSec'>
+
 interface Props {
   tracks: LaneView[]
   /** Playhead position in seconds. */
@@ -85,10 +88,9 @@ interface Props {
   onSwapBars(trackId: string, from: number, to: number): void
   /**
    * The grip on an instrumental's first bar was dragged `deltaSec` along the timeline:
-   * where every instrumental's bars start moves with it. It snaps onto something within
-   * `toleranceSec`.
+   * where every instrumental's bars start moves with it, snapping as `snap` allows.
    */
-  onMoveBars(phase: GesturePhase, deltaSec: number, toleranceSec: number): void
+  onMoveBars(phase: GesturePhase, deltaSec: number, snap: BarDragSnap): void
   /** The grip was nudged with an arrow key: bar 1 a little earlier (-1) or later (1). */
   onNudgeBars(direction: -1 | 1): void
   /** The bar open in the Instrumental panel, outlined on its lane. */
@@ -296,6 +298,7 @@ export function Timeline({
   // Where the pointer went down on a bars grip, and whether it has moved far enough to drag.
   const barsDrag = useRef<{ x0: number; moved: boolean } | null>(null)
 
+  const barSnap = (): BarDragSnap => ({ toleranceSec: SNAP_PX / pxPerSec, playheadSec: position })
   /** The grip on an instrumental's first bar: drag it, or nudge it with the arrow keys. */
   const barsGrip = (startSec: number): ReactNode => (
     <Tooltip text={t('timeline.moveBarsHelp')}>
@@ -317,15 +320,14 @@ export function Timeline({
           if (!d.moved) {
             if (Math.abs(e.clientX - d.x0) < DRAG_THRESHOLD_PX) return
             d.moved = true
-            onMoveBars('start', 0, SNAP_PX / pxPerSec)
+            onMoveBars('start', 0, barSnap())
           }
-          onMoveBars('move', (e.clientX - d.x0) / pxPerSec, SNAP_PX / pxPerSec)
+          onMoveBars('move', (e.clientX - d.x0) / pxPerSec, barSnap())
         }}
         onPointerUp={(e) => {
           const d = barsDrag.current
           barsDrag.current = null
-          if (d?.moved && pxPerSec > 0)
-            onMoveBars('end', (e.clientX - d.x0) / pxPerSec, SNAP_PX / pxPerSec)
+          if (d?.moved && pxPerSec > 0) onMoveBars('end', (e.clientX - d.x0) / pxPerSec, barSnap())
         }}
         onKeyDown={(e) => {
           if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return

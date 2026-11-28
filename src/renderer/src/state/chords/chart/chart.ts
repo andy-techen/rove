@@ -203,11 +203,13 @@ export interface BarSnapTargets {
   beat?: { bpm: number; startSec: number } | null
   /** The edges of the clips on the timeline (timeline seconds), like a vocal's start. */
   clipEdges?: number[]
+  /** Where the playhead is, in timeline seconds. */
+  playheadSec?: number
 }
 
 /**
  * Bar 1 dragged `deltaSec` along the timeline from `fromSec`. It snaps onto the start of
- * the song or a clip's edge when it comes within `toleranceSec` (timeline seconds) of
+ * the song, a clip's edge or the playhead when it comes within `toleranceSec` (timeline seconds) of
  * one, else onto the music's nearest beat, so lining the bars up with a vocal or the
  * music is easy. Edges come first, as in a clip drag: beats are so close together that
  * one is nearly always nearer than the edge being aimed for.
@@ -216,7 +218,7 @@ export function draggedBarStart(
   fromSec: number,
   deltaSec: number,
   speed: number,
-  { beat, clipEdges = [] }: BarSnapTargets,
+  { beat, clipEdges = [], playheadSec }: BarSnapTargets,
   toleranceSec: number
 ): DraggedStart {
   const wanted = Math.max(0, fromSec + deltaSec * speed)
@@ -227,7 +229,8 @@ export function draggedBarStart(
   const period = beat && beat.bpm > 0 ? SEC_PER_MIN / beat.bpm : 0
   const beats =
     beat && period ? [beat.startSec + Math.round((wanted - beat.startSec) / period) * period] : []
-  const near = nearest([0, ...clipEdges.map((sec) => sec * speed)]) ?? nearest(beats)
+  const marks = playheadSec === undefined ? clipEdges : [...clipEdges, playheadSec]
+  const near = nearest([0, ...marks.map((sec) => sec * speed)]) ?? nearest(beats)
   return near === undefined
     ? { startSec: tidy(wanted), snappedAt: null }
     : { startSec: tidy(near), snappedAt: tidy(near / speed) }

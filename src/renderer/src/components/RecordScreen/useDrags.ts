@@ -12,7 +12,7 @@ import { SnapView, snapGesture } from '../../state/editing/snapping'
 import { ProcessedAudio, bufferFor } from '../../state/processing/processedAudio'
 import { findClip, musicOf, tempoOf, withSongStart } from '../../state/song/project'
 import type { Song } from '../../state/song/useSong'
-import type { GesturePhase } from '../Timeline'
+import type { BarDragSnap, GesturePhase } from '../Timeline'
 import type { SongSelection } from './useSongSelection'
 
 interface Options {
@@ -36,7 +36,7 @@ export interface Drags {
     overTrackId: string | null
   ): void
   /** Bar 1 dragged along the timeline. */
-  onMoveBars(phase: GesturePhase, deltaSec: number, toleranceSec: number): void
+  onMoveBars(phase: GesturePhase, deltaSec: number, snap: BarDragSnap): void
   onNudgeBars(direction: -1 | 1): void
 }
 
@@ -100,7 +100,7 @@ export function useDrags({ song, canEdit, selection, processed, musicTempo }: Op
       setSnapAt(phase === 'end' ? null : snapped.at)
       if (phase === 'end') gesture.current = null
     },
-    onMoveBars: (phase, deltaSec, toleranceSec) => {
+    onMoveBars: (phase, deltaSec, { toleranceSec, playheadSec }) => {
       if (!open) return
       if (phase === 'start')
         barsDrag.current = {
@@ -117,7 +117,7 @@ export function useDrags({ song, canEdit, selection, processed, musicTempo }: Op
         drag.fromSec,
         deltaSec,
         speed,
-        { beat: musicTempo, clipEdges },
+        { beat: musicTempo, clipEdges, playheadSec },
         toleranceSec
       )
       song.edit(withSongStart(open.data, moved.startSec), drag.key)

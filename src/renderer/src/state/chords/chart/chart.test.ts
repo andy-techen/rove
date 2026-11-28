@@ -288,6 +288,13 @@ describe('moving where the bars start', () => {
     })
   })
 
+  it('snaps onto the playhead', () => {
+    expect(draggedBarStart(1, 0.98, 1, { playheadSec: 2 }, 0.05)).toEqual({
+      startSec: 2,
+      snappedAt: 2
+    })
+  })
+
   it('prefers a clip’s edge to a nearer beat, as a clip drag prefers edges to the grid', () => {
     // Dragged to 1.28: the beat at 1.3 is nearer, but the vocal starting at 1.25 wins.
     expect(draggedBarStart(1, 0.28, 1, { beat, clipEdges: [1.25] }, 0.05).startSec).toBe(1.25)
