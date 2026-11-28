@@ -183,7 +183,8 @@ export function RecordScreen({
   const song = useSong(initial)
   const { song: open, audio, skipBacking, busy } = song
   const songKey = useSongKey(open?.data, audio)
-  const { processed, waiting } = useProcessedAudio(open?.data, audio, songKey)
+  const plan = usePlan()
+  const { processed, waiting } = useProcessedAudio(open?.data, audio, songKey, plan)
   const { beat, file: beatFile } = useBeat(open?.data, audio)
   const chordBacking = useChordBacking(open?.data)
   const chordsTracks = open ? chordsTracksOf(open.data) : []
@@ -752,7 +753,6 @@ export function RecordScreen({
     polishTrack?.role === 'backing' ? polishTrack.id : null
   )
   const error = song.error ?? transport.error
-  const plan = usePlan()
 
   return (
     <div className="screen" hidden={!active}>
@@ -1192,6 +1192,7 @@ export function RecordScreen({
                       : undefined
                   }
                   locked={!canEdit}
+                  canTune={isEnabled('tuning', plan)}
                   onHide={hidePanel}
                   onGrow={growBottomPanel}
                   onChange={(next, key) =>

@@ -3,6 +3,7 @@ import { ExportFormat, ExportLoudness, ExportStage, exportMix } from '../../audi
 import { mixdownOf } from './selectors'
 import { processProject } from '../processing/processedAudio'
 import { songKeyOf } from '../processing/songKey'
+import { usePlan } from '../license/useFeature'
 import { Song } from './useSong'
 import { ChordPart } from '../chords/chart'
 import { SongLyrics } from '../lyrics/lyrics'
@@ -50,6 +51,7 @@ export interface Exporter {
 /** Exporting one song's mix to a file the person picks, with the chords as they sound now. */
 export function useExport(song: Song, parts: ChordPart[]): Exporter {
   const [state, setState] = useState<ExportState>({ status: 'idle' })
+  const plan = usePlan()
   return {
     state,
     start: async (options) => {
@@ -62,7 +64,7 @@ export function useExport(song: Song, parts: ChordPart[]): Exporter {
         // Usually already tuned for playback, so this is quick.
         setState({ status: 'working', stage: { stage: 'tuning' } })
         const key = await songKeyOf(open.data, song.audio)
-        const processed = await processProject(open.data, song.audio, key)
+        const processed = await processProject(open.data, song.audio, key, plan)
         const { tracks, lengthSec } = mixdownOf(open.data, song.audio, processed, parts)
         const video = options.video && (await sceneOf(options.video, open.data.lyrics))
         const bytes = await exportMix(tracks, lengthSec, { ...options, video }, (stage) =>

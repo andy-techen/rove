@@ -5,6 +5,7 @@ import {
   POLISH_CONTROLS,
   PolishParam,
   PolishSettings,
+  controlOf,
   defaultPolish,
   polishParams
 } from '../../audio/polish/polish'
@@ -69,6 +70,8 @@ interface Props {
   polish: PolishSettings
   auto?: AutoPolishControl
   locked: boolean
+  /** Tuning is premium: without it, the panel leaves its knob and settings out. */
+  canTune: boolean
   /** `key` groups a slider drag into one undo step. */
   onChange(next: PolishSettings, key?: string): void
   onHide(): void
@@ -87,6 +90,7 @@ export function PolishPanel({
   polish,
   auto,
   locked,
+  canTune,
   onChange,
   onHide,
   onGrow
@@ -107,6 +111,8 @@ export function PolishPanel({
       key === 'tuning' || !suggestion ? null : autoMark(key, polish, suggestion, sweetSpot)
     return mark && t(MARK_COPY[mark] ?? `polish.auto.reasons.${mark as AutoPolishReason}`)
   }
+  const controls = POLISH_CONTROLS.filter((key) => canTune || key !== 'tuning')
+  const advancedParams = PARAMS.filter((key) => canTune || controlOf(key) !== 'tuning')
   const params = polishParams(polish)
   const overrides = polish.advanced ?? {}
 
@@ -170,7 +176,7 @@ export function PolishPanel({
         </p>
       )}
       <KnobRow dimmed={!polish.enabled}>
-        {POLISH_CONTROLS.map((key) => {
+        {controls.map((key) => {
           const name = t(`polish.controls.${key}.label`)
           return (
             <KnobControl
@@ -210,7 +216,7 @@ export function PolishPanel({
 
       {advanced && (
         <div className={cx('advanced-grid', !polish.enabled && 'polish-off')}>
-          {PARAMS.map((key) => {
+          {advancedParams.map((key) => {
             const range = PARAM_RANGES[key]
             const custom = key in overrides
             const shown = paramDisplay(key, params[key])

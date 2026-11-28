@@ -5,7 +5,7 @@ import { t } from '@shared/copy'
 import { defaultPolish } from '../../audio/polish/polish'
 import { PolishPanel } from '.'
 
-function renderPanel(polish = defaultPolish('lead')) {
+function renderPanel(polish = defaultPolish('lead'), canTune = true) {
   const onChange = vi.fn()
   render(
     <PolishPanel
@@ -13,6 +13,7 @@ function renderPanel(polish = defaultPolish('lead')) {
       part="lead"
       polish={polish}
       locked={false}
+      canTune={canTune}
       onChange={onChange}
       onHide={vi.fn()}
     />
@@ -31,6 +32,7 @@ describe('PolishPanel', () => {
         part="lead"
         polish={defaultPolish('lead')}
         locked={false}
+        canTune
         onChange={vi.fn()}
         onHide={onHide}
       />
@@ -133,5 +135,14 @@ describe('PolishPanel', () => {
     const field = screen.getByRole('textbox', { name: t('panel.typeValue', { name }) })
     await userEvent.type(field, '150{Enter}')
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ space: 1 }))
+  })
+
+  it('leaves out tuning, with its Advanced settings, on the free plan', async () => {
+    renderPanel(defaultPolish('lead'), false)
+    await userEvent.click(screen.getByRole('button', { name: t('polish.advanced') }))
+    expect(screen.queryByRole('slider', { name: t('polish.controls.tuning.label') })).toBeNull()
+    expect(screen.queryByRole('slider', { name: t('polish.params.tuneStrength') })).toBeNull()
+    expect(screen.queryByRole('slider', { name: t('polish.params.retuneMs') })).toBeNull()
+    expect(slider(t('polish.controls.space.label'))).toBeInTheDocument()
   })
 })

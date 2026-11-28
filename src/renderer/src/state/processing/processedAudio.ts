@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Plan } from '@shared/features'
 import { SongKey } from '../../audio/pitch/key'
 import { hasRender } from '../../audio/dsp/renderCache'
 import { changeMusicBuffer, musicKey } from '../../audio/music/stretch'
@@ -27,11 +28,16 @@ interface Job {
 }
 
 /** Every recording that plays changed: tuned vocals, and music at a new speed or key. */
-function jobsFor(project: Project, audio: Record<string, AudioBuffer>, key: SongKey | null): Job[] {
+function jobsFor(
+  project: Project,
+  audio: Record<string, AudioBuffer>,
+  key: SongKey | null,
+  plan: Plan
+): Job[] {
   const music = musicOf(project)
   const musicChanged = music.speed !== 1 || music.semitones !== 0
   return project.tracks.flatMap((track) => {
-    const tuning = tuningOf(track, key)
+    const tuning = tuningOf(track, key, plan)
     const changesMusic = track.role === 'backing' && musicChanged
     if (!tuning && !changesMusic) return []
     return track.clips.flatMap((clip): Job[] => {
@@ -61,10 +67,11 @@ function jobsFor(project: Project, audio: Record<string, AudioBuffer>, key: Song
 export async function processProject(
   project: Project,
   audio: Record<string, AudioBuffer>,
-  key: SongKey | null
+  key: SongKey | null,
+  plan: Plan
 ): Promise<ProcessedAudio> {
   const result: ProcessedAudio = {}
-  for (const job of jobsFor(project, audio, key)) {
+  for (const job of jobsFor(project, audio, key, plan)) {
     const buffer = await job.render()
     result[job.trackId] = { ...result[job.trackId], [job.file]: buffer }
   }
@@ -95,26 +102,27 @@ export interface Processing {
 export function useProcessedAudio(
   project: Project | undefined,
   audio: Record<string, AudioBuffer>,
-  key: SongKey | null
+  key: SongKey | null,
+  plan: Plan
 ): Processing {
   const [rendered, setRendered] = useState<{ processed: ProcessedAudio; keys: string[] }>({
     processed: {},
     keys: []
   })
   const [busy, setBusy] = useState(false)
-  const jobs = project ? jobsFor(project, audio, key) : []
+  const jobs = project ? jobsFor(project, audio, key, plan) : []
   // Only what rendering depends on, so unrelated edits (a fade, a volume) don't re-render.
   const signature = jobs.map((j) => `${j.trackId}:${j.file}:${j.key}`).join(';')
 
   useEffect(() => {
     if (!project) return
     let cancelled = false
-    const current = jobsFor(project, audio, key)
+    const current = jobsFor(project, audio, key, plan)
     const pending = current.some((j) => !hasRender(j.buffer, j.key))
     const timer = setTimeout(
       () => {
         if (pending) setBusy(true)
-        processProject(project, audio, key)
+        processProject(project, audio, key, plan)
           .then((processed) => {
             if (!cancelled) setRendered({ processed, keys: current.map(jobId) })
           })

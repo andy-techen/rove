@@ -26,6 +26,7 @@ describe('PremiumSection', () => {
     render(<PremiumSection />)
     expect(screen.getByText(t('premium.features.vocalRemoval'))).toBeInTheDocument()
     expect(screen.getByText(t('premium.features.autoPolish'))).toBeInTheDocument()
+    expect(screen.getByText(t('premium.features.tuning'))).toBeInTheDocument()
   })
 
   it('activates a pasted key', async () => {

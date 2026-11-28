@@ -343,7 +343,8 @@
     "pitch": "Pay once, and it’s yours to keep. It unlocks:",
     "features": {
       "vocalRemoval": "Take the vocals out of any song you add",
-      "autoPolish": "Auto polish: Rove sets your sound for you, and learns your taste as you go"
+      "autoPolish": "Auto polish: Rove sets your sound for you, and learns your taste as you go",
+      "tuning": "Tuning: gently pulls your notes into the song's key"
     },
     "buy": "Get Premium",
     "buySoon": "Buying opens soon. For now, any license key unlocks Premium.",

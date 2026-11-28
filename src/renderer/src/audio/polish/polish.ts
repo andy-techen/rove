@@ -122,6 +122,10 @@ const SLIDER_MAP: Record<
   retuneMs: { control: 'tuning', at0: 250, at1: 5 }
 }
 
+/** The plain-language control that moves a real parameter. Makeup follows Smoothness. */
+export const controlOf = (param: PolishParam): PolishControl =>
+  param === 'makeupDb' ? 'smoothness' : SLIDER_MAP[param].control
+
 // Makeup restores roughly half the level the compressor takes away, so turning
 // Smoothness up doesn't make the voice suddenly quieter; never more than this.
 const MAKEUP_SHARE = 0.5

@@ -59,6 +59,7 @@ function Harness({ files = ['a.wav'] }: { files?: string[] }) {
         part="lead"
         polish={polishOf(track)}
         locked={false}
+        canTune
         onChange={(next) => push(withTrackPolish(song, track.id, next))}
         onHide={vi.fn()}
         auto={{
