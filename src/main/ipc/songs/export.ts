@@ -1,17 +1,23 @@
-import { app, ipcMain, shell, ShareMenu } from 'electron'
+import { ipcMain, shell, ShareMenu } from 'electron'
 import path from 'node:path'
 import { t } from '@shared/copy'
 import { EXPORT_CHANNELS, EXPORT_FORMATS, ExportFormat } from '@shared/exportFormats'
 import { showSave, windowFor } from '../files/dialogs'
 import { songFolderName } from '../files/fileNames'
 import { writeAtomically } from '../files/writeAtomically'
+import { exportsFolder } from '../preferences/settings'
 
 // The renderer may write only to a path the person just picked in the save dialog,
 // once, and reveal only files it exported.
 const chosen = new Set<string>()
 const written = new Set<string>()
-// Next export opens where the last one went.
+// Next export opens where the last one went, until the singer picks an exports folder.
 let lastDir: string | null = null
+
+/** The next export opens in the exports folder again, not where the last one went. */
+export const forgetLastExportDir = (): void => {
+  lastDir = null
+}
 
 const isFormat = (value: unknown): value is ExportFormat =>
   (EXPORT_FORMATS as readonly unknown[]).includes(value)
@@ -22,7 +28,7 @@ export function registerExportIpc(): void {
     const fileName = `${songFolderName(songName) || t('dialogs.untitledSong')}.${format}`
     const filePath = await showSave(e, {
       title: t('export.dialogTitle'),
-      defaultPath: path.join(lastDir ?? app.getPath('music'), fileName),
+      defaultPath: path.join(lastDir ?? exportsFolder(), fileName),
       filters: [{ name: t(`export.formats.${format}`), extensions: [format] }]
     })
     if (!filePath) return null

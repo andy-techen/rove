@@ -9,12 +9,19 @@ import { AppDialog, Section, useAppDialog } from '.'
 function Harness() {
   const dialog = useAppDialog()
   return dialog.section ? (
-    <AppDialog section={dialog.section} onSection={dialog.show} onClose={dialog.close} />
+    <AppDialog
+      section={dialog.section}
+      onSection={dialog.show}
+      onClose={dialog.close}
+      onMicCheck={vi.fn()}
+    />
   ) : null
 }
 
-const openAt = (section: Section) => {
-  render(<AppDialog section={section} onSection={vi.fn()} onClose={vi.fn()} />)
+const openAt = (section: Section, onMicCheck = vi.fn()) => {
+  render(
+    <AppDialog section={section} onSection={vi.fn()} onClose={vi.fn()} onMicCheck={onMicCheck} />
+  )
   return userEvent.setup()
 }
 
@@ -62,21 +69,38 @@ describe('AppDialog', () => {
 })
 
 describe('AppDialog settings', () => {
-  it('shows where new songs are saved and changes it', async () => {
-    vi.mocked(window.api.getSongsFolder).mockResolvedValue('/Users/sam/Music/Rove')
-    vi.mocked(window.api.chooseSongsFolder).mockResolvedValue('/Users/sam/Songs')
+  const folders = [
+    ['songs', 'getSongsFolder', 'chooseSongsFolder', 'settings.changeSongsFolder'],
+    ['exports', 'getExportsFolder', 'chooseExportsFolder', 'settings.changeExportsFolder']
+  ] as const
+
+  it.each(folders)('shows where %s are saved and changes it', async (kind, get, choose, change) => {
+    vi.mocked(window.api[get]).mockResolvedValueOnce(`/Users/sam/${kind}`)
+    vi.mocked(window.api[choose]).mockResolvedValueOnce(`/Users/sam/new ${kind}`)
     const user = openAt('settings')
-    expect(await screen.findByText('/Users/sam/Music/Rove')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: t('settings.changeFolder') }))
-    expect(await screen.findByText('/Users/sam/Songs')).toBeInTheDocument()
+    expect(await screen.findByText(`/Users/sam/${kind}`)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: t(change) }))
+    expect(await screen.findByText(`/Users/sam/new ${kind}`)).toBeInTheDocument()
   })
 
   it('keeps the folder when choosing is cancelled', async () => {
-    vi.mocked(window.api.getSongsFolder).mockResolvedValue('/Users/sam/Music/Rove')
-    vi.mocked(window.api.chooseSongsFolder).mockResolvedValue(null)
+    vi.mocked(window.api.getSongsFolder).mockResolvedValueOnce('/Users/sam/Music/Rove')
     const user = openAt('settings')
-    await user.click(await screen.findByRole('button', { name: t('settings.changeFolder') }))
+    await user.click(await screen.findByRole('button', { name: t('settings.changeSongsFolder') }))
     expect(screen.getByText('/Users/sam/Music/Rove')).toBeInTheDocument()
+  })
+
+  it('switches the theme', async () => {
+    const user = openAt('settings')
+    await user.click(screen.getByRole('button', { name: t('menu.themes.dark') }))
+    expect(window.api.setTheme).toHaveBeenCalledWith('dark')
+  })
+
+  it('opens the mic check', async () => {
+    const onMicCheck = vi.fn()
+    const user = openAt('settings', onMicCheck)
+    await user.click(screen.getByRole('button', { name: t('settings.checkMicrophone') }))
+    expect(onMicCheck).toHaveBeenCalled()
   })
 })
 

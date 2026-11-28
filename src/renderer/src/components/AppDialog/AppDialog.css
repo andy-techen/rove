@@ -163,11 +163,17 @@ button.keymap-keys:hover {
 }
 /* Settings */
 
+/* Names in one column, their controls beside them. */
 .settings {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-5) var(--space-6);
   font-size: var(--font-size-ui);
+}
+
+.settings .segmented {
+  justify-self: start;
 }
 
 .settings-label {

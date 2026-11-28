@@ -82,7 +82,15 @@ function App(): React.JSX.Element {
       <Snackbar />
       {showMicCheck && <MicCheck mic={mic} onboarding={!onboarded} onDone={finishMicCheck} />}
       {dialog.section && (
-        <AppDialog section={dialog.section} onSection={dialog.show} onClose={dialog.close} />
+        <AppDialog
+          section={dialog.section}
+          onSection={dialog.show}
+          onClose={dialog.close}
+          onMicCheck={() => {
+            dialog.close()
+            setScreen('micCheck')
+          }}
+        />
       )}
       {naming && (
         <NewSongDialog

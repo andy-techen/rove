@@ -446,8 +446,17 @@
     "songsFolder": "Songs folder",
     "songsFolderHint": "Where new songs are saved",
     "changeFolder": "Change…",
+    "changeSongsFolder": "Change songs folder",
+    "changeExportsFolder": "Change exports folder",
     "chooseFolderTitle": "Choose where to save new songs",
-    "chooseFolderButton": "Use This Folder"
+    "chooseFolderButton": "Use This Folder",
+    "appearance": "Appearance",
+    "microphone": "Microphone",
+    "microphoneHint": "Pick your mic and set its level",
+    "checkMicrophone": "Check microphone",
+    "exportsFolder": "Exports folder",
+    "exportsFolderHint": "Where exports are saved first",
+    "chooseExportsTitle": "Choose where to save exports"
   },
   "newSong": {
     "title": "New song",

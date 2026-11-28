@@ -85,6 +85,8 @@ export function createFakeApi(): FakeApi {
     },
     getSongsFolder: vi.fn(async () => '/Users/singer/Music/Rove'),
     chooseSongsFolder: vi.fn(async (): Promise<string | null> => null),
+    getExportsFolder: vi.fn(async () => '/Users/singer/Music'),
+    chooseExportsFolder: vi.fn(async (): Promise<string | null> => null),
     onTheme: vi.fn((listener: (theme: Theme) => void) => {
       listener('system')
       return () => {}

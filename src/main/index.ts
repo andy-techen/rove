@@ -13,7 +13,7 @@ import { electronApp, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { setUpAbout } from './about'
 import { registerProjectIpc } from './ipc/songs/project'
-import { registerExportIpc } from './ipc/songs/export'
+import { forgetLastExportDir, registerExportIpc } from './ipc/songs/export'
 import { registerLyricsIpc } from './ipc/online/lyrics'
 import { registerAppearanceIpc, reportTheme } from './ipc/preferences/appearance'
 import { registerKeymapIpc } from './ipc/preferences/keymap'
@@ -126,7 +126,7 @@ app.whenReady().then(async () => {
   registerLyricsIpc()
   await registerAppearanceIpc()
   await registerKeymapIpc()
-  await registerSettingsIpc()
+  await registerSettingsIpc(forgetLastExportDir)
   registerSeparationIpc()
   registerWishlistIpc()
   registerCatalogIpc()

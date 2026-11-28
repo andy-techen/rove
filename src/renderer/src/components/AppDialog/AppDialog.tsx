@@ -9,7 +9,11 @@ import { SettingsSection } from './SettingsSection'
 import { VoiceSection } from './VoiceSection'
 import './AppDialog.css'
 
-const CONTENT: Record<Section, () => React.JSX.Element> = {
+interface SectionProps {
+  onMicCheck(): void
+}
+
+const CONTENT: Record<Section, (props: SectionProps) => React.JSX.Element> = {
   voice: VoiceSection,
   settings: SettingsSection,
   premium: PremiumSection,
@@ -28,12 +32,14 @@ interface Props {
   section: Section
   onSection(section: Section): void
   onClose(): void
+  /** Closes the dialog and opens the mic check. */
+  onMicCheck(): void
 }
 
 const tabId = (section: Section): string => `app-dialog-tab-${section}`
 
 /** One place for the singer's voice, settings, premium and shortcuts, picked from a sidebar. */
-export function AppDialog({ section, onSection, onClose }: Props): React.JSX.Element {
+export function AppDialog({ section, onSection, onClose, onMicCheck }: Props): React.JSX.Element {
   const tabs = useRef<Partial<Record<Section, HTMLButtonElement | null>>>({})
   const Content = CONTENT[section]
 
@@ -89,7 +95,7 @@ export function AppDialog({ section, onSection, onClose }: Props): React.JSX.Ele
           role="tabpanel"
           aria-labelledby={tabId(section)}
         >
-          <Content />
+          <Content onMicCheck={onMicCheck} />
         </div>
       </div>
     </Dialog>

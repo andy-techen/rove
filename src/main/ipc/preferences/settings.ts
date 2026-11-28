@@ -14,24 +14,46 @@ let settings = DEFAULTS
 export const songsFolder = (): string =>
   settings.songsFolder ?? path.join(app.getPath('music'), 'Rove')
 
+/** Where exports go unless the singer picks elsewhere: the folder they chose, or ~/Music. */
+export const exportsFolder = (): string => settings.exportsFolder ?? app.getPath('music')
+
 async function save(next: Settings): Promise<void> {
   settings = next
   await store.save(settings)
 }
 
-/** Loads settings before the first window opens and serves them to windows. */
-export async function registerSettingsIpc(): Promise<void> {
+/** Asks for a folder, starting from `current`; resolves to it, or null if cancelled. */
+const chooseFolder = (
+  e: Electron.IpcMainInvokeEvent,
+  title: string,
+  current: string
+): Promise<string | null> =>
+  showOpen(e, {
+    title,
+    buttonLabel: t('settings.chooseFolderButton'),
+    defaultPath: current,
+    properties: ['openDirectory', 'createDirectory']
+  })
+
+/**
+ * Loads settings before the first window opens and serves them to windows.
+ * `onExportsFolder` hears when the singer picks a new exports folder.
+ */
+export async function registerSettingsIpc(onExportsFolder: () => void): Promise<void> {
   settings = await store.load()
   ipcMain.handle(SETTINGS_CHANNELS.songsFolder, () => songsFolder())
   ipcMain.handle(SETTINGS_CHANNELS.chooseSongsFolder, async (e) => {
-    const chosen = await showOpen(e, {
-      title: t('settings.chooseFolderTitle'),
-      buttonLabel: t('settings.chooseFolderButton'),
-      defaultPath: songsFolder(),
-      properties: ['openDirectory', 'createDirectory']
-    })
+    const chosen = await chooseFolder(e, t('settings.chooseFolderTitle'), songsFolder())
     if (!chosen) return null
     await save({ ...settings, songsFolder: chosen })
+    return chosen
+  })
+  ipcMain.handle(SETTINGS_CHANNELS.exportsFolder, () => exportsFolder())
+  ipcMain.handle(SETTINGS_CHANNELS.chooseExportsFolder, async (e) => {
+    const chosen = await chooseFolder(e, t('settings.chooseExportsTitle'), exportsFolder())
+    if (!chosen) return null
+    await save({ ...settings, exportsFolder: chosen })
+    onExportsFolder()
     return chosen
   })
 }

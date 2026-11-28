@@ -132,6 +132,8 @@ const api: RoveApi = {
   },
   getSongsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.songsFolder),
   chooseSongsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.chooseSongsFolder),
+  getExportsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.exportsFolder),
+  chooseExportsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.chooseExportsFolder),
   setTheme: (next) => ipcRenderer.invoke(APPEARANCE_CHANNELS.set, next),
   onTheme,
   onLicense,

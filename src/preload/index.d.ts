@@ -106,6 +106,10 @@ export interface RoveApi {
   getSongsFolder(): Promise<string>
   /** Asks for a new songs folder; resolves to it, or null if cancelled. */
   chooseSongsFolder(): Promise<string | null>
+  /** Where the save dialog for an export first opens. */
+  getExportsFolder(): Promise<string>
+  /** Asks for a new exports folder; resolves to it, or null if cancelled. */
+  chooseExportsFolder(): Promise<string | null>
   /** Listens for the chosen theme (now, then on each change); returns an unsubscribe. */
   onTheme(listener: (theme: Theme) => void): () => void
   /** Listens for this Mac's plan and key hint (now, then on each change). */
