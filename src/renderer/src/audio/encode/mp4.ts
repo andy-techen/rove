@@ -6,7 +6,7 @@ import {
   Output,
   QUALITY_HIGH
 } from 'mediabunny'
-import { FRAME_RATE } from './constants'
+import { FRAME_RATE, KEY_FRAME_INTERVAL_SEC } from './constants'
 
 /**
  * Encodes the mix with a picture as an H.264/AAC MP4, the pairing every phone and social
@@ -25,7 +25,13 @@ export async function encodeMp4(
     format: new Mp4OutputFormat({ fastStart: 'in-memory' }),
     target: new BufferTarget()
   })
-  const video = new CanvasSource(canvas, { codec: 'avc', quality: QUALITY_HIGH })
+  // A quality level rather than a bitrate: the encoder holds the picture's quality and
+  // spends next to nothing on unchanged frames, where a bitrate would be padded out.
+  const video = new CanvasSource(canvas, {
+    codec: 'avc',
+    quality: QUALITY_HIGH,
+    keyFrameInterval: KEY_FRAME_INTERVAL_SEC
+  })
   const audio = new AudioBufferSource({ codec: 'aac', quality: QUALITY_HIGH })
   output.addVideoTrack(video, { frameRate: FRAME_RATE })
   output.addAudioTrack(audio)

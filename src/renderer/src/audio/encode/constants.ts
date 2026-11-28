@@ -29,3 +29,9 @@ export const INT16_MAX = 0x7fff
  * almost nothing to encode.
  */
 export const FRAME_RATE = 24
+/**
+ * Seconds between full pictures. The frame is a still picture with lyric changes, so a
+ * full picture every 2 seconds (the encoder's default) made up most of the file; this
+ * cuts a picture-background video to about a third, and scrubbing still feels quick.
+ */
+export const KEY_FRAME_INTERVAL_SEC = 10
