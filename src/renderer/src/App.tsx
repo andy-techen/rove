@@ -49,6 +49,7 @@ function App(): React.JSX.Element {
       else if (action === 'newSong') setNaming(true)
       else if (action === 'open') void tabs.open()
       else if (action === 'songbook') setSongbookOpen(true)
+      else if (action === 'importProject') void tabs.importSongFile()
       else if (action === 'closeSong' && tabs.activeId) tabs.close(tabs.activeId)
       else if ((action === 'moveSongLeft' || action === 'moveSongRight') && tabs.activeId) {
         const at = tabs.tabs.findIndex((item) => item.id === tabs.activeId)
@@ -107,6 +108,10 @@ function App(): React.JSX.Element {
           onNew={() => {
             setSongbookOpen(false)
             setNaming(true)
+          }}
+          onImport={() => {
+            setSongbookOpen(false)
+            void tabs.importSongFile()
           }}
           onStart={(name, artist, note) => {
             setSongbookOpen(false)

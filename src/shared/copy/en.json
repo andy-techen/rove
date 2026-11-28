@@ -318,7 +318,23 @@
     "lineUp": "Line Up with the Music",
     "syncHarmony": "Sync Harmony with the Lead",
     "makeHarmony": "Make Harmony",
-    "makeLead": "Make Lead"
+    "makeLead": "Make Lead",
+    "exportProject": "Export Project…",
+    "importProject": "Import Project…"
+  },
+  "songFile": {
+    "exportTitle": "Export Project",
+    "importTitle": "Import Project",
+    "importButton": "Import",
+    "fileType": "Rove Project",
+    "import": "Import project",
+    "formatName": "Project",
+    "formatHint": "The whole song, to open in Rove",
+    "exported": "Project exported. Anyone with Rove can open it.",
+    "exportFailed": "Couldn't export the project. Try again, or pick another folder.",
+    "importFailed": "Couldn't import that project. It may not be a Rove project.",
+    "notASong": "That isn't a Rove project.",
+    "tooLarge": "This song is too big to export as one file."
   },
   "appDialog": {
     "sections": "Sections",
@@ -753,14 +769,14 @@
       "wav": "Best quality, for mastering or uploading",
       "mp3": "Smaller file, for sharing"
     },
-    "loudness": "Loudness",
+    "loudness": "Volume",
     "loudnessOptions": {
       "streaming": "Ready for streaming",
       "loud": "Louder",
       "asMixed": "As mixed"
     },
     "loudnessHelp": {
-      "streaming": "matches the loudness of streaming services",
+      "streaming": "matches the volume of streaming services",
       "loud": "pushes it louder still",
       "asMixed": "leaves it exactly as you mixed it"
     },
@@ -768,7 +784,7 @@
     "cancel": "Cancel",
     "stages": {
       "mixing": "Mixing…",
-      "levelling": "Levelling loudness…",
+      "levelling": "Setting the volume…",
       "tuning": "Tuning vocals…",
       "encoding": "Encoding… {percent}%",
       "saving": "Saving…"

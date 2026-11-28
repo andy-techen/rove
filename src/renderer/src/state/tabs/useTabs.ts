@@ -24,6 +24,8 @@ export interface Tabs {
   open(): Promise<void>
   /** Opens a song from the Songbook by its folder name. */
   openByName(folder: string): Promise<void>
+  /** Asks for a .rove project file and opens it as a new song. */
+  importSongFile(): Promise<void>
 }
 
 const tab = (initial: ChosenProject): Tab => ({ id: crypto.randomUUID(), initial })
@@ -120,6 +122,14 @@ export function useTabs(enabled: boolean): Tabs {
         add(await window.api.openSongbookSong(folder))
       } catch {
         setError(t('app.openFolderFailed'))
+      }
+    },
+    importSongFile: async () => {
+      try {
+        const imported = await window.api.importSongFile()
+        if (imported) add(imported)
+      } catch {
+        setError(t('songFile.importFailed'))
       }
     }
   }

@@ -132,6 +132,7 @@ import {
 import { useElementHeight } from '../../state/ui/useElementHeight'
 import { clickGrid, tempoOfMusic } from '../../state/transport/metronome'
 import { useSong } from '../../state/song/useSong'
+import { exportSongFile } from '../../state/song/songFile'
 import { useAutoPolish } from '../../state/processing/useAutoPolish'
 import { useTransport } from '../../state/transport/useTransport'
 import { ExportDialog } from '../ExportDialog'
@@ -608,6 +609,9 @@ export function RecordScreen({
         break
       case 'export':
         openExport()
+        break
+      case 'exportProject':
+        if (song.song) void exportSongFile({ dir: song.song.dir, saveNow: song.saveNow })
         break
       case 'undo':
         if (canEdit) song.undo()

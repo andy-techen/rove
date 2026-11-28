@@ -4,7 +4,7 @@ import type { MenuAction } from '@shared/menu'
 import type { LyricsResult } from '@shared/lyrics'
 import type { Theme } from '@shared/appearance'
 import { FREE_STATUS, LicenseStatus } from '@shared/license'
-import type { RoveApi } from '../../../preload/index.d'
+import type { ChosenProject, RoveApi } from '../../../preload/index.d'
 
 /** A stand-in for the preload bridge: every call is a spy, menu events can be fired. */
 export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void } {
@@ -59,6 +59,8 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
     saveTake: vi.fn(async () => 'audio/take-001.wav'),
     readAudio: vi.fn(async () => new Uint8Array()),
     writeManifest: vi.fn(async () => {}),
+    exportSongFile: vi.fn(async (): Promise<string | null> => null),
+    importSongFile: vi.fn(async (): Promise<ChosenProject | null> => null),
     chooseExportPath: vi.fn(async (name: string, format: string) => `/Music/${name}.${format}`),
     writeExport: vi.fn(async () => {}),
     revealExport: vi.fn(async () => {}),

@@ -161,6 +161,7 @@
 .songbook-footer {
   display: flex;
   justify-content: flex-end;
+  gap: var(--space-4);
   margin-top: var(--space-7);
 }
 

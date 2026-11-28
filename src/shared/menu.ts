@@ -8,6 +8,8 @@ export const MENU_ACTIONS = [
   'songbook',
   'save',
   'export',
+  'exportProject',
+  'importProject',
   'closeSong',
   'moveSongLeft',
   'moveSongRight',

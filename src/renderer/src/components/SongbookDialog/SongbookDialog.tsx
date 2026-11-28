@@ -18,6 +18,8 @@ interface Props {
   onOpen(folder: string): void
   /** Starts a new song (opens the New Song dialog). */
   onNew(): void
+  /** Opens a .rove project file as a new song. */
+  onImport(): void
   /** Makes a real song from a wishlist item, keeping its artist and note. */
   onStart(name: string, artist?: string, note?: string): void
   onClose(): void
@@ -32,6 +34,7 @@ export function SongbookDialog({
   openFolders,
   onOpen,
   onNew,
+  onImport,
   onStart,
   onClose
 }: Props): React.JSX.Element {
@@ -96,6 +99,9 @@ export function SongbookDialog({
         </div>
         {view === 'songs' && (
           <div className="songbook-footer">
+            <Button variant="quiet" onClick={onImport}>
+              {t('songFile.import')}
+            </Button>
             <Button icon="plus" onClick={onNew}>
               {t('songbook.newSong')}
             </Button>

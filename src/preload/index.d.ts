@@ -96,6 +96,10 @@ export interface RoveApi {
   saveTake(projectDir: string, wav: ArrayBuffer): Promise<string>
   readAudio(projectDir: string, relPath: string): Promise<Uint8Array>
   writeManifest(projectDir: string, manifest: unknown): Promise<void>
+  /** Asks where to save the song as one .rove file and writes it; null if cancelled. */
+  exportSongFile(projectDir: string): Promise<string | null>
+  /** Asks for a .rove file and unpacks it into a new song; null if cancelled. */
+  importSongFile(): Promise<ChosenProject | null>
   /** Asks where to save an export; null if the person cancels. */
   chooseExportPath(songName: string, format: ExportFormat): Promise<string | null>
   /** Writes an export to the path just chosen (and only that path). */

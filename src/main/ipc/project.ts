@@ -14,6 +14,7 @@ import {
   uniqueName
 } from './fileNames'
 import { songsFolder } from './settings'
+import { SONG_FILE_EXTENSION, packSong, unpackSong } from './songArchive'
 import { MANIFEST, readManifest, songbookDirs, songbookSong } from './songbook'
 import { writeAtomically } from './writeAtomically'
 
@@ -297,6 +298,44 @@ export function registerProjectIpc(): void {
   ipcMain.handle('project:readAudio', async (_e, projectDir: string, relPath: string) => {
     assertOpen(projectDir)
     return new Uint8Array(await fs.readFile(resolveAudioPath(projectDir, relPath)))
+  })
+
+  // Packs an open song into one .rove file, written only to the path just chosen.
+  ipcMain.handle('project:exportSongFile', async (e, projectDir: unknown) => {
+    if (typeof projectDir !== 'string') throw new Error(t('dialogs.songNotOpen'))
+    assertOpen(projectDir)
+    const manifest = (await readManifest(projectDir)) as { name?: unknown } | null
+    const songName = typeof manifest?.name === 'string' ? manifest.name : ''
+    const fileName = `${songFolderName(songName) || t('dialogs.untitledSong')}.${SONG_FILE_EXTENSION}`
+    const options = {
+      title: t('songFile.exportTitle'),
+      defaultPath: path.join(app.getPath('documents'), fileName),
+      filters: [{ name: t('songFile.fileType'), extensions: [SONG_FILE_EXTENSION] }]
+    }
+    const win = windowFor(e)
+    const result = win
+      ? await dialog.showSaveDialog(win, options)
+      : await dialog.showSaveDialog(options)
+    if (result.canceled || !result.filePath) return null
+    await packSong(projectDir, result.filePath)
+    return result.filePath
+  })
+
+  // Unpacks a .rove file the singer picked into a new song under the songs folder.
+  ipcMain.handle('project:importSongFile', async (e) => {
+    const options = {
+      title: t('songFile.importTitle'),
+      buttonLabel: t('songFile.importButton'),
+      properties: ['openFile'] as Array<'openFile'>,
+      filters: [{ name: t('songFile.fileType'), extensions: [SONG_FILE_EXTENSION] }]
+    }
+    const win = windowFor(e)
+    const result = win
+      ? await dialog.showOpenDialog(win, options)
+      : await dialog.showOpenDialog(options)
+    const source = result.filePaths[0]
+    if (result.canceled || !source) return null
+    return openSong(await unpackSong(source, songsRoot()))
   })
 
   ipcMain.handle('project:writeManifest', async (_e, projectDir: string, manifest: unknown) => {

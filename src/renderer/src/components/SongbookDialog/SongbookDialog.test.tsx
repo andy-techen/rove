@@ -10,7 +10,14 @@ const DAY = 24 * 60 * 60 * 1000
 const dreams = { id: 'w1', name: 'Dreams', artist: 'Fleetwood Mac', addedAt: NOW }
 
 function renderDialog(openFolders: string[] = []) {
-  const props = { openFolders, onOpen: vi.fn(), onNew: vi.fn(), onStart: vi.fn(), onClose: vi.fn() }
+  const props = {
+    openFolders,
+    onOpen: vi.fn(),
+    onNew: vi.fn(),
+    onImport: vi.fn(),
+    onStart: vi.fn(),
+    onClose: vi.fn()
+  }
   render(<SongbookDialog {...props} />)
   return props
 }
@@ -35,6 +42,12 @@ describe('SongbookDialog', () => {
     await userEvent.click(await songButton('Fly Away'))
     expect(screen.getByText('Sam')).toBeInTheDocument()
     expect(onOpen).toHaveBeenCalledWith('Fly-Away')
+  })
+
+  it('imports a project file from the songs view', async () => {
+    const { onImport } = renderDialog()
+    await userEvent.click(screen.getByRole('button', { name: t('songFile.import') }))
+    expect(onImport).toHaveBeenCalled()
   })
 
   it('moves a song to the Trash after confirming', async () => {
