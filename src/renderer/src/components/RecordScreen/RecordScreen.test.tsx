@@ -93,6 +93,12 @@ async function openSong({ position = 2, mode = 'idle' as Mode, project = song() 
     />
   )
   await screen.findByRole('button', { name: /^Vocal 1/ })
+  // The tracks show a moment before opening finishes and editing unlocks; on a busy
+  // machine a test could act in between. Record turns on once it has.
+  if (mode === 'idle') {
+    const record = button(t('track.record', { name: 'Vocal 1' }))
+    await waitFor(() => expect(record).toBeEnabled())
+  }
   return project
 }
 
