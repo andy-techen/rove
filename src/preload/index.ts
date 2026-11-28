@@ -13,6 +13,7 @@ import {
 import { SETTINGS_CHANNELS } from '@shared/settings'
 import { WISHLIST_CHANNELS } from '@shared/wishlist'
 import { VOICE_CHANNELS } from '@shared/voice'
+import { TASTE_CHANNELS } from '@shared/polishTaste'
 import { INPUT_VOLUME_CHANNELS, parseInputVolume } from '@shared/inputVolume'
 import { parseOverrides } from '@shared/keymap'
 import {
@@ -117,6 +118,9 @@ const api: RoveApi = {
     readTake: (folder, file) => ipcRenderer.invoke(VOICE_CHANNELS.readTake, folder, file),
     loadCache: () => ipcRenderer.invoke(VOICE_CHANNELS.loadCache),
     saveCache: (entries) => ipcRenderer.invoke(VOICE_CHANNELS.saveCache, entries)
+  },
+  taste: {
+    listExamples: () => ipcRenderer.invoke(TASTE_CHANNELS.listExamples)
   },
   getSongsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.songsFolder),
   chooseSongsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.chooseSongsFolder),

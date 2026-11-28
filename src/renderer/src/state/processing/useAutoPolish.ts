@@ -2,6 +2,7 @@ import { t } from '@shared/copy'
 import { useEffect, useRef, useState } from 'react'
 import { AUTO_POLISH_VERSION, suggestPolish } from '../../audio/polish/autoPolish'
 import { PolishReading, analyseVoice } from '../../audio/polish/polishReading'
+import { learnTaste } from '../../audio/polish/taste'
 import { Project } from '../song/project'
 import {
   heardOf,
@@ -61,28 +62,42 @@ export function useAutoPolish(
     setListeningTo(track.id)
     setOutcome(null)
     let profile: PolishReading | null
+    // What the singer did after earlier auto polishes, read while Rove listens. Without
+    // it, auto polish still works from what it hears.
+    const examples = window.api.taste.listExamples().catch(() => [])
     try {
       if (!profiles.current.has(heard)) profiles.current.set(heard, await analyseVoice(windows))
       profile = profiles.current.get(heard) ?? null
     } finally {
       setListeningTo(null)
     }
+    // Learned before reading the song, so the edit below applies to the song as it is now.
+    const taste = learnTaste(await examples, track.id)
     const song = latest.current
     const now = song?.tracks.find((t) => t.id === track.id)
     const report = (message: AutoPolishMessage, clipped = false): void =>
       setOutcome({ trackId: track.id, heard: now ? heardOf(now) : heard, message, clipped })
     if (!song || !now || heardOf(now) !== heard) return report('tryAgain')
     if (!profile) return report('tooShort')
-    const suggestion = suggestPolish(profile, now.part ?? 'lead')
-    edit(withPolishSuggestion(song, now.id, { ...suggestion, heard, version: AUTO_POLISH_VERSION }))
+    const suggestion = suggestPolish(profile, now.part ?? 'lead', taste)
+    edit(
+      withPolishSuggestion(song, now.id, {
+        ...suggestion,
+        heard,
+        version: AUTO_POLISH_VERSION,
+        reading: profile
+      })
+    )
     report('done', profile.clipped)
     // That it worked is a passing note; the knobs' sparkles say what changed. A clipped
     // take instead keeps its warning in the panel, where the singer can act on it.
     if (!profile.clipped) {
       showSnack(
-        suggestion.reasons.includes('balanced')
-          ? t('polish.auto.reasons.balanced')
-          : t('polish.auto.done')
+        suggestion.taste
+          ? t('polish.auto.doneTaste')
+          : suggestion.reasons.includes('balanced')
+            ? t('polish.auto.reasons.balanced')
+            : t('polish.auto.done')
       )
     }
   }

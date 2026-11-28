@@ -1,3 +1,4 @@
+import type { PolishReading } from '@shared/polishTaste'
 import { nextTick } from '../dsp/resample'
 import {
   AIR_BAND,
@@ -13,27 +14,7 @@ import {
   singingTest
 } from '../dsp/voiceBands'
 
-/** What auto polish heard in a vocal track's takes. Levels are dBFS (RMS). */
-export interface PolishReading {
-  /** Typical singing level: the median of the sung moments. */
-  voiceDb: number
-  /** Soft singing: the quietest tenth of the sung moments. */
-  softDb: number
-  /** How far strong singing rises above soft singing. */
-  rangeDb: number
-  /** The room between lines. */
-  noiseDb: number
-  /** Mains hum or rumble between lines. */
-  hum: boolean
-  /** Level of the "s" sounds above the de-esser's split; null when there are too few. */
-  sibilanceDb: number | null
-  /** The voice's tone, per Hz, relative to 1–2 kHz: body, presence and air. */
-  bodyDb: number
-  presenceDb: number
-  airDb: number
-  /** Some of a take hit full scale: too loud to fix afterwards. */
-  clipped: boolean
-}
+export type { PolishReading }
 
 /** The part of one take that plays: a clip's window into its decoded audio. */
 export interface HeardWindow {

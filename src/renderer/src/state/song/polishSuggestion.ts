@@ -1,19 +1,10 @@
+import { heardOfClips } from '@shared/polishTaste'
 import { PolishSuggestion } from '../../audio/polish/autoPolish'
 import { HeardWindow } from '../../audio/polish/polishReading'
 import { Project, Track, polishOf } from './project'
 
-// Clip windows are compared to the millisecond: finer differences can't be heard.
-const HEARD_DECIMALS = 3
-
 /** Names the clip windows a track plays, so a suggestion knows what it listened to. */
-export function heardOf(track: Track): string {
-  return track.clips
-    .map(
-      (c) => `${c.file}@${c.offset.toFixed(HEARD_DECIMALS)}+${c.duration.toFixed(HEARD_DECIMALS)}`
-    )
-    .sort()
-    .join('|')
-}
+export const heardOf = (track: Track): string => heardOfClips(track.clips)
 
 /** The played part of each of a track's takes whose audio is loaded. */
 export function heardWindows(track: Track, audio: Record<string, AudioBuffer>): HeardWindow[] {

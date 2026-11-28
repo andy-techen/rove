@@ -188,6 +188,24 @@ contract is `src/shared/voice.ts`.
   `VOICE_UNLOCK_SEC` (3 minutes) of sung notes are heard. The charts live in
   `components/VoiceProfile/` and draw at their measured width, so labels keep their size.
 
+## Auto polish learns the singer's taste from finished songs
+
+Auto polish (premium) saves what it heard (`reading`) with each suggestion on the track.
+When the singer moves the knobs afterwards, the gap between where they left them and what
+the rules say for that reading is what Rove learns from. Nothing else is stored: the
+songs are the data, so undoing, re-recording or deleting a song changes what it learns.
+
+- `taste:listExamples` (`ipc/taste.ts`, gated on `autoPolish`) reads every Songbook
+  `project.json` and keeps the polished vocal tracks that still play what was heard and
+  have Polish on (`tasteExamplesOf` in `src/shared/polishTaste.ts`), newest song first.
+- `audio/polish/taste.ts` (`learnTaste`) turns them into a small lean per control: a
+  recency-weighted average of the singer's moves, pulled toward none while there are few
+  songs, capped at `MAX_LEAN`, and never toward more noise reduction. Moves are measured
+  from today's rules, never from an earlier lean, so a kept lean settles instead of
+  growing, and changing the rules doesn't spoil old songs.
+- `suggestPolish` adds the lean inside `AUTO_LIMITS`. Reasons still come from what Rove
+  heard; a knob the taste moved far enough says "You usually like this a little higher".
+
 ## Where the audio work lives (`src/renderer/src/audio`)
 
 | Folder        | What it does                                                                                                                                    |

@@ -3,6 +3,7 @@ import { KeymapOverrides, parseOverrides } from '@shared/keymap'
 import type { MenuAction } from '@shared/menu'
 import type { LyricsResult } from '@shared/lyrics'
 import type { Theme } from '@shared/appearance'
+import type { TasteExample } from '@shared/polishTaste'
 import { FREE_STATUS, LicenseStatus } from '@shared/license'
 import type { ChosenProject, RoveApi } from '../../../preload/index.d'
 
@@ -73,6 +74,9 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
       readTake: vi.fn(async () => new Uint8Array()),
       loadCache: vi.fn(async () => []),
       saveCache: vi.fn(async () => {})
+    },
+    taste: {
+      listExamples: vi.fn(async (): Promise<TasteExample[]> => [])
     },
     getSongsFolder: vi.fn(async () => '/Users/singer/Music/Rove'),
     chooseSongsFolder: vi.fn(async (): Promise<string | null> => null),

@@ -6,6 +6,7 @@ import type { Theme } from '../shared/appearance'
 import type { ActivationResult, LicenseStatus } from '../shared/license'
 import type { WishlistItem } from '../shared/wishlist'
 import type { VoiceApi } from '../shared/voice'
+import type { TasteApi } from '../shared/polishTaste'
 import type { ContextMenuItem, MenuAction, NativeEdit } from '../shared/menu'
 
 export interface ChosenProject {
@@ -115,6 +116,8 @@ export interface RoveApi {
   saveInstrumental(projectDir: string, source: string, wav: ArrayBuffer): Promise<string>
   /** The singer's takes across every Songbook song, and the voice profile's saved summaries. */
   voice: VoiceApi
+  /** Polished vocal tracks across the Songbook, so auto polish can learn the singer's taste. */
+  taste: TasteApi
   /** Where new songs are created. */
   getSongsFolder(): Promise<string>
   /** Asks for a new songs folder; resolves to it, or null if cancelled. */

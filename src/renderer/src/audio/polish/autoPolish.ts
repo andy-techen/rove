@@ -20,9 +20,18 @@ export type AutoPolishReason =
   | 'dull'
   | 'bright'
 
+/**
+ * How far to lean each control from what the rules say, learned from where the singer
+ * left the knobs on songs auto polish set before (`audio/polish/taste.ts`).
+ */
+export type Taste = Partial<Record<SuggestedControl, number>>
+
 export interface AutoPolish {
   amounts: SuggestedAmounts
+  /** Why the rules moved the controls; the singer's taste is told apart, in `taste`. */
   reasons: AutoPolishReason[]
+  /** How far the singer's taste moved each control, beyond the rules; absent when it didn't. */
+  taste?: Taste
 }
 
 /**
@@ -81,12 +90,25 @@ function nudge(shortBy: number, n: Nudge): number {
   return shortBy > 0 ? Math.min(n.up, beyond) : -Math.min(n.down, beyond)
 }
 
+/** Keeps a control inside auto polish's limits, in whole steps. */
+function settle(key: SuggestedControl, value: number): number {
+  const v = clamp(value, AUTO_LIMITS[key].min, AUTO_LIMITS[key].max)
+  // Rounding noise reduction down never lifts the gate above soft singing.
+  const round = key === 'cleanup' ? Math.floor : Math.round
+  return round(v * STEPS) / STEPS
+}
+
 /**
  * Turns what Rove heard into Polish settings for this part. Controls whose effect
  * depends on level (noise reduction, evenness) aim a real parameter at the take and
- * invert the slider; tone controls take bounded steps from the part's defaults.
+ * invert the slider; tone controls take bounded steps from the part's defaults. The
+ * singer's taste then leans each one, still inside the same limits.
  */
-export function suggestPolish(profile: PolishReading, part: 'lead' | 'harmony'): AutoPolish {
+export function suggestPolish(
+  profile: PolishReading,
+  part: 'lead' | 'harmony',
+  taste: Taste = {}
+): AutoPolish {
   const base = defaultPolish(part)
   // Level-aimed controls keep the part's offset from the lead (a harmony sits more even).
   const lead = defaultPolish('lead')
@@ -120,16 +142,25 @@ export function suggestPolish(profile: PolishReading, part: 'lead' | 'harmony'):
     space: base.space
   }
 
+  const keys = Object.keys(raw) as SuggestedControl[]
+  const ruled = Object.fromEntries(keys.map((key) => [key, settle(key, raw[key])]))
   const amounts = Object.fromEntries(
-    (Object.keys(raw) as SuggestedControl[]).map((key) => {
-      const v = clamp(raw[key], AUTO_LIMITS[key].min, AUTO_LIMITS[key].max)
-      // Rounding noise reduction down never lifts the gate above soft singing.
-      const round = key === 'cleanup' ? Math.floor : Math.round
-      return [key, round(v * STEPS) / STEPS]
-    })
+    keys.map((key) => [key, settle(key, raw[key] + (taste[key] ?? 0))])
   ) as SuggestedAmounts
-  return { amounts, reasons: reasonsFor(amounts, base, profile.hum) }
+  const leaned = Object.fromEntries(
+    keys.flatMap((key) => {
+      const moved = Math.round((amounts[key] - ruled[key]) * STEPS) / STEPS
+      return moved ? [[key, moved]] : []
+    })
+  ) as Taste
+  // Reasons tell what Rove heard, so they come from the rules alone.
+  const reasons = reasonsFor(ruled as SuggestedAmounts, base, profile.hum)
+  return Object.keys(leaned).length ? { amounts, reasons, taste: leaned } : { amounts, reasons }
 }
+
+/** Auto polish's rules alone, for a take: what the singer's taste is measured from. */
+export const ruledPolish = (profile: PolishReading, part: 'lead' | 'harmony'): SuggestedAmounts =>
+  suggestPolish(profile, part).amounts
 
 const REASONS: Record<SuggestedControl, [up: AutoPolishReason, down: AutoPolishReason] | null> = {
   cleanup: ['noisyRoom', 'quietRoom'],
@@ -141,7 +172,11 @@ const REASONS: Record<SuggestedControl, [up: AutoPolishReason, down: AutoPolishR
 }
 
 /** What a knob's sparkle says: why auto polish turned it, or at least which way. */
-export type AutoMark = AutoPolishReason | 'up' | 'down'
+export type AutoMark = AutoPolishReason | 'up' | 'down' | 'tasteUp' | 'tasteDown'
+
+// The singer's taste names a knob once it moved it at least this far; a smaller lean
+// just tops up whatever the rules said.
+const TASTE_MARK_STEP = 0.05
 
 /**
  * The mark on a control auto polish turned, while it still sits where auto polish left
@@ -156,6 +191,8 @@ export function autoMark(
   const set = suggestion.amounts[key]
   if (set === defaults[key] || now[key] !== set) return null
   const up = set > defaults[key]
+  const leaned = suggestion.taste?.[key] ?? 0
+  if (Math.abs(leaned) >= TASTE_MARK_STEP) return leaned > 0 ? 'tasteUp' : 'tasteDown'
   const own = suggestion.reasons.find((r) => REASONS[key]?.includes(r))
   if (own) return own
   // Hum explains a lower Warmth (as in reasonsFor), never a higher one.
@@ -188,4 +225,9 @@ export interface PolishSuggestion extends AutoPolish {
   /** Which clip windows it heard, so a stale suggestion is recognisable. */
   heard: string
   version: number
+  /**
+   * What it heard, so later songs can learn the singer's taste by comparing where they
+   * left the knobs with what the rules say. Older suggestions have none.
+   */
+  reading?: PolishReading
 }

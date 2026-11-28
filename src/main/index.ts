@@ -12,6 +12,7 @@ import { registerSettingsIpc } from './ipc/settings'
 import { registerSeparationIpc } from './ipc/separation'
 import { registerWishlistIpc } from './ipc/wishlist'
 import { registerCatalogIpc } from './ipc/catalog'
+import { registerTasteIpc } from './ipc/taste'
 import { registerVoiceIpc } from './ipc/voice'
 import { registerInputVolumeIpc } from './ipc/inputVolume'
 import { registerLicenseIpc, reportLicense } from './ipc/license'
@@ -114,6 +115,7 @@ app.whenReady().then(async () => {
   registerWishlistIpc()
   registerCatalogIpc()
   registerVoiceIpc()
+  registerTasteIpc()
   registerInputVolumeIpc()
   await registerLicenseIpc()
 

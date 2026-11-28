@@ -47,10 +47,13 @@ export interface AutoPolishControl {
   onListen(): void
 }
 
-// A knob's sparkle when auto polish turned it too little to give a reason.
+// A knob's sparkle when auto polish turned it too little to give a reason, or turned
+// it for the singer's taste rather than for something it heard.
 const MARK_COPY: Partial<Record<AutoMark, CopyKey>> = {
   up: 'polish.auto.turnedUp',
-  down: 'polish.auto.turnedDown'
+  down: 'polish.auto.turnedDown',
+  tasteUp: 'polish.auto.tasteUp',
+  tasteDown: 'polish.auto.tasteDown'
 }
 
 const AUTO_TITLE: Record<AutoPolishStatus, CopyKey> = {

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
+import type { TasteExample } from '@shared/polishTaste'
 import { TONE_REFERENCE, suggestPolish } from '../../audio/polish/autoPolish'
 import { defaultPolish } from '../../audio/polish/polish'
 import { PolishReading, analyseVoice } from '../../audio/polish/polishReading'
@@ -87,9 +88,20 @@ const knob = (key: keyof typeof expected) =>
 const percent = (amount: number) => String(Math.round(amount * 100))
 const autoButton = () => screen.getByRole('button', { name: t('polish.auto.label') })
 
-async function autoPolish() {
+async function autoPolish(done = t('polish.auto.done')) {
   await userEvent.click(autoButton())
-  await screen.findByText(t('polish.auto.done'))
+  await screen.findByText(done)
+}
+
+/** Earlier songs where the singer turned Warmth up from what auto polish set. */
+function warmerSongs(n: number): TasteExample[] {
+  return Array.from({ length: n }, (_, i) => ({
+    trackId: `earlier-${i}`,
+    part: 'lead',
+    savedAt: n - i,
+    reading: dullTake,
+    kept: { ...expected, warmth: expected.warmth + 0.15 }
+  }))
 }
 
 async function tooltipShows(text: string) {
@@ -99,7 +111,10 @@ async function tooltipShows(text: string) {
   )
 }
 
-beforeEach(() => vi.mocked(analyseVoice).mockReset().mockResolvedValue(dullTake))
+beforeEach(() => {
+  vi.mocked(analyseVoice).mockReset().mockResolvedValue(dullTake)
+  vi.mocked(window.api.taste.listExamples).mockReset().mockResolvedValue([])
+})
 
 describe('Auto-polish', () => {
   it('listens to the takes and sets the knobs for this voice', async () => {
@@ -168,5 +183,22 @@ describe('Auto-polish', () => {
     render(<Harness files={[]} />)
     expect(autoButton()).toBeDisabled()
     await tooltipShows(t('polish.auto.titleNoTakes'))
+  })
+
+  it('leans toward how the singer set earlier songs, and says so', async () => {
+    vi.mocked(window.api.taste.listExamples).mockResolvedValue(warmerSongs(6))
+    render(<Harness />)
+    await autoPolish(t('polish.auto.doneTaste'))
+    expect(Number((knob('warmth') as HTMLInputElement).value)).toBeGreaterThan(
+      Number(percent(expected.warmth))
+    )
+    expect(screen.getByRole('img', { name: t('polish.auto.tasteUp') })).toBeTruthy()
+  })
+
+  it('still polishes when earlier songs can’t be read', async () => {
+    vi.mocked(window.api.taste.listExamples).mockRejectedValue(new Error('nope'))
+    render(<Harness />)
+    await autoPolish()
+    expect(knob('clarity')).toHaveValue(percent(expected.clarity))
   })
 })

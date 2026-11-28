@@ -111,6 +111,22 @@ describe('suggestPolish', () => {
   it('gives the same suggestion for the same take', () => {
     expect(lead({ noiseDb: -50, rangeDb: 22 })).toEqual(lead({ noiseDb: -50, rangeDb: 22 }))
   })
+
+  it('leans each knob toward the singer’s taste', () => {
+    const { amounts, taste } = suggestPolish(profile(), 'lead', { warmth: 0.1 })
+    expect(amounts.warmth).toBeCloseTo(lead().amounts.warmth + 0.1)
+    expect(taste).toEqual({ warmth: 0.1 })
+  })
+
+  it('keeps a leaned knob inside auto polish’s limits', () => {
+    const { amounts } = suggestPolish(profile(), 'lead', { space: 2 })
+    expect(amounts.space).toBe(AUTO_LIMITS.space.max)
+  })
+
+  it('gives reasons for what it heard, not for the singer’s taste', () => {
+    const { reasons } = suggestPolish(profile(), 'lead', { clarity: 0.15 })
+    expect(reasons).toEqual(['balanced'])
+  })
 })
 
 describe('autoMark', () => {
@@ -141,5 +157,13 @@ describe('autoMark', () => {
     const higher = suggestion({ warmth: defaults.warmth + 0.05 }, ['hum'])
     expect(autoMark('warmth', lower.amounts, lower, defaults)).toBe('hum')
     expect(autoMark('warmth', higher.amounts, higher, defaults)).toBe('up')
+  })
+
+  it('says the singer usually likes it that way when their taste moved it', () => {
+    const s = {
+      ...suggestion({ warmth: defaults.warmth + 0.1 }, ['balanced']),
+      taste: { warmth: 0.1 }
+    }
+    expect(autoMark('warmth', s.amounts, s, defaults)).toBe('tasteUp')
   })
 })
