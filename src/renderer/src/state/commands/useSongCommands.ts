@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { NATIVE_EDITS, NativeEdit } from '@shared/preferences/menu'
 import type { ClipRef } from '../editing/clipSets'
 import { adjacentTrack } from '../editing/trackSelection'
 import { Project, withVocalPart } from '../song/project'
@@ -7,7 +6,7 @@ import { edgeAfter, edgeBefore, skipTarget, songEnd } from '../song/selectors'
 import { exportSongFile } from '../song/songFile'
 import type { Song } from '../song/useSong'
 import type { Transport } from '../transport/useTransport'
-import { Command, onCommand, typingIn } from './commands'
+import { Command, editsText, onCommand } from './commands'
 
 /** What an open song's commands act on, as the screen sees it this render. */
 export interface SongCommandContext {
@@ -45,10 +44,6 @@ export interface SongCommandContext {
   toggleLyrics(): void
   toggleChords(): void
 }
-
-/** The native text edit a command stands for, when it's one of them. */
-export const nativeEditFor = (action: Command): NativeEdit | null =>
-  (NATIVE_EDITS as readonly string[]).includes(action) ? (action as NativeEdit) : null
 
 /** What each command does to the open song. */
 export function songCommands(c: SongCommandContext): Partial<Record<Command, () => void>> {
@@ -128,9 +123,8 @@ export function useSongCommands(active: boolean, context: SongCommandContext): v
   useEffect(() => {
     run.current = (action) => {
       if (!active) return
-      const native = nativeEditFor(action)
-      if (native && typingIn(document.activeElement)) void window.api.nativeEdit(native)
-      else if (!context.behindDialog) songCommands(context)[action]?.()
+      // A text field takes these itself (useTextEdits).
+      if (!editsText(action) && !context.behindDialog) songCommands(context)[action]?.()
     }
   })
   useEffect(() => onCommand((action) => run.current(action)), [])

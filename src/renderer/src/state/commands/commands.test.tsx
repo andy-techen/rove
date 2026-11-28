@@ -1,7 +1,8 @@
 import { fireEvent, render, renderHook, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { onCommand, useShortcutKeys } from './commands'
+import { fireMenu } from '../../test/fakeApi'
+import { onCommand, useShortcutKeys, useTextEdits } from './commands'
 import { applyOverrides } from './keymap'
 
 const listen = () => {
@@ -39,5 +40,21 @@ describe('shortcut keys', () => {
     await userEvent.keyboard(' ')
     expect(pressed).toHaveBeenCalled()
     expect(heard).not.toHaveBeenCalled()
+  })
+})
+
+describe('text edits', () => {
+  it('copies from a text field with no song open', () => {
+    renderHook(() => useTextEdits())
+    render(<input aria-label="Search" />)
+    screen.getByRole('textbox').focus()
+    fireMenu('copy')
+    expect(window.api.nativeEdit).toHaveBeenCalledWith('copy')
+  })
+
+  it('leaves editing commands alone outside a text field', () => {
+    renderHook(() => useTextEdits())
+    fireMenu('copy')
+    expect(window.api.nativeEdit).not.toHaveBeenCalled()
   })
 })

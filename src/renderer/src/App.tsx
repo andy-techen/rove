@@ -6,7 +6,7 @@ import { MicCheck } from './components/MicCheck'
 import { RecordScreen } from './components/RecordScreen'
 import { Welcome } from './components/Welcome'
 import { Snackbar } from './components/ui/Snackbar'
-import { Command, onCommand, useShortcutKeys } from './state/commands/commands'
+import { Command, onCommand, useShortcutKeys, useTextEdits } from './state/commands/commands'
 import { syncKeymap } from './state/commands/keymap'
 import { hasOnboarded, markOnboarded } from './state/ui/onboarding'
 import { useMicrophone } from './state/transport/useMicrophone'
@@ -40,6 +40,7 @@ function App(): React.JSX.Element {
 
   useEffect(syncKeymap, [])
   useShortcutKeys()
+  useTextEdits()
 
   // App-wide commands. Song edits (undo, split…) are handled by the active tab.
   const menu = useRef<(action: Command) => void>(() => {})

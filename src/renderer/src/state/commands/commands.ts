@@ -6,7 +6,7 @@ import {
   matchesAccelerator,
   yieldsToControls
 } from '@shared/preferences/keymap'
-import { MenuAction } from '@shared/preferences/menu'
+import { MenuAction, NATIVE_EDITS, NativeEdit } from '@shared/preferences/menu'
 import { keyboardFocus } from '../ui/focusRing'
 import { currentKeymap } from './keymap'
 
@@ -92,3 +92,27 @@ export function useShortcutKeys(): void {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 }
+
+const isNativeEdit = (command: Command): command is NativeEdit =>
+  (NATIVE_EDITS as readonly string[]).includes(command)
+
+/**
+ * Lets undo, cut, copy, paste and select all act on a focused text field. The Edit menu
+ * sends them to the renderer, so without this, typing anywhere a song doesn't handle
+ * them (the Songbook, Settings, Welcome) couldn't be copied. Mount once, at the top.
+ */
+export function useTextEdits(): void {
+  useEffect(
+    () =>
+      onCommand((command) => {
+        if (isNativeEdit(command) && typingIn(document.activeElement)) {
+          void window.api.nativeEdit(command)
+        }
+      }),
+    []
+  )
+}
+
+/** Is this an editing command the focused text field should handle instead? */
+export const editsText = (command: Command): boolean =>
+  isNativeEdit(command) && typingIn(document.activeElement)
