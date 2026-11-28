@@ -25,11 +25,12 @@ describe('findSyncedLyrics', () => {
   it.each([
     ['a same-length entry with synced lyrics', [entry()], 1],
     ['the same name in the other script', [entry({ trackName: '小幸运' })], 1],
+    ['the same name with a plain dash', [entry({ trackName: 'Anti-Hero' })], 1, 'Anti\u2010Hero'],
     ['a different length (another recording)', [entry({ duration: 280 })], null],
     ['only plain lyrics', [entry({ syncedLyrics: null, plainLyrics: 'la' })], null],
     ['another song by the artist', [entry({ trackName: '你就不要想起我' })], null]
-  ])('takes %s → %s', async (_case, results, expected) => {
-    expect(await findSyncedLyrics(lookup, lrclib(results))).toBe(expected)
+  ])('takes %s', async (_case, results, expected, title = lookup.title) => {
+    expect(await findSyncedLyrics({ ...lookup, title }, lrclib(results))).toBe(expected)
   })
 
   it('falls back to the title alone when LRCLIB credits the artist differently', async () => {

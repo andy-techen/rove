@@ -45,7 +45,14 @@ export function isSameSong(result: LyricsResult, title: string, durationSec: num
   )
 }
 
-/** Case, width and script (simplified or traditional) don't make a different song. */
+/**
+ * Case, width, script (simplified or traditional) and typographic dashes and quotes
+ * (MusicBrainz writes "Anti‐Hero" with U+2010) don't make a different song.
+ */
 function plainName(name: string): string {
-  return toTraditional(name.normalize('NFKC').trim().toLocaleLowerCase())
+  const plain = name
+    .normalize('NFKC')
+    .replace(/[\u2010-\u2015\u2212]/g, '-')
+    .replace(/[\u2018\u2019]/g, "'")
+  return toTraditional(plain.trim().toLocaleLowerCase())
 }
