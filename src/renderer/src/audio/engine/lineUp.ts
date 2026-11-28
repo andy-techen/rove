@@ -1,5 +1,7 @@
 import { onsetStrength } from '../dsp/onsets'
-import { AudioSource } from '../pitch/key'
+import { AudioSource } from '../dsp/audioSource'
+import { parabolicOffset } from '../dsp/peakFit'
+import { mean, median } from '../dsp/stats'
 
 /** A piece of music as it plays on the timeline (a backing clip, the chords). */
 export interface MusicClip {
@@ -49,8 +51,8 @@ const MIN_PROMINENCE = 0.05
 export const MIN_LINE_UP_SEC = 0.02
 
 const centred = (x: Float32Array): Float32Array => {
-  const mean = x.reduce((s, v) => s + v, 0) / (x.length || 1)
-  return x.map((v) => v - mean)
+  const average = mean(x)
+  return x.map((v) => v - average)
 }
 const deviation = (x: Float32Array): number =>
   Math.sqrt(x.reduce((s, v) => s + v * v, 0) / (x.length || 1))
@@ -80,12 +82,11 @@ export async function takeLag(take: AudioSource, music: AudioSource): Promise<nu
   const scores: number[] = []
   for (let lag = first; lag <= last; lag++) scores.push(score(lag))
   const best = scores.indexOf(Math.max(...scores))
-  const typical = [...scores].sort((a, b) => a - b)[Math.floor(scores.length / 2)]
+  const typical = median(scores)
   if (scores[best] < MIN_CORRELATION || scores[best] - typical < MIN_PROMINENCE) return null
 
   // A parabola through the peak and its neighbours places it between frames.
   const [a, b, c] = [scores[best - 1], scores[best], scores[best + 1]]
-  const bend = a - 2 * b + c
-  const between = a !== undefined && c !== undefined && bend < 0 ? (a - c) / (2 * bend) : 0
+  const between = a !== undefined && c !== undefined ? parabolicOffset(a, b, c, 'peak') : 0
   return (first + best + between) / voice.rate
 }

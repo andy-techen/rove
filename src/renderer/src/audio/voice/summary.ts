@@ -6,6 +6,7 @@ import {
   TakeSummary
 } from '@shared/voice'
 import { analyseFrames, singingTest } from '../dsp/voiceBands'
+import { mean, median } from '../dsp/stats'
 import { analysePitch, hzToMidi } from '../pitch/pitch'
 
 /** The part of a take that plays. durationSec 0 means to the end. */
@@ -50,9 +51,6 @@ function clipWindow(samples: Float32Array, sampleRate: number, window: TakeWindo
       : samples.length
   return samples.subarray(start, end)
 }
-
-const median = (xs: number[]): number => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]
-const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length
 
 /** Runs of steady pitch (in MIDI note numbers) long enough to count as held notes. */
 function heldNotes(midi: number[], hopSec: number): number[][] {

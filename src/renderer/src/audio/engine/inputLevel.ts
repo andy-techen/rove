@@ -1,5 +1,6 @@
 import { INPUT_VOLUME_MAX } from '@shared/inputVolume'
 import { CLIP_DB, QUIET_DB } from '../mix/meter'
+import { clamp } from '../dsp/units'
 
 // The loudest part of a song should peak here: in the meter's green, below "getting
 // loud", with room for an even bigger note on the night.
@@ -24,6 +25,6 @@ export function nextInputVolume(current: number, loudestDb: number): number | nu
   if (!(loudestDb >= QUIET_DB)) return null
   const shortDb = loudestDb >= CLIP_DB ? -CLIPPED_DROP_DB : TARGET_PEAK_DB - loudestDb
   if (Math.abs(shortDb) < CLOSE_ENOUGH_DB) return current
-  const steps = Math.max(-MAX_STEPS, Math.min(MAX_STEPS, Math.round(shortDb * STEPS_PER_DB)))
-  return Math.max(MIN_VOLUME, Math.min(INPUT_VOLUME_MAX, current + steps))
+  const steps = clamp(Math.round(shortDb * STEPS_PER_DB), -MAX_STEPS, MAX_STEPS)
+  return clamp(current + steps, MIN_VOLUME, INPUT_VOLUME_MAX)
 }

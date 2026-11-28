@@ -1,7 +1,8 @@
 // How a voice's energy splits across frequency bands, frame by frame. Auto polish reads
 // tone from this to set its controls; the voice profile sums it over every song.
-import { fft } from './fft'
+import { fft, hann as hannWindow } from './fft'
 import { gainToDb } from './units'
+import { percentile } from './stats'
 
 export const FRAME = 2048
 export const HOP = FRAME / 2
@@ -40,16 +41,8 @@ export interface Frame {
   air: number
 }
 
-const hann = Float64Array.from(
-  { length: FRAME },
-  (_, n) => 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (FRAME - 1))
-)
+const hann = hannWindow(FRAME)
 const hannPower = hann.reduce((sum, w) => sum + w * w, 0)
-
-export function percentile(values: number[], p: number): number {
-  const sorted = [...values].sort((a, b) => a - b)
-  return sorted[Math.floor(p * (sorted.length - 1))]
-}
 
 /** One frame's level and how its energy splits across the bands. */
 export function analyseFrame(samples: Float32Array, at: number, sampleRate: number): Frame {

@@ -1,5 +1,6 @@
 import type { SeparateRequest, SeparationReply } from './messages'
 import SeparationWorker from './separation.worker?worker'
+import { clamp } from '../dsp/units'
 
 // Segments start every half segment: half the work of the model's usual quarter, for
 // about 0.1 dB less separation (measured by @audio/neural-separate on MUSDB18).
@@ -55,7 +56,7 @@ export function removeVocals(
       channels,
       sampleRate: song.sampleRate,
       model: model.slice(),
-      threads: Math.max(1, Math.min(MAX_THREADS, navigator.hardwareConcurrency - SPARE_CORES)),
+      threads: clamp(navigator.hardwareConcurrency - SPARE_CORES, 1, MAX_THREADS),
       step: SEGMENT_STEP
     }
     worker.postMessage(request, [...channels.map((ch) => ch.buffer), request.model.buffer])

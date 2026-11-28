@@ -1,4 +1,5 @@
 import { Mp3Encoder } from '@breezystack/lamejs'
+import { clamp } from '../dsp/units'
 
 // 320 kbps CBR: the top MP3 rate, so the smaller file costs as little quality as MP3 can.
 const MP3_KBPS = 320
@@ -8,7 +9,7 @@ const FRAMES_PER_CHUNK = 64
 const INT16_MAX = 0x7fff
 
 const toInt16 = (samples: Float32Array): Int16Array =>
-  Int16Array.from(samples, (s) => Math.max(-1, Math.min(1, s)) * INT16_MAX)
+  Int16Array.from(samples, (s) => clamp(s, -1, 1) * INT16_MAX)
 
 /**
  * Encodes a mix to MP3 in chunks, yielding between them so the window stays responsive

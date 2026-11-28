@@ -31,3 +31,13 @@ export function fft(re: Float64Array, im: Float64Array): void {
     }
   }
 }
+
+/**
+ * A Hann window. Periodic windows (dividing by `length`) overlap-add to exactly 1 at
+ * half-length hops, which resynthesis and spectral frames want; the symmetric form
+ * (dividing by `length − 1`) ends on zero at both edges.
+ */
+export function hann(length: number, periodic = false): Float64Array {
+  const span = periodic ? length : length - 1
+  return Float64Array.from({ length }, (_, n) => 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / span))
+}

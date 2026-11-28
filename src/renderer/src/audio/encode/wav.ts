@@ -1,3 +1,5 @@
+import { clamp } from '../dsp/units'
+
 // Takes are 16-bit mono; exports are 24-bit stereo for headroom in mastering.
 export type BitDepth = 16 | 24
 const PCM_FORMAT = 1
@@ -47,7 +49,7 @@ export function encodeWav(
   let offset = HEADER_BYTES
   for (let i = 0; i < frames; i++) {
     for (const channel of channels) {
-      const clamped = Math.max(-1, Math.min(1, channel[i]))
+      const clamped = clamp(channel[i], -1, 1)
       const value = Math.trunc(clamped < 0 ? clamped * negative : clamped * positive)
       if (bitDepth === 16) {
         view.setInt16(offset, value, true)

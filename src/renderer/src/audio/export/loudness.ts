@@ -1,4 +1,5 @@
 import { dbToGain, gainToDb } from '../dsp/units'
+import { mean } from '../dsp/stats'
 
 // Loudness to ITU-R BS.1770-4 / EBU R128, as streaming services measure it.
 // https://www.itu.int/rec/R-REC-BS.1770
@@ -24,7 +25,7 @@ type Biquad = [b0: number, b1: number, b2: number, a1: number, a2: number]
 function kWeighting(sampleRate: number): [Biquad, Biquad] {
   const shelfK = Math.tan((Math.PI * 1681.974450955533) / sampleRate)
   const shelfQ = 0.7071752369554196
-  const vh = 10 ** (3.999843853973347 / 20)
+  const vh = dbToGain(3.999843853973347)
   const vb = vh ** 0.4996667741545416
   const a0 = 1 + shelfK / shelfQ + shelfK * shelfK
   const shelf: Biquad = [
@@ -84,7 +85,6 @@ export function integratedLoudness(channels: Float32Array[], sampleRate: number)
   }
   const gated = (threshold: number, powers: number[]): number[] =>
     powers.filter((p) => blockLoudness(p) > threshold)
-  const mean = (powers: number[]): number => powers.reduce((a, b) => a + b, 0) / powers.length
 
   const audible = gated(ABSOLUTE_GATE_LUFS, blocks)
   if (audible.length === 0) return -Infinity

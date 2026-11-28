@@ -219,7 +219,7 @@ songs are the data, so undoing, re-recording or deleting a song changes what it 
 | `music/`      | Beat tracking, time-stretch and pitch-shift for the backing track, chord detection; instrumentals' guitar, sampled piano and drums              |
 | `export/`     | Offline mixdown and loudness levelling                                                                                                          |
 | `encode/`     | WAV and MP3 encoding (takes and exports)                                                                                                        |
-| `dsp/`        | Shared maths: FFT, resampling, units, and the render cache                                                                                      |
+| `dsp/`        | Shared maths: FFT and windows, resampling, units and `clamp`, stats, peak fitting, seeded noise, and the render cache                           |
 | `worklets/`   | Code that runs on the audio thread: the recorder and the noise gate                                                                             |
 
 Heavy work (tuning, speed and key, analysis, export) runs offline into buffers; live

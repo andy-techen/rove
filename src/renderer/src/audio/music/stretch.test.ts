@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { analysePitch, hzToMidi } from '../pitch/pitch'
 import { changeSpeedAndPitch, detectBeat } from './stretch'
+import { seededNoise } from '../dsp/noise'
 
 const SR = 48000
 
@@ -14,12 +15,11 @@ const tone = (hz: number, seconds: number): Float32Array =>
 function clicks(bpm: number, seconds: number, startSec = 0): Float32Array {
   const out = new Float32Array(Math.round(seconds * SR))
   const beat = (60 / bpm) * SR
-  let seed = 1
+  const noise = seededNoise(1)
   for (let b = 0; startSec * SR + b * beat < out.length; b++) {
     const at = Math.round(startSec * SR + b * beat)
     for (let i = 0; i < SR * 0.03 && at + i < out.length; i++) {
-      seed = (seed * 16807) % 2147483647
-      out[at + i] = ((seed / 2147483647) * 2 - 1) * 0.5 * Math.exp(-i / (SR * 0.006))
+      out[at + i] = noise() * 0.5 * Math.exp(-i / (SR * 0.006))
     }
   }
   return out
@@ -36,13 +36,12 @@ async function pitchOf(samples: Float32Array): Promise<number> {
 function speedingClicks(fromBpm: number, toBpm: number, seconds: number) {
   const out = new Float32Array(Math.round(seconds * SR))
   const times: number[] = []
-  let seed = 1
+  const noise = seededNoise(1)
   for (let t = 0.2; t < seconds - 0.05;) {
     times.push(t)
     const at = Math.round(t * SR)
     for (let i = 0; i < SR * 0.03 && at + i < out.length; i++) {
-      seed = (seed * 16807) % 2147483647
-      out[at + i] = ((seed / 2147483647) * 2 - 1) * 0.5 * Math.exp(-i / (SR * 0.006))
+      out[at + i] = noise() * 0.5 * Math.exp(-i / (SR * 0.006))
     }
     const bpm = fromBpm + ((toBpm - fromBpm) * t) / seconds
     t += 60 / bpm

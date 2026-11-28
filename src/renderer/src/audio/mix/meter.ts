@@ -1,5 +1,3 @@
-import { gainToDb } from '../dsp/units'
-
 export const METER_FLOOR_DB = -60
 
 export type LevelZone = 'silent' | 'quiet' | 'good' | 'loud' | 'clip'
@@ -10,8 +8,6 @@ export const CLIP_DB = -1
 export const LOUD_DB = -6
 export const GOOD_DB = -24
 export const QUIET_DB = -45
-
-export const toDb = gainToDb
 
 // Peak meter falls at this rate after a peak, so the bar is readable.
 const FALL_DB_PER_SEC = 24

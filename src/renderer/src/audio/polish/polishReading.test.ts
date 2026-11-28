@@ -1,17 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { dbToGain } from '../dsp/units'
+import { seededNoise } from '../dsp/noise'
 import { HeardWindow, analyseVoice } from './polishReading'
 
 const RATE = 48000
-
-// Repeatable noise, so a failing test fails the same way every time.
-function noiseSource(seed = 7): () => number {
-  let s = seed
-  return () => {
-    s = (s * 16807) % 2147483647
-    return (s / 2147483647) * 2 - 1
-  }
-}
 
 /** A sung-like tone: a 220 Hz voice with harmonics up to about 4 kHz, at an RMS level. */
 function voice(sec: number, db: number, body = 1): Float32Array {
@@ -30,7 +22,7 @@ function voice(sec: number, db: number, body = 1): Float32Array {
 /** An "s": a burst of energy between 6.5 and 11 kHz, at an RMS level. */
 function ess(sec: number, db: number): Float32Array {
   const out = new Float32Array(Math.round(sec * RATE))
-  const random = noiseSource(3)
+  const random = seededNoise(3)
   const partials = Array.from({ length: 19 }, (_, i) => ({
     hz: 6500 + i * 250,
     phase: random() * Math.PI
@@ -58,7 +50,7 @@ const join = (...parts: Float32Array[]): Float32Array => {
 
 /** Room noise (white, at an RMS level) and an optional 60 Hz hum over the whole take. */
 function inRoom(take: Float32Array, noiseDb: number, humDb?: number): Float32Array {
-  const random = noiseSource()
+  const random = seededNoise(7)
   // Uniform noise in ±1 has an RMS of 1/√3.
   const noise = dbToGain(noiseDb) * Math.sqrt(3)
   const hum = humDb === undefined ? 0 : dbToGain(humDb) * Math.SQRT2

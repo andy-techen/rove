@@ -1,3 +1,5 @@
+import { clamp } from '../dsp/units'
+
 /** The plain-language controls, each 0..1. */
 export interface PolishAmounts {
   cleanup: number
@@ -127,10 +129,10 @@ const SLIDER_MAP: Record<
 const MAKEUP_SHARE = 0.5
 const MAKEUP_MAX_DB = 12
 
-const lerp = (a: number, b: number, t: number): number => a + (b - a) * Math.max(0, Math.min(1, t))
+const lerp = (a: number, b: number, t: number): number => a + (b - a) * clamp(t, 0, 1)
 /** Keeps a parameter inside its safe range, however it was set. */
 export const clampParam = (key: PolishParam, value: number): number =>
-  Math.max(PARAM_RANGES[key].min, Math.min(PARAM_RANGES[key].max, value))
+  clamp(value, PARAM_RANGES[key].min, PARAM_RANGES[key].max)
 
 /**
  * The slider position that gives a real parameter this value: the inverse of the
@@ -138,7 +140,7 @@ export const clampParam = (key: PolishParam, value: number): number =>
  */
 export function amountFor(param: Exclude<PolishParam, 'makeupDb'>, value: number): number {
   const { at0, at1 } = SLIDER_MAP[param]
-  return Math.max(0, Math.min(1, (value - at0) / (at1 - at0)))
+  return clamp((value - at0) / (at1 - at0), 0, 1)
 }
 
 /** Turns the plain-language sliders (and any Advanced overrides) into real DSP settings. */

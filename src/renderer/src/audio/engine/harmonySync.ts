@@ -1,4 +1,5 @@
 import { MIN_LINE_UP_SEC } from './lineUp'
+import { parabolicOffset } from '../dsp/peakFit'
 
 /** A stretch of singing between pauses, in seconds from the start of the take. */
 export interface Phrase {
@@ -125,8 +126,7 @@ export function harmonyTiming(
     if (scores[best] < MIN_MATCH || atEdge) return { ...phrase, bySec: 0 }
     // A parabola through the peak and its neighbours places it between frames.
     const [p, q, r] = [scores[best - 1], scores[best], scores[best + 1]]
-    const bend = p - 2 * q + r
-    const between = p !== undefined && r !== undefined && bend < 0 ? (p - r) / (2 * bend) : 0
+    const between = p !== undefined && r !== undefined ? parabolicOffset(p, q, r, 'peak') : 0
     const bySec = (best - reach + between) * FRAME_SEC
     return { ...phrase, bySec: Math.abs(bySec) >= MIN_LINE_UP_SEC ? bySec : 0 }
   })

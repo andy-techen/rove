@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createMeter } from '../../audio/engine/engine'
 import { nextInputVolume } from '../../audio/engine/inputLevel'
-import { toDb } from '../../audio/mix/meter'
+import { gainToDb } from '../../audio/dsp/units'
 
 // Long enough to sing a big line; short enough to stay a quick check.
 const LISTEN_MS = 5000
@@ -52,7 +52,7 @@ export function useAutoLevel(
     const meter = createMeter(source)
     let loudest = -Infinity
     const read = setInterval(() => {
-      loudest = Math.max(loudest, toDb(meter.readPeak()))
+      loudest = Math.max(loudest, gainToDb(meter.readPeak()))
     }, READ_EVERY_MS)
     const stop = (): void => {
       clearInterval(read)
