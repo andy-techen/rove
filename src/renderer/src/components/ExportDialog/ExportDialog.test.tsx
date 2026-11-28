@@ -15,6 +15,7 @@ import {
 } from '../../audio/export/videoFrame'
 import { DEFAULT_FONT, FontId } from '../../audio/export/videoFonts'
 import { Align, stepSize } from '../../audio/export/videoLayout'
+import { fireMenu } from '../../test/fakeApi'
 import { ExportDialog } from '.'
 
 const renderDialog = (
@@ -285,6 +286,24 @@ describe('ExportDialog', () => {
     await finishEditing()
     await start()
     expect(videoOf(props).texts[0].width).toBeLessThan(VIDEO_WIDTH - MARGIN * 2)
+  })
+
+  it('undoes and redoes changes to the picture one at a time', async () => {
+    const props = renderDialog()
+    await chooseVideo()
+    await openEditor()
+    await addWords('Hi')
+    await userEvent.click(wordsOnPicture('Hi'))
+    await userEvent.keyboard('{Escape}')
+    const larger = screen.getByRole('button', { name: t('export.video.larger') })
+    await userEvent.click(larger)
+    await userEvent.click(larger)
+    fireMenu('undo')
+    fireMenu('undo')
+    fireMenu('redo')
+    await finishEditing()
+    await start()
+    expect(videoOf(props).texts[0].size).toBe(stepSize(WORDS_SIZE, WORDS_SIZES, 1))
   })
 
   it('moves the words in small steps with the arrow keys', async () => {

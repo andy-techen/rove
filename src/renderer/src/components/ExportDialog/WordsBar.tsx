@@ -16,7 +16,8 @@ interface Props {
   /** The colour the words take when the singer hasn't picked one. */
   autoInk: string
   fonts: FontId[]
-  onChange(change: Partial<TextBox>): void
+  /** `key` groups a run of changes (sliding through colours) into one undo step. */
+  onChange(change: Partial<TextBox>, key?: string): void
   onRemove(): void
 }
 
@@ -41,7 +42,7 @@ export function WordsBar({
         <InkSwatch
           colour={box.colour ?? autoInk}
           label={t('export.video.wordsColour')}
-          onColour={(colour) => onChange({ colour })}
+          onColour={(colour) => onChange({ colour }, 'colour')}
         />
       }
       after={

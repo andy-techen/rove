@@ -24,6 +24,7 @@ const context = (over: Partial<SongCommandContext> = {}): SongCommandContext => 
     selectedTrackId: null,
     oneClip: null,
     navTrack: null,
+    behindDialog: false,
     ...over
   }
 }
@@ -37,6 +38,17 @@ describe('useSongCommands', () => {
     fireMenu('undo')
     expect(window.api.nativeEdit).toHaveBeenCalledWith('undo')
     expect(c.song.undo).not.toHaveBeenCalled()
+  })
+
+  it('leaves the song alone behind a dialog, but still undoes typing in it', () => {
+    const c = context({ behindDialog: true })
+    renderHook(() => useSongCommands(true, c))
+    fireMenu('undo')
+    expect(c.song.undo).not.toHaveBeenCalled()
+    render(<input aria-label="Name" />)
+    screen.getByRole('textbox').focus()
+    fireMenu('undo')
+    expect(window.api.nativeEdit).toHaveBeenCalledWith('undo')
   })
 
   it('still plays from the keyboard while typing', () => {

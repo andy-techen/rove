@@ -242,6 +242,7 @@ export function RecordScreen({
     oneClip,
     // Navigation follows the selected clip's track, else the selected track, else every track.
     navTrack: selection.selected?.trackId ?? selectedTrackId,
+    behindDialog: exportOpen,
     copy: clipboard.copy,
     cut: clipboard.cut,
     paste: clipboard.paste,

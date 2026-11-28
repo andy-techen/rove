@@ -23,6 +23,11 @@ export interface SongCommandContext {
   oneClip: ClipRef | null
   /** The track the edge keys follow; null for every track. */
   navTrack: string | null
+  /**
+   * A dialog over the song (export) has the keyboard: commands leave the song alone,
+   * and the dialog handles its own (the picture editor's undo).
+   */
+  behindDialog: boolean
   copy(): void
   cut(): void
   paste(): void
@@ -125,7 +130,7 @@ export function useSongCommands(active: boolean, context: SongCommandContext): v
       if (!active) return
       const native = nativeEditFor(action)
       if (native && typingIn(document.activeElement)) void window.api.nativeEdit(native)
-      else songCommands(context)[action]?.()
+      else if (!context.behindDialog) songCommands(context)[action]?.()
     }
   })
   useEffect(() => onCommand((action) => run.current(action)), [])

@@ -111,9 +111,10 @@ interface Props {
   onSelect(id: string | null): void
   onEdit(id: string | null): void
   onAdd(position: Position): void
-  onChange(id: string, change: Partial<TextBox>): void
+  /** `key` groups a run of changes (one drag) into one undo step. */
+  onChange(id: string, change: Partial<TextBox>, key?: string): void
   onRemove(id: string): void
-  onLyricsChange(change: Partial<LyricsStyle>): void
+  onLyricsChange(change: Partial<LyricsStyle>, key?: string): void
   /** Tools down the side of the picture, as in a phone's story editor. */
   tools: ReactNode
 }
@@ -145,6 +146,8 @@ export function PictureStage({
     null
   )
   const [dragging, setDragging] = useState(false)
+  // Counts presses, so each drag or resize is its own undo step.
+  const gesture = useRef(0)
   const [guides, setGuides] = useState<Guides>(NO_GUIDES)
   const words = useRef(new Map<string, HTMLDivElement>())
   const fonts = fontsOnThisMachine()
@@ -222,6 +225,7 @@ export function PictureStage({
   const onPressDown = (e: PointerEvent<HTMLDivElement>, id: string, position: Position): void => {
     e.stopPropagation()
     e.currentTarget.setPointerCapture?.(e.pointerId)
+    gesture.current += 1
     const point = pointOf(e)
     press.current = {
       id,
@@ -246,13 +250,17 @@ export function PictureStage({
       const rectAt = (at: Position): Rect =>
         lyricsRectFor({ ...value.lyricsStyle, position: lyricsWithin(at) })
       const at = aligned(held.id, lyricsWithin(wanted), rectAt, e.metaKey)
-      onLyricsChange({ position: lyricsWithin(at) })
+      onLyricsChange({ position: lyricsWithin(at) }, `drag:${gesture.current}`)
       return
     }
     const box = value.texts.find((b) => b.id === held.id)
     if (!box) return
     const rectAt = (at: Position): Rect => rectOf(measure, { ...box, position: at })
-    onChange(held.id, { position: aligned(held.id, wanted, rectAt, e.metaKey) })
+    onChange(
+      held.id,
+      { position: aligned(held.id, wanted, rectAt, e.metaKey) },
+      `drag:${gesture.current}`
+    )
   }
 
   const onWordsUp = (): void => {
@@ -277,7 +285,7 @@ export function PictureStage({
     const moved = nudged(e, box.position)
     if (!moved) return
     onSelect(box.id)
-    onChange(box.id, { position: inFrame(moved) })
+    onChange(box.id, { position: inFrame(moved) }, 'nudge')
   }
 
   /** Where an arrow key moves something at `position`, or null for any other key. */
@@ -300,13 +308,13 @@ export function PictureStage({
     right: rect.x + rect.width / 2
   })
   /** Moves one side of a box (words, or the lyrics: `id`) to `to`, in video pixels. */
-  const resizeTo = (id: string, side: Side, to: number): void => {
+  const resizeTo = (id: string, side: Side, to: number, key: string): void => {
     if (id === LYRICS_SELECTED) {
-      onLyricsChange(resizeLyrics(value.lyricsStyle, edgesOf(lyricsRect), side, to))
+      onLyricsChange(resizeLyrics(value.lyricsStyle, edgesOf(lyricsRect), side, to), key)
       return
     }
     const box = value.texts.find((b) => b.id === id)
-    if (box) onChange(id, resizeWords(box, edgesOf(rectOf(measure, box)), side, to))
+    if (box) onChange(id, resizeWords(box, edgesOf(rectOf(measure, box)), side, to), key)
   }
   const rectFor = (id: string): Rect | null => {
     if (id === LYRICS_SELECTED) return lyricsRect
@@ -318,6 +326,7 @@ export function PictureStage({
     e.stopPropagation()
     e.preventDefault()
     e.currentTarget.setPointerCapture?.(e.pointerId)
+    gesture.current += 1
     resizing.current = { id, side }
     setDragging(true)
   }
@@ -326,7 +335,7 @@ export function PictureStage({
     if (!held) return
     // The grip sits on the box's padded outline, so the lines' edge is a pad inside it.
     const pad = held.side === 'left' ? GRAB_PAD : -GRAB_PAD
-    resizeTo(held.id, held.side, pointOf(e).x * VIDEO_WIDTH + pad)
+    resizeTo(held.id, held.side, pointOf(e).x * VIDEO_WIDTH + pad, `resize:${gesture.current}`)
   }
   const onEdgeUp = (): void => {
     resizing.current = null
@@ -338,7 +347,7 @@ export function PictureStage({
     if (!step?.x || !rect) return
     e.preventDefault()
     const by = (e.shiftKey ? NUDGE_FAR : NUDGE) * VIDEO_WIDTH * step.x
-    resizeTo(id, side, edgesOf(rect)[side] + by)
+    resizeTo(id, side, edgesOf(rect)[side] + by, 'resize-keys')
   }
 
   const onLyricsKey = (e: KeyboardEvent): void => {
@@ -350,7 +359,7 @@ export function PictureStage({
     const moved = nudged(e, value.lyricsStyle.position)
     if (!moved) return
     onSelect(LYRICS_SELECTED)
-    onLyricsChange({ position: lyricsWithin(moved) })
+    onLyricsChange({ position: lyricsWithin(moved) }, 'nudge')
   }
 
   const chosen = value.texts.find((box) => box.id === selected)
@@ -423,7 +432,7 @@ export function PictureStage({
                   maxLength={WORDS_MAX_LENGTH}
                   value={box.text}
                   onPointerDown={(e) => e.stopPropagation()}
-                  onChange={(e) => onChange(box.id, { text: e.target.value })}
+                  onChange={(e) => onChange(box.id, { text: e.target.value }, 'type')}
                   onBlur={(e) => {
                     // Picking a colour for the words isn't finishing them; a click on the
                     // picture still does.
@@ -519,7 +528,7 @@ export function PictureStage({
               placement={placement(chosenRect, GRAB_PAD)}
               autoInk={autoInk}
               fonts={fonts}
-              onChange={(change) => onChange(chosen.id, change)}
+              onChange={(change, key) => onChange(chosen.id, change, key)}
               onRemove={() => onRemove(chosen.id)}
             />
           )}

@@ -16,7 +16,8 @@ interface Props {
   /** The colour the lyrics take when the singer hasn't picked one. */
   autoInk: string
   fonts: FontId[]
-  onChange(change: Partial<LyricsStyle>): void
+  /** `key` groups a run of changes (sliding through colours) into one undo step. */
+  onChange(change: Partial<LyricsStyle>, key?: string): void
 }
 
 /** Colour, font, lining up and size for the lyrics, just above them. */
@@ -39,7 +40,7 @@ export function LyricsBar({
         <InkSwatch
           colour={style.colour ?? autoInk}
           label={t('export.video.lyricsColour')}
-          onColour={(colour) => onChange({ colour })}
+          onColour={(colour) => onChange({ colour }, 'colour')}
         />
       }
       after={

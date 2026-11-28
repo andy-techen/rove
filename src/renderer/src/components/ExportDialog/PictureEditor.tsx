@@ -1,4 +1,4 @@
-import { CSSProperties, useState } from 'react'
+import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { Position, coverCrop } from '../../audio/export/videoLayout'
 import {
@@ -13,6 +13,14 @@ import {
 } from '../../audio/export/videoFrame'
 import { DEFAULT_FONT } from '../../audio/export/videoFonts'
 import { SongLyrics, isTimed } from '../../state/lyrics/lyrics'
+import { Command, onCommand, typingIn } from '../../state/commands/commands'
+import {
+  History,
+  emptyHistory,
+  pushHistory,
+  redoHistory,
+  undoHistory
+} from '../../state/song/history'
 import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
 import { Icon } from '../ui/Icon'
@@ -52,6 +60,33 @@ export function PictureEditor({
   )
   const { background, texts } = value
   const timed = lyrics ? isTimed(lyrics) : false
+  const [history, setHistory] = useState<History<VideoOptions>>(emptyHistory)
+
+  /**
+   * Changes the picture and remembers how it was, for undo. Changes sharing a `key` in a
+   * row (one drag, the letters typed into one set of words) undo as a single step.
+   */
+  const change = (next: VideoOptions, key?: string): void => {
+    setHistory((h) => pushHistory(h, value, key))
+    onChange(next)
+  }
+  const travel = (step: typeof undoHistory): void => {
+    const moved = step(history, value)
+    if (!moved) return
+    setHistory(moved.history)
+    onChange(moved.value)
+  }
+  // ⌘Z and ⌘⇧Z step through the picture's changes while it's open. In a text field they
+  // belong to the text (the song's command handler sends them there).
+  const run = useRef<(command: Command) => void>(() => {})
+  useEffect(() => {
+    run.current = (command) => {
+      if (typingIn(document.activeElement)) return
+      if (command === 'undo') travel(undoHistory)
+      if (command === 'redo') travel(redoHistory)
+    }
+  })
+  useEffect(() => onCommand((command) => run.current(command)), [])
   const autoInk = inkOn(sceneFor(value, picture.image, null).background)
 
   const thumbnail = useDrawing(
@@ -65,9 +100,12 @@ export function PictureEditor({
     [picture.image, picture.file]
   )
 
-  const setTexts = (next: TextBox[]): void => onChange({ ...value, texts: next })
-  const updateText = (id: string, change: Partial<TextBox>): void =>
-    setTexts(texts.map((box) => (box.id === id ? { ...box, ...change } : box)))
+  const setTexts = (next: TextBox[], key?: string): void => change({ ...value, texts: next }, key)
+  const updateText = (id: string, edit: Partial<TextBox>, key?: string): void =>
+    setTexts(
+      texts.map((box) => (box.id === id ? { ...box, ...edit } : box)),
+      key && `${id}:${key}`
+    )
   /** New words at `position`, ready to type into. */
   const addWordsAt = (position: Position): void => {
     const box: TextBox = {
@@ -80,7 +118,8 @@ export function PictureEditor({
       width: null,
       position
     }
-    setTexts([...texts, box])
+    // Adding words and typing them is one step, so undo takes away the words as typed.
+    setTexts([...texts, box], `${box.id}:type`)
     setSelected(box.id)
     setEditing(box.id)
   }
@@ -94,7 +133,10 @@ export function PictureEditor({
     const finished = texts.find((box) => box.id === editing)
     if (id === editing) return
     if (finished && id !== finished.id && !finished.text.trim()) {
-      setTexts(texts.filter((box) => box.id !== finished.id))
+      setTexts(
+        texts.filter((box) => box.id !== finished.id),
+        `${finished.id}:type`
+      )
       if (selected === finished.id) setSelected(null)
     }
     setEditing(id)
@@ -107,12 +149,12 @@ export function PictureEditor({
   }
   const pickColour = (colour: string): void => {
     setPickedColour(colour)
-    onChange({ ...value, background: { kind: 'colour', colour } })
+    change({ ...value, background: { kind: 'colour', colour } }, 'background-colour')
   }
   const choosePicture = (chosen: File | undefined): void => {
     if (!chosen) return
     picture.choose(chosen)
-    onChange({ ...value, background: { kind: 'picture', file: chosen } })
+    change({ ...value, background: { kind: 'picture', file: chosen } })
   }
 
   return (
@@ -138,8 +180,11 @@ export function PictureEditor({
           onAdd={addWordsAt}
           onChange={updateText}
           onRemove={remove}
-          onLyricsChange={(change) =>
-            onChange({ ...value, lyricsStyle: { ...value.lyricsStyle, ...change } })
+          onLyricsChange={(edit, key) =>
+            change(
+              { ...value, lyricsStyle: { ...value.lyricsStyle, ...edit } },
+              key && `lyrics:${key}`
+            )
           }
           tools={
             <>
@@ -162,7 +207,7 @@ export function PictureEditor({
                 title={timed ? undefined : t('export.video.lyricsNeedTiming')}
                 aria-pressed={value.lyrics && timed}
                 disabled={!timed}
-                onClick={() => onChange({ ...value, lyrics: !value.lyrics })}
+                onClick={() => change({ ...value, lyrics: !value.lyrics })}
               />
             </>
           }
@@ -186,7 +231,7 @@ export function PictureEditor({
                   className="visually-hidden"
                   aria-label={t(`export.video.backgrounds.${id}`)}
                   checked={background.kind === 'blank' && background.id === id}
-                  onChange={() => onChange({ ...value, background: { kind: 'blank', id } })}
+                  onChange={() => change({ ...value, background: { kind: 'blank', id } })}
                 />
               </label>
             </Tooltip>
@@ -225,7 +270,7 @@ export function PictureEditor({
                   checked={background.kind === 'picture'}
                   onChange={() =>
                     picture.file &&
-                    onChange({ ...value, background: { kind: 'picture', file: picture.file } })
+                    change({ ...value, background: { kind: 'picture', file: picture.file } })
                   }
                 />
               </label>
