@@ -492,6 +492,7 @@ export function PictureStage({
           {lyricsChosen && !dragging && (
             <LyricsBar
               style={value.lyricsStyle}
+              autoInk={autoInk}
               top={lyricsRect.top / VIDEO_HEIGHT}
               placement={placement(lyricsRect, GRAB_PAD)}
               fonts={fonts}

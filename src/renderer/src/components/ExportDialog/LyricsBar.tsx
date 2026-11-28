@@ -5,6 +5,7 @@ import { LYRICS_SIZES, LyricsStyle, lyricsEdge } from '../../audio/export/videoF
 import { FontId } from '../../audio/export/videoFonts'
 import { IconButton } from '../ui/IconButton'
 import { AlignButton } from './AlignButton'
+import { InkSwatch } from './InkSwatch'
 import { PictureBar } from './PictureBar'
 
 interface Props {
@@ -12,12 +13,21 @@ interface Props {
   /** The top of the lyrics, as a share of the frame's height. */
   top: number
   placement: CSSProperties
+  /** The colour the lyrics take when the singer hasn't picked one. */
+  autoInk: string
   fonts: FontId[]
   onChange(change: Partial<LyricsStyle>): void
 }
 
-/** Font, size and lining up for the lyrics, just above them. */
-export function LyricsBar({ style, top, placement, fonts, onChange }: Props): React.JSX.Element {
+/** Colour, font, lining up and size for the lyrics, just above them. */
+export function LyricsBar({
+  style,
+  top,
+  placement,
+  autoInk,
+  fonts,
+  onChange
+}: Props): React.JSX.Element {
   return (
     <PictureBar
       top={top}
@@ -25,6 +35,13 @@ export function LyricsBar({ style, top, placement, fonts, onChange }: Props): Re
       font={style.font}
       fonts={fonts}
       onFont={(font) => onChange({ font })}
+      before={
+        <InkSwatch
+          colour={style.colour ?? autoInk}
+          label={t('export.video.lyricsColour')}
+          onColour={(colour) => onChange({ colour })}
+        />
+      }
       after={
         <>
           <AlignButton

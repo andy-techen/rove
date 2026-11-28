@@ -4,8 +4,8 @@ import { stepSize } from '../../audio/export/videoLayout'
 import { TextBox, WORDS_SIZES } from '../../audio/export/videoFrame'
 import { FontId } from '../../audio/export/videoFonts'
 import { IconButton } from '../ui/IconButton'
-import { Tooltip } from '../ui/Tooltip'
 import { AlignButton } from './AlignButton'
+import { InkSwatch } from './InkSwatch'
 import { PictureBar } from './PictureBar'
 
 interface Props {
@@ -30,7 +30,6 @@ export function WordsBar({
   onChange,
   onRemove
 }: Props): React.JSX.Element {
-  const colour = box.colour ?? autoInk
   return (
     <PictureBar
       top={top}
@@ -39,21 +38,11 @@ export function WordsBar({
       fonts={fonts}
       onFont={(font) => onChange({ font })}
       before={
-        <Tooltip text={t('export.video.wordsColour')}>
-          <label
-            className="picture-swatch picture-swatch-colour"
-            style={{ '--swatch-colour': colour } as CSSProperties}
-          >
-            <input
-              type="color"
-              className="visually-hidden"
-              aria-label={t('export.video.wordsColour')}
-              value={colour}
-              onInput={(e) => onChange({ colour: e.currentTarget.value })}
-              onChange={(e) => onChange({ colour: e.target.value })}
-            />
-          </label>
-        </Tooltip>
+        <InkSwatch
+          colour={box.colour ?? autoInk}
+          label={t('export.video.wordsColour')}
+          onColour={(colour) => onChange({ colour })}
+        />
       }
       after={
         <>

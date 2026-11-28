@@ -416,6 +416,40 @@ describe('ExportDialog', () => {
     expect(position.x).toBe(DEFAULT_LYRICS_STYLE.position.x)
   })
 
+  it('colours the lyrics from the bar above them', async () => {
+    const props = renderDialog({ status: 'idle' }, timedLyrics())
+    await chooseVideo()
+    await openEditor()
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyrics') }))
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyricsOnPicture') }))
+    fireEvent.input(screen.getByLabelText(t('export.video.lyricsColour')), {
+      target: { value: '#ffffff' }
+    })
+    await finishEditing()
+    await start()
+    expect(videoOf(props).lyricsStyle.colour).toBe('#ffffff')
+  })
+
+  it('offers a colour picked for words again for the lyrics', async () => {
+    localStorage.clear()
+    const props = renderDialog({ status: 'idle' }, timedLyrics())
+    await chooseVideo()
+    await openEditor()
+    await addWords('Hi')
+    await userEvent.click(wordsOnPicture('Hi'))
+    fireEvent.change(screen.getByLabelText(t('export.video.wordsColour')), {
+      target: { value: '#123456' }
+    })
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyrics') }))
+    await userEvent.click(screen.getByRole('button', { name: t('export.video.lyricsOnPicture') }))
+    await userEvent.click(
+      screen.getByRole('button', { name: t('export.video.recentColour', { colour: '#123456' }) })
+    )
+    await finishEditing()
+    await start()
+    expect(videoOf(props).lyricsStyle.colour).toBe('#123456')
+  })
+
   it('can’t show lyrics that have no timing', async () => {
     renderDialog({ status: 'idle' }, { ...timedLyrics(), lines: [{ time: null, text: 'Hi' }] })
     await chooseVideo()

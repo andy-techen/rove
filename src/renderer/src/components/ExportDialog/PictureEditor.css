@@ -242,6 +242,22 @@
   font-family: var(--words-font);
 }
 
+/* A colour picked lately, beside the colour swatch: a smaller round dot of it. */
+.picture-recent-colour {
+  flex: none;
+  width: var(--size-control-xs);
+  height: var(--size-control-xs);
+  padding: 0;
+  border: var(--size-hairline) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--swatch-colour);
+  cursor: pointer;
+}
+
+:root:not([data-input='pointer']) .picture-recent-colour:focus-visible {
+  outline: var(--size-focus-ring) solid var(--color-accent);
+}
+
 .picture-words-bar .picture-swatch {
   width: var(--size-control-sm);
   height: var(--size-control-sm);

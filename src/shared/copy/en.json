@@ -842,6 +842,8 @@
         "center": "centre",
         "right": "right"
       },
+      "lyricsColour": "Colour of the lyrics",
+      "recentColour": "Use {colour} again",
       "lyricsSmaller": "Smaller lyrics",
       "lyricsLarger": "Larger lyrics",
       "addWords": "Add words",

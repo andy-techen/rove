@@ -74,6 +74,8 @@ export interface LyricsStyle {
    * top.
    */
   position: Position
+  /** "#rrggbb", or null for whichever of dark or light reads on the background. */
+  colour: string | null
   /** How wide the lines may run before they wrap, in video pixels; null fits the frame. */
   width: number | null
 }
@@ -143,6 +145,7 @@ export const DEFAULT_LYRICS_STYLE: LyricsStyle = {
   size: 64,
   align: 'center',
   position: { x: 0.5, y: LYRICS_TOP / VIDEO_HEIGHT },
+  colour: null,
   width: null
 }
 
@@ -378,7 +381,7 @@ export function drawVideoFrame(
   ctx.textBaseline = 'alphabetic'
   drawWords(ctx, scene, skipText)
   if (!scene.lyrics) return
-  ctx.fillStyle = inkOn(scene.background)
+  ctx.fillStyle = scene.lyricsStyle.colour ?? inkOn(scene.background)
   const style = scene.lyricsStyle
   const { blocks, anchor } = layoutLyrics(ctx, scene.lyrics, style, timeSec)
   blocks.forEach((block, i) => {
