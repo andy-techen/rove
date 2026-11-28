@@ -120,7 +120,7 @@ sequenceDiagram
   M-->>P: parseSearchResults: validated, at most 12
   Singer->>P: pick a result
   P->>P: parseLyricsText: timed lines (LRC) into project.lyrics
-  Note over P: while playing, activeLineIndex(position + offset)<br/>highlights the line; clicking a line seeks there
+  Note over P: while playing, activeLineIndex(position + offset)<br/>highlights the line, and clicking a line seeks there
 ```
 
 Only the main process goes online, and only with words the singer typed. Results are
@@ -246,8 +246,8 @@ sequenceDiagram
   Note over W: @audio/neural-separate: 11 s segments, STFT,<br/>SCNet in onnxruntime-web (CPU threads), iSTFT
   W-->>H: progress … then the song minus its vocals
   H->>API: saveInstrumental(dir, song, wav)
-  M->>M: write audio/<song> (no vocals).wav (never overwrites)
-  H->>P: clips play the instrumental; withVocals remembers the song
+  M->>M: write audio/#lt;song#gt; (no vocals).wav (never overwrites)
+  H->>P: clips play the instrumental, and withVocals remembers the song
 ```
 
 The model runs inside the app with nothing online. onnxruntime-web only uses more than
