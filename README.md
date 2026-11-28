@@ -24,34 +24,27 @@
   <a href="https://github.com/andy-techen/rove/releases/latest"><strong>Download</strong></a>
 </p>
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshot-dark.png">
-    <img src="docs/assets/screenshot-light.png" alt="Rove: a song with a backing track, lead and harmony, lyrics following along" width="880">
-  </picture>
-</p>
-
 ## About
 
 Rove is a desktop app for people who love to sing: in the car, at karaoke, in a choir,
 alone in their room. It's made for a recording you're proud of, without having to
 become an audio engineer.
 
-- **Sing over any song.** Bring a backing track and record your voice over it.
-- **Layer harmonies.** Stack your own voice into a fuller sound.
-- **Sound your best.** Plain-language controls with good defaults, and nothing that can
-  clip or sound broken.
-- **Never lose a take.** Your recordings are never modified; edits live in the project.
+## Features
+
+- **Sing over any song.** Bring a backing track, or make your own from a few chords.
+- **Layer your own harmonies.** Stack your voice into a fuller sound.
+- **Polish in plain words.** Controls named for what you hear, with good defaults for
+  every part.
+- **Lyrics and chords at hand.** Follow along while you sing.
+- **Get to know your voice.** See your range, and how it grows, across every song.
+- **Never lose a take.** Your recordings are never modified; every edit can be undone.
 
 ## Install
 
 Download the latest `.dmg` from
 [Releases](https://github.com/andy-techen/rove/releases/latest): `-arm64` for Apple
 silicon (M1 and later), `-x64` for Intel.
-
-> [!NOTE]
-> Rove isn't notarized yet, so macOS blocks the first launch. Open the app once, then go
-> to **System Settings → Privacy & Security** and choose **Open Anyway**.
 
 ## Development
 
@@ -93,7 +86,3 @@ Start with [`CLAUDE.md`](CLAUDE.md), which links the guides every change follows
   Alexander Holm, licensed under
   [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); trimmed and re-encoded, with
   its licence in `src/renderer/src/audio/music/pianoSamples/`.
-
-## License
-
-[Apache 2.0](LICENSE)
