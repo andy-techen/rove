@@ -40,12 +40,35 @@ section.panel.chord-backing-panel {
   .chord-picker {
     overflow: visible;
   }
+
+  /* With the whole panel scrolling, the bar tools are what need to stay in reach. */
+  section.panel.chord-backing-panel > .panel-header {
+    position: static;
+  }
 }
 
+/* Strum or fingerpick and the bar tools stay in reach while you scroll down the bars
+   you're adding. */
 .chart-settings {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-4) var(--space-7);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-bottom: var(--space-3);
+  margin-bottom: calc(-1 * var(--space-3));
+  background: var(--color-surface);
+}
+
+/* Stacked, they stick to the panel instead and, like its header, reach up over its
+   padding. */
+@media (max-width: 900px) {
+  .chart-settings {
+    top: calc(-1 * var(--space-7));
+    padding-top: var(--space-7);
+    margin-top: calc(-1 * var(--space-7));
+  }
 }
 
 /* Strum or fingerpick, for the bars selected below. */

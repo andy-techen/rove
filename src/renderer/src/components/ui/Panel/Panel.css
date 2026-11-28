@@ -8,10 +8,18 @@
   background: var(--color-surface);
 }
 
+/* A panel that scrolls keeps its title and tools in reach. Sticking counts from inside
+   the panel's padding, so the header reaches up over it to hide what scrolls past. */
 .panel-header {
   display: flex;
   align-items: center;
   gap: var(--space-4);
+  position: sticky;
+  top: calc(-1 * var(--space-7));
+  z-index: 1;
+  margin-top: calc(-1 * var(--space-7));
+  padding-top: var(--space-7);
+  background: var(--color-surface);
 }
 
 .panel-header h2 {
