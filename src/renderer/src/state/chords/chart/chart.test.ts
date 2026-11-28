@@ -265,21 +265,37 @@ describe('moving where the bars start', () => {
   })
 
   it('follows the drag where there is no beat close by', () => {
-    expect(draggedBarStart(1, 0.12, 1, beat, 0.05)).toEqual({ startSec: 1.12, snappedAt: null })
+    expect(draggedBarStart(1, 0.12, 1, { beat }, 0.05)).toEqual({
+      startSec: 1.12,
+      snappedAt: null
+    })
   })
 
   it('snaps onto the music’s nearest beat when dragged close to it', () => {
-    expect(draggedBarStart(1, 0.27, 1, beat, 0.05)).toEqual({ startSec: 1.3, snappedAt: 1.3 })
+    expect(draggedBarStart(1, 0.27, 1, { beat }, 0.05)).toEqual({ startSec: 1.3, snappedAt: 1.3 })
   })
 
   it('snaps onto the start of the song', () => {
-    expect(draggedBarStart(0.5, -0.47, 1, null, 0.05)).toEqual({ startSec: 0, snappedAt: 0 })
-    expect(draggedBarStart(0.5, -3, 1, null, 0.05).startSec).toBe(0)
+    expect(draggedBarStart(0.5, -0.47, 1, {}, 0.05)).toEqual({ startSec: 0, snappedAt: 0 })
+    expect(draggedBarStart(0.5, -3, 1, {}, 0.05).startSec).toBe(0)
+  })
+
+  it('snaps onto the edge of a clip, such as where a vocal starts', () => {
+    // At double speed, the clip at 0.7 s on the timeline is 1.4 s into the song.
+    expect(draggedBarStart(1, 0.18, 2, { clipEdges: [0.7] }, 0.05)).toEqual({
+      startSec: 1.4,
+      snappedAt: 0.7
+    })
+  })
+
+  it('prefers a clip’s edge to a nearer beat, as a clip drag prefers edges to the grid', () => {
+    // Dragged to 1.28: the beat at 1.3 is nearer, but the vocal starting at 1.25 wins.
+    expect(draggedBarStart(1, 0.28, 1, { beat, clipEdges: [1.25] }, 0.05).startSec).toBe(1.25)
   })
 
   it('works in the song’s own time when Speed plays it faster', () => {
     // At double speed, a second dragged on the timeline is two seconds of the song.
-    const moved = draggedBarStart(1, 0.5, 2, null, 0.01)
+    const moved = draggedBarStart(1, 0.5, 2, {}, 0.01)
     expect(moved.startSec).toBe(2)
   })
 

@@ -110,7 +110,16 @@ export function useDrags({ song, canEdit, selection, processed, musicTempo }: Op
       const drag = barsDrag.current
       if (!drag) return
       const { speed } = musicOf(open.data)
-      const moved = draggedBarStart(drag.fromSec, deltaSec, speed, musicTempo, toleranceSec)
+      const clipEdges = open.data.tracks.flatMap((t) =>
+        t.clips.flatMap((c) => [c.start, c.start + c.duration])
+      )
+      const moved = draggedBarStart(
+        drag.fromSec,
+        deltaSec,
+        speed,
+        { beat: musicTempo, clipEdges },
+        toleranceSec
+      )
       song.edit(withSongStart(open.data, moved.startSec), drag.key)
       setSnapAt(phase === 'end' ? null : moved.snappedAt)
       if (phase === 'end') barsDrag.current = null

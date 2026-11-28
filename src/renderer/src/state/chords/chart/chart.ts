@@ -197,27 +197,37 @@ export interface DraggedStart {
   snappedAt: number | null
 }
 
+/** What bar 1 snaps onto while it's dragged, besides the start of the song. */
+export interface BarSnapTargets {
+  /** The music's beat. */
+  beat?: { bpm: number; startSec: number } | null
+  /** The edges of the clips on the timeline (timeline seconds), like a vocal's start. */
+  clipEdges?: number[]
+}
+
 /**
- * Bar 1 dragged `deltaSec` along the timeline from `fromSec`. It snaps onto the music's
- * nearest beat, or the start of the song, when it comes within `toleranceSec` (timeline
- * seconds) of one, so lining the bars up with the music is easy.
+ * Bar 1 dragged `deltaSec` along the timeline from `fromSec`. It snaps onto the start of
+ * the song or a clip's edge when it comes within `toleranceSec` (timeline seconds) of
+ * one, else onto the music's nearest beat, so lining the bars up with a vocal or the
+ * music is easy. Edges come first, as in a clip drag: beats are so close together that
+ * one is nearly always nearer than the edge being aimed for.
  */
 export function draggedBarStart(
   fromSec: number,
   deltaSec: number,
   speed: number,
-  musicBeat: { bpm: number; startSec: number } | null,
+  { beat, clipEdges = [] }: BarSnapTargets,
   toleranceSec: number
 ): DraggedStart {
   const wanted = Math.max(0, fromSec + deltaSec * speed)
-  const targets = [0]
-  if (musicBeat && musicBeat.bpm > 0) {
-    const period = SEC_PER_MIN / musicBeat.bpm
-    targets.push(musicBeat.startSec + Math.round((wanted - musicBeat.startSec) / period) * period)
-  }
-  const near = targets
-    .filter((sec) => sec >= 0 && Math.abs(sec - wanted) / speed <= toleranceSec)
-    .sort((a, b) => Math.abs(a - wanted) - Math.abs(b - wanted))[0]
+  const nearest = (targets: number[]): number | undefined =>
+    targets
+      .filter((sec) => sec >= 0 && Math.abs(sec - wanted) / speed <= toleranceSec)
+      .sort((a, b) => Math.abs(a - wanted) - Math.abs(b - wanted))[0]
+  const period = beat && beat.bpm > 0 ? SEC_PER_MIN / beat.bpm : 0
+  const beats =
+    beat && period ? [beat.startSec + Math.round((wanted - beat.startSec) / period) * period] : []
+  const near = nearest([0, ...clipEdges.map((sec) => sec * speed)]) ?? nearest(beats)
   return near === undefined
     ? { startSec: tidy(wanted), snappedAt: null }
     : { startSec: tidy(near), snappedAt: tidy(near / speed) }
