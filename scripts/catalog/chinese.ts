@@ -10,6 +10,10 @@ export function isChinese(language: CatalogLanguage | null): boolean {
   return language === 'zh-Hans' || language === 'zh-Hant'
 }
 
+export function hasChinese(text: string): boolean {
+  return /\p{Script=Han}/u.test(text)
+}
+
 export function toTraditional(text: string): string {
   return convert(text)
 }

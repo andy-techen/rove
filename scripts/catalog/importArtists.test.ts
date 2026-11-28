@@ -50,6 +50,13 @@ describe('importArtist', () => {
     ])
   })
 
+  it('keeps a Mandarin singer to songs with Chinese titles', async () => {
+    const db = openCatalog(':memory:')
+    const tracks = [track(1, 'Stars Align', 900), track(2, '晴天', 500)]
+    await importArtist(db, { ...adele, language: 'zh-Hant' }, 2, services(tracks))
+    expect(db.prepare('SELECT title FROM songs').all()).toEqual([{ title: '晴天' }])
+  })
+
   it('skips tracks MusicBrainz does not know instead of keeping them for review', async () => {
     const db = openCatalog(':memory:')
     const fetchJson = services([track(1, 'Hello', 500)])

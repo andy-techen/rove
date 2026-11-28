@@ -5,6 +5,7 @@ import type {
   CatalogSongType
 } from '../../src/shared/online/catalog'
 import { addSong, AddResult } from './add'
+import { hasChinese, isChinese } from './chinese'
 import { isOtherVersion, topTracks, trackIsrc } from './deezer'
 import type { FetchJson } from './musicbrainz'
 
@@ -31,6 +32,9 @@ export async function importArtist(
   for (const track of await topTracks(artist.deezerId, fetchJson)) {
     if (added >= count) break
     if (isOtherVersion(track)) continue
+    // A Mandarin singer's English features and romanised titles aren't what they're
+    // known for, and would be filed under the wrong language.
+    if (isChinese(artist.language) && !hasChinese(track.title)) continue
     const isrc = await trackIsrc(track.id, fetchJson)
     if (!isrc) continue
     const result = await addSong(
