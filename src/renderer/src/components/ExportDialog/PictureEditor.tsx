@@ -117,6 +117,7 @@ export function PictureEditor({
       closeLabel={t('export.video.closeEditor')}
       sizeKey="pictureEditor"
       className="picture-editor"
+      fill
       onClose={onClose}
     >
       <div className="picture-editor-body">

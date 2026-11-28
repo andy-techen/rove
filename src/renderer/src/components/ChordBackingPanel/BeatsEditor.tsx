@@ -1,12 +1,4 @@
-import {
-  CSSProperties,
-  KeyboardEvent,
-  MouseEvent,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState
-} from 'react'
+import { CSSProperties, MouseEvent, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import {
   BEAT_NAME_MAX_LENGTH,
@@ -21,7 +13,7 @@ import {
   mineOf,
   nextBeatNumber
 } from '../../state/song/project'
-import { ChartPlace, barRange } from '../../state/chords/chart'
+import { ChartPlace } from '../../state/chords/chart'
 import { repeatLine } from '../../state/chords/chartBars'
 import { SNAP_BEATS, beatName, hitsFrom } from '../../state/chords/beats'
 import { useBeatRecorder } from '../../state/chords/useBeatRecorder'
@@ -29,11 +21,14 @@ import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
 import { NameField } from '../ui/NameField'
+import { raised } from '../ui/Raised'
 import { SearchField } from '../ui/SearchField'
 import { Tooltip } from '../ui/Tooltip'
 import { cx } from '../ui/cx'
+import { BarTools } from './BarTools'
 import { BeatPad } from './BeatPad'
 import { usePadKeys } from './padKeys'
+import { useBarGrid } from './useBarGrid'
 import { Switch } from '../ui/Switch'
 
 interface Props {
@@ -81,44 +76,14 @@ export function BeatsEditor({
 }: Props): React.JSX.Element {
   const { parts } = beats
   const barsPerLine = beatsPerBar
-  const barRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const focusOnDraw = useRef<number | null>(null)
-  useEffect(() => {
-    const bar = focusOnDraw.current
-    if (bar === null || !barRefs.current[bar]) return
-    focusOnDraw.current = null
-    barRefs.current[bar]?.focus()
-  }, [parts.length])
-  const clampBar = (bar: number): number => Math.max(0, Math.min(parts.length - 1, bar))
-  const selected = clampBar(place.bar)
-  const [first, last] = barRange({
-    ...place,
-    bar: selected,
-    last: clampBar(place.last ?? selected)
+  const { selected, first, last, lineIsFull, select, barRef, onGridKey, pickNewBar } = useBarGrid({
+    count: parts.length,
+    barsPerLine,
+    place,
+    onPlace,
+    locked,
+    onRemove
   })
-
-  const select = (bar: number, focus = false, extend = false): void => {
-    const next = clampBar(bar)
-    onPlace(extend ? { bar: selected, slot: 0, last: next } : { bar: next, slot: 0 })
-    if (focus) barRefs.current[next]?.focus()
-  }
-
-  const onGridKey = (e: KeyboardEvent<HTMLOListElement>): void => {
-    const moves: Record<string, number> = {
-      ArrowLeft: -1,
-      ArrowRight: 1,
-      ArrowUp: -barsPerLine,
-      ArrowDown: barsPerLine
-    }
-    if (e.key in moves) {
-      e.preventDefault()
-      const from = e.shiftKey ? (place.last ?? selected) : selected
-      select(from + moves[e.key], true, e.shiftKey)
-    } else if ((e.key === 'Backspace' || e.key === 'Delete') && !locked) {
-      e.preventDefault()
-      onRemove()
-    }
-  }
 
   const withPicked = (part: BarBeat): BarBeat[] =>
     parts.map((p, i) => (i >= first && i <= last ? part : p))
@@ -133,9 +98,6 @@ export function BeatsEditor({
 
   // A click on a part leaves focus in the bars, so the arrow keys still move along them.
   const keepFocus = (e: MouseEvent): void => e.preventDefault()
-
-  // Only a whole line of bars repeats: a part-filled last line isn't a phrase yet.
-  const lineIsFull = parts.length >= (Math.floor(selected / barsPerLine) + 1) * barsPerLine
 
   const barsText =
     last > first
@@ -411,9 +373,7 @@ export function BeatsEditor({
             <li key={i}>
               <button
                 type="button"
-                ref={(el) => {
-                  barRefs.current[i] = el
-                }}
+                ref={barRef(i)}
                 className={cx(
                   'chart-bar',
                   i >= first && i <= last && 'chart-bar-selected',
@@ -434,38 +394,23 @@ export function BeatsEditor({
             </li>
           ))}
         </ol>
-        <div className="chart-bar-actions">
-          <Button
-            size="sm"
-            variant="ghost"
-            icon="plus"
-            disabled={locked}
-            onClick={() => {
-              // A new bar carries on like the one before it.
-              onParts([...parts, parts.at(-1) ?? 'main'])
-              onPlace({ bar: parts.length, slot: 0 })
-              focusOnDraw.current = parts.length
-            }}
-          >
-            {t('chords.addBar')}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            icon="duplicate"
-            disabled={locked || !lineIsFull}
-            onClick={() => {
-              const repeated = repeatLine(parts, selected, barsPerLine)
-              onParts(repeated.bars)
-              onPlace({ bar: repeated.copyAt, slot: 0 })
-            }}
-          >
-            {t('chords.repeatLine')}
-          </Button>
-        </div>
+        <BarTools
+          locked={locked}
+          lineIsFull={lineIsFull}
+          onAddBar={() => {
+            // A new bar carries on like the one before it.
+            onParts([...parts, parts.at(-1) ?? 'main'])
+            pickNewBar()
+          }}
+          onRepeatLine={() => {
+            const repeated = repeatLine(parts, selected, barsPerLine)
+            onParts(repeated.bars)
+            onPlace({ bar: repeated.copyAt, slot: 0 })
+          }}
+        />
       </div>
 
-      <section className="chord-picker beats-picker" aria-label={barsText}>
+      <section className={cx('chord-picker', 'beats-picker', raised)} aria-label={barsText}>
         <div className="picker-head">
           <span className="beats-pad-name">
             <span className="picker-bar">{barsText}</span>

@@ -4,7 +4,9 @@ import { CHORD_QUALITIES, Chord } from '../../audio/music/chords'
 import { PITCH_CLASSES } from '../../audio/pitch/key'
 import { chordsMatching, sameChord } from '../../state/chords/chordText'
 import { chordName, noteName } from '../../state/chords/noteNames'
+import { raised } from '../ui/Raised'
 import { SearchField } from '../ui/SearchField'
+import { Segmented, SegmentedOption } from '../ui/Segmented'
 import { cx } from '../ui/cx'
 
 // As many matches as fit one row of the picker.
@@ -71,13 +73,16 @@ export function ChordPicker({
     </button>
   )
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'key', label: suggestions.label },
-    { id: 'all', label: t('chords.every') }
+  const tabs: SegmentedOption<Tab>[] = [
+    { value: 'key', label: suggestions.label },
+    { value: 'all', label: t('chords.every') }
   ]
 
   return (
-    <section className="chord-picker" aria-label={t('chords.pickerLabel', { bars: barsText })}>
+    <section
+      className={cx('chord-picker', raised)}
+      aria-label={t('chords.pickerLabel', { bars: barsText })}
+    >
       <div className="picker-head">
         <span className="picker-bar">{barsText}</span>
       </div>
@@ -107,19 +112,13 @@ export function ChordPicker({
       ) : (
         <>
           {suggestions.chords.length > 0 && (
-            <div className="picker-tabs" role="group" aria-label={t('chords.pickerTabs')}>
-              {tabs.map(({ id, label }) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={cx('picker-tab', tab === id && 'picker-tab-on')}
-                  aria-pressed={tab === id}
-                  onClick={() => setTab(id)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              className="picker-tabs"
+              label={t('chords.pickerTabs')}
+              options={tabs}
+              value={tab}
+              onChange={setTab}
+            />
           )}
           {tab === 'key' ? (
             <div className="picker-row picker-chords" role="group" aria-label={suggestions.label}>

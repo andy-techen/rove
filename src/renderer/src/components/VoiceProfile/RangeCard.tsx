@@ -4,6 +4,7 @@ import type { VoiceProfile } from '../../audio/voice'
 import { noteWithOctave } from '../../state/chords/noteNames'
 import type { KeyRange, SongView } from '../../state/voice/voiceView'
 import { Button } from '../ui/Button'
+import { Segmented, SegmentedOption } from '../ui/Segmented'
 import { Keyboard } from './Keyboard'
 import { KEYBOARD_HEIGHT, KeyScale, keyScale } from './keyboardGeometry'
 import { Measured } from './Measured'
@@ -207,35 +208,6 @@ function SongRanges({
 
 type RangeView = 'all' | 'songs'
 
-/** All songs or By song: two choices side by side, the one showing filled in. */
-function ViewSwitch({
-  view,
-  onView
-}: {
-  view: RangeView
-  onView(view: RangeView): void
-}): React.JSX.Element {
-  const options: { value: RangeView; label: string }[] = [
-    { value: 'all', label: t('voice.allSongs') },
-    { value: 'songs', label: t('voice.bySong') }
-  ]
-  return (
-    <div className="voice-switch" role="group" aria-label={t('voice.rangeView')}>
-      {options.map(({ value, label }) => (
-        <button
-          key={value}
-          type="button"
-          className="voice-switch-option"
-          aria-pressed={view === value}
-          onClick={() => onView(value)}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 interface Props {
   profile: VoiceProfile
   songs: SongView[]
@@ -245,11 +217,15 @@ interface Props {
 /** Your range: the headline notes, and time on each note overall or a range per song. */
 export function RangeCard({ profile, songs, keys }: Props): React.JSX.Element {
   const [view, setView] = useState<RangeView>('all')
+  const views: SegmentedOption<RangeView>[] = [
+    { value: 'all', label: t('voice.allSongs') },
+    { value: 'songs', label: t('voice.bySong') }
+  ]
   return (
     <section className="voice-card">
       <div className="voice-card-head">
         <h3>{t('voice.range')}</h3>
-        <ViewSwitch view={view} onView={setView} />
+        <Segmented label={t('voice.rangeView')} options={views} value={view} onChange={setView} />
       </div>
       <p className="voice-subtitle">{t('voice.rangeSubtitle')}</p>
       <dl className="voice-stats">

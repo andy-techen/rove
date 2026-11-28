@@ -204,32 +204,6 @@
 }
 
 /* All songs | By song: two quiet choices in one soft track, the one showing filled. */
-.voice-switch {
-  display: inline-flex;
-  padding: var(--space-1);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-raised);
-}
-
-.voice-switch-option {
-  padding: var(--space-2) var(--space-5);
-  border: none;
-  border-radius: var(--radius-md);
-  background: none;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
-  cursor: pointer;
-}
-
-.voice-switch-option:hover {
-  color: var(--color-text);
-}
-
-.voice-switch-option[aria-pressed='true'] {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
 .voice-song-name {
   overflow: hidden;
   text-overflow: ellipsis;

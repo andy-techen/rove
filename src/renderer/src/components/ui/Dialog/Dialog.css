@@ -39,6 +39,13 @@
   box-shadow: var(--shadow-raised-hover);
 }
 
+/* A dialog whose content fills it as it's resized lays out as a column, but only while
+   open: a closed <dialog> must stay display: none. */
+.dialog-fill[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 /* The dialog takes focus only so nothing inside starts focused; it isn't a control. */
 .dialog:focus {
   outline: none;

@@ -3,6 +3,7 @@ import { t } from '@shared/copy'
 import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
 import { SearchField } from '../ui/SearchField'
+import { Segmented } from '../ui/Segmented'
 import { cx } from '../ui/cx'
 import { NewSongDialog } from '../NewSongDialog'
 import { Explore } from './Explore'
@@ -60,21 +61,16 @@ export function SongbookDialog({
       closeLabel={t('songbook.close')}
       onClose={onClose}
       className="songbook"
+      fill
       sizeKey="songbook"
     >
-      <div className="songbook-views" role="group" aria-label={t('songbook.viewsLabel')}>
-        {VIEWS.map((v) => (
-          <button
-            key={v}
-            type="button"
-            className={cx('songbook-view', view === v && 'active')}
-            aria-pressed={view === v}
-            onClick={() => setView(v)}
-          >
-            {t(`songbook.views.${v}`)}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        className="songbook-views"
+        label={t('songbook.viewsLabel')}
+        options={VIEWS.map((v) => ({ value: v, label: t(`songbook.views.${v}`) }))}
+        value={view}
+        onChange={setView}
+      />
       {/* One height for every tab, so switching tabs doesn't resize the dialog. */}
       <div className="songbook-panel">
         {view !== 'explore' && (

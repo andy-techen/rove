@@ -1,4 +1,4 @@
-import { CSSProperties, KeyboardEvent, MouseEvent, useEffect, useRef } from 'react'
+import { CSSProperties, MouseEvent } from 'react'
 import { t } from '@shared/copy'
 import { Chord } from '../../audio/music/chords'
 import {
@@ -11,7 +11,7 @@ import {
   guitarFeel,
   pianoFeel
 } from '../../state/song/project'
-import { ChartPlace, barRange } from '../../state/chords/chart'
+import { ChartPlace } from '../../state/chords/chart'
 import {
   MAX_CHORDS_PER_BAR,
   addBar,
@@ -30,7 +30,9 @@ import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
 import { IconButton } from '../ui/IconButton'
 import { cx } from '../ui/cx'
+import { BarTools } from './BarTools'
 import { ChordPicker, ChordSuggestions } from './ChordPicker'
+import { useBarGrid } from './useBarGrid'
 
 // Each instrument offers its own feels, and reads a bar set on the other as its nearest.
 const FEELS = {
@@ -87,31 +89,18 @@ export function ChartEditor({
   // A line holds as many bars as a bar has beats (4 in 4/4, 3 in 3/4), as charts are
   // written, so lines read as phrases.
   const barsPerLine = beatsPerBar
-  const barRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const focusOnDraw = useRef<number | null>(null)
-  useEffect(() => {
-    const bar = focusOnDraw.current
-    if (bar === null || !barRefs.current[bar]) return
-    focusOnDraw.current = null
-    barRefs.current[bar]?.focus()
-  }, [bars.length])
-  const clampBar = (bar: number): number => Math.max(0, Math.min(bars.length - 1, bar))
-  const selected = clampBar(place.bar)
-  const [first, last] = barRange({
-    ...place,
-    bar: selected,
-    last: clampBar(place.last ?? selected)
+  const { selected, first, last, lineIsFull, select, barRef, onGridKey, pickNewBar } = useBarGrid({
+    count: bars.length,
+    barsPerLine,
+    place,
+    onPlace,
+    locked,
+    onRemove
   })
   // A run of bars is filled with one chord each; one bar can be split in two.
   const isRun = last > first
   const slot = isRun ? 0 : place.slot
   const setSlot = (next: number): void => onPlace({ bar: selected, slot: next })
-
-  const select = (bar: number, focus = false, extend = false): void => {
-    const next = clampBar(bar)
-    onPlace(extend ? { bar: selected, slot: 0, last: next } : { bar: next, slot: 0 })
-    if (focus) barRefs.current[next]?.focus()
-  }
 
   const pick = (chord: Chord): void => {
     if (isRun) {
@@ -126,23 +115,6 @@ export function ChartEditor({
     else if (selected < bars.length - 1) select(selected + 1)
   }
 
-  const onGridKey = (e: KeyboardEvent<HTMLOListElement>): void => {
-    const moves: Record<string, number> = {
-      ArrowLeft: -1,
-      ArrowRight: 1,
-      ArrowUp: -barsPerLine,
-      ArrowDown: barsPerLine
-    }
-    if (e.key in moves) {
-      e.preventDefault()
-      const from = e.shiftKey ? (place.last ?? selected) : selected
-      select(from + moves[e.key], true, e.shiftKey)
-    } else if ((e.key === 'Backspace' || e.key === 'Delete') && !locked) {
-      e.preventDefault()
-      onRemove()
-    }
-  }
-
   // What "keep" makes of the selection: a split bar's half keeps the chord before it.
   const isHalf = !isRun && bars[selected].length > 1
   const keptBefore = isHalf && slot === 1 ? bars[selected][0] : chordBefore(bars, first)
@@ -151,9 +123,6 @@ export function ChartEditor({
     : bars.slice(first, last + 1).some((bar) => bar.length > 0)
       ? clearBars(bars, first, last)
       : undefined
-
-  // Only a whole line of bars repeats: a part-filled last line isn't a phrase yet.
-  const lineIsFull = bars.length >= (Math.floor(selected / barsPerLine) + 1) * barsPerLine
 
   const barsText = isRun
     ? t('chords.barRange', { from: first + 1, to: last + 1 })
@@ -269,9 +238,7 @@ export function ChartEditor({
                     <button
                       key={k}
                       type="button"
-                      ref={(el) => {
-                        if (k === 0) barRefs.current[i] = el
-                      }}
+                      ref={k === 0 ? barRef(i) : undefined}
                       className={cx(
                         'chart-bar',
                         (isRun ? i >= first && i <= last : i === selected && k === slot) &&
@@ -302,9 +269,7 @@ export function ChartEditor({
               ) : (
                 <button
                   type="button"
-                  ref={(el) => {
-                    barRefs.current[i] = el
-                  }}
+                  ref={barRef(i)}
                   className={cx(
                     'chart-bar',
                     i >= first && i <= last && 'chart-bar-selected',
@@ -330,53 +295,33 @@ export function ChartEditor({
             </li>
           ))}
         </ol>
-        <div className="chart-bar-actions">
-          <Button
-            size="sm"
-            variant="ghost"
-            icon="plus"
-            disabled={locked}
-            onClick={() => {
-              // A new bar is played like the one before it.
-              onBars(addBar(bars), [...feels, feels.at(-1) ?? 'strum'])
-              // The new bar doesn't exist until the chart comes back: pick it now, and
-              // focus it once it's drawn.
-              onPlace({ bar: bars.length, slot: 0 })
-              focusOnDraw.current = bars.length
-            }}
-          >
-            {t('chords.addBar')}
-          </Button>
-          <span className="chart-line-actions">
+        <BarTools
+          locked={locked}
+          lineIsFull={lineIsFull}
+          onAddBar={() => {
+            // A new bar is played like the one before it.
+            onBars(addBar(bars), [...feels, feels.at(-1) ?? 'strum'])
+            pickNewBar()
+          }}
+          onRepeatLine={() => {
+            const repeated = repeatLine(bars, selected, barsPerLine)
+            onBars(repeated.bars, repeatLine(feels, selected, barsPerLine).bars)
+            onPlace({ bar: repeated.copyAt, slot: 0 })
+          }}
+        >
+          <span className="chart-paste">
             <Button
               size="sm"
               variant="ghost"
-              icon="duplicate"
-              disabled={locked || !lineIsFull}
-              onClick={() => {
-                const repeated = repeatLine(bars, selected, barsPerLine)
-                onBars(repeated.bars, repeatLine(feels, selected, barsPerLine).bars)
-                onPlace({ bar: repeated.copyAt, slot: 0 })
-              }}
+              icon="paste"
+              disabled={locked}
+              onClick={onPasteChords}
             >
-              {t('chords.repeatLine')}
+              {t('chords.pasteChords')}
             </Button>
-            <span className="chart-paste">
-              <Button
-                size="sm"
-                variant="ghost"
-                icon="paste"
-                disabled={locked}
-                onClick={onPasteChords}
-              >
-                {t('chords.pasteChords')}
-              </Button>
-              <HelpTip
-                lines={[t('chords.pasteChordsHelp.copy'), t('chords.pasteChordsHelp.bars')]}
-              />
-            </span>
+            <HelpTip lines={[t('chords.pasteChordsHelp.copy'), t('chords.pasteChordsHelp.bars')]} />
           </span>
-        </div>
+        </BarTools>
         {pasteNote && (
           <p className="chart-unread" role="status">
             {pasteNote}
