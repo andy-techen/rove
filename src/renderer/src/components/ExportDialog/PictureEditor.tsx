@@ -14,7 +14,6 @@ import {
 import { SongLyrics, isTimed } from '../../state/lyrics/lyrics'
 import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
-import { HelpTip } from '../ui/HelpTip'
 import { Icon } from '../ui/Icon'
 import { IconButton } from '../ui/IconButton'
 import { Tooltip } from '../ui/Tooltip'
@@ -136,7 +135,12 @@ export function PictureEditor({
           onRemove={remove}
           tools={
             <>
-              <IconButton icon="text" label={t('export.video.addWords')} onClick={addWords} />
+              <IconButton
+                icon="text"
+                label={t('export.video.addWords')}
+                title={t('export.video.addWordsTip')}
+                onClick={addWords}
+              />
               <IconButton
                 icon="snap"
                 label={t('export.video.snap')}
@@ -151,12 +155,6 @@ export function PictureEditor({
                 aria-pressed={value.lyrics && timed}
                 disabled={!timed}
                 onClick={() => onChange({ ...value, lyrics: !value.lyrics })}
-              />
-              <HelpTip
-                items={(['add', 'change', 'move'] as const).map((step) => ({
-                  term: t(`export.video.wordsHelp.${step}Term`),
-                  text: t(`export.video.wordsHelp.${step}`)
-                }))}
               />
             </>
           }

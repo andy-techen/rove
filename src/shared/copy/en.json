@@ -786,14 +786,6 @@
       "yourPicture": "Your picture",
       "choosePicture": "Use your own picture",
       "pickColour": "Pick a colour",
-      "wordsHelp": {
-        "addTerm": "Add words",
-        "add": "click the picture",
-        "changeTerm": "Change",
-        "change": "click the words",
-        "moveTerm": "Move",
-        "move": "drag them, or use the arrow keys"
-      },
       "edit": "Edit picture",
       "editShort": "Edit",
       "summary": {
@@ -812,6 +804,7 @@
       "smaller": "Smaller words",
       "larger": "Larger words",
       "addWords": "Add words",
+      "addWordsTip": "Add words (or click anywhere on the picture)",
       "snap": "Snap into line",
       "snapTip": "Snap into line: words line up with the centre and each other. Hold ⌘ while dragging to place them freely.",
       "lyrics": "Show lyrics",
