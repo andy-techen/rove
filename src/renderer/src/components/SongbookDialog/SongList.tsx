@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { t } from '@shared/copy'
 import type { SongbookEntry } from '../../../../preload/index.d'
 import { NewSongDialog } from '../NewSongDialog'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { IconButton } from '../ui/IconButton'
-import { RemoveSongDialog } from './RemoveSongDialog'
 import { relativeTime } from './relativeTime'
 import { matchesSearch } from './search'
 
@@ -135,9 +135,14 @@ export function SongList({ openFolders, query, onOpen }: Props): React.JSX.Eleme
         />
       )}
       {removing && (
-        <RemoveSongDialog
-          name={removing.name}
-          onRemove={() => void remove(removing.folder)}
+        // Removing a song takes its recordings with it, so say so plainly first.
+        <ConfirmDialog
+          title={t('songbook.removeTitle', { name: removing.name })}
+          message={t('songbook.removeWarning')}
+          confirmLabel={t('songbook.remove')}
+          danger
+          sizeKey="removeSong"
+          onConfirm={() => void remove(removing.folder)}
           onCancel={() => setRemoving(null)}
         />
       )}

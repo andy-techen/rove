@@ -1,0 +1,21 @@
+.confirm-dialog {
+  --dialog-default-width: var(--layout-dialog-narrow);
+}
+
+.confirm-dialog-message {
+  margin: 0 0 var(--space-8);
+  font-size: var(--font-size-ui);
+  line-height: var(--line-height);
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+.confirm-dialog-danger.btn {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-thumb);
+}

@@ -103,23 +103,24 @@ Don't introduce a new size; if nothing fits, the hierarchy probably needs rethin
 
 Reach for these before writing new markup:
 
-| Component      | Use it for                                                                                                                                     |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Button`       | Text buttons. `primary`, `secondary`, `quiet` (soft fill), `ghost` (in-place); sizes `md`, `sm`; optional `icon`.                              |
-| `IconButton`   | Any icon-only control. `label` is required (accessible name and tooltip).                                                                      |
-| `RecordButton` | Record on a track: a red dot in a round button that fills red to stop. In a toolbar, use `IconButton` with `recordRing`.                       |
-| `Icon`         | Inline icons by name; add new glyphs to `Icon/icons.ts`.                                                                                       |
-| `Slider`       | Range inputs (lane volume and position, Advanced). `centre` for two-way ones.                                                                  |
-| `Knob`         | A turnable control. `centre` for ones that go both ways (speed, key).                                                                          |
-| `KnobControl`  | A knob with its name, help and value, as panels show it; lay out in a `KnobRow`. `setBy` marks one Rove turned (why, on hover).                |
-| `Dialog`       | Every popup: title, close button, Esc to close, resizable from its corner (`sizeKey` remembers the size).                                      |
-| `Panel`        | A titled panel under the timeline (Polish, Music), with header actions.                                                                        |
-| `Splitter`     | A draggable edge between areas (side panel width, the lyrics/chords split).                                                                    |
-| `NumberField`  | A number to type over (Enter applies, Esc reverts); pair it with a slider.                                                                     |
-| `Switch`       | On/off toggles with a label.                                                                                                                   |
-| `HelpTip`      | A "?" that reveals help on hover or focus: `text` for a sentence; `lines` (steps) and `items` (bullets) for longer help.                       |
-| `Snackbar`     | One-off news the singer needn't act on ("Auto-polished."), bottom left: call `showSnack(text)`. Warnings and errors stay beside their control. |
-| `Logo`         | The app icon with the "rove" wordmark (top bar `sm`, full-screen headings `lg`).                                                               |
+| Component       | Use it for                                                                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Button`        | Text buttons. `primary`, `secondary`, `quiet` (soft fill), `ghost` (in-place); sizes `md`, `sm`; optional `icon`.                              |
+| `IconButton`    | Any icon-only control. `label` is required (accessible name and tooltip).                                                                      |
+| `RecordButton`  | Record on a track: a red dot in a round button that fills red to stop. In a toolbar, use `IconButton` with `recordRing`.                       |
+| `Icon`          | Inline icons by name; add new glyphs to `Icon/icons.ts`.                                                                                       |
+| `Slider`        | Range inputs (lane volume and position, Advanced). `centre` for two-way ones.                                                                  |
+| `Knob`          | A turnable control. `centre` for ones that go both ways (speed, key).                                                                          |
+| `KnobControl`   | A knob with its name, help and value, as panels show it; lay out in a `KnobRow`. `setBy` marks one Rove turned (why, on hover).                |
+| `Dialog`        | Every popup: title, close button, Esc to close, resizable from its corner (`sizeKey` remembers the size).                                      |
+| `ConfirmDialog` | Asking before a step that's hard to undo: a message, Cancel and a confirm button; `danger` makes it red.                                       |
+| `Panel`         | A titled panel under the timeline (Polish, Music), with header actions.                                                                        |
+| `Splitter`      | A draggable edge between areas (side panel width, the lyrics/chords split).                                                                    |
+| `NumberField`   | A number to type over (Enter applies, Esc reverts); pair it with a slider.                                                                     |
+| `Switch`        | On/off toggles with a label.                                                                                                                   |
+| `HelpTip`       | A "?" that reveals help on hover or focus: `text` for a sentence; `lines` (steps) and `items` (bullets) for longer help.                       |
+| `Snackbar`      | One-off news the singer needn't act on ("Auto-polished."), bottom left: call `showSnack(text)`. Warnings and errors stay beside their control. |
+| `Logo`          | The app icon with the "rove" wordmark (top bar `sm`, full-screen headings `lg`).                                                               |
 
 If a pattern repeats in two places, promote it to `ui/`. Things that have been copied
 before and should be promoted next time they're needed: a segmented control (a group of

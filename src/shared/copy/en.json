@@ -362,7 +362,10 @@
     "on": "Premium is on. Thanks for supporting Rove!",
     "deactivate": "Deactivate this Mac",
     "deactivating": "Deactivating…",
-    "deactivateHint": "Frees this Mac so you can use your key on another one. Your songs stay as they are."
+    "deactivateHint": "Frees this Mac so you can use your key on another one. Your songs stay as they are.",
+    "deactivateTitle": "Deactivate this Mac?",
+    "deactivateWarning": "Premium turns off on this Mac until you activate your key again. Your songs stay as they are, and your key is free to use on another Mac.",
+    "deactivateConfirm": "Deactivate"
   },
   "voice": {
     "loading": "Getting your voice ready…",
@@ -823,6 +826,9 @@
     "close": "Done",
     "failed": "Couldn't export the song. Try again, or pick another folder."
   },
+  "confirm": {
+    "cancel": "Cancel"
+  },
   "songbook": {
     "title": "Songbook",
     "close": "Close Songbook",
@@ -840,7 +846,6 @@
     "removeLabel": "Remove {name}",
     "cantRemoveOpen": "Close the tab first to remove this song.",
     "remove": "Remove",
-    "cancel": "Cancel",
     "removeFailed": "Couldn't remove that song.",
     "viewsLabel": "Show",
     "views": {

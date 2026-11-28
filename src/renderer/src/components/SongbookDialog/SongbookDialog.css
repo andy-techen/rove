@@ -167,28 +167,6 @@
   margin-bottom: var(--space-5);
 }
 
-.remove-song {
-  --dialog-default-width: var(--layout-dialog-narrow);
-}
-
-.remove-song-warning {
-  margin: 0 0 var(--space-8);
-  font-size: var(--font-size-ui);
-  line-height: var(--line-height);
-}
-
-.remove-song-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-4);
-}
-
-.remove-song-confirm.btn {
-  background: var(--color-danger);
-  border-color: var(--color-danger);
-  color: var(--color-thumb);
-}
-
 /* Explore keeps its search and filters in place and scrolls only the results, so a
    filter's popover can also hang over the list instead of being clipped. */
 .songbook-body-explore {

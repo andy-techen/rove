@@ -1,6 +1,26 @@
 /* Every dialog resizes from its corner. A dialog sets its starting size with
    --dialog-default-width (and -height); the size it was dragged to comes back as
    --dialog-width and --dialog-height (useDialogSize). */
+
+/* Each dialog's size is its own: without this, one opened inside another (deactivating
+   from Settings) would take on the outer dialog's size. */
+@property --dialog-width {
+  syntax: '*';
+  inherits: false;
+}
+@property --dialog-height {
+  syntax: '*';
+  inherits: false;
+}
+@property --dialog-default-width {
+  syntax: '*';
+  inherits: false;
+}
+@property --dialog-default-height {
+  syntax: '*';
+  inherits: false;
+}
+
 .dialog {
   max-width: calc(100vw - var(--space-12));
   max-height: calc(100vh - var(--space-12));

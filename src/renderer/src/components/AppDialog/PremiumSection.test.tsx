@@ -51,9 +51,21 @@ describe('PremiumSection', () => {
     render(<PremiumSection />)
     expect(screen.getByText('•••• 4d51')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: t('premium.deactivate') }))
+    await userEvent.click(screen.getByRole('button', { name: t('premium.deactivateConfirm') }))
     expect(window.api.deactivateLicense).toHaveBeenCalled()
     send({ plan: 'free', keyHint: null })
     expect(keyField()).toBeInTheDocument()
+  })
+
+  it('asks before freeing this Mac, and stays premium on cancel', async () => {
+    license(PREMIUM)
+    render(<PremiumSection />)
+    await userEvent.click(screen.getByRole('button', { name: t('premium.deactivate') }))
+    expect(screen.getByText(t('premium.deactivateWarning'))).toBeInTheDocument()
+    // The text button; the dialog's close button shares its name.
+    await userEvent.click(screen.getByText(t('confirm.cancel')))
+    expect(window.api.deactivateLicense).not.toHaveBeenCalled()
+    expect(screen.queryByText(t('premium.deactivateWarning'))).toBeNull()
   })
 
   it('says buying is not open yet while there is no checkout', async () => {

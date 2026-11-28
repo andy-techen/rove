@@ -4,6 +4,7 @@ import { PREMIUM_FEATURES } from '@shared/premiumFeatures'
 import { ActivationFailure } from '@shared/license'
 import { useLicense } from '../../state/license/useFeature'
 import { Button } from '../ui/Button'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { HelpTip } from '../ui/HelpTip'
 import { Icon } from '../ui/Icon'
 
@@ -83,7 +84,9 @@ function Upgrade(): React.JSX.Element {
 /** On premium: what's unlocked, the key, and freeing this Mac for another. */
 function Unlocked({ keyHint }: { keyHint: string | null }): React.JSX.Element {
   const [freeing, setFreeing] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const deactivate = async (): Promise<void> => {
+    setConfirming(false)
     setFreeing(true)
     await window.api.deactivateLicense()
     setFreeing(false)
@@ -98,12 +101,22 @@ function Unlocked({ keyHint }: { keyHint: string | null }): React.JSX.Element {
         <span className="settings-label">{t('premium.keyLabel')}</span>
         <div className="premium-key-row">
           <span className="premium-hint">{keyHint}</span>
-          <Button variant="quiet" size="sm" disabled={freeing} onClick={() => void deactivate()}>
+          <Button variant="quiet" size="sm" disabled={freeing} onClick={() => setConfirming(true)}>
             {freeing ? t('premium.deactivating') : t('premium.deactivate')}
           </Button>
           <HelpTip text={t('premium.deactivateHint')} />
         </div>
       </div>
+      {confirming && (
+        <ConfirmDialog
+          title={t('premium.deactivateTitle')}
+          message={t('premium.deactivateWarning')}
+          confirmLabel={t('premium.deactivateConfirm')}
+          sizeKey="deactivateLicense"
+          onConfirm={() => void deactivate()}
+          onCancel={() => setConfirming(false)}
+        />
+      )}
     </>
   )
 }
