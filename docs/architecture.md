@@ -279,6 +279,7 @@ before anything is tuned for playback or export.
 | `userData/keymap.json`             | Shortcuts the singer rebound                            |
 | `userData/appearance.json`         | Match System, Light or Dark                             |
 | `userData/license.json`            | The license key that unlocks premium on this Mac        |
+| `userData/window.json`             | The window's size and place, and whether it's maximized |
 
 ## Building and shipping
 

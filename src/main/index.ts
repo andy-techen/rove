@@ -1,4 +1,13 @@
-import { app, clipboard, shell, BrowserWindow, ipcMain, session, systemPreferences } from 'electron'
+import {
+  app,
+  clipboard,
+  shell,
+  screen,
+  BrowserWindow,
+  ipcMain,
+  session,
+  systemPreferences
+} from 'electron'
 import { join } from 'path'
 import { electronApp, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -25,10 +34,15 @@ import {
 } from '@shared/preferences/menu'
 import { MIC_CHANNELS } from '@shared/songs/mic'
 import { WINDOW } from './constants'
+import { loadWindowBounds, rememberWindowBounds } from './windowBounds'
 
-function createWindow(): void {
+async function createWindow(): Promise<void> {
+  const workAreas = screen.getAllDisplays().map((d) => d.workArea)
+  const { maximized, ...bounds } = await loadWindowBounds(workAreas)
   const mainWindow = new BrowserWindow({
-    ...WINDOW,
+    minWidth: WINDOW.minWidth,
+    minHeight: WINDOW.minHeight,
+    ...bounds,
     show: false,
     autoHideMenuBar: true,
     title: 'Rove',
@@ -42,6 +56,9 @@ function createWindow(): void {
       nodeIntegration: false
     }
   })
+
+  if (maximized) mainWindow.maximize()
+  rememberWindowBounds(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -118,10 +135,10 @@ app.whenReady().then(async () => {
   registerInputVolumeIpc()
   await registerLicenseIpc()
 
-  createWindow()
+  await createWindow()
 
   app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) void createWindow()
   })
 })
 
