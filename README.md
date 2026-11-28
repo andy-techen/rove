@@ -35,6 +35,9 @@ proud of, without having to become an audio engineer.
 - **Layer your own harmonies.** Stack your voice into a fuller sound.
 - **Polish in plain words.** Controls named for what you hear, with good defaults for
   every part.
+- **Auto polish that learns your taste.** Rove listens to your takes and sets Polish
+  for your voice. Make it your own, and next time it leans your way. It all stays on
+  your Mac.
 - **Lyrics and chords at hand.** Follow along while you sing.
 - **Get to know your voice.** See your range, and how it grows, across every song.
 - **Never lose a take.** Your recordings are never modified; every edit can be undone.
