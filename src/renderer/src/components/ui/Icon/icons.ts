@@ -89,7 +89,14 @@ export const STROKE_ICONS = {
   edit: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4',
   // A closed book: the Songbook. A note on the cover is lost at top-bar size.
   songbook:
-    'M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19'
+    'M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19',
+  // Words on a picture: a capital T, as story editors show it.
+  text: 'M6 5h12M12 5v14M9 19h6',
+  // Smaller and larger words: a T with a minus or a plus beside it.
+  textSmaller: 'M4 8h10M9 8v11M16 6h5',
+  textLarger: 'M4 8h10M9 8v11M16 6h5M18.5 3.5v5',
+  // Snap into line: a box with a guide line running through its centre.
+  snap: 'M8 7h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zM12 3v18'
 } as const
 
 export const FILLED_ICONS = {

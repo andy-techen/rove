@@ -1,7 +1,6 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { t } from '@shared/copy'
 import { Button } from '../ui/Button'
-import { dialogSizeStyle, useDialogSize } from '../../state/ui/dialogSize'
 import { Dialog } from '../ui/Dialog'
 import { SearchField } from '../ui/SearchField'
 import { cx } from '../ui/cx'
@@ -38,8 +37,6 @@ export function SongbookDialog({
   onStart,
   onClose
 }: Props): React.JSX.Element {
-  const dialog = useRef<HTMLDialogElement>(null)
-  const size = useDialogSize(dialog, 'songbook')
   const [view, setView] = useState<View>('songs')
   const [query, setQuery] = useState('')
   const [addingWish, setAddingWish] = useState(false)
@@ -63,8 +60,7 @@ export function SongbookDialog({
       closeLabel={t('songbook.close')}
       onClose={onClose}
       className="songbook"
-      dialogRef={dialog}
-      style={dialogSizeStyle(size, 'songbook')}
+      sizeKey="songbook"
     >
       <div className="songbook-views" role="group" aria-label={t('songbook.viewsLabel')}>
         {VIEWS.map((v) => (

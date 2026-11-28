@@ -1,5 +1,5 @@
 .new-song {
-  width: min(var(--layout-dialog-narrow), calc(100vw - var(--space-12)));
+  --dialog-default-width: var(--layout-dialog-narrow);
 }
 
 .new-song-form {

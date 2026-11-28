@@ -1,6 +1,5 @@
 /* One size whichever section shows, so switching never resizes it; a long section
-   scrolls inside. The corner drags it bigger or smaller (resize), and the size it was
-   dragged to comes back next time as --app-dialog-width and --app-dialog-height. */
+   scrolls inside. Like every dialog, it resizes from its corner (see Dialog.css). */
 .app-dialog {
   /* The header row is as tall as its close button (an icon button). */
   --app-dialog-header: calc(
@@ -9,12 +8,10 @@
   /* As much room under the section as the title band takes above it (padding, header,
      the gap below it), so the section sits evenly in the frame. */
   padding-bottom: calc(var(--space-8) + var(--app-dialog-header) + var(--space-8));
-  width: var(--app-dialog-width, var(--layout-app-dialog));
-  height: var(--app-dialog-height, var(--layout-app-dialog-height));
+  --dialog-default-width: var(--layout-app-dialog);
+  --dialog-default-height: var(--layout-app-dialog-height);
   min-width: var(--layout-app-dialog-min-width);
   min-height: var(--layout-app-dialog-min-height);
-  max-width: calc(100vw - var(--space-12));
-  resize: both;
   overflow: hidden;
 }
 

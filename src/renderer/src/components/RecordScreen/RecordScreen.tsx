@@ -1273,8 +1273,10 @@ export function RecordScreen({
       {exportOpen && (
         <ExportDialog
           state={exporter.state}
+          lyrics={song.song?.data.lyrics ?? null}
           onStart={(options) => void exporter.start(options)}
           onReveal={exporter.reveal}
+          onShare={exporter.share}
           onExportProject={() => {
             setExportOpen(false)
             if (song.song) void exportSongFile({ dir: song.song.dir, saveNow: song.saveNow })

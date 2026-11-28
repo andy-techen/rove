@@ -766,21 +766,65 @@
     "format": "Format",
     "formats": {
       "wav": "WAV",
-      "mp3": "MP3"
+      "mp3": "MP3",
+      "mp4": "Video"
     },
     "formatHints": {
       "wav": "Best quality, for mastering or uploading",
-      "mp3": "Smaller file, for sharing"
+      "mp3": "Smaller file, for sharing",
+      "mp4": "Your song with a picture, ready to post"
+    },
+    "video": {
+      "picture": "Picture",
+      "backgrounds": {
+        "goldenHour": "Golden hour",
+        "sunset": "Sunset",
+        "evening": "Evening",
+        "cream": "Cream",
+        "black": "Black"
+      },
+      "yourPicture": "Your picture",
+      "choosePicture": "Use your own picture",
+      "pickColour": "Pick a colour",
+      "wordsHelp": {
+        "addTerm": "Add words",
+        "add": "click the picture",
+        "changeTerm": "Change",
+        "change": "click the words",
+        "moveTerm": "Move",
+        "move": "drag them, or use the arrow keys"
+      },
+      "edit": "Edit picture",
+      "editShort": "Edit",
+      "summary": {
+        "custom": "Custom background",
+        "lyrics": "Lyrics on"
+      },
+      "editorTitle": "Picture",
+      "closeEditor": "Close the picture",
+      "done": "Done",
+      "background": "Background",
+      "wordsHeading": "Words",
+      "wordsField": "Words",
+      "wordsOnPicture": "Words: {text}",
+      "wordsColour": "Colour of these words",
+      "removeWords": "Remove these words",
+      "smaller": "Smaller words",
+      "larger": "Larger words",
+      "addWords": "Add words",
+      "snap": "Snap into line",
+      "snapTip": "Snap into line: words line up with the centre and each other. Hold ⌘ while dragging to place them freely.",
+      "lyrics": "Show lyrics",
+      "lyricsNeedTiming": "Add synced lyrics to show them as you sing",
+      "preview": "How the video will look"
     },
     "loudness": "Volume",
     "loudnessOptions": {
       "streaming": "Ready for streaming",
-      "loud": "Louder",
       "asMixed": "As mixed"
     },
     "loudnessHelp": {
       "streaming": "matches the volume of streaming services",
-      "loud": "pushes it louder still",
       "asMixed": "leaves it exactly as you mixed it"
     },
     "start": "Export",
@@ -794,6 +838,8 @@
     },
     "done": "Saved “{file}”.",
     "reveal": "Show in Finder",
+    "share": "Share…",
+    "shareHelp": "Send it to your phone with AirDrop, or to Messages, Mail or Photos.",
     "close": "Done",
     "failed": "Couldn't export the song. Try again, or pick another folder."
   },

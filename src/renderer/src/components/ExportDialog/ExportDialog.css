@@ -1,5 +1,5 @@
 .export-dialog {
-  width: min(var(--layout-dialog-narrow), calc(100vw - var(--space-12)));
+  --dialog-default-width: var(--layout-dialog-narrow);
 }
 
 .export-choice {
@@ -53,6 +53,64 @@
   color: var(--color-text-muted);
 }
 
+/* The picture as one row, like the format options: a thumbnail, what's on it, and Edit
+   at the far end. The whole row opens the picture editor. */
+.export-video {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: var(--size-hairline) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.export-video:hover {
+  background: var(--color-surface-raised);
+}
+
+.export-video-preview {
+  flex: none;
+  width: var(--layout-video-thumb);
+  aspect-ratio: 9 / 16;
+  border-radius: var(--radius-sm);
+}
+
+.export-video-label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.export-video-name {
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+}
+
+.export-video-hint {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.export-video-edit {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-ui);
+  color: var(--color-text-muted);
+}
+
+.export-video:hover .export-video-edit {
+  color: var(--color-accent-text);
+}
+
 .export-status {
   min-height: calc(var(--font-size-ui) * var(--line-height));
   margin-top: var(--space-7);
@@ -67,6 +125,7 @@
 
 .export-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: var(--space-4);
   margin-top: var(--space-4);

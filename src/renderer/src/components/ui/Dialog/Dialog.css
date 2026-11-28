@@ -1,7 +1,15 @@
+/* Every dialog resizes from its corner. A dialog sets its starting size with
+   --dialog-default-width (and -height); the size it was dragged to comes back as
+   --dialog-width and --dialog-height (useDialogSize). */
 .dialog {
+  max-width: calc(100vw - var(--space-12));
   max-height: calc(100vh - var(--space-12));
+  min-width: var(--layout-dialog-min-width);
+  min-height: var(--layout-dialog-min-height);
   overflow-y: auto;
-  width: min(var(--layout-dialog), calc(100vw - var(--space-12)));
+  resize: both;
+  width: var(--dialog-width, var(--dialog-default-width, var(--layout-dialog)));
+  height: var(--dialog-height, var(--dialog-default-height, fit-content));
   margin: auto;
   padding: var(--space-8) var(--space-9) var(--space-9);
   border: var(--size-hairline) solid var(--color-border);

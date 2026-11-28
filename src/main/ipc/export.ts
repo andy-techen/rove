@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell, ShareMenu } from 'electron'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { t } from '@shared/copy'
@@ -48,5 +48,17 @@ export function registerExportIpc(): void {
 
   ipcMain.handle(EXPORT_CHANNELS.reveal, (_e, filePath: unknown) => {
     if (typeof filePath === 'string' && written.has(filePath)) shell.showItemInFolder(filePath)
+  })
+
+  // The Mac's share menu: AirDrop to the singer's phone, Messages, Mail, Photos and the
+  // rest, at the pointer. Only for a file this export wrote.
+  ipcMain.handle(EXPORT_CHANNELS.share, (e, filePath: unknown) => {
+    if (typeof filePath !== 'string' || !written.has(filePath)) return
+    if (process.platform !== 'darwin') {
+      shell.showItemInFolder(filePath)
+      return
+    }
+    const win = BrowserWindow.fromWebContents(e.sender) ?? undefined
+    new ShareMenu({ filePaths: [filePath] }).popup({ window: win })
   })
 }

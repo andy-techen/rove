@@ -6,19 +6,19 @@ import { encodeMp3 } from '../encode/mp3'
 import { scheduleClips } from '../mix/playback'
 import { dbToGain } from '../dsp/units'
 import { encodeWav } from '../encode/wav'
+import { encodeMp4 } from '../encode/mp4'
+import { VIDEO_HEIGHT, VIDEO_WIDTH, VideoScene, drawVideoFrame, frameKey } from './videoFrame'
 
 export type { ExportFormat }
-export type ExportLoudness = 'streaming' | 'loud' | 'asMixed'
+export type ExportLoudness = 'streaming' | 'asMixed'
 
 /**
- * Integrated loudness to aim for. Spotify, YouTube and Tidal play songs at about
- * -14 LUFS, so a mix there plays as mixed; "loud" suits sharing outside them.
+ * Integrated loudness to aim for. Spotify, YouTube, Instagram and TikTok all turn songs
+ * to about -14 LUFS, so a mix levelled there plays as mixed, and anything louder is only
+ * turned down again.
  * https://support.spotify.com/us/artists/article/loudness-normalization/
  */
-export const LOUDNESS_TARGET_LUFS: Record<Exclude<ExportLoudness, 'asMixed'>, number> = {
-  streaming: -14,
-  loud: -10
-}
+const STREAMING_LUFS = -14
 // Headroom for MP3 encoding and cheap converters, which overshoot a 0 dBFS peak.
 const PEAK_CEILING_DB = -1
 const STEREO = 2
@@ -56,6 +56,27 @@ async function renderMix(
   return [rendered.getChannelData(0), rendered.getChannelData(1)]
 }
 
+/** Puts the mix under the video's picture, drawing a frame only when the picture changes. */
+function encodeVideo(
+  channels: Float32Array[],
+  scene: VideoScene,
+  onProgress: (progress: number) => void
+): Promise<Uint8Array<ArrayBuffer>> {
+  const canvas = document.createElement('canvas')
+  canvas.width = VIDEO_WIDTH
+  canvas.height = VIDEO_HEIGHT
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('No canvas to draw the video on')
+  let drawn: string | null = null
+  const draw = (timeSec: number): void => {
+    const key = frameKey(scene, timeSec)
+    if (key === drawn) return
+    drawVideoFrame(ctx, scene, timeSec)
+    drawn = key
+  }
+  return encodeMp4(channels, SAMPLE_RATE, canvas, draw, onProgress)
+}
+
 /**
  * Mixes the song down, levels it to the chosen loudness, and encodes it. Levelling
  * renders twice: once to measure, once with the gain in front of the limiter, so a
@@ -64,7 +85,7 @@ async function renderMix(
 export async function exportMix(
   tracks: MixdownTrack[],
   lengthSec: number,
-  options: { format: ExportFormat; loudness: ExportLoudness },
+  options: { format: ExportFormat; loudness: ExportLoudness; video?: VideoScene },
   onStage: (stage: ExportStage) => void
 ): Promise<Uint8Array<ArrayBuffer>> {
   onStage({ stage: 'mixing' })
@@ -72,11 +93,16 @@ export async function exportMix(
   if (options.loudness !== 'asMixed') {
     onStage({ stage: 'levelling' })
     const measured = integratedLoudness(channels, SAMPLE_RATE)
-    const gainDb = levelGainDb(measured, LOUDNESS_TARGET_LUFS[options.loudness])
+    const gainDb = levelGainDb(measured, STREAMING_LUFS)
     if (gainDb !== 0) channels = await renderMix(tracks, lengthSec, gainDb)
   }
   channels = withPeakCeiling(channels, PEAK_CEILING_DB)
   onStage({ stage: 'encoding', progress: 0 })
+  const onProgress = (progress: number): void => onStage({ stage: 'encoding', progress })
   if (options.format === 'wav') return new Uint8Array(encodeWav(channels, SAMPLE_RATE, 24))
-  return encodeMp3(channels, SAMPLE_RATE, (progress) => onStage({ stage: 'encoding', progress }))
+  if (options.format === 'mp4') {
+    if (!options.video) throw new Error('A video needs a picture')
+    return encodeVideo(channels, options.video, onProgress)
+  }
+  return encodeMp3(channels, SAMPLE_RATE, onProgress)
 }

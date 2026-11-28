@@ -33,6 +33,14 @@ hears.
   and every icon, ghost and quiet button in it follows.
 - **Small actions in a row of controls are `quiet` buttons** ("Tap"): a soft fill, no
   border, so they read as clickable without standing out like `secondary`.
+- **Every dialog resizes.** Any popup can be dragged bigger or smaller by its corner,
+  and it comes back at that size next time. `Dialog` does this for you: give it a
+  `sizeKey` (where the size is remembered) and set its starting size in its stylesheet
+  with `--dialog-default-width` and `--dialog-default-height`, never `width` or
+  `height`, which would undo the drag. Lay its content out to grow with it (a list or
+  picture fills the space; nothing is pinned to the starting size).
+- **Room to work.** When a task needs space to see and place things (arranging words on
+  a picture), open a larger dialog for it rather than working in a small preview.
 - **Instructions hide behind help.** How-to text goes behind a `HelpTip` (a small "?"
   that reveals the instruction on hover or keyboard focus), beside the control it
   explains. Don't add always-visible paragraphs. Help longer than a sentence or two
@@ -102,6 +110,7 @@ Reach for these before writing new markup:
 | `Slider`       | Range inputs (lane volume and position, Advanced). `centre` for two-way ones.                                                                  |
 | `Knob`         | A turnable control. `centre` for ones that go both ways (speed, key).                                                                          |
 | `KnobControl`  | A knob with its name, help and value, as panels show it; lay out in a `KnobRow`. `setBy` marks one Rove turned (why, on hover).                |
+| `Dialog`       | Every popup: title, close button, Esc to close, resizable from its corner (`sizeKey` remembers the size).                                      |
 | `Panel`        | A titled panel under the timeline (Polish, Music), with header actions.                                                                        |
 | `Splitter`     | A draggable edge between areas (side panel width, the lyrics/chords split).                                                                    |
 | `NumberField`  | A number to type over (Enter applies, Esc reverts); pair it with a slider.                                                                     |

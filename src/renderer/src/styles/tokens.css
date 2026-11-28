@@ -35,6 +35,11 @@
   --color-highlight: rgba(255, 250, 240, 0.14);
   --color-grid: rgba(255, 255, 255, 0.05);
   --color-backdrop: rgba(0, 0, 0, 0.45);
+  /* Guide lines drawn over a video picture, which is the same in both themes. */
+  --color-guide: rgba(255, 250, 240, 0.45);
+  /* A smart guide while dragging words: pink, as design tools draw them, so it shows on any
+     picture and never reads as the accent. Over the video, so one value for both themes. */
+  --color-snap-guide: #ec4f9a;
   --shadow-raised: 0 2px 10px rgba(0, 0, 0, 0.25);
   --shadow-raised-hover: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-thumb: 0 1px 3px rgba(0, 0, 0, 0.45);
@@ -146,6 +151,14 @@
   --layout-traffic-lights: 80px;
   --layout-dialog: 640px;
   --layout-dialog-narrow: 420px;
+  /* As small as any dialog can be dragged: room for a title and a row of buttons. */
+  --layout-dialog-min-width: 320px;
+  --layout-dialog-min-height: 160px;
+  /* The export dialog's video thumbnail: a phone screen in miniature (its height follows). */
+  --layout-video-thumb: 32px;
+  /* The picture editor: room for a tall picture, its tools beside it. */
+  --layout-picture-editor: 560px;
+  --layout-picture-editor-height: 760px;
   /* The app dialog: a section sidebar beside the two-column shortcuts table. */
   --layout-app-dialog: 820px;
   --layout-app-dialog-sidebar: 140px;

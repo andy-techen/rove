@@ -39,6 +39,7 @@ export function NewSongDialog({
       closeLabel={t('newSong.cancel')}
       onClose={onClose}
       initialFocus={field}
+      sizeKey="newSong"
       className="new-song"
     >
       <form
