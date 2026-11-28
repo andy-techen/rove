@@ -1,6 +1,6 @@
-import { fft } from './fft'
+import { fft, hann as hannWindow } from './fft'
 import { downsampleForAnalysis, nextTick } from './resample'
-import { AudioSource } from '../pitch/key'
+import { AudioSource } from './audioSource'
 
 // Drums, plucks and sung consonants live across the spectrum; above this adds little.
 const ONSET_CUTOFF_HZ = 5000
@@ -22,10 +22,7 @@ export async function onsetStrength(
   const envelope = new Float32Array(frames)
   const re = new Float64Array(ONSET_FFT)
   const im = new Float64Array(ONSET_FFT)
-  const hann = Float64Array.from(
-    { length: ONSET_FFT },
-    (_, i) => 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / ONSET_FFT)
-  )
+  const hann = hannWindow(ONSET_FFT, true)
   const previous = new Float64Array(ONSET_FFT / 2)
   for (let f = 0; f < frames; f++) {
     for (let i = 0; i < ONSET_FFT; i++) re[i] = data[f * ONSET_HOP + i] * hann[i]

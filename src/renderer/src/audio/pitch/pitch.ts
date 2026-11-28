@@ -1,5 +1,7 @@
 import { downsampleForAnalysis, nextTick } from '../dsp/resample'
 import { dbToGain } from '../dsp/units'
+import { hann as hannWindow } from '../dsp/fft'
+import { parabolicOffset } from '../dsp/peakFit'
 
 /** How often the sung pitch is measured. */
 export const PITCH_HOP_SEC = 0.01
@@ -73,11 +75,7 @@ function yinLag(
     if (diff[lag] >= YIN_THRESHOLD) continue
     while (lag + 1 < maxLag && diff[lag + 1] < diff[lag]) lag++
     // A parabola through the dip and its neighbours finds the period between samples.
-    const a = diff[lag - 1]
-    const b = diff[lag]
-    const c = diff[lag + 1]
-    const bend = a - 2 * b + c
-    return bend > 0 ? lag + (a - c) / (2 * bend) : lag
+    return lag + parabolicOffset(diff[lag - 1], diff[lag], diff[lag + 1], 'dip')
   }
   return 0
 }
@@ -140,10 +138,7 @@ export async function analysePitch(samples: Float32Array, sampleRate: number): P
   const span = window + maxLag + 1
   const diff = new Float64Array(maxLag + 1)
   const spectrumLength = Math.round(SPECTRUM_SEC * rate)
-  const hann = Float64Array.from(
-    { length: spectrumLength },
-    (_, n) => 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (spectrumLength - 1))
-  )
+  const hann = hannWindow(spectrumLength)
   const frames = Math.floor(samples.length / sampleRate / PITCH_HOP_SEC) + 1
   const f0 = new Float32Array(frames)
   for (let i = 0; i < frames; i++) {

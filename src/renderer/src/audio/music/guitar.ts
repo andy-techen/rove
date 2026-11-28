@@ -1,5 +1,6 @@
 import { midiToHz } from '../pitch/pitch'
 import { nextTick } from '../dsp/resample'
+import { seededNoise } from '../dsp/noise'
 
 /** One string sounding in a strum. Strings count from the low E (0) to the high E (5). */
 export interface StrumNote {
@@ -27,14 +28,12 @@ const PLUCK_SEC = 3
 // How long the lowest string takes to die away by 60 dB; higher strings ring shorter.
 const LOW_RING_SEC = 3.5
 const LOW_STRING_HZ = 82
-const DECAY_60DB = 3
+// A 60 dB fall is three powers of ten in amplitude.
+const DECADES_IN_60DB = 3
 // Softens the noise burst, like a soft pick or a thumb: a warm, round tone. Brighter
 // settings sound harsh, and their strong upper harmonics blur which chord is playing.
 const PICK_SMOOTHING = 0.93
-// Park–Miller "minimal standard" random numbers: every render sounds the same.
-const PRNG_SEED = 2718
-const PRNG_MULT = 16807
-const PRNG_MOD = 2147483647
+const NOISE_SEED = 2718
 // A doubled note gets its own noise burst, so the two voices don't sound like one.
 const SEED_STEPS = 100
 
@@ -49,15 +48,13 @@ function synthPluck(midi: number, sampleRate: number): Float32Array {
   const frac = delay - period
   const allpass = (1 - frac) / (1 + frac)
   const ringSec = LOW_RING_SEC * Math.sqrt(LOW_STRING_HZ / hz)
-  const loss = 10 ** (-DECAY_60DB / (ringSec * hz))
+  const loss = 10 ** (-DECADES_IN_60DB / (ringSec * hz))
 
   const loop = new Float32Array(period)
-  let seed = PRNG_SEED + Math.round(midi * SEED_STEPS)
+  const noise = seededNoise(NOISE_SEED + Math.round(midi * SEED_STEPS))
   let prev = 0
   for (let i = 0; i < period; i++) {
-    seed = (seed * PRNG_MULT) % PRNG_MOD
-    const noise = (seed / PRNG_MOD) * 2 - 1
-    prev = prev * PICK_SMOOTHING + noise * (1 - PICK_SMOOTHING)
+    prev = prev * PICK_SMOOTHING + noise() * (1 - PICK_SMOOTHING)
     loop[i] = prev
   }
   let last = loop[period - 1]

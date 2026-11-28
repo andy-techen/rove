@@ -1,18 +1,13 @@
 import type { DrumHit, DrumVoice } from '../../state/chords/beats'
+import { seededNoise } from '../dsp/noise'
 
 // Each drum is synthesised once per sample rate: a few short sounds, so no samples ship.
 
-const PRNG_SEED = 1618
-const PRNG_MULT = 16807
-const PRNG_MOD = 2147483647
+const NOISE_SEED = 1618
 
-/** Repeatable noise, so a part renders the same every time. */
 function noise(length: number): Float32Array {
-  let seed = PRNG_SEED
-  return Float32Array.from({ length }, () => {
-    seed = (seed * PRNG_MULT) % PRNG_MOD
-    return (seed / PRNG_MOD) * 2 - 1
-  })
+  const next = seededNoise(NOISE_SEED)
+  return Float32Array.from({ length }, () => next())
 }
 
 /** Noise with its lows taken out: what's left is the sizzle of a cymbal or snare wire. */

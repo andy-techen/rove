@@ -1,5 +1,6 @@
 import { TASTE_CONTROLS, TasteExample } from '@shared/polishTaste'
 import { Taste, ruledPolish } from './autoPolish'
+import { clamp } from '../dsp/units'
 
 /** The furthest the singer's taste leans a control from what the rules say. */
 export const MAX_LEAN = 0.15
@@ -37,7 +38,7 @@ export function learnTaste(examples: TasteExample[], except?: string): Taste {
   return Object.fromEntries(
     TASTE_CONTROLS.flatMap((key) => {
       const mean = sums[key] / (weight + PRIOR_SONGS)
-      const lean = Math.max(-MAX_LEAN, Math.min(MOST[key] ?? MAX_LEAN, mean))
+      const lean = clamp(mean, -MAX_LEAN, MOST[key] ?? MAX_LEAN)
       const stepped = Math.round(lean * STEPS) / STEPS
       return Math.abs(stepped) >= MIN_LEAN ? [[key, stepped]] : []
     })

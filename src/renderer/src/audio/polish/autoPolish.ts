@@ -1,5 +1,6 @@
 import { PolishAmounts, amountFor, defaultPolish } from './polish'
 import { PolishReading } from './polishReading'
+import { clamp } from '../dsp/units'
 
 /** Auto polish sets every control but Tuning, which changes the singing itself. */
 export type SuggestedAmounts = Omit<PolishAmounts, 'tuning'>
@@ -81,8 +82,6 @@ const HUM_WARMTH = -0.15
 // A control that moved at least this far gets its reason told.
 const REASON_STEP = 0.1
 const STEPS = 100
-
-const clamp = (v: number, min: number, max: number): number => Math.max(min, Math.min(max, v))
 
 /** How far to move a control, for a measure `shortBy` dB under its reference. */
 function nudge(shortBy: number, n: Nudge): number {

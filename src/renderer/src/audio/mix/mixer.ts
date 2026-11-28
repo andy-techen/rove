@@ -6,8 +6,9 @@ import {
   polishParams
 } from '../polish/polish'
 import { GATE_PROCESSOR } from '../worklets/messages'
-import { dbToGain, gainToDb } from '../dsp/units'
+import { clamp, dbToGain, gainToDb } from '../dsp/units'
 import { DE_ESS_BAND } from '../dsp/voiceBands'
+import { seededNoise } from '../dsp/noise'
 
 export interface TrackMix {
   role: 'vocal' | 'backing'
@@ -55,12 +56,8 @@ const REVERB_PREDELAY_SEC = 0.015
 const IR_STEPS_PER_SEC = 5
 const IR_LEVEL = 0.5
 // ln(1000): the exponent at which the tail has fallen 60 dB (the usual "decay time").
-const DECAY_60DB = Math.log(1000)
-// Park–Miller "minimal standard" random numbers: repeatable noise, so every render
-// of the same room sounds the same.
-const PRNG_SEED = 12345
-const PRNG_MULTIPLIER = 16807
-const PRNG_MODULUS = 2147483647
+const E_FOLDS_IN_60DB = Math.log(1000)
+const NOISE_SEED = 12345
 
 // Safety limiter: just under full scale, effectively brick-wall.
 const LIMITER_THRESHOLD_DB = -1
@@ -91,13 +88,11 @@ export function roomImpulse(ctx: BaseAudioContext, decaySec: number): AudioBuffe
   const pre = Math.round(REVERB_PREDELAY_SEC * sr)
   const length = pre + Math.round(key * sr)
   const buffer = ctx.createBuffer(2, length, sr)
-  let seed = PRNG_SEED
+  const noise = seededNoise(NOISE_SEED)
   for (let ch = 0; ch < 2; ch++) {
     const data = buffer.getChannelData(ch)
     for (let i = pre; i < length; i++) {
-      seed = (seed * PRNG_MULTIPLIER) % PRNG_MODULUS
-      const noise = (seed / PRNG_MODULUS) * 2 - 1
-      data[i] = noise * Math.exp((-DECAY_60DB * (i - pre)) / (key * sr)) * IR_LEVEL
+      data[i] = noise() * Math.exp((-E_FOLDS_IN_60DB * (i - pre)) / (key * sr)) * IR_LEVEL
     }
   }
   byDecay.set(key, buffer)
@@ -278,7 +273,7 @@ export class TrackChain {
 
   private apply(mix: TrackMix, set: Setter): void {
     set(this.volume.gain, mix.muted ? 0 : mix.volume)
-    set(this.panner.pan, Math.max(-1, Math.min(1, mix.pan)))
+    set(this.panner.pan, clamp(mix.pan, -1, 1))
     this.polish?.apply(mix.polish ?? defaultPolish(), set)
     if (this.bass) set(this.bass.gain, mix.tone?.bassDb ?? 0)
     if (this.brightness) set(this.brightness.gain, mix.tone?.brightnessDb ?? 0)
@@ -363,5 +358,5 @@ export function sliderToGain(position: number): number {
 export function gainToSlider(gain: number): number {
   if (gain <= 0) return 0
   const db = gainToDb(gain)
-  return Math.max(0, Math.min(1, (db - SLIDER_MIN_DB) / (SLIDER_MAX_DB - SLIDER_MIN_DB)))
+  return clamp((db - SLIDER_MIN_DB) / (SLIDER_MAX_DB - SLIDER_MIN_DB), 0, 1)
 }

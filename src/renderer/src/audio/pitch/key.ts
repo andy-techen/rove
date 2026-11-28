@@ -1,6 +1,8 @@
-import { fft } from '../dsp/fft'
+import { fft, hann as hannWindow } from '../dsp/fft'
 import { hzToMidi } from './pitch'
 import { downsampleForAnalysis, nextTick } from '../dsp/resample'
+import { AudioSource } from '../dsp/audioSource'
+import { mean } from '../dsp/stats'
 
 export type KeyMode = 'major' | 'minor'
 
@@ -19,7 +21,7 @@ const SCALE_STEPS: Record<KeyMode, number[]> = {
   minor: [0, 2, 3, 5, 7, 8, 10]
 }
 
-const pitchClass = (note: number): number =>
+export const pitchClass = (note: number): number =>
   ((Math.round(note) % PITCH_CLASSES) + PITCH_CLASSES) % PITCH_CLASSES
 
 /** The pitch classes a key allows, ascending. No key means every note is allowed. */
@@ -64,7 +66,6 @@ const PROFILES: Record<KeyMode, number[]> = {
 }
 
 function correlation(a: number[], b: number[]): number {
-  const mean = (xs: number[]): number => xs.reduce((s, x) => s + x, 0) / xs.length
   const ma = mean(a)
   const mb = mean(b)
   let num = 0
@@ -104,20 +105,12 @@ const CHROMA_MAX_HZ = 2000
 const FFT_SIZE = 4096
 const FRAMES_PER_CHUNK = 20
 
-export interface AudioSource {
-  channels: Float32Array[]
-  sampleRate: number
-}
-
 /** Adds up how strongly each pitch class sounds through some audio. */
 async function addChroma(source: AudioSource, chroma: number[]): Promise<void> {
   const { data, rate } = downsampleForAnalysis(source.channels, source.sampleRate, CHROMA_MAX_HZ)
   const re = new Float64Array(FFT_SIZE)
   const im = new Float64Array(FFT_SIZE)
-  const hann = Float64Array.from(
-    { length: FFT_SIZE },
-    (_, i) => 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / FFT_SIZE)
-  )
+  const hann = hannWindow(FFT_SIZE, true)
   const lowBin = Math.ceil((CHROMA_MIN_HZ * FFT_SIZE) / rate)
   const highBin = Math.floor((CHROMA_MAX_HZ * FFT_SIZE) / rate)
   let frame = 0

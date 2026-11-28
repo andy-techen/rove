@@ -1,4 +1,8 @@
-import { AudioSource } from '../pitch/key'
+import { AudioSource } from '../dsp/audioSource'
+import { hann } from '../dsp/fft'
+import { parabolicOffset } from '../dsp/peakFit'
+import { mean } from '../dsp/stats'
+import { clamp } from '../dsp/units'
 import { bufferOf, cachedRender, channelsOf } from '../dsp/renderCache'
 import { lowpass, nextTick } from '../dsp/resample'
 import { onsetStrength } from '../dsp/onsets'
@@ -31,11 +35,7 @@ function peakNear(score: (lag: number) => number, around: number, reach: number)
   for (let lag = around - reach; lag <= around + reach; lag++) {
     if (lag > 1 && score(lag) > score(best)) best = lag
   }
-  const a = score(best - 1)
-  const b = score(best)
-  const c = score(best + 1)
-  const bend = a - 2 * b + c
-  return bend < 0 ? best + (a - c) / (2 * bend) : best
+  return best + parabolicOffset(score(best - 1), score(best), score(best + 1), 'peak')
 }
 
 /** A music's beat: its tempo, and when its first beat falls (seconds into the recording). */
@@ -51,9 +51,9 @@ export interface Beat {
 export async function detectBeat(source: AudioSource): Promise<Beat | null> {
   const { envelope, rate, frameSec } = await onsetStrength(source, TEMPO_ANALYSIS_SEC)
   if (envelope.length === 0) return null
-  const mean = envelope.reduce((s, x) => s + x, 0) / envelope.length
-  if (mean < MIN_ONSET_ENERGY) return null
-  const centred = envelope.map((x) => x - mean)
+  const average = mean(envelope)
+  if (average < MIN_ONSET_ENERGY) return null
+  const centred = envelope.map((x) => x - average)
 
   const lagFor = (bpm: number): number => (SEC_PER_MIN * rate) / bpm
   const shortest = Math.floor(lagFor(MAX_BPM))
@@ -146,10 +146,7 @@ async function timeStretch(
   const hop = frame / 2
   const analysisHop = hop / factor
   const seek = Math.round(SEEK_SEC * sampleRate)
-  const window = Float32Array.from(
-    { length: frame },
-    (_, i) => 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / frame)
-  )
+  const window = Float32Array.from(hann(frame, true))
   // A mono, thinned guide for finding where each frame lines up best.
   const guide = new Float32Array(Math.ceil(length / GUIDE_STEP))
   for (let i = 0; i < guide.length; i++) {
@@ -209,7 +206,7 @@ async function timeStretch(
 /** Reads `x` at `ratio` times the speed (Catmull–Rom interpolation): higher and shorter. */
 function resample(x: Float32Array, ratio: number): Float32Array<ArrayBuffer> {
   const out = new Float32Array(Math.round(x.length / ratio))
-  const at = (i: number): number => x[Math.max(0, Math.min(x.length - 1, i))]
+  const at = (i: number): number => x[clamp(i, 0, x.length - 1)]
   for (let n = 0; n < out.length; n++) {
     const pos = n * ratio
     const i = Math.floor(pos)

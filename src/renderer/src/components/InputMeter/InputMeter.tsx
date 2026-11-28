@@ -10,9 +10,9 @@ import {
   RecentPeak,
   levelZone,
   meterFill,
-  nextDisplayDb,
-  toDb
+  nextDisplayDb
 } from '../../audio/mix/meter'
+import { gainToDb } from '../../audio/dsp/units'
 import './InputMeter.css'
 
 const MS_PER_SEC = 1000
@@ -70,7 +70,7 @@ export function InputMeter({
     // through React state, and React skips re-rendering when it is unchanged.
     const tick = (now: number): void => {
       const dtSec = (now - last) / MS_PER_SEC
-      const peakDb = toDb(meter.readPeak())
+      const peakDb = gainToDb(meter.readPeak())
       displayDb = nextDisplayDb(displayDb, peakDb, dtSec)
       last = now
       if (!reported && check.update(dtSec, displayDb)) {

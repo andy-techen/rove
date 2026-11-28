@@ -10,9 +10,9 @@ import {
   SINGING_OVER_ROOM_DB,
   analyseFrame,
   densityDb,
-  percentile,
   singingTest
 } from '../dsp/voiceBands'
+import { percentile } from '../dsp/stats'
 
 export type { PolishReading }
 
@@ -43,8 +43,6 @@ const PERCENT = {
   loud: 0.95,
   room: 0.2
 }
-
-const median = (values: number[]): number => percentile(values, PERCENT.median)
 
 /** The played part of a take, mixed to mono. */
 function monoWindow(heard: HeardWindow): Float32Array {
@@ -106,7 +104,7 @@ export async function analyseVoice(windows: HeardWindow[]): Promise<PolishReadin
   const softDb = percentile(sung, PERCENT.soft)
   const mid = sum(singing, 'mid')
   return {
-    voiceDb: median(sung),
+    voiceDb: percentile(sung, PERCENT.median),
     softDb,
     rangeDb: percentile(sung, PERCENT.loud) - softDb,
     noiseDb: gaps.length
@@ -115,7 +113,12 @@ export async function analyseVoice(windows: HeardWindow[]): Promise<PolishReadin
           PERCENT.room
         )
       : roomGuess,
-    hum: gaps.length > 0 && median(gaps.map((f) => f.humShare)) >= HUM_SHARE,
+    hum:
+      gaps.length > 0 &&
+      percentile(
+        gaps.map((f) => f.humShare),
+        PERCENT.median
+      ) >= HUM_SHARE,
     sibilanceDb:
       sibilant.length >= MIN_SIBILANT_FRAMES
         ? percentile(

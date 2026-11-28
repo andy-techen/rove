@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MusicClip, musicUnder, takeLag } from './lineUp'
+import { seededNoise } from '../dsp/noise'
 
 const RATE = 12000
 const SONG_SEC = 20
@@ -7,8 +8,7 @@ const SONG_SEC = 20
 /** Short bursts of noise at each time: drum hits, or sung syllables. */
 function hits(times: number[], seed = 1): Float32Array {
   const out = new Float32Array(SONG_SEC * RATE)
-  let x = seed
-  const noise = (): number => ((x = (x * 16807) % 2147483647) / 2147483647) * 2 - 1
+  const noise = seededNoise(seed)
   for (const t of times) {
     const at = Math.round(t * RATE)
     for (let i = 0; i < 0.04 * RATE && at + i < out.length; i++) {

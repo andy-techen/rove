@@ -1,6 +1,8 @@
 import { nearestNote } from './key'
 import { PitchTrack, analysePitch, hzToMidi } from './pitch'
 import { bufferOf, cachedRender, channelsOf } from '../dsp/renderCache'
+import { hann } from '../dsp/fft'
+import { clamp } from '../dsp/units'
 
 /** How hard and how fast to pull notes in tune, and which notes count as in tune. */
 export interface Tuning {
@@ -76,13 +78,9 @@ export function shiftPitch(
   const out = new Float32Array(input.length)
   const hop = Math.max(1, Math.round(GRAIN_HOP_SEC * sampleRate))
   const grain = hop * 2
-  // A periodic Hann window: windows a hop apart sum to exactly 1.
-  const window = Float32Array.from(
-    { length: grain },
-    (_, k) => 0.5 - 0.5 * Math.cos((Math.PI * k) / hop)
-  )
+  const window = Float32Array.from(hann(grain, true))
   const frameAt = (n: number): number =>
-    Math.max(0, Math.min(ratios.length - 1, Math.round(n / sampleRate / hopSec)))
+    clamp(Math.round(n / sampleRate / hopSec), 0, ratios.length - 1)
   const sample = (pos: number): number => {
     const i = Math.floor(pos)
     if (i < 0 || i >= input.length) return 0

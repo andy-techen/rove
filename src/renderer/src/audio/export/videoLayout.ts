@@ -1,4 +1,5 @@
 import { SongLyrics, activeLineIndex } from '../../state/lyrics/lyrics'
+import { clamp } from '../dsp/units'
 
 export interface Rect {
   x: number
@@ -90,12 +91,13 @@ export function placeBlock(
   blockHeight: number,
   frame: { width: number; height: number; margin: number }
 ): { x: number; top: number } {
-  const clamp = (value: number, min: number, max: number): number =>
-    min > max ? (min + max) / 2 : Math.min(max, Math.max(min, value))
+  // A block too big for the frame sits in the middle of where it could go.
+  const fit = (value: number, min: number, max: number): number =>
+    min > max ? (min + max) / 2 : clamp(value, min, max)
   const { width, height, margin } = frame
   return {
-    x: clamp(position.x * width, margin + blockWidth / 2, width - margin - blockWidth / 2),
-    top: clamp(position.y * height - blockHeight / 2, margin, height - margin - blockHeight)
+    x: fit(position.x * width, margin + blockWidth / 2, width - margin - blockWidth / 2),
+    top: fit(position.y * height - blockHeight / 2, margin, height - margin - blockHeight)
   }
 }
 

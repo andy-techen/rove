@@ -5,20 +5,8 @@ import {
   RecentPeak,
   levelZone,
   meterFill,
-  nextDisplayDb,
-  toDb
+  nextDisplayDb
 } from './meter'
-
-describe('toDb', () => {
-  it('maps full scale to 0 dB and half scale to about -6 dB', () => {
-    expect(toDb(1)).toBe(0)
-    expect(toDb(0.5)).toBeCloseTo(-6.02, 2)
-  })
-
-  it('treats digital silence as -Infinity', () => {
-    expect(toDb(0)).toBe(-Infinity)
-  })
-})
 
 describe('meterFill', () => {
   it('spans the floor to 0 dB and clamps outside it', () => {

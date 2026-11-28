@@ -1,7 +1,8 @@
-import { fft } from '../dsp/fft'
+import { fft, hann as hannWindow } from '../dsp/fft'
 import { channelsOf } from '../dsp/renderCache'
 import { beatOf } from './stretch'
-import { AudioSource, PITCH_CLASSES } from '../pitch/key'
+import { PITCH_CLASSES, pitchClass } from '../pitch/key'
+import { AudioSource } from '../dsp/audioSource'
 import { hzToMidi } from '../pitch/pitch'
 import { downsampleForAnalysis, nextTick } from '../dsp/resample'
 import { dbToGain } from '../dsp/units'
@@ -70,17 +71,11 @@ async function chromagram(
   source: AudioSource
 ): Promise<{ frames: Float64Array[]; times: number[]; levels: number[] }> {
   const { data, rate } = downsampleForAnalysis(source.channels, source.sampleRate, CUTOFF_HZ)
-  const hann = Float64Array.from(
-    { length: FFT_SIZE },
-    (_, i) => 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / FFT_SIZE)
-  )
+  const hann = hannWindow(FFT_SIZE, true)
   const lowBin = Math.ceil((LOW_HZ * FFT_SIZE) / rate)
   const highBin = Math.floor((CUTOFF_HZ * FFT_SIZE) / rate)
   const pcOfBin = Array.from({ length: highBin + 1 }, (_, bin) =>
-    bin >= lowBin
-      ? ((Math.round(hzToMidi((bin * rate) / FFT_SIZE)) % PITCH_CLASSES) + PITCH_CLASSES) %
-        PITCH_CLASSES
-      : -1
+    bin >= lowBin ? pitchClass(hzToMidi((bin * rate) / FFT_SIZE)) : -1
   )
   const re = new Float64Array(FFT_SIZE)
   const im = new Float64Array(FFT_SIZE)
