@@ -81,10 +81,10 @@ export interface RoveApi {
   ): Promise<WishlistItem[]>
   /** Searches the curated song catalog that ships with the app. */
   searchCatalog(options: CatalogSearchOptions): Promise<CatalogSearchResult>
-  /** Reopens the songs that were open last time. */
-  restoreTabs(): Promise<{ songs: ChosenProject[]; activeSong: string | null }>
   /** The filters worth offering: values at least one catalog song has. */
   catalogFacets(): Promise<CatalogFacets>
+  /** Reopens the songs that were open last time. */
+  restoreTabs(): Promise<{ songs: ChosenProject[]; activeSong: string | null }>
   rememberTabs(dirs: string[], active: string | null): Promise<void>
   /** Makes a song folder under ~/Music/Rove, named after the song (untitled without a name). */
   createSong(name?: string, artist?: string, note?: string): Promise<ChosenProject>

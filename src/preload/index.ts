@@ -110,6 +110,7 @@ const api: RoveApi = {
   updateWishlistItem: (id, name, artist, note) =>
     ipcRenderer.invoke(WISHLIST_CHANNELS.update, id, name, artist, note),
   searchCatalog: (options) => ipcRenderer.invoke(CATALOG_CHANNELS.search, options),
+  catalogFacets: () => ipcRenderer.invoke(CATALOG_CHANNELS.facets),
   restoreTabs: () => ipcRenderer.invoke(PROJECT_CHANNELS.restoreTabs),
   rememberTabs: (dirs, active) => ipcRenderer.invoke(PROJECT_CHANNELS.rememberTabs, dirs, active),
   createSong: (name, artist, note) =>
@@ -118,7 +119,6 @@ const api: RoveApi = {
   importBackingTrack: (dir) => ipcRenderer.invoke(PROJECT_CHANNELS.importBackingTrack, dir),
   saveTake: (dir, wav) => ipcRenderer.invoke(PROJECT_CHANNELS.saveTake, dir, wav),
   readAudio: (dir, relPath) => ipcRenderer.invoke(PROJECT_CHANNELS.readAudio, dir, relPath),
-  catalogFacets: () => ipcRenderer.invoke(CATALOG_CHANNELS.facets),
   writeManifest: (dir, manifest) =>
     ipcRenderer.invoke(PROJECT_CHANNELS.writeManifest, dir, manifest),
   exportSongFile: (dir) => ipcRenderer.invoke(PROJECT_CHANNELS.exportSongFile, dir),
