@@ -20,14 +20,13 @@ import { MIC_CHANNELS } from '@shared/songs/mic'
 import { PROJECT_CHANNELS } from '@shared/songs/project'
 import { SEPARATION_MODEL_CHANNEL } from '@shared/songs/separation'
 import {
-  CONTEXT_MENU_CHANNEL,
   FULL_SCREEN_CHANNEL,
   KEYMAP_CHANNELS,
-  MENU_CHANNEL,
-  OPEN_SONG_CHANNEL,
+  parseDockChoice,
   NATIVE_EDIT_CHANNEL,
   CLIPBOARD_TEXT_CHANNEL,
-  isMenuAction
+  isMenuAction,
+  MENU_CHANNELS
 } from '@shared/preferences/menu'
 import type { RoveApi } from './index.d'
 
@@ -71,21 +70,23 @@ const api: RoveApi = {
     const handler = (_e: Electron.IpcRendererEvent, action: unknown): void => {
       if (isMenuAction(action)) listener(action)
     }
-    ipcRenderer.on(MENU_CHANNEL, handler)
-    return () => ipcRenderer.removeListener(MENU_CHANNEL, handler)
+    ipcRenderer.on(MENU_CHANNELS.action, handler)
+    return () => ipcRenderer.removeListener(MENU_CHANNELS.action, handler)
   },
   onOpenSong: (listener) => {
     const handler = (_e: Electron.IpcRendererEvent, folder: unknown): void => {
       if (typeof folder === 'string') listener(folder)
     }
-    ipcRenderer.on(OPEN_SONG_CHANNEL, handler)
-    return () => ipcRenderer.removeListener(OPEN_SONG_CHANNEL, handler)
+    ipcRenderer.on(MENU_CHANNELS.openSong, handler)
+    return () => ipcRenderer.removeListener(MENU_CHANNELS.openSong, handler)
   },
+  takeDockChoice: async () =>
+    parseDockChoice(await ipcRenderer.invoke(MENU_CHANNELS.pendingChoice)),
   getKeymap: () => ipcRenderer.invoke(KEYMAP_CHANNELS.get),
   setKeymap: (overrides) => ipcRenderer.invoke(KEYMAP_CHANNELS.set, overrides),
   onKeymapChanged: subscribe(KEYMAP_CHANNELS.changed, parseOverrides),
   captureShortcutKeys: (on) => ipcRenderer.invoke(KEYMAP_CHANNELS.capture, on),
-  showContextMenu: (items) => ipcRenderer.invoke(CONTEXT_MENU_CHANNEL, items),
+  showContextMenu: (items) => ipcRenderer.invoke(MENU_CHANNELS.context, items),
   nativeEdit: (command) => ipcRenderer.invoke(NATIVE_EDIT_CHANNEL, command),
   readClipboardText: async () => {
     const text: unknown = await ipcRenderer.invoke(CLIPBOARD_TEXT_CHANNEL)

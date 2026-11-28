@@ -1,6 +1,6 @@
 import { BrowserWindow, ipcMain } from 'electron'
 import { KeymapOverrides, effectiveKeymap, parseOverrides } from '@shared/preferences/keymap'
-import { CONTEXT_MENU_CHANNEL, KEYMAP_CHANNELS, parseContextMenu } from '@shared/preferences/menu'
+import { KEYMAP_CHANNELS, parseContextMenu, MENU_CHANNELS } from '@shared/preferences/menu'
 import { installMenu, showContextMenu } from '../../menu'
 import { jsonStore } from '../files/jsonStore'
 
@@ -31,7 +31,7 @@ export async function registerKeymapIpc(): Promise<void> {
   ipcMain.handle(KEYMAP_CHANNELS.capture, (e, on: unknown) => {
     e.sender.setIgnoreMenuShortcuts(on === true)
   })
-  ipcMain.handle(CONTEXT_MENU_CHANNEL, (e, raw: unknown) =>
+  ipcMain.handle(MENU_CHANNELS.context, (e, raw: unknown) =>
     showContextMenu(e.sender, parseContextMenu(raw))
   )
 }

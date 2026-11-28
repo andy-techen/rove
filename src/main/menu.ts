@@ -1,21 +1,23 @@
-import { app, BrowserWindow, Menu, MenuItemConstructorOptions, WebContents } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  MenuItemConstructorOptions,
+  WebContents
+} from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { t } from '@shared/copy'
 import { KEYMAP, Keymap, ShortcutId, isInAppAccelerator } from '@shared/preferences/keymap'
 import { RECENT_SONGS } from '@shared/constants'
-import {
-  ContextMenuItem,
-  MENU_CHANNEL,
-  MenuAction,
-  OPEN_SONG_CHANNEL
-} from '@shared/preferences/menu'
+import { ContextMenuItem, DockChoice, MenuAction, MENU_CHANNELS } from '@shared/preferences/menu'
 import { THEMES } from '@shared/preferences/appearance'
 import { currentTheme, setTheme } from './ipc/preferences/appearance'
 import { listSongbook } from './ipc/songs/songbook'
 
 /** Sends a menu choice to the focused window; the renderer decides what it means. */
 function send(action: MenuAction): void {
-  BrowserWindow.getFocusedWindow()?.webContents.send(MENU_CHANNEL, action)
+  BrowserWindow.getFocusedWindow()?.webContents.send(MENU_CHANNELS.action, action)
 }
 
 const separator: MenuItemConstructorOptions = { type: 'separator' }
@@ -162,34 +164,49 @@ export function installMenu(keymap: Keymap): void {
 }
 
 let showForDock: (() => Promise<BrowserWindow>) | null = null
+// A choice made with no window open, waiting for the new window to take it.
+let pending: DockChoice | null = null
 
 /**
  * Right-clicking Rove in the Dock: pick up a recent song, or start or find one, without
- * hunting for the window. `showWindow` brings the window forward (opening one if it was
- * closed) before the choice is sent, since nothing has focus while the Dock menu is open.
+ * hunting for the window. `showWindow` brings the window forward, or opens one.
  */
 export function installDockMenu(showWindow: () => Promise<BrowserWindow>): void {
   showForDock = showWindow
+  ipcMain.handle(MENU_CHANNELS.pendingChoice, () => {
+    const choice = pending
+    pending = null
+    return choice
+  })
   void refreshDockMenu()
+}
+
+/** Carries out a Dock menu choice in the window, which comes forward for it. */
+async function choose(choice: DockChoice, showWindow: () => Promise<BrowserWindow>): Promise<void> {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    pending = choice
+    await showWindow()
+    return
+  }
+  const window = await showWindow()
+  if ('action' in choice) window.webContents.send(MENU_CHANNELS.action, choice.action)
+  else window.webContents.send(MENU_CHANNELS.openSong, choice.folder)
 }
 
 /** Rebuilds the Dock menu's recent songs, after the songs may have changed. */
 export async function refreshDockMenu(): Promise<void> {
   const showWindow = showForDock
   if (!app.dock || !showWindow) return
-  const toWindow =
-    (channel: string, payload: string): (() => void) =>
-    () =>
-      void showWindow().then((window) => window.webContents.send(channel, payload))
+  const click = (choice: DockChoice) => (): void => void choose(choice, showWindow)
   const item = (label: string, action: MenuAction): MenuItemConstructorOptions => ({
     label,
-    click: toWindow(MENU_CHANNEL, action)
+    click: click({ action })
   })
   // The Dock menu is a list to glance at, so a failed read just leaves the songs out.
   const recent = (await listSongbook().catch(() => [])).slice(0, RECENT_SONGS)
   const songs = recent.map((song): MenuItemConstructorOptions => ({
     label: song.name,
-    click: toWindow(OPEN_SONG_CHANNEL, song.folder)
+    click: click({ folder: song.folder })
   }))
   // A dimmed row titles the songs, as Music's Dock menu does over Recently Played; a
   // macOS section header (type 'header') would draw it smaller and bold instead.
@@ -229,7 +246,7 @@ export function showContextMenu(sender: WebContents, items: ContextMenuItem[]): 
   const template = items.map((item): MenuItemConstructorOptions => {
     if (item === 'separator') return separator
     const { action, enabled } = item
-    const click = (): void => sender.send(MENU_CHANNEL, action)
+    const click = (): void => sender.send(MENU_CHANNELS.action, action)
     if (isShortcut(action)) {
       return {
         label: t(`keymap.${action}`),

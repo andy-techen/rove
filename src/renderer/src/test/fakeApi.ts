@@ -26,6 +26,7 @@ export function createFakeApi(): FakeApi {
     },
     fireMenu: (action) => menuListeners.forEach((listener) => listener(action)),
     onOpenSong: () => () => {},
+    takeDockChoice: vi.fn(async () => null),
     getKeymap: vi.fn(async () => ({})),
     setKeymap: vi.fn(async (overrides: KeymapOverrides) => parseOverrides(overrides)),
     onKeymapChanged: () => () => {},

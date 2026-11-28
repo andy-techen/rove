@@ -11,7 +11,12 @@ import type { ActivationResult, LicenseStatus } from '../shared/license/license'
 import type { WishlistItem } from '../shared/preferences/wishlist'
 import type { VoiceApi } from '../shared/songs/voice'
 import type { TasteApi } from '../shared/preferences/polishTaste'
-import type { ContextMenuItem, MenuAction, NativeEdit } from '../shared/preferences/menu'
+import type {
+  ContextMenuItem,
+  DockChoice,
+  MenuAction,
+  NativeEdit
+} from '../shared/preferences/menu'
 import type { ChosenProject, SongbookEntry } from '../shared/songs/project'
 
 export interface ImportedBackingTrack {
@@ -34,6 +39,8 @@ export interface RoveApi {
   onMenu(listener: (action: MenuAction) => void): () => void
   /** A recent song picked from the Dock menu, by its folder under the songs folder. */
   onOpenSong(listener: (folder: string) => void): () => void
+  /** A Dock menu choice made while no window was open, if one is waiting. */
+  takeDockChoice(): Promise<DockChoice | null>
   /** The shortcuts the person has rebound (the rest keep their defaults). */
   getKeymap(): Promise<KeymapOverrides>
   /** Saves rebinds and rebuilds the menu; resolves to what was kept after validation. */

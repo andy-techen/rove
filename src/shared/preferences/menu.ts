@@ -1,7 +1,19 @@
+/** Menu IPC: menu choices sent to the window, and the window's right-click menus. */
+export const MENU_CHANNELS = {
+  /** A menu bar, Dock or right-click menu choice. */
+  action: 'menu:action',
+  /** A song picked from the Dock menu's recent songs: its folder under the songs folder. */
+  openSong: 'menu:openSong',
+  /**
+   * A Dock menu choice made while no window was open. The new window takes it once its
+   * songs have reopened; sent straight away, it would arrive before anything listens.
+   */
+  pendingChoice: 'menu:pendingChoice',
+  /** The window asks the main process to show a right-click menu of these rows. */
+  context: 'menu:context'
+} as const
+
 // Actions the native application menu sends to the renderer.
-
-export const MENU_CHANNEL = 'menu:action'
-
 export const MENU_ACTIONS = [
   'newSong',
   'open',
@@ -60,11 +72,15 @@ export function isMenuAction(value: unknown): value is MenuAction {
   return typeof value === 'string' && (MENU_ACTIONS as readonly string[]).includes(value)
 }
 
-/** A song picked from the Dock menu's recent songs: its folder under the songs folder. */
-export const OPEN_SONG_CHANNEL = 'menu:openSong'
+export type DockChoice = { action: MenuAction } | { folder: string }
 
-/** The window asks the main process to show a right-click menu of these rows. */
-export const CONTEXT_MENU_CHANNEL = 'menu:context'
+/** Keeps a well-formed choice from the main process; anything else is none. */
+export function parseDockChoice(raw: unknown): DockChoice | null {
+  if (typeof raw !== 'object' || raw === null) return null
+  const { action, folder } = raw as Record<string, unknown>
+  if (isMenuAction(action)) return { action }
+  return typeof folder === 'string' ? { folder } : null
+}
 
 /** One row of a right-click menu: an action (dimmed when it can't run now) or a divider. */
 export type ContextMenuItem = { action: MenuAction; enabled: boolean } | 'separator'

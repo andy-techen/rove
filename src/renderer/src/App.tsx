@@ -69,6 +69,18 @@ function App(): React.JSX.Element {
   })
   useEffect(() => window.api.onOpenSong((folder) => openSong.current(folder)), [])
 
+  // A Dock menu choice made while the window was closed, once its songs have reopened.
+  const tookDockChoice = useRef(false)
+  useEffect(() => {
+    if (!tabs.restored || tookDockChoice.current) return
+    tookDockChoice.current = true
+    void window.api.takeDockChoice().then((choice) => {
+      if (!choice) return
+      if ('action' in choice) menu.current(choice.action)
+      else openSong.current(choice.folder)
+    })
+  }, [tabs.restored])
+
   return (
     <>
       {/* Every open song stays mounted so switching tabs keeps its place and undo history. */}

@@ -86,7 +86,7 @@ async function createWindow(): Promise<BrowserWindow> {
   return mainWindow
 }
 
-/** The window, brought forward; a closed one opens again and is ready for a menu choice. */
+/** The window, brought forward; a closed one opens again. */
 async function showWindow(): Promise<BrowserWindow> {
   const existing = BrowserWindow.getAllWindows()[0]
   if (existing) {
@@ -95,9 +95,7 @@ async function showWindow(): Promise<BrowserWindow> {
     existing.focus()
     return existing
   }
-  const created = await createWindow()
-  await new Promise<void>((resolve) => created.webContents.once('did-finish-load', () => resolve()))
-  return created
+  return createWindow()
 }
 
 registerAppScheme()
