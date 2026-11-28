@@ -22,4 +22,6 @@ scripts/catalog/.cache/
 
 # Throwaway input lists for catalog:import and catalog:add --file.
 scripts/catalog/lists/
+# A curator's local record of songs taken out on purpose (catalog:reject).
+scripts/catalog/rejected.json
 *.tsbuildinfo

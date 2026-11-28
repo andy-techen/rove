@@ -171,6 +171,15 @@ export function setSyncedLyrics(db: DatabaseSync, id: number, lrclibId: number |
   )
 }
 
+/** The names and ISRC of a song, or undefined when there's no song with that id. */
+export function songById(
+  db: DatabaseSync,
+  id: number
+): { title: string; artist: string; isrc: string | null } | undefined {
+  return db.prepare('SELECT title, artist, isrc FROM songs WHERE id = ?').get(id) as
+    { title: string; artist: string; isrc: string | null } | undefined
+}
+
 export function removeSong(db: DatabaseSync, id: number): boolean {
   return db.prepare('DELETE FROM songs WHERE id = ?').run(id).changes > 0
 }

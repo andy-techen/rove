@@ -17,10 +17,12 @@ import { addSong, AddRequest, AddResult } from './add'
 import { cachedFetchJson } from './http'
 import { ArtistPick, importArtist } from './importArtists'
 import { findSyncedLyrics } from './lrclib'
+import { readRejections, saveRejection } from './rejected'
 import {
   editSong,
   finishWrite,
   openCatalog,
+  songById,
   removeSong,
   reviewList,
   setSyncedLyrics,
@@ -33,6 +35,7 @@ import {
 const ROOT = resolve(import.meta.dirname, '../..')
 const CATALOG = join(ROOT, 'resources/catalog/catalog.sqlite')
 const CACHE = join(import.meta.dirname, '.cache')
+const REJECTED = join(import.meta.dirname, 'rejected.json')
 
 const USAGE = `Usage:
   catalog:add -- "<title>" "<artist>" [--lang ${CATALOG_LANGUAGES.join('|')}]
@@ -47,6 +50,8 @@ const USAGE = `Usage:
       --tags replaces the song's tags; tags are one of: ${CATALOG_TAGS.join(', ')}
   catalog:enrich [-- --id <id>] [--refresh]
       checks LRCLIB for synced lyrics of the exact recording (by its length)
+  catalog:reject -- <id> "<reason>"
+      removes a song and keeps it out of later adds and imports
   catalog:remove -- <id>
   catalog:review
   catalog:setup        show catalog changes as SQL in git diff`
@@ -62,6 +67,8 @@ async function main(argv: string[]): Promise<void> {
       return edit(rest)
     case 'enrich':
       return enrich(rest)
+    case 'reject':
+      return reject(rest)
     case 'remove':
       return remove(rest)
     case 'review':
@@ -115,7 +122,8 @@ async function add(args: string[]): Promise<void> {
   const db = openCatalog(CATALOG)
   const fetchJson = cachedFetchJson(CACHE, values.refresh)
   try {
-    for (const request of requests) print(await addSong(db, request, fetchJson))
+    const rejections = await readRejections(REJECTED)
+    for (const request of requests) print(await addSong(db, request, fetchJson, rejections))
   } finally {
     finishWrite(db)
     db.close()
@@ -138,10 +146,11 @@ async function importArtists(args: string[]): Promise<void> {
 
   const db = openCatalog(CATALOG)
   const fetchJson = cachedFetchJson(CACHE, values.refresh)
+  const rejections = await readRejections(REJECTED)
   try {
     for (const { pick, name } of artists) {
       console.log(`\n${name}`)
-      await importArtist(db, pick, count, fetchJson, print)
+      await importArtist(db, pick, count, fetchJson, print, rejections)
     }
   } finally {
     finishWrite(db)
@@ -225,6 +234,23 @@ async function enrich(args: string[]): Promise<void> {
     console.log(`\nSynced lyrics for ${synced} of ${songs.length}.`)
   } finally {
     finishWrite(db)
+    db.close()
+  }
+}
+
+async function reject(args: string[]): Promise<void> {
+  const id = Number(args[0])
+  const reason = args[1]?.trim()
+  if (!Number.isInteger(id) || !reason) throw new UsageError('Give the song id and a reason.')
+  const db = openCatalog(CATALOG)
+  try {
+    const song = songById(db, id)
+    if (!song) throw new UsageError(`No song #${id}.`)
+    await saveRejection(REJECTED, { ...song, reason })
+    removeSong(db, id)
+    finishWrite(db)
+    console.log(`Rejected #${id} ${song.title} — ${song.artist}.`)
+  } finally {
     db.close()
   }
 }

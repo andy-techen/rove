@@ -7,6 +7,7 @@ import type {
 } from '../../src/shared/online/catalog'
 import { isChinese, toTraditional } from './chinese'
 import { creditOf, describeCandidates, FetchJson, lookupRecording } from './musicbrainz'
+import { Rejection, rejectionOf } from './rejected'
 import { findDuplicate, findReviewRow, saveSong, SongInput } from './store'
 
 export interface AddRequest {
@@ -39,7 +40,8 @@ export type AddResult =
 export async function addSong(
   db: DatabaseSync,
   request: AddRequest,
-  fetchJson: FetchJson
+  fetchJson: FetchJson,
+  rejections: readonly Rejection[] = []
 ): Promise<AddResult> {
   const lookup = await lookupRecording(request, fetchJson)
   const notes: string[] = []
@@ -103,6 +105,11 @@ export async function addSong(
   }
   if (!song.language) notes.push('No language; add again with --lang.')
   if (notes.length) song = { ...song, status: 'review', reviewNote: notes.join('\n') }
+
+  const rejection = rejectionOf(rejections, song)
+  if (rejection) {
+    return { kind: 'skipped', title: song.title, artist: song.artist, reason: rejection }
+  }
 
   const replaceId = findReviewRow(db, request.title, request.artist)
   const duplicate = findDuplicate(db, song, replaceId)

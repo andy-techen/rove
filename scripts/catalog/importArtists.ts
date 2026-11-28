@@ -8,6 +8,7 @@ import { addSong, AddResult } from './add'
 import { hasChinese, isChinese } from './chinese'
 import { isOtherVersion, topTracks, trackIsrc } from './deezer'
 import type { FetchJson } from './musicbrainz'
+import type { Rejection } from './rejected'
 
 export interface ArtistPick {
   deezerId: number
@@ -25,7 +26,8 @@ export async function importArtist(
   artist: ArtistPick,
   count: number,
   fetchJson: FetchJson,
-  onResult: (result: AddResult) => void = () => {}
+  onResult: (result: AddResult) => void = () => {},
+  rejections: readonly Rejection[] = []
 ): Promise<AddResult[]> {
   const results: AddResult[] = []
   let added = 0
@@ -56,7 +58,8 @@ export async function importArtist(
         // fill the review list with them.
         skipUnmatched: true
       },
-      fetchJson
+      fetchJson,
+      rejections
     )
     results.push(result)
     onResult(result)

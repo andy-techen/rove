@@ -94,6 +94,17 @@ describe('addSong', () => {
     })
   })
 
+  it('skips a song that was rejected, giving the reason', async () => {
+    const db = openCatalog(':memory:')
+    const rejected = [
+      { title: 'Dreams', artist: 'Fleetwood Mac', isrc: null, reason: 'a holiday song' }
+    ]
+    expect(await addSong(db, request(), musicBrainz(recording()), rejected)).toMatchObject({
+      kind: 'skipped',
+      reason: 'a holiday song'
+    })
+  })
+
   it('removes a song along with its tags', async () => {
     const db = openCatalog(':memory:')
     const id = idOf(await addSong(db, request({ tags: ['classic'] }), musicBrainz(recording())))

@@ -145,6 +145,7 @@ Developers curate it with the scripts in `scripts/catalog/`:
 | `npm run catalog:edit -- <id> --tags … --genre …` | Hand fixes: language, type, genre, tags (from the fixed `CATALOG_TAGS`)    |
 | `npm run catalog:enrich [-- --id <id>]`           | Checks LRCLIB for synced lyrics of the exact recording, sets the flag      |
 | `npm run catalog:review`                          | Songs that couldn't be placed for sure, with why and what to try           |
+| `npm run catalog:reject -- <id> "<reason>"`       | Removes a song; later adds and imports skip it (kept locally, uncommitted) |
 | `npm run catalog:remove -- <id>`                  | Removes a song                                                             |
 | `npm run catalog:setup` (runs on `npm install`)   | Makes `git diff` show catalog changes as SQL rows instead of "binary file" |
 
