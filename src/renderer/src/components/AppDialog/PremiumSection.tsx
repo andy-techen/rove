@@ -7,6 +7,7 @@ import { Button } from '../ui/Button'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { HelpTip } from '../ui/HelpTip'
 import { Icon } from '../ui/Icon'
+import { raised } from '../ui/Raised'
 
 /** What premium unlocks, read from the one premium list so it never falls behind. */
 function FeatureList(): React.JSX.Element {
@@ -19,6 +20,25 @@ function FeatureList(): React.JSX.Element {
         </li>
       ))}
     </ul>
+  )
+}
+
+/** What Premium gives, on its own raised card, under a line that says where you stand. */
+function PremiumCard({
+  lead,
+  children
+}: {
+  lead: string
+  children?: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <div className={`premium-card ${raised}`}>
+      <p className="premium-lead">
+        <strong>{lead}</strong>
+      </p>
+      <FeatureList />
+      {children}
+    </div>
   )
 }
 
@@ -41,19 +61,19 @@ function Upgrade(): React.JSX.Element {
 
   return (
     <>
-      <p className="premium-lead">{t('premium.pitch')}</p>
-      <FeatureList />
-      <div className="premium-buy">
-        <Button
-          variant="primary"
-          onClick={() => void window.api.openCheckout().then((opened) => setBuySoon(!opened))}
-        >
-          {t('premium.buy')}
-        </Button>
-        {buySoon && <p className="premium-note">{t('premium.buySoon')}</p>}
-      </div>
+      <PremiumCard lead={t('premium.pitch')}>
+        <div className="premium-buy">
+          <Button
+            variant="primary"
+            onClick={() => void window.api.openCheckout().then((opened) => setBuySoon(!opened))}
+          >
+            {t('premium.buy')}
+          </Button>
+          {buySoon && <p className="premium-note">{t('premium.buySoon')}</p>}
+        </div>
+      </PremiumCard>
       <form className="premium-key" onSubmit={(e) => void activate(e)}>
-        <span className="settings-label">{t('premium.haveKey')}</span>
+        <span className="premium-key-details">{t('premium.haveKey')}</span>
         <div className="premium-key-row">
           <input
             type="text"
@@ -67,15 +87,15 @@ function Upgrade(): React.JSX.Element {
           <Button type="submit" variant="secondary" disabled={!key.trim() || activating}>
             {activating ? t('premium.activating') : t('premium.activate')}
           </Button>
+          <Button variant="ghost" onClick={() => void window.api.openLicenseOrders()}>
+            {t('premium.lostKey')}
+          </Button>
         </div>
         {failure && (
           <p className="error" role="alert">
             {t(`premium.errors.${failure}`)}
           </p>
         )}
-        <Button variant="ghost" size="sm" onClick={() => void window.api.openLicenseOrders()}>
-          {t('premium.lostKey')}
-        </Button>
       </form>
     </>
   )
@@ -93,13 +113,10 @@ function Unlocked({ keyHint }: { keyHint: string | null }): React.JSX.Element {
   }
   return (
     <>
-      <p className="premium-lead">
-        <strong>{t('premium.on')}</strong>
-      </p>
-      <FeatureList />
+      <PremiumCard lead={t('premium.on')} />
       <div className="premium-key">
-        <span className="settings-label">{t('premium.keyLabel')}</span>
-        <div className="premium-key-row">
+        <div className="premium-key-row premium-key-details">
+          <span>{t('premium.keyLabel')}</span>
           <span className="premium-hint">{keyHint}</span>
           <Button variant="quiet" size="sm" disabled={freeing} onClick={() => setConfirming(true)}>
             {freeing ? t('premium.deactivating') : t('premium.deactivate')}
@@ -125,7 +142,7 @@ function Unlocked({ keyHint }: { keyHint: string | null }): React.JSX.Element {
 export function PremiumSection(): React.JSX.Element {
   const { plan, keyHint } = useLicense()
   return (
-    <div className="settings premium">
+    <div className="premium">
       {plan === 'premium' ? <Unlocked keyHint={keyHint} /> : <Upgrade />}
     </div>
   )
