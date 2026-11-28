@@ -44,6 +44,8 @@
 
 .export-option-name {
   font-weight: var(--font-weight-semibold);
+  /* A long hint wraps beside the name, never the name itself. */
+  white-space: nowrap;
 }
 
 .export-option-hint {

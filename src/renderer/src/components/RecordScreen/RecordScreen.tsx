@@ -1275,6 +1275,10 @@ export function RecordScreen({
           state={exporter.state}
           onStart={(options) => void exporter.start(options)}
           onReveal={exporter.reveal}
+          onExportProject={() => {
+            setExportOpen(false)
+            if (song.song) void exportSongFile({ dir: song.song.dir, saveNow: song.saveNow })
+          }}
           onClose={() => setExportOpen(false)}
         />
       )}

@@ -10,11 +10,15 @@ import './ExportDialog.css'
 
 const LOUDNESS: ExportLoudness[] = ['streaming', 'loud', 'asMixed']
 const PERCENT = 100
+// Besides the mix, the whole song can go out as a Rove project file.
+type ExportChoice = ExportFormat | 'project'
 
 interface Props {
   state: ExportState
   onStart(options: ExportOptions): void
   onReveal(): void
+  /** Saves the whole song as one .rove project file, when that's the format chosen. */
+  onExportProject(): void
   onClose(): void
 }
 
@@ -32,8 +36,14 @@ function statusText(state: ExportState): string | null {
 }
 
 /** Choose a format and loudness, then export the song's mix to a file. */
-export function ExportDialog({ state, onStart, onReveal, onClose }: Props): React.JSX.Element {
-  const [format, setFormat] = useState<ExportFormat>('wav')
+export function ExportDialog({
+  state,
+  onStart,
+  onReveal,
+  onExportProject,
+  onClose
+}: Props): React.JSX.Element {
+  const [format, setFormat] = useState<ExportChoice>('wav')
   const [loudness, setLoudness] = useState<ExportLoudness>('streaming')
   const working = state.status === 'working'
   const status = statusText(state)
@@ -59,30 +69,42 @@ export function ExportDialog({ state, onStart, onReveal, onClose }: Props): Reac
             <span className="export-option-hint">{t(`export.formatHints.${f}`)}</span>
           </label>
         ))}
+        <label className="export-option">
+          <input
+            type="radio"
+            name="export-format"
+            checked={format === 'project'}
+            onChange={() => setFormat('project')}
+          />
+          <span className="export-option-name">{t('songFile.formatName')}</span>
+          <span className="export-option-hint">{t('songFile.formatHint')}</span>
+        </label>
       </fieldset>
 
-      <fieldset className="export-choice" disabled={working}>
-        <legend>
-          {t('export.loudness')}{' '}
-          <HelpTip
-            items={LOUDNESS.map((l) => ({
-              term: t(`export.loudnessOptions.${l}`),
-              text: t(`export.loudnessHelp.${l}`)
-            }))}
-          />
-        </legend>
-        {LOUDNESS.map((l) => (
-          <label key={l} className="export-option">
-            <input
-              type="radio"
-              name="export-loudness"
-              checked={loudness === l}
-              onChange={() => setLoudness(l)}
+      {format !== 'project' && (
+        <fieldset className="export-choice" disabled={working}>
+          <legend>
+            {t('export.loudness')}{' '}
+            <HelpTip
+              items={LOUDNESS.map((l) => ({
+                term: t(`export.loudnessOptions.${l}`),
+                text: t(`export.loudnessHelp.${l}`)
+              }))}
             />
-            <span className="export-option-name">{t(`export.loudnessOptions.${l}`)}</span>
-          </label>
-        ))}
-      </fieldset>
+          </legend>
+          {LOUDNESS.map((l) => (
+            <label key={l} className="export-option">
+              <input
+                type="radio"
+                name="export-loudness"
+                checked={loudness === l}
+                onChange={() => setLoudness(l)}
+              />
+              <span className="export-option-name">{t(`export.loudnessOptions.${l}`)}</span>
+            </label>
+          ))}
+        </fieldset>
+      )}
 
       <p
         className={state.status === 'failed' ? 'export-status error' : 'export-status'}
@@ -104,7 +126,12 @@ export function ExportDialog({ state, onStart, onReveal, onClose }: Props): Reac
             <Button variant="quiet" onClick={onClose}>
               {t('export.cancel')}
             </Button>
-            <Button disabled={working} onClick={() => onStart({ format, loudness })}>
+            <Button
+              disabled={working}
+              onClick={() =>
+                format === 'project' ? onExportProject() : onStart({ format, loudness })
+              }
+            >
               {t('export.start')}
             </Button>
           </>

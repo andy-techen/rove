@@ -6,7 +6,13 @@ import type { ExportState } from '../../state/song/useExport'
 import { ExportDialog } from '.'
 
 const renderDialog = (state: ExportState = { status: 'idle' }) => {
-  const props = { state, onStart: vi.fn(), onReveal: vi.fn(), onClose: vi.fn() }
+  const props = {
+    state,
+    onStart: vi.fn(),
+    onReveal: vi.fn(),
+    onExportProject: vi.fn(),
+    onClose: vi.fn()
+  }
   render(<ExportDialog {...props} />)
   return props
 }
@@ -24,6 +30,15 @@ describe('ExportDialog', () => {
     await userEvent.click(screen.getByRole('radio', { name: t('export.loudnessOptions.asMixed') }))
     await userEvent.click(screen.getByRole('button', { name: t('export.start') }))
     expect(props.onStart).toHaveBeenCalledWith({ format: 'mp3', loudness: 'asMixed' })
+  })
+
+  it('exports the whole project as one file when Project is the format', async () => {
+    const props = renderDialog()
+    await userEvent.click(screen.getByRole('radio', { name: new RegExp(t('songFile.formatName')) }))
+    expect(screen.queryByText(t('export.loudness'))).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: t('export.start') }))
+    expect(props.onExportProject).toHaveBeenCalled()
+    expect(props.onStart).not.toHaveBeenCalled()
   })
 
   it('shows progress while working', () => {
