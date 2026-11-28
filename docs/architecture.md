@@ -52,6 +52,7 @@ flowchart LR
 flowchart TB
   App["App.tsx<br/>onboarding, app dialog, new-song dialog"] --> tabs["useTabs<br/>open songs, tab order"]
   tabs --> screen["RecordScreen<br/>(one per tab, kept mounted)"]
+  tabs --> welcome["Welcome<br/>(no song open)"]
 
   screen --> song["useSong<br/>project.json, undo, saving"]
   screen --> transport["useTransport<br/>play, record, metronome"]

@@ -4,6 +4,7 @@ import { NewSongDialog } from './components/NewSongDialog'
 import { SongbookDialog } from './components/SongbookDialog'
 import { MicCheck } from './components/MicCheck'
 import { RecordScreen } from './components/RecordScreen'
+import { Welcome } from './components/Welcome'
 import { Snackbar } from './components/ui/Snackbar'
 import { Command, onCommand, useShortcutKeys } from './state/commands/commands'
 import { syncKeymap } from './state/commands/keymap'
@@ -78,6 +79,15 @@ function App(): React.JSX.Element {
           onSongbook={() => setSongbookOpen(true)}
         />
       ))}
+      {!showMicCheck && tabs.restored && tabs.tabs.length === 0 && (
+        <Welcome
+          onNew={() => setNaming(true)}
+          onOpen={() => void tabs.open()}
+          onImport={() => void tabs.importSongFile()}
+          onSongbook={() => setSongbookOpen(true)}
+          onOpenSong={(folder) => void tabs.openByName(folder)}
+        />
+      )}
       {!showMicCheck && tabs.error && <p className="error app-error">{tabs.error}</p>}
       <Snackbar />
       {showMicCheck && <MicCheck mic={mic} onboarding={!onboarded} onDone={finishMicCheck} />}

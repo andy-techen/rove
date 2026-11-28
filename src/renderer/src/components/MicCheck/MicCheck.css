@@ -11,8 +11,15 @@
   gap: var(--space-9);
 }
 
+/* Centred, as on the welcome screen, so the logo doesn't jump moving between them.
+   The card's controls stay left-aligned, where they're easier to scan. */
+.mic-check-header {
+  text-align: center;
+}
+
 .mic-check-title {
   display: flex;
+  justify-content: center;
   margin-bottom: var(--space-5);
 }
 

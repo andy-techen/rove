@@ -39,6 +39,8 @@ export const STROKE_ICONS = {
   retake: 'M4 4v5h5M5.1 15a7.5 7.5 0 1 0 1.6-7.8L4 9M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4z',
   tune: 'M4 6h9M17 6h3M15 4v4M4 12h3M11 12h9M9 10v4M4 18h11M19 18h1M17 16v4',
   export: 'M12 15V3M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5',
+  // Export's arrow turned around: a project coming in.
+  import: 'M12 3v12M7 10l5 5 5-5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5',
   save: 'M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM7 3v5h8V3M7 21v-7h10v7',
   // A large four-point star and a small one: something worked out for you. Kept for the
   // automatic tools (auto polish).

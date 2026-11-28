@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { SongbookDialog } from '.'
-import { relativeTime } from './relativeTime'
 
 const NOW = new Date('2026-11-22T12:00:00Z').getTime()
 const DAY = 24 * 60 * 60 * 1000
@@ -165,18 +164,5 @@ describe('Songbook search', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: t('songbook.searchLabel') }), 'sam')
     expect(screen.getByText('Fly Away')).toBeInTheDocument()
     expect(screen.queryByText('Sunset')).not.toBeInTheDocument()
-  })
-})
-
-describe('relativeTime', () => {
-  it('labels the last few days in words', () => {
-    expect(relativeTime(NOW - 30 * 60 * 1000, NOW)).toBe(t('songbook.justNow'))
-    expect(relativeTime(NOW - 5 * 60 * 60 * 1000, NOW)).toBe(t('songbook.today'))
-    expect(relativeTime(NOW - 1.5 * DAY, NOW)).toBe(t('songbook.yesterday'))
-    expect(relativeTime(NOW - 3 * DAY, NOW)).toBe(t('songbook.daysAgo', { days: 3 }))
-  })
-
-  it('falls back to a date beyond a week', () => {
-    expect(relativeTime(NOW - 30 * DAY, NOW)).toBe(new Date(NOW - 30 * DAY).toLocaleDateString())
   })
 })

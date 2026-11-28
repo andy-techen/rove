@@ -1,0 +1,117 @@
+.welcome {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* macOS: stands in for the title bar, so the window can still be dragged. */
+.welcome-drag {
+  height: var(--layout-titlebar);
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+/* Sits in the middle of the window. With no card to hold it (as the mic check has),
+   everything is centred, or the left-aligned column reads as off to one side. */
+.welcome-body {
+  flex: 1;
+  width: 100%;
+  max-width: var(--layout-narrow-max);
+  margin: 0 auto;
+  padding: var(--space-12) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-9);
+  font-size: var(--font-size-ui);
+  text-align: center;
+}
+
+.welcome-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-5);
+}
+
+.welcome-body header p {
+  font-size: var(--font-size-lead);
+}
+
+.welcome-recent {
+  align-self: stretch;
+  text-align: left;
+}
+
+.welcome-recent ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: var(--size-hairline) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.welcome-recent li + li {
+  border-top: var(--size-hairline) solid var(--color-border);
+}
+
+.welcome-song {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+
+.welcome-song:hover {
+  background: var(--color-surface-raised);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-song {
+    transition: none;
+  }
+}
+
+/* Always a name line and an artist line tall, so a song without an artist doesn't make
+   a shorter row. */
+.welcome-song-title {
+  flex: 1;
+  min-width: 0;
+  min-height: calc((var(--font-size-ui) + var(--font-size-caption)) * var(--line-height));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.welcome-song-name {
+  font-weight: var(--font-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.welcome-song-artist,
+.welcome-song-when {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.welcome-song-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.welcome-song-when {
+  flex-shrink: 0;
+}

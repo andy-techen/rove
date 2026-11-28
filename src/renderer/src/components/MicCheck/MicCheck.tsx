@@ -43,7 +43,7 @@ export function MicCheck({ mic, onboarding, onDone }: Props): React.JSX.Element 
 
   return (
     <main className="mic-check">
-      <header>
+      <header className="mic-check-header">
         <h1 className="mic-check-title">
           <Logo size="lg" />
         </h1>

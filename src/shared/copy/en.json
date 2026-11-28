@@ -978,5 +978,16 @@
     "editLabel": "Edit {name}",
     "cantEditOpen": "Close the tab first to edit this song here.",
     "editFailed": "Couldn't change that song."
+  },
+  "welcome": {
+    "title": "What would you like to sing?",
+    "newSong": "New song",
+    "open": "Open…",
+    "openTitle": "Open a song folder",
+    "import": "Import…",
+    "importTitle": "Import a Rove project",
+    "songbook": "Songbook",
+    "recent": "Recent songs",
+    "openSong": "Open {name}"
   }
 }

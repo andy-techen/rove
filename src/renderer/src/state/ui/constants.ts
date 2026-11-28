@@ -1,3 +1,4 @@
+import { MS_PER_SEC, SEC_PER_MIN } from '@shared/units'
 import type { ColorScheme } from './colorScheme'
 
 // Theme
@@ -28,3 +29,11 @@ export const INSTRUMENTAL_MIN_HEIGHT = 300
 // Movement below this many screen pixels is a click, not a drag: on a clip, on the
 // timeline before a selection box starts, or on words in the picture editor.
 export const DRAG_THRESHOLD_PX = 4
+
+// Time spans
+
+// For "3 days ago", in milliseconds.
+const MINUTE = SEC_PER_MIN * MS_PER_SEC
+export const HOUR = 60 * MINUTE
+export const DAY = 24 * HOUR
+export const WEEK = 7 * DAY

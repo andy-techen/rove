@@ -94,11 +94,6 @@ describe('TopBar', () => {
     expect(props.onMove).toHaveBeenCalledWith('b', 0)
   })
 
-  it('hides the close button when only one song is open', () => {
-    renderBar({ tabs: [tabs[0]] })
-    expect(screen.queryByRole('button', { name: /^Close/ })).not.toBeInTheDocument()
-  })
-
   it('names the theme in use and switches to the next one on click', async () => {
     vi.mocked(window.api.onTheme).mockImplementation((listener) => {
       listener('dark')

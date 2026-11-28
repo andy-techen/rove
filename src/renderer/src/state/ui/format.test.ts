@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { formatClock, formatDuration, formatMillis } from './format'
+import { t } from '@shared/copy'
+import { DAY, HOUR } from './constants'
+import { formatClock, formatDuration, formatMillis, relativeTime } from './format'
+
+const NOW = new Date('2026-11-22T12:00:00Z').getTime()
 
 describe('formatMillis', () => {
   it.each([
@@ -32,5 +36,18 @@ describe('formatClock', () => {
     [-1, '00:00']
   ])('%d s reads %s on the timer', (seconds, text) => {
     expect(formatClock(seconds)).toBe(text)
+  })
+})
+
+describe('relativeTime', () => {
+  it('labels the last few days in words', () => {
+    expect(relativeTime(NOW - HOUR / 2, NOW)).toBe(t('songbook.justNow'))
+    expect(relativeTime(NOW - 5 * HOUR, NOW)).toBe(t('songbook.today'))
+    expect(relativeTime(NOW - 1.5 * DAY, NOW)).toBe(t('songbook.yesterday'))
+    expect(relativeTime(NOW - 3 * DAY, NOW)).toBe(t('songbook.daysAgo', { days: 3 }))
+  })
+
+  it('falls back to a date beyond a week', () => {
+    expect(relativeTime(NOW - 30 * DAY, NOW)).toBe(new Date(NOW - 30 * DAY).toLocaleDateString())
   })
 })

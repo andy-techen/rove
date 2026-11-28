@@ -68,7 +68,6 @@ export function TopBar({
       ? drag.slot
       : null
   const shortcuts = useShortcuts()
-  const closable = tabs.length > 1
   // On macOS the bar doubles as the title bar (see titleBarStyle in the main process),
   // leaving room for the window buttons, which macOS hides in full screen.
   const isMac = window.api.platform === 'darwin'
@@ -141,17 +140,15 @@ export function TopBar({
                     </button>
                   </Tooltip>
                 )}
-                {closable && (
-                  <IconButton
-                    icon="close"
-                    iconSize="secondary"
-                    className="tab-close"
-                    label={t('topBar.close', { name: tab.name })}
-                    title={shortcuts.label(t('topBar.closeTitle'), 'closeSong')}
-                    disabled={disabled}
-                    onClick={() => onClose(tab.id)}
-                  />
-                )}
+                <IconButton
+                  icon="close"
+                  iconSize="secondary"
+                  className="tab-close"
+                  label={t('topBar.close', { name: tab.name })}
+                  title={shortcuts.label(t('topBar.closeTitle'), 'closeSong')}
+                  disabled={disabled}
+                  onClick={() => onClose(tab.id)}
+                />
               </div>
             )
           })}

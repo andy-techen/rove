@@ -4,7 +4,7 @@ import type { SongbookEntry } from '@shared/songs/project'
 import { NewSongDialog } from '../NewSongDialog'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { IconButton } from '../ui/IconButton'
-import { relativeTime } from './relativeTime'
+import { relativeTime } from '../../state/ui/format'
 import { matchesSearch } from './search'
 
 interface Props {

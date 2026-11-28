@@ -11,7 +11,10 @@ export interface Tab {
 
 export interface Tabs {
   tabs: Tab[]
+  /** No song open: the welcome screen shows. */
   activeId: string | null
+  /** Last session's songs have been reopened (or there were none to reopen). */
+  restored: boolean
   /** Current name and folder of each tab's song, keyed by tab id. */
   info: Record<string, { name: string; dir: string }>
   error: string | null
@@ -35,33 +38,41 @@ export function useTabs(enabled: boolean): Tabs {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [info, setInfoMap] = useState<Record<string, { name: string; dir: string }>>({})
   const [error, setError] = useState<string | null>(null)
+  const [restored, setRestored] = useState(false)
+  // Only a restore that worked may overwrite last session's list.
+  const [remembering, setRemembering] = useState(false)
 
-  // Reopen last session's songs once, or start a fresh one.
-  const restored = useRef(false)
+  // Reopen last session's songs once. Someone with no songs yet goes straight into a
+  // fresh one; anyone else who closed them all comes back to the welcome screen.
+  const restoring = useRef(false)
   useEffect(() => {
-    if (!enabled || restored.current) return
-    restored.current = true
+    if (!enabled || restoring.current) return
+    restoring.current = true
     void (async () => {
       try {
         const { songs, activeSong } = await window.api.restoreTabs()
-        const opened = songs.length ? songs.map(tab) : [tab(await window.api.createSong())]
+        const firstTime = !songs.length && (await window.api.listSongs()).length === 0
+        const opened = firstTime ? [tab(await window.api.createSong())] : songs.map(tab)
         setTabs(opened)
         const active = opened.find((item) => item.initial.dir === activeSong) ?? opened[0]
-        setActiveId(active.id)
+        setActiveId(active?.id ?? null)
+        setRemembering(true)
       } catch {
         setError(t('app.openFailed'))
+      } finally {
+        setRestored(true)
       }
     })()
   }, [enabled])
 
-  // Remember which songs are open, in order, for next launch.
+  // Remember which songs are open, in order, for next launch, even when that's none.
   const dirs = tabs.map((item) => info[item.id]?.dir ?? item.initial.dir)
   const activeDir = activeId ? (info[activeId]?.dir ?? null) : null
-  const dirsKey = dirs.join('\n')
+  const dirsKey = JSON.stringify(dirs)
   useEffect(() => {
-    if (!dirsKey) return
-    void window.api.rememberTabs(dirsKey.split('\n'), activeDir)
-  }, [dirsKey, activeDir])
+    if (!remembering) return
+    void window.api.rememberTabs(JSON.parse(dirsKey), activeDir)
+  }, [remembering, dirsKey, activeDir])
 
   const setInfo = useCallback((tabId: string, next: { name: string; dir: string }) => {
     setInfoMap((prev) =>
@@ -78,11 +89,14 @@ export function useTabs(enabled: boolean): Tabs {
     const next = tab(initial)
     setTabs((prev) => [...prev, next])
     setActiveId(next.id)
+    // After a failed restore, a song opened by hand is the session to remember.
+    setRemembering(true)
   }
 
   return {
     tabs,
     activeId,
+    restored,
     info,
     error,
     setInfo,
@@ -96,11 +110,10 @@ export function useTabs(enabled: boolean): Tabs {
         )
       ),
     close: (tabId) => {
-      if (tabs.length <= 1) return
       const index = tabs.findIndex((item) => item.id === tabId)
       const remaining = tabs.filter((item) => item.id !== tabId)
       setTabs(remaining)
-      if (tabId === activeId) setActiveId(remaining[Math.max(0, index - 1)].id)
+      if (tabId === activeId) setActiveId(remaining[Math.max(0, index - 1)]?.id ?? null)
     },
     newSong: async (name, artist, note) => {
       try {
