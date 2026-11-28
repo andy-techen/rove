@@ -13,7 +13,7 @@ export interface Clip {
   start: number
   /** Where inside the file playback begins, in seconds (for trimming later). */
   offset: number
-  /** How much of the file plays, in seconds. 0 means "the whole file" (older projects). */
+  /** How much of the file plays, in seconds. */
   duration: number
   /** Seconds to fade in from silence at the clip's start. */
   fadeIn?: number
@@ -43,7 +43,7 @@ export interface Track {
   volume: number
   pan: number
   muted: boolean
-  /** Vocal tracks only; older projects fall back to the part's defaults. */
+  /** Vocal tracks only. */
   polish?: PolishSettings
   /** Vocal tracks only: what auto polish suggested, set when the singer asked for it. */
   polishSuggestion?: PolishSuggestion
@@ -332,7 +332,7 @@ export function moveTrack(project: Project, trackId: string, to: number): Projec
 }
 
 export function polishOf(track: Track): PolishSettings {
-  // Songs saved before a control existed get that control's default.
+  // A control added in a later version starts at its default on songs saved before it.
   return { ...defaultPolish(track.part ?? 'lead'), ...track.polish }
 }
 
@@ -684,56 +684,15 @@ export function deleteClip(project: Project, trackId: string, clipId: string): P
   return mapClip(project, trackId, clipId, () => [])
 }
 
-/** Fills in lengths for clips saved before they were known (version 1 backing tracks). */
-export function withKnownDurations(project: Project, durations: Record<string, number>): Project {
-  let changed = false
-  const tracks = project.tracks.map((t) => ({
-    ...t,
-    clips: t.clips.map((c) => {
-      if (c.duration > 0 || !durations[c.file]) return c
-      changed = true
-      return { ...c, duration: Math.max(0, durations[c.file] - c.offset) }
-    })
-  }))
-  return changed ? { ...project, tracks } : project
-}
-
-interface ProjectV1 {
-  version: 1
-  name: string
-  sampleRate: number
-  backingTrack: { file: string; name: string; volume: number } | null
-  tracks: { clips: Clip[] }[]
-}
-
-// Version 1 had a single backing track and stacked every take on one lead track.
-// Each old take becomes its own vocal track so nothing disappears from the timeline.
-function migrateV1(v1: ProjectV1): Project {
-  let project: Project = { version: 2, name: v1.name, sampleRate: v1.sampleRate, tracks: [] }
-  if (v1.backingTrack) {
-    const added = withNewTrack(project, 'backing', { sourceName: v1.backingTrack.name })
-    project = withTrackAudio(added.project, added.track.id, v1.backingTrack.file, 0)
-  }
-  for (const clip of v1.tracks.flatMap((t) => t.clips ?? [])) {
-    const added = withNewTrack(project, 'vocal')
-    project = withTrackAudio(added.project, added.track.id, clip.file, clip.duration)
-  }
-  return tracksOf(project, 'vocal').length ? project : withNewTrack(project, 'vocal').project
-}
-
 export function parseProject(data: unknown): Project {
   const p = data as { version?: unknown; name?: unknown; tracks?: unknown; artist?: unknown } | null
-  if (!p || typeof p.name !== 'string' || !Array.isArray(p.tracks)) {
+  if (!p || p.version !== 2 || typeof p.name !== 'string' || !Array.isArray(p.tracks)) {
     throw new Error(t('song.notRoveProject'))
   }
-  if (p.version === 1) return migrateV1(p as ProjectV1)
-  if (p.version === 2) {
-    const project = p as Project
-    // Only keep an artist field that's actually a non-empty string.
-    if (typeof project.artist !== 'string' || !project.artist.trim()) delete project.artist
-    return withChartsOnTracks(project)
-  }
-  throw new Error(t('song.notRoveProject'))
+  const project = p as Project
+  // Only keep an artist field that's actually a non-empty string.
+  if (typeof project.artist !== 'string' || !project.artist.trim()) delete project.artist
+  return withReadableMusic(project)
 }
 
 export function formatDuration(seconds: number): string {
@@ -781,7 +740,7 @@ const ORIGINAL_MUSIC: MusicSettings = {
 const TIME_PRECISION = 1e6
 const roundTime = (sec: number): number => Math.round(sec * TIME_PRECISION) / TIME_PRECISION
 
-// Songs saved before a setting existed get its default.
+// Settings the song hasn't changed play as recorded.
 export const musicOf = (project: Project): MusicSettings => ({
   ...ORIGINAL_MUSIC,
   ...project.music
@@ -924,27 +883,14 @@ const isPadHit = (value: unknown): value is PadHit => {
   )
 }
 
-/**
- * A beat of your own as saved, brought up to date: beats first made on an eighth-note
- * grid kept each drum's eighths, which become hits on those eighths.
- */
+/** A beat of your own as saved, or null when it can't be read. */
 function readMyBeat(value: unknown): MyBeat | null {
-  const beat = value as (Partial<MyBeat> & { pads?: Record<string, unknown> }) | null
+  const beat = value as Partial<MyBeat> | null
   if (!beat || !Number.isInteger(beat.n)) return null
   if (beat.name !== undefined && typeof beat.name !== 'string') return null
+  if (!Array.isArray(beat.hits) || !beat.hits.every(isPadHit)) return null
   const named = beat.name === undefined ? {} : { name: beat.name }
-  if (Array.isArray(beat.hits))
-    return beat.hits.every(isPadHit) ? { n: beat.n!, ...named, hits: beat.hits } : null
-  if (!beat.pads || typeof beat.pads !== 'object') return null
-  const hits: PadHit[] = []
-  for (const [drum, eighths] of Object.entries(beat.pads)) {
-    if (!PAD_DRUMS.includes(drum as PadDrum) || !Array.isArray(eighths)) return null
-    for (const i of eighths) {
-      if (!Number.isInteger(i)) return null
-      hits.push({ drum: drum as PadDrum, at: (i as number) / 2 })
-    }
-  }
-  return { n: beat.n!, ...named, hits }
+  return { n: beat.n!, ...named, hits: beat.hits }
 }
 
 /** Drums as saved, or null when they can't be read. */
@@ -971,35 +917,18 @@ function isTempo(value: unknown): value is SongTempo {
 }
 
 /**
- * Brings older songs up to date. Songs from before each chords track had its own chart
- * kept one for the song: it moves to the first chords track. Charts once kept their own
- * tempo: the first one's becomes the song's. A chart Rove can't read is dropped rather
- * than played wrong.
+ * The song's tempo and each chords track's chart, instrument and drums, as saved. A part
+ * Rove can't read is dropped rather than played wrong.
  */
-function withChartsOnTracks(project: Project): Project {
-  const { chart: legacy, ...rest } = project as Project & { chart?: unknown }
-  let unclaimed = isChart(legacy) ? legacy : undefined
-  const oldTempo = [legacy, ...rest.tracks.map((t) => t.chart)].find(isTempo)
-  const tempo = isTempo(rest.tempo) ? rest.tempo : oldTempo && tempoFrom(oldTempo)
-  const chartOnly = (chart: ChordChart): ChordChart =>
-    chart.feels ? { bars: chart.bars, feels: chart.feels } : { bars: chart.bars }
-  const label = ROLE_LABEL.chords
-  let lastNumber = Math.max(
-    0,
-    ...rest.tracks.map((t) => Number(new RegExp(`^${label} (\\d+)$`).exec(t.name)?.[1] ?? 0))
-  )
-  const updated: Project = { ...rest }
-  if (tempo) updated.tempo = tempo
-  else delete updated.tempo
+function withReadableMusic(project: Project): Project {
+  const updated: Project = { ...project }
+  if (!isTempo(updated.tempo)) delete updated.tempo
   return {
     ...updated,
-    tracks: rest.tracks.map((track) => {
+    tracks: project.tracks.map((track) => {
       if (track.role !== 'chords') return track
-      const found = isChart(track.chart) ? track.chart : unclaimed
-      const chart = found && chartOnly(found)
-      unclaimed = undefined
       const plain = { ...track }
-      delete plain.chart
+      if (!isChart(plain.chart)) delete plain.chart
       if (!INSTRUMENTS.includes(plain.instrument as Instrument) || plain.instrument === 'guitar')
         delete plain.instrument
       const beats = readBeatChart(plain.beats)
@@ -1007,15 +936,10 @@ function withChartsOnTracks(project: Project): Project {
       else delete plain.beats
       // Drums without bars to play fall back to the guitar.
       if (plain.instrument === 'beats' && !plain.beats) delete plain.instrument
-      // The one chords track was once called "Chords"; it's numbered with the music now.
-      if (plain.name === OLD_CHORDS_NAME) plain.name = `${label} ${++lastNumber}`
-      return chart ? { ...plain, chart } : plain
+      return plain
     })
   }
 }
-
-/** What songs named their chords track before it was numbered with the music. */
-const OLD_CHORDS_NAME = 'Chords'
 
 /** The tracks that play chords the singer wrote. */
 export const chordsTracksOf = (project: Project): Track[] => tracksOf(project, 'chords')

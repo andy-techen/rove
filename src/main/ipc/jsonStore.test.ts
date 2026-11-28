@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -12,8 +12,7 @@ const parseCount = (raw: unknown): number =>
     ? (raw as { n: number }).n
     : 0
 
-const store = (options?: { compact?: boolean }) =>
-  jsonStore('count.json', (raw) => ({ n: parseCount(raw) }), { n: -1 }, options)
+const store = () => jsonStore('count.json', (raw) => ({ n: parseCount(raw) }), { n: -1 })
 
 describe('jsonStore', () => {
   beforeEach(async () => {
@@ -37,12 +36,5 @@ describe('jsonStore', () => {
   it('cleans what it reads with parse', async () => {
     await writeFile(path.join(userData, 'count.json'), '{"n":"three"}')
     expect(await store().load()).toEqual({ n: 0 })
-  })
-
-  it('indents the file unless asked to keep it compact', async () => {
-    await store().save({ n: 3 })
-    expect(await readFile(path.join(userData, 'count.json'), 'utf8')).toBe('{\n  "n": 3\n}')
-    await store({ compact: true }).save({ n: 4 })
-    expect(await readFile(path.join(userData, 'count.json'), 'utf8')).toBe('{"n":4}')
   })
 })

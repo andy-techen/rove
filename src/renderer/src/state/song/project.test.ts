@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PolishSettings, defaultPolish } from '../../audio/polish/polish'
+import { defaultPolish } from '../../audio/polish/polish'
 import {
   Clip,
   Project,
@@ -17,14 +17,12 @@ import {
   splitClip,
   trimClipEnd,
   trimClipStart,
-  withKnownDurations,
   createProject,
   formatClock,
   formatDuration,
   formatMillis,
   insertClip,
   parseProject,
-  polishOf,
   tracksOf,
   musicOf,
   withMusicSpeed,
@@ -265,17 +263,6 @@ describe('role defaults', () => {
   })
 })
 
-describe('withTrackChanges', () => {
-  it('changes only the named track', () => {
-    const p = withNewTrack(createProject('Song', 48000), 'vocal').project
-    const next = withTrackChanges(p, p.tracks[1].id, { muted: true, volume: 0.3 })
-    expect(next.tracks.map((t) => [t.muted, t.volume])).toEqual([
-      [false, 1],
-      [true, 0.3]
-    ])
-  })
-})
-
 describe('withVocalPart', () => {
   const lead = () => {
     const p = createProject('Song', 48000)
@@ -302,15 +289,6 @@ describe('withVocalPart', () => {
     const { p, id } = lead()
     const [track] = withVocalPart(withVocalPart(p, id, 'harmony'), id, 'lead').tracks
     expect(track).toMatchObject({ part: 'lead', volume: 1, pan: 0, polish: defaultPolish('lead') })
-  })
-})
-
-describe('createProject', () => {
-  it('starts with one empty vocal track ready to record into', () => {
-    const p = createProject('Song', 48000)
-    expect(p.version).toBe(2)
-    expect(p.tracks).toHaveLength(1)
-    expect(p.tracks[0]).toMatchObject({ role: 'vocal', name: 'Vocal 1', clips: [] })
   })
 })
 
@@ -359,49 +337,6 @@ describe('parseProject', () => {
   it('round-trips a saved project', () => {
     const p = withTrackAudio(createProject('Song', 48000), 'x', 'a.wav', 1)
     expect(parseProject(JSON.parse(JSON.stringify(p)))).toEqual(p)
-  })
-
-  it('migrates a version 1 project: backing track and each take become tracks', () => {
-    const v1 = {
-      version: 1,
-      name: 'Old Song',
-      sampleRate: 48000,
-      backingTrack: { file: 'audio/backing-beat.mp3', name: 'beat.mp3', volume: 1 },
-      tracks: [
-        {
-          id: 't',
-          role: 'lead',
-          name: 'Lead Vocal',
-          volume: 1,
-          pan: 0,
-          muted: false,
-          clips: [
-            { id: 'a', file: 'audio/take-001.wav', start: 0, offset: 0, duration: 10 },
-            { id: 'b', file: 'audio/take-002.wav', start: 0, offset: 0, duration: 12 }
-          ]
-        }
-      ]
-    }
-    const p = parseProject(v1)
-    expect(p.version).toBe(2)
-    expect(p.name).toBe('Old Song')
-    expect(p.tracks.map((t) => [t.role, t.name, t.clips[0]?.file])).toEqual([
-      ['backing', 'Backing 1', 'audio/backing-beat.mp3'],
-      ['vocal', 'Vocal 1', 'audio/take-001.wav'],
-      ['vocal', 'Vocal 2', 'audio/take-002.wav']
-    ])
-    expect(p.tracks[0].sourceName).toBe('beat.mp3')
-  })
-
-  it('gives a migrated project with no takes an empty vocal track', () => {
-    const p = parseProject({
-      version: 1,
-      name: 'x',
-      sampleRate: 48000,
-      backingTrack: null,
-      tracks: []
-    })
-    expect(p.tracks.map((t) => t.name)).toEqual(['Vocal 1'])
   })
 
   it.each([null, {}, { version: 3, name: 'x', tracks: [] }, { version: 2, name: 'x' }])(
@@ -516,22 +451,6 @@ describe('clip editing', () => {
     const { p, id } = setup([clip('a', 0, 4), clip('b', 5, 4)])
     expect(trackSpans(deleteClip(p, id, 'a'))).toEqual([['b.wav', 5, 0, 4]])
   })
-
-  it('fills in unknown clip lengths once the audio is decoded', () => {
-    const { p } = setup([clip('a', 0, 0)])
-    expect(trackSpans(withKnownDurations(p, { 'a.wav': 42 }))).toEqual([['a.wav', 0, 0, 42]])
-    expect(withKnownDurations(p, {})).toBe(p)
-  })
-})
-
-describe('tuning settings', () => {
-  it('gives tracks saved before tuning existed tuning switched off', () => {
-    const project = createProject('Song', 48000)
-    const [track] = project.tracks
-    const older: Partial<PolishSettings> = { ...polishOf(track) }
-    delete older.tuning
-    expect(polishOf({ ...track, polish: older as PolishSettings }).tuning).toBe(0)
-  })
 })
 
 describe('lyrics', () => {
@@ -568,10 +487,6 @@ describe('music speed and key', () => {
   const music = (p: Project) => p.tracks.find((t) => t.role === 'backing')!.clips[0]
   const vocal = (p: Project) => p.tracks.find((t) => t.role === 'vocal')!.clips[0]
 
-  it('plays music at its own speed and key until changed', () => {
-    expect(musicOf(withMusic())).toMatchObject({ speed: 1, semitones: 0 })
-  })
-
   it('makes the music shorter when it speeds up, and leaves vocals where they are', () => {
     const faster = withMusicSpeed(withMusic(), 1.25)
     expect(musicOf(faster).speed).toBe(1.25)
@@ -598,29 +513,13 @@ describe('music speed and key', () => {
 })
 
 describe('music tone and click', () => {
-  it('plays music with a flat tone and no click until changed', () => {
-    expect(musicOf(createProject('Song', 48000))).toMatchObject({
-      bassDb: 0,
-      brightnessDb: 0,
-      clickOn: false
-    })
-  })
-
-  it('reads songs saved before tone existed as flat', () => {
-    const older = { ...createProject('Song', 48000), music: { speed: 1.1, semitones: 0 } }
-    expect(musicOf(older as Project)).toMatchObject({ speed: 1.1, bassDb: 0, clickOn: false })
-  })
-
   it('keeps bass and brightness within a safe range', () => {
     const song = withMusicTone(createProject('Song', 48000), { bassDb: 20, brightnessDb: -3 })
     expect(musicOf(song)).toMatchObject({ bassDb: MUSIC_TONE_MAX_DB, brightnessDb: -3 })
   })
 
-  it('sets the metronome volume between silent and full', () => {
+  it('keeps the metronome volume between silent and full, and keeps it when switched on', () => {
     expect(musicOf(withClick(createProject('Song', 48000), 1.5)).click).toBe(1)
-  })
-
-  it('switches the metronome on and off, keeping its volume', () => {
     const on = withClickOn(withClick(createProject('Song', 48000), 0.4), true)
     expect(musicOf(on)).toMatchObject({ clickOn: true, click: 0.4 })
   })

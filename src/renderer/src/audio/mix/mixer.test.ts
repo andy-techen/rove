@@ -7,16 +7,12 @@ describe('volume slider mapping', () => {
     expect(gainToSlider(0)).toBe(0)
   })
 
-  it('puts unity gain a little over 85% of the way up', () => {
-    expect(gainToSlider(1)).toBeCloseTo(40 / 46, 5)
-    expect(sliderToGain(40 / 46)).toBeCloseTo(1, 5)
-  })
-
   it('tops out at +6 dB', () => {
     expect(sliderToGain(1)).toBeCloseTo(1.995, 2)
   })
 
-  it('round-trips', () => {
+  it('round-trips, with unity gain a little over 85% of the way up', () => {
+    expect(gainToSlider(1)).toBeCloseTo(40 / 46, 5)
     for (const g of [0.05, 0.3, 0.7, 1, 1.5])
       expect(sliderToGain(gainToSlider(g))).toBeCloseTo(g, 6)
   })

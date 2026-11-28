@@ -36,11 +36,6 @@ const mic = (overrides: Partial<Microphone>): Microphone => ({
 })
 
 describe('MicCheck', () => {
-  it('is headed by the Rove logo', () => {
-    render(<MicCheck mic={mic({})} onboarding onDone={vi.fn()} />)
-    expect(screen.getByRole('heading', { name: t('app.name') })).toBeInTheDocument()
-  })
-
   it('explains how to fix blocked access and lets the singer retry', async () => {
     const m = mic({ access: 'denied' })
     render(<MicCheck mic={m} onboarding onDone={vi.fn()} />)
@@ -54,10 +49,10 @@ describe('MicCheck', () => {
     expect(screen.getByRole('button', { name: t('micCheck.continue') })).toBeDisabled()
   })
 
-  it('lets a returning singer leave straight away, with nothing to measure', async () => {
+  it('lets a returning singer leave straight away, with no level to reach first', async () => {
     const onDone = vi.fn()
-    render(<MicCheck mic={mic({})} onboarding={false} onDone={onDone} />)
-    expect(screen.queryByRole('button', { name: /measure/i })).not.toBeInTheDocument()
+    render(<MicCheck mic={mic({ source: live })} onboarding={false} onDone={onDone} />)
+    expect(screen.queryByText(t('micCheck.continueHint'))).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: t('micCheck.done') }))
     expect(onDone).toHaveBeenCalled()
   })

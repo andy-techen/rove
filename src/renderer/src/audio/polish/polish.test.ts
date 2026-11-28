@@ -86,19 +86,9 @@ describe('polishParams', () => {
       ...defaultPolish(),
       advanced: { compRatio: 50, reverbMix: 2, lowCutHz: 5 }
     })
-    expect(p.compRatio).toBe(8)
-    expect(p.reverbMix).toBe(0.6)
-    expect(p.lowCutHz).toBe(40)
-  })
-})
-
-describe('defaultPolish', () => {
-  it('sits harmonies further back than the lead', () => {
-    const lead = defaultPolish('lead')
-    const harmony = defaultPolish('harmony')
-    expect(harmony.clarity).toBeLessThan(lead.clarity)
-    expect(harmony.space).toBeGreaterThan(lead.space)
-    expect(harmony.smoothness).toBeGreaterThan(lead.smoothness)
+    expect(p.compRatio).toBe(PARAM_RANGES.compRatio.max)
+    expect(p.reverbMix).toBe(PARAM_RANGES.reverbMix.max)
+    expect(p.lowCutHz).toBe(PARAM_RANGES.lowCutHz.min)
   })
 })
 

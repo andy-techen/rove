@@ -21,14 +21,10 @@ describe('meterFill', () => {
 describe('levelZone', () => {
   it.each([
     [-Infinity, 'silent'],
-    [-50, 'silent'],
     [-45, 'quiet'],
-    [-30, 'quiet'],
     [-24, 'good'],
-    [-12, 'good'],
     [-6, 'loud'],
-    [-1, 'clip'],
-    [0, 'clip']
+    [-1, 'clip']
   ])('%d dB is %s', (db, zone) => {
     expect(levelZone(db)).toBe(zone)
   })

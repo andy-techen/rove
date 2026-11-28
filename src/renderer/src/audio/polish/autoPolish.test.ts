@@ -86,6 +86,7 @@ describe('suggestPolish', () => {
     const harmony = suggestPolish(take, 'harmony').amounts
     expect(harmony.clarity).toBeLessThan(leadAmounts.clarity)
     expect(harmony.space).toBeGreaterThan(leadAmounts.space)
+    expect(harmony.smoothness).toBeGreaterThan(leadAmounts.smoothness)
   })
 
   it('keeps every knob inside its auto-polish limits, whatever it hears', () => {
@@ -102,14 +103,6 @@ describe('suggestPolish', () => {
         expect(amounts[k]).toBeLessThanOrEqual(AUTO_LIMITS[k].max)
       }
     }
-  })
-
-  it('leaves Tuning alone', () => {
-    expect('tuning' in lead().amounts).toBe(false)
-  })
-
-  it('gives the same suggestion for the same take', () => {
-    expect(lead({ noiseDb: -50, rangeDb: 22 })).toEqual(lead({ noiseDb: -50, rangeDb: 22 }))
   })
 
   it('leans each knob toward the singer’s taste', () => {

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import { t } from '@shared/copy'
+import { Mock, describe, expect, it, vi } from 'vitest'
+import { CopyKey, t } from '@shared/copy'
 import { MusicSettings } from '../../state/song/project'
 import type { VocalsState } from '../../state/processing/useVocalRemoval'
 import { MusicPanel } from '.'
@@ -84,10 +84,34 @@ describe('MusicPanel', () => {
     expect(screen.getByRole('textbox', { name: t('music.typeKey') })).toHaveValue('+2')
   })
 
-  it('goes back to the original speed and key', async () => {
-    const { onReset } = renderPanel({ speed: 1.1, semitones: -2 })
-    await userEvent.click(screen.getByRole('button', { name: t('music.reset') }))
-    expect(onReset).toHaveBeenCalled()
+  it.each<{
+    does: string
+    button: CopyKey
+    music?: Partial<MusicSettings>
+    vocals?: VocalsState
+    spy: (props: ReturnType<typeof renderPanel>) => Mock
+  }>([
+    {
+      does: 'goes back to the original speed and key',
+      button: 'music.reset',
+      music: { speed: 1.1, semitones: -2 },
+      spy: (props) => props.onReset
+    },
+    {
+      does: 'removes the vocals from the music on request',
+      button: 'music.removeVocals',
+      spy: (props) => props.vocals.onRemove
+    },
+    {
+      does: 'restores the vocals once they are removed',
+      button: 'music.restoreVocals',
+      vocals: { state: 'removed' },
+      spy: (props) => props.vocals.onPutBack
+    }
+  ])('$does', async ({ button, music, vocals, spy }) => {
+    const props = renderPanel(music, vocals && { vocals: vocalsIn(vocals) })
+    await userEvent.click(screen.getByRole('button', { name: t(button) }))
+    expect(spy(props)).toHaveBeenCalled()
   })
 
   it('puts the speed back on its own, leaving the key', async () => {
@@ -111,12 +135,6 @@ describe('MusicPanel', () => {
     expect(onTone).toHaveBeenCalledWith({ bassDb: -3 }, 'music-bassDb')
   })
 
-  it('removes the vocals from the music on request', async () => {
-    const { vocals } = renderPanel()
-    await userEvent.click(screen.getByRole('button', { name: t('music.removeVocals') }))
-    expect(vocals.onRemove).toHaveBeenCalled()
-  })
-
   it('shows how far removing the vocals has got, and can stop it', async () => {
     const { vocals } = renderPanel({}, { vocals: vocalsIn({ state: 'removing', progress: 0.4 }) })
     expect(screen.getByRole('progressbar', { name: t('music.removingVocals') })).toHaveAttribute(
@@ -125,11 +143,5 @@ describe('MusicPanel', () => {
     )
     await userEvent.click(screen.getByRole('button', { name: t('music.stopRemovingVocals') }))
     expect(vocals.onCancel).toHaveBeenCalled()
-  })
-
-  it('restores the vocals once they are removed', async () => {
-    const { vocals } = renderPanel({}, { vocals: vocalsIn({ state: 'removed' }) })
-    await userEvent.click(screen.getByRole('button', { name: t('music.restoreVocals') }))
-    expect(vocals.onPutBack).toHaveBeenCalled()
   })
 })

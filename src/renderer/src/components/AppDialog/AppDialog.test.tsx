@@ -1,9 +1,8 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
-import type { MenuAction } from '@shared/menu'
-import { createFakeApi } from '../../test/fakeApi'
+import { fireMenu } from '../../test/fakeApi'
 import { AppDialog, Section, useAppDialog } from '.'
 
 /** The dialog as App wires it: closed until a command opens it. */
@@ -13,9 +12,6 @@ function Harness() {
     <AppDialog section={dialog.section} onSection={dialog.show} onClose={dialog.close} />
   ) : null
 }
-
-const fireMenu = (action: MenuAction) =>
-  act(() => (window.api as ReturnType<typeof createFakeApi>).fireMenu(action))
 
 const openAt = (section: Section) => {
   render(<AppDialog section={section} onSection={vi.fn()} onClose={vi.fn()} />)
@@ -62,33 +58,6 @@ describe('AppDialog', () => {
     expect(tab('shortcuts')).toHaveAttribute('aria-selected', 'true')
     await userEvent.keyboard('{ArrowDown}')
     expect(tab('voice')).toHaveAttribute('aria-selected', 'true')
-  })
-
-  it('closes from the close button', async () => {
-    render(<Harness />)
-    fireMenu('settings')
-    await userEvent.click(screen.getByRole('button', { name: t('appDialog.close') }))
-    expect(screen.queryByRole('dialog')).toBeNull()
-  })
-
-  it('closes on Esc', () => {
-    render(<Harness />)
-    fireMenu('settings')
-    // jsdom doesn't close a modal on Esc; the browser does, and fires close.
-    fireEvent(screen.getByRole('dialog'), new Event('close'))
-    expect(screen.queryByRole('dialog')).toBeNull()
-  })
-})
-
-describe('AppDialog size', () => {
-  it('opens at the size it was last dragged to', () => {
-    localStorage.setItem('rove.appDialog.width', '700')
-    localStorage.setItem('rove.appDialog.height', '500')
-    openAt('settings')
-    const dialog = screen.getByRole('dialog')
-    expect(dialog.style.getPropertyValue('--dialog-width')).toBe('700px')
-    expect(dialog.style.getPropertyValue('--dialog-height')).toBe('500px')
-    localStorage.clear()
   })
 })
 

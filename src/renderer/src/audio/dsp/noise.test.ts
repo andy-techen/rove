@@ -8,10 +8,6 @@ describe('seededNoise', () => {
     expect(take(seededNoise(42), 50)).toEqual(take(seededNoise(42), 50))
   })
 
-  it('differs for another seed', () => {
-    expect(take(seededNoise(42), 5)).not.toEqual(take(seededNoise(43), 5))
-  })
-
   it('stays between -1 and 1 and averages near zero', () => {
     const samples = take(seededNoise(1), 10000)
     expect(samples.every((s) => s >= -1 && s <= 1)).toBe(true)

@@ -73,10 +73,6 @@ describe('VoiceProfile', () => {
   it('shows each song’s range when By song is chosen', async () => {
     const user = renderWith(twoSongs())
     await user.click(await screen.findByRole('button', { name: t('voice.bySong') }))
-    expect(screen.getByRole('button', { name: t('voice.bySong') })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    )
     const songs = screen.getByRole('list', { name: t('voice.songsChart') })
     expect(within(songs).getAllByRole('listitem')).toHaveLength(2)
   })

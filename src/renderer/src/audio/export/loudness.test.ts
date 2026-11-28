@@ -1,12 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { integratedLoudness, levelGainDb, samplePeakDb, withPeakCeiling } from './loudness'
+import { tone } from '../../test/signals'
 
 const RATE = 48000
-const sine = (amplitude: number, seconds: number) =>
-  Float32Array.from(
-    { length: RATE * seconds },
-    (_, i) => amplitude * Math.sin((2 * Math.PI * 997 * i) / RATE)
-  )
+const sine = (amplitude: number, seconds: number) => tone(997, seconds, amplitude, RATE)
 
 describe('integratedLoudness (ITU-R BS.1770)', () => {
   it('reads a -20 dBFS tone in both channels as -20 LUFS', () => {

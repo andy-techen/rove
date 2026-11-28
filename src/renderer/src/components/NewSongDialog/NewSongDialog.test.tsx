@@ -28,23 +28,15 @@ describe('NewSongDialog', () => {
     expect(onCreate).toHaveBeenCalledWith('Fly Away', 'Sam', undefined)
   })
 
-  it('passes along a note when one is given', async () => {
-    const { onCreate } = renderDialog()
-    await userEvent.keyboard('Fly Away')
-    await userEvent.type(
-      screen.getByRole('textbox', { name: t('newSong.noteLabel') }),
-      'For Mum{Enter}'
-    )
-    expect(onCreate).toHaveBeenCalledWith('Fly Away', undefined, 'For Mum')
-  })
-
   it('passes along a note, and a cleared one as none', async () => {
-    const { onCreate } = renderDialog({
-      editing: { name: 'Fly Away', note: 'Old' }
-    })
-    await userEvent.clear(screen.getByRole('textbox', { name: t('newSong.noteLabel') }))
+    const { onCreate } = renderDialog({ editing: { name: 'Fly Away', note: 'Old' } })
+    const note = screen.getByRole('textbox', { name: t('newSong.noteLabel') })
+    await userEvent.clear(note)
+    await userEvent.type(note, 'For Mum{Enter}')
+    expect(onCreate).toHaveBeenLastCalledWith('Fly Away', undefined, 'For Mum')
+    await userEvent.clear(note)
     await userEvent.keyboard('{Enter}')
-    expect(onCreate).toHaveBeenCalledWith('Fly Away', undefined, undefined)
+    expect(onCreate).toHaveBeenLastCalledWith('Fly Away', undefined, undefined)
   })
 
   it('needs a name before it can start', () => {

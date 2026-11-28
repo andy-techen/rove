@@ -2,15 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { offersVocals } from './premiumControls'
 
 describe('offersVocals', () => {
-  it('offers removing the vocals on premium', () => {
+  it('offers removing vocals on premium only, but lets free put back ones removed earlier', () => {
     expect(offersVocals('premium', { state: 'with' })).toBe(true)
-  })
-
-  it('hides it on the free plan', () => {
     expect(offersVocals('free', { state: 'with' })).toBe(false)
-  })
-
-  it('still lets free put back vocals removed earlier, since that undoes, not removes', () => {
+    // Putting vocals back undoes a removal rather than removing.
     expect(offersVocals('free', { state: 'removed' })).toBe(true)
   })
 })

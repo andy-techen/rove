@@ -1,14 +1,16 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { Dialog } from '.'
 
-const open = () =>
+const open = (onClose = vi.fn()) => {
   render(
-    <Dialog title="Export song" closeLabel="Close" sizeKey="test" onClose={vi.fn()}>
+    <Dialog title="Export song" closeLabel="Close" sizeKey="test" onClose={onClose}>
       <button type="button">Export</button>
     </Dialog>
   )
+  return onClose
+}
 
 describe('Dialog', () => {
   it('opens without focusing the close button, so no tooltip pops up', () => {
@@ -31,5 +33,18 @@ describe('Dialog', () => {
     expect(dialog.style.getPropertyValue('--dialog-width')).toBe('640px')
     expect(dialog.style.getPropertyValue('--dialog-height')).toBe('480px')
     localStorage.clear()
+  })
+
+  it('closes from the close button', async () => {
+    const onClose = open()
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it('closes on Esc', () => {
+    const onClose = open()
+    // jsdom doesn't close a modal on Esc; the browser does, and fires close.
+    fireEvent(screen.getByRole('dialog'), new Event('close'))
+    expect(onClose).toHaveBeenCalled()
   })
 })

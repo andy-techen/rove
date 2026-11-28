@@ -21,25 +21,29 @@ describe('history', () => {
     expect(redoHistory(start, 1)).toBeNull()
   })
 
-  it('collapses a run of same-key edits (one slider drag) into one step', () => {
-    let h = pushHistory(start, 0, 'volume:a')
-    h = pushHistory(h, 1, 'volume:a')
-    h = pushHistory(h, 2, 'volume:a')
-    expect(h.past).toEqual([0])
-    expect(undoHistory(h, 3)!.value).toBe(0)
-  })
-
-  it('starts a new step when the key changes', () => {
-    let h = pushHistory(start, 0, 'volume:a')
-    h = pushHistory(h, 1, 'pan:a')
-    h = pushHistory(h, 2, 'volume:a')
-    expect(h.past).toEqual([0, 1, 2])
-  })
-
-  it('never coalesces unkeyed edits', () => {
-    let h = pushHistory(start, 0)
-    h = pushHistory(h, 1)
-    expect(h.past).toEqual([0, 1])
+  it('collapses a run of same-key edits (one slider drag) into one step, but not unkeyed ones', () => {
+    const undoSteps = (edits: [number, string?][]) => {
+      let h = start
+      for (const [value, key] of edits) h = pushHistory(h, value, key)
+      const steps: number[] = []
+      for (let u = undoHistory(h, -1); u; u = undoHistory(u.history, u.value)) steps.push(u.value)
+      return steps
+    }
+    expect(
+      undoSteps([
+        [0, 'volume:a'],
+        [1, 'volume:a'],
+        [2, 'volume:a']
+      ])
+    ).toEqual([0])
+    expect(
+      undoSteps([
+        [0, 'volume:a'],
+        [1, 'pan:a'],
+        [2, 'volume:a']
+      ])
+    ).toEqual([2, 1, 0])
+    expect(undoSteps([[0], [1]])).toEqual([1, 0])
   })
 
   it('drops the redo stack after a new edit', () => {

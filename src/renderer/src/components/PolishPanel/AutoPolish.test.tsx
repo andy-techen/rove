@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -106,10 +106,8 @@ function warmerSongs(n: number): TasteExample[] {
 }
 
 async function tooltipShows(text: string) {
-  await userEvent.hover(autoButton())
-  await waitFor(() =>
-    expect(screen.getAllByRole('tooltip').map((tip) => tip.textContent)).toContain(text)
-  )
+  act(() => autoButton().focus())
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(text)
 }
 
 beforeEach(() => {
@@ -131,13 +129,7 @@ describe('Auto-polish', () => {
     expect(knob('clarity')).toHaveValue(percent(defaultPolish('lead').clarity))
   })
 
-  it('marks each knob it turned with why, on hover', async () => {
-    render(<Harness />)
-    await autoPolish()
-    expect(screen.getByRole('img', { name: t('polish.auto.reasons.dull') })).toBeTruthy()
-  })
-
-  it('drops a knob’s mark once you turn it yourself', async () => {
+  it('marks each knob it turned with why, and drops the mark once you turn it yourself', async () => {
     render(<Harness />)
     await autoPolish()
     const mark = () => screen.queryByRole('img', { name: t('polish.auto.reasons.dull') })
@@ -183,7 +175,12 @@ describe('Auto-polish', () => {
   it('waits for a take before it can listen', async () => {
     render(<Harness files={[]} />)
     expect(autoButton()).toBeDisabled()
-    await tooltipShows(t('polish.auto.titleNoTakes'))
+    // A disabled button can't take focus, so this one is hovered, without the real wait.
+    vi.useFakeTimers()
+    fireEvent.pointerOver(autoButton())
+    act(() => vi.runOnlyPendingTimers())
+    vi.useRealTimers()
+    expect(screen.getByRole('tooltip')).toHaveTextContent(t('polish.auto.titleNoTakes'))
   })
 
   it('leans toward how the singer set earlier songs, and says so', async () => {

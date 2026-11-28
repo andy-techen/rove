@@ -54,12 +54,6 @@ describe('editing bars', () => {
     expect(removeBars(chart, 0, 3, [])).toEqual([[]])
   })
 
-  it('copies a run of bars and pastes it over the chart from another bar', () => {
-    const chart = bars('| C | G | Am | F |')
-    const copied = copyBars(chart, 0, 1)
-    expect(names(pasteBars(chart, 3, copied))).toEqual(['C', 'G', 'Am', 'C', 'G'])
-  })
-
   it('puts pasted bars in, moving the rest along', () => {
     expect(names(insertBars(bars('| C | G | F |'), 2, bars('| Am | Dm |')))).toEqual([
       'C',
@@ -94,8 +88,9 @@ describe('editing bars', () => {
     expect(chordName(chordBefore(bars('| C | F G | % | % |'), 3)!)).toBe('G')
   })
 
-  it('writes pasted bars over the chart from where they land, growing it', () => {
-    expect(names(pasteBars(bars('C G'), 1, bars('Am F D')))).toEqual(['C', 'Am', 'F', 'D'])
+  it('writes copied bars over the chart from where they land, growing it', () => {
+    const copied = copyBars(bars('| Am | F | D | E |'), 0, 2)
+    expect(names(pasteBars(bars('C G'), 1, copied))).toEqual(['C', 'Am', 'F', 'D'])
   })
 })
 

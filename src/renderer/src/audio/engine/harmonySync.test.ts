@@ -39,15 +39,11 @@ describe('phrasesOf', () => {
 })
 
 describe('harmonyTiming', () => {
-  it('hears how far each harmony phrase sits from the lead', () => {
-    const timing = harmonyTiming(voice(277, 1.12, 4.42), voice(220), RATE)
-    expect(timing?.map((p) => p.bySec)).toEqual([expect.closeTo(0.12, 2), expect.closeTo(-0.08, 2)])
-  })
-
-  it('leaves a phrase that is already with the lead where it is', () => {
-    const timing = harmonyTiming(voice(277, 1.12, 4.5), voice(220), RATE)
-    expect(timing?.[0].bySec).toBeCloseTo(0.12, 2)
-    expect(timing?.[1].bySec).toBe(0)
+  it('hears how far each harmony phrase sits from the lead, leaving one already with it', () => {
+    const offBy = (verseAt: number, chorusAt: number) =>
+      harmonyTiming(voice(277, verseAt, chorusAt), voice(220), RATE)?.map((p) => p.bySec)
+    expect(offBy(1.12, 4.42)).toEqual([expect.closeTo(0.12, 2), expect.closeTo(-0.08, 2)])
+    expect(offBy(1.12, 4.5)).toEqual([expect.closeTo(0.12, 2), 0])
   })
 
   it('offers nothing when the harmony is already with the lead', () => {

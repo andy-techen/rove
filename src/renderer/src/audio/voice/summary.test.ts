@@ -2,17 +2,12 @@ import { LANDING_BIN_CENTS, LANDING_RANGE_CENTS } from '@shared/voice'
 import { describe, expect, it } from 'vitest'
 import { midiToHz } from '../pitch/pitch'
 import { summariseTake } from './summary'
+import { join, silence, voice } from '../../test/signals'
 
 const SR = 48000
 const A3 = 57
 const E4 = 64
 
-/** A sung-like tone: a fundamental with a few weaker harmonics. */
-const voice = (hz: number, seconds: number): Float32Array =>
-  Float32Array.from({ length: Math.round(seconds * SR) }, (_, i) => {
-    const t = (2 * Math.PI * hz * i) / SR
-    return 0.25 * Math.sin(t) + 0.12 * Math.sin(2 * t) + 0.06 * Math.sin(3 * t)
-  })
 /** A smooth slide from one pitch to another, as when a singer glides between notes. */
 const glide = (fromHz: number, toHz: number, seconds: number): Float32Array => {
   let phase = 0
@@ -21,12 +16,6 @@ const glide = (fromHz: number, toHz: number, seconds: number): Float32Array => {
     phase += (2 * Math.PI * fromHz * Math.pow(toHz / fromHz, at)) / SR
     return 0.25 * Math.sin(phase) + 0.12 * Math.sin(2 * phase) + 0.06 * Math.sin(3 * phase)
   })
-}
-const silence = (seconds: number): Float32Array => new Float32Array(Math.round(seconds * SR))
-const join = (...parts: Float32Array[]): Float32Array => {
-  const out = new Float32Array(parts.reduce((n, p) => n + p.length, 0))
-  parts.reduce((at, p) => (out.set(p, at), at + p.length), 0)
-  return out
 }
 const whole = { offsetSec: 0, durationSec: 0 }
 const held = (landing: number[]): number => landing.reduce((a, b) => a + b, 0)
@@ -46,19 +35,14 @@ describe('summariseTake', () => {
     expect(summary.noteSec[A3]).toBeCloseTo(1, 1)
   })
 
-  it('takes range only from notes held long enough', async () => {
+  it('leaves a passing note out of the range and the time on each note', async () => {
     const blip = join(silence(0.3), voice(midiToHz(E4), 0.08), silence(0.3))
     const short = await summariseTake(blip, SR, whole)
     expect(short.sungSec).toBeGreaterThan(0)
     expect(short.lowestNote).toBeNull()
-    const held = await summariseTake(join(blip, voice(220, 0.4), silence(0.3)), SR, whole)
-    expect([held.lowestNote, held.highestNote]).toEqual([A3, A3])
-  })
-
-  it('leaves a passing note out of the time on each note', async () => {
-    const take = join(voice(midiToHz(E4), 0.08), silence(0.3), voice(220, 0.5))
-    const summary = await summariseTake(take, SR, whole)
-    expect(notes(summary.noteSec)).toEqual([A3])
+    const take = await summariseTake(join(blip, voice(220, 0.4), silence(0.3)), SR, whole)
+    expect([take.lowestNote, take.highestNote]).toEqual([A3, A3])
+    expect(notes(take.noteSec)).toEqual([A3])
   })
 
   it('splits a run where the pitch jumps to a new note', async () => {

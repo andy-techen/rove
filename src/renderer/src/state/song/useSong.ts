@@ -7,7 +7,6 @@ import {
   VocalPart,
   createProject,
   parseProject,
-  withKnownDurations,
   withNewTrack,
   withTrackAudio
 } from './project'
@@ -133,8 +132,8 @@ export function useSong(initial: ChosenProject): Song {
     const data = chosen.manifest
       ? parseProject(chosen.manifest)
       : createProject(chosen.name, getAudioContext().sampleRate, chosen.artist, chosen.note)
-    // Persist new songs and upgrades from older project versions right away.
-    if ((chosen.manifest as { version?: number } | null)?.version !== data.version) {
+    // Persist new songs right away.
+    if (!chosen.manifest) {
       await persist(chosen.dir, data)
     } else {
       // Freshly opened from disk: everything on screen is already saved.
@@ -153,14 +152,6 @@ export function useSong(initial: ChosenProject): Song {
           .then((buffer) => {
             if (openToken.current !== token) return
             setAudio((prev) => ({ ...prev, [clip.file]: buffer }))
-            const open = current.current
-            if (clip.duration === 0 && open) {
-              show({
-                dir: open.dir,
-                data: withKnownDurations(open.data, { [clip.file]: buffer.duration })
-              })
-              scheduleSave(open.dir)
-            }
           })
           .catch(
             () =>

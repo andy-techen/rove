@@ -2,28 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { nextInputVolume } from './inputLevel'
 
 describe('nextInputVolume', () => {
-  it('turns a quiet singer up toward the target', () => {
-    expect(nextInputVolume(37, -22)).toBe(61)
-  })
-
-  it('turns a loud singer down', () => {
-    expect(nextInputVolume(60, -4)).toBe(48)
-  })
-
-  it('backs well off when the voice clipped', () => {
-    expect(nextInputVolume(80, 0)).toBe(56)
-  })
-
-  it('leaves a level that is already about right', () => {
-    expect(nextInputVolume(50, -11)).toBe(50)
-  })
-
-  it('stays inside the volume range', () => {
-    expect(nextInputVolume(95, -40)).toBe(100)
-    expect(nextInputVolume(8, 0)).toBe(5)
-  })
-
-  it('does nothing when it heard no singing', () => {
-    expect(nextInputVolume(50, -60)).toBeNull()
+  it.each([
+    ['turns a quiet singer up toward the target', 37, -22, 61],
+    ['turns a loud singer down', 60, -4, 48],
+    ['backs well off when the voice clipped', 80, 0, 56],
+    ['leaves a level that is already about right', 50, -11, 50],
+    ['stays under the top of the volume range', 95, -40, 100],
+    ['stays over the bottom of the volume range', 8, 0, 5],
+    ['does nothing when it heard no singing', 50, -60, null]
+  ])('%s', (_, volume, peakDb, next) => {
+    expect(nextInputVolume(volume, peakDb)).toBe(next)
   })
 })

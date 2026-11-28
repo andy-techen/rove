@@ -9,9 +9,15 @@ const unlocked = (view: ReturnType<typeof voiceView>) => {
 }
 
 describe('voiceView', () => {
-  it('stays locked until there are 3 minutes of singing', () => {
-    const view = voiceView([sungEntry('A', '2026-07-01', { sec: VOICE_UNLOCK_SEC - 1 })])
-    expect(view).toMatchObject({ locked: true, sungSec: VOICE_UNLOCK_SEC - 1 })
+  it('stays locked until there are 3 minutes of singing, counted across songs', () => {
+    const almost = voiceView([sungEntry('A', '2026-07-01', { sec: VOICE_UNLOCK_SEC - 1 })])
+    expect(almost).toMatchObject({ locked: true, sungSec: VOICE_UNLOCK_SEC - 1 })
+    const half = VOICE_UNLOCK_SEC / 2
+    const view = voiceView([
+      sungEntry('A', '2026-07-01', { sec: half }),
+      sungEntry('B', '2026-07-02', { sec: half })
+    ])
+    expect(view.locked).toBe(false)
   })
 
   it('counts songs, recorded time and takes, a split take once', () => {
@@ -34,15 +40,6 @@ describe('voiceView', () => {
       ])
     )
     expect(view.songs.map((s) => s.folder)).toEqual(['Old', 'New'])
-  })
-
-  it('unlocks at 3 minutes, across songs', () => {
-    const half = VOICE_UNLOCK_SEC / 2
-    const view = voiceView([
-      sungEntry('A', '2026-07-01', { sec: half }),
-      sungEntry('B', '2026-07-02', { sec: half })
-    ])
-    expect(view.locked).toBe(false)
   })
 
   it('spans whole octaves around every note sung', () => {

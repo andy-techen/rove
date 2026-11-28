@@ -12,11 +12,8 @@ import {
 } from './fileNames'
 
 describe('nextTakeName', () => {
-  it('starts at take-001', () => {
+  it('starts at take-001 and continues after the highest existing take, ignoring other files', () => {
     expect(nextTakeName([])).toBe('take-001.wav')
-  })
-
-  it('continues after the highest existing take, ignoring other files', () => {
     expect(nextTakeName(['take-001.wav', 'take-007.wav', 'backing-song.mp3', '.DS_Store'])).toBe(
       'take-008.wav'
     )

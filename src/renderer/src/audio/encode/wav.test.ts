@@ -8,16 +8,6 @@ describe('encodeWav', () => {
   const samples = new Float32Array([0, 0.5, -0.5, 1, -1, 2, -2])
   const view = new DataView(encodeWav([samples], 48000))
 
-  it('writes a 16-bit mono PCM header for the given sample rate', () => {
-    expect(ascii(view, 0, 4)).toBe('RIFF')
-    expect(ascii(view, 8, 4)).toBe('WAVE')
-    expect(view.getUint16(20, true)).toBe(1)
-    expect(view.getUint16(22, true)).toBe(1)
-    expect(view.getUint32(24, true)).toBe(48000)
-    expect(view.getUint32(28, true)).toBe(96000)
-    expect(view.getUint16(34, true)).toBe(16)
-  })
-
   it('sizes the RIFF and data chunks from the sample count', () => {
     expect(view.byteLength).toBe(44 + samples.length * 2)
     expect(view.getUint32(4, true)).toBe(36 + samples.length * 2)

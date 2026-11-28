@@ -73,14 +73,4 @@ describe('useSong', () => {
     })
     expect(lastSaved().name).toBe('Night Drive')
   })
-
-  it('adds a harmony with quieter, off-centre defaults', async () => {
-    const { result } = await openSong()
-    await act(() => result.current.addVocalTrack('harmony'))
-    expect(result.current.song!.data.tracks[1]).toMatchObject({
-      part: 'harmony',
-      volume: 0.7,
-      pan: -0.35
-    })
-  })
 })

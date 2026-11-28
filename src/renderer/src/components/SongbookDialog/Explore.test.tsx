@@ -22,8 +22,16 @@ const yueliang: CatalogSong = {
   genre: 'ballad'
 }
 
-const openFilters = (): Promise<void> =>
-  userEvent.click(screen.getByRole('button', { name: t('songbook.explore.filters') }))
+const filtersButton = () => screen.getByRole('button', { name: t('songbook.explore.filters') })
+const openFilters = (): Promise<void> => userEvent.click(filtersButton())
+const filter = (label: 'languageLabel' | 'genreLabel' | 'tagLabel') =>
+  screen.queryByRole('button', { name: new RegExp(t(`songbook.explore.${label}`)) })
+
+/** Explore with the first page of the catalog shown. */
+async function renderExplore() {
+  render(<Explore />)
+  await screen.findByText('Dreams')
+}
 
 describe('Explore', () => {
   beforeEach(() => {
@@ -36,48 +44,36 @@ describe('Explore', () => {
   afterEach(() => vi.clearAllMocks())
 
   it('shows catalog songs with their language tag', async () => {
-    render(<Explore />)
-    expect(await screen.findByText('Dreams')).toBeInTheDocument()
+    await renderExplore()
     expect(screen.getByText('Fleetwood Mac')).toBeInTheDocument()
     expect(screen.getAllByText(t('songbook.explore.languages.en')).length).toBeGreaterThan(0)
   })
 
   it('passes the search query to the catalog as the singer types', async () => {
-    render(<Explore />)
+    await renderExplore()
     await userEvent.type(
       screen.getByRole('searchbox', { name: t('songbook.explore.searchLabel') }),
       'moon'
     )
-    await screen.findByText('Dreams')
     expect(window.api.searchCatalog).toHaveBeenLastCalledWith({ query: 'moon' })
   })
 
-  it('reveals a row of filters when the funnel icon is pressed', async () => {
-    render(<Explore />)
-    await screen.findByText('Dreams')
-    expect(
-      screen.queryByRole('button', { name: /songbook.explore.languageLabel/i })
-    ).not.toBeInTheDocument()
+  it('reveals a row of filters, shown as pressed, when the funnel icon is pressed', async () => {
+    await renderExplore()
+    expect(filter('languageLabel')).not.toBeInTheDocument()
+    expect(filtersButton()).toHaveAttribute('aria-pressed', 'false')
     await openFilters()
+    expect(filtersButton()).toHaveAttribute('aria-pressed', 'true')
     // Each filter group appears as its own expandable button in the row.
-    expect(
-      screen.getByRole('button', { name: new RegExp(t('songbook.explore.languageLabel')) })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: new RegExp(t('songbook.explore.genreLabel')) })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: new RegExp(t('songbook.explore.tagLabel')) })
-    ).toBeInTheDocument()
+    expect(filter('languageLabel')).toBeInTheDocument()
+    expect(filter('genreLabel')).toBeInTheDocument()
+    expect(filter('tagLabel')).toBeInTheDocument()
   })
 
   it('narrows to a genre chosen from its dropdown', async () => {
-    render(<Explore />)
-    await screen.findByText('Dreams')
+    await renderExplore()
     await openFilters()
-    await userEvent.click(
-      screen.getByRole('button', { name: new RegExp(t('songbook.explore.genreLabel')) })
-    )
+    await userEvent.click(filter('genreLabel')!)
     await userEvent.click(
       screen.getByRole('checkbox', { name: t('songbook.explore.genres.ballad') })
     )
@@ -89,29 +85,18 @@ describe('Explore', () => {
   })
 
   it('narrows to any song with one of the ticked tags', async () => {
-    render(<Explore />)
-    await screen.findByText('Dreams')
+    await renderExplore()
     await openFilters()
-    await userEvent.click(
-      screen.getByRole('button', { name: new RegExp(t('songbook.explore.tagLabel')) })
-    )
+    await userEvent.click(filter('tagLabel')!)
     await userEvent.click(screen.getByRole('checkbox', { name: t('songbook.explore.tags.love') }))
     expect(window.api.searchCatalog).toHaveBeenLastCalledWith({ query: '', tags: ['love'] })
-  })
-
-  it('shows the filter icon as pressed while the row is open', async () => {
-    render(<Explore />)
-    const toggle = screen.getByRole('button', { name: t('songbook.explore.filters') })
-    expect(toggle).toHaveAttribute('aria-pressed', 'false')
-    await userEvent.click(toggle)
-    expect(toggle).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('adds a song to the wishlist and marks it as added', async () => {
     vi.mocked(window.api.addToWishlist).mockResolvedValue([
       { id: 'w1', name: 'Dreams', artist: 'Fleetwood Mac', addedAt: 0 }
     ])
-    render(<Explore />)
+    await renderExplore()
     await userEvent.click(
       await screen.findByRole('button', {
         name: t('songbook.explore.addLabel', { name: 'Dreams' })
@@ -129,7 +114,7 @@ describe('Explore', () => {
     vi.mocked(window.api.listWishlist).mockResolvedValue([
       { id: 'w1', name: 'Dreams', artist: 'Fleetwood Mac', addedAt: 0 }
     ])
-    render(<Explore />)
+    await renderExplore()
     expect(
       await screen.findByRole('button', {
         name: t('songbook.explore.addedLabel', { name: 'Dreams' })

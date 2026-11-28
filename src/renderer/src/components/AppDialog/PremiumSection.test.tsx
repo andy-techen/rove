@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { LicenseStatus } from '@shared/license'
+import { PREMIUM_FEATURES } from '@shared/premiumFeatures'
 import { PremiumSection } from './PremiumSection'
 
 const PREMIUM: LicenseStatus = { plan: 'premium', keyHint: '•••• 4d51' }
@@ -24,9 +25,9 @@ describe('PremiumSection', () => {
   it('lists what premium unlocks', () => {
     license()
     render(<PremiumSection />)
-    expect(screen.getByText(t('premium.features.vocalRemoval'))).toBeInTheDocument()
-    expect(screen.getByText(t('premium.features.autoPolish'))).toBeInTheDocument()
-    expect(screen.getByText(t('premium.features.tuning'))).toBeInTheDocument()
+    for (const feature of PREMIUM_FEATURES) {
+      expect(screen.getByText(t(`premium.features.${feature}`))).toBeInTheDocument()
+    }
   })
 
   it('activates a pasted key', async () => {

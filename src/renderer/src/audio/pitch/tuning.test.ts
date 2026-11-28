@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { analysePitch, hzToMidi, midiToHz } from './pitch'
 import { scaleOf } from './key'
 import { correctionRatios, shiftPitch } from './tuning'
+import { voice } from '../../test/signals'
 
 const SR = 48000
 const HOP = 0.01
@@ -14,12 +15,6 @@ const held = (hz: number, frames = 50): { hopSec: number; f0: Float32Array } => 
   f0: new Float32Array(frames).fill(hz)
 })
 const centsOf = (ratio: number): number => 1200 * Math.log2(ratio)
-
-const voice = (hz: number, seconds: number): Float32Array =>
-  Float32Array.from({ length: Math.round(seconds * SR) }, (_, i) => {
-    const t = (2 * Math.PI * hz * i) / SR
-    return 0.25 * Math.sin(t) + 0.12 * Math.sin(2 * t) + 0.06 * Math.sin(3 * t)
-  })
 
 describe('tuning corrections', () => {
   it('leaves the voice alone at zero strength', () => {

@@ -4,30 +4,20 @@ import { fadeEnvelope, planClip } from './playback'
 const clip = { start: 10, offset: 0, duration: 20 }
 
 describe('planClip', () => {
-  it('delays a clip that starts after the playhead', () => {
-    expect(planClip(clip, 4)).toEqual({ delay: 6, offset: 0, duration: 20, into: 0 })
+  it.each([
+    ['delays a clip that starts after the playhead', clip, 4, [6, 0, 20, 0]],
+    ['starts partway into a clip the playhead is inside', clip, 15, [0, 5, 15, 5]],
+    ['keeps a file offset when starting partway in', { ...clip, offset: 2 }, 15, [0, 7, 15, 5]]
+  ])('%s', (_, played, at, [delay, offset, duration, into]) => {
+    expect(planClip(played, at)).toEqual({ delay, offset, duration, into })
   })
 
-  it('starts partway into a clip the playhead is inside', () => {
-    expect(planClip(clip, 15)).toEqual({ delay: 0, offset: 5, duration: 15, into: 5 })
-  })
-
-  it('respects an existing file offset when starting partway in', () => {
-    expect(planClip({ start: 10, offset: 2, duration: 20 }, 15)).toEqual({
-      delay: 0,
-      offset: 7,
-      duration: 15,
-      into: 5
-    })
-  })
-
-  it('skips clips that already ended', () => {
-    expect(planClip(clip, 30)).toBeNull()
-    expect(planClip(clip, 45)).toBeNull()
-  })
-
-  it('skips empty clips', () => {
-    expect(planClip({ start: 0, offset: 0, duration: 0 }, 0)).toBeNull()
+  it.each([
+    ['a clip that just ended', clip, 30],
+    ['a clip that ended a while ago', clip, 45],
+    ['an empty clip', { start: 0, offset: 0, duration: 0 }, 0]
+  ])('skips %s', (_, played, at) => {
+    expect(planClip(played, at)).toBeNull()
   })
 })
 

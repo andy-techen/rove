@@ -33,17 +33,16 @@ export function archiveEntryOk(name: string): boolean {
 
 /**
  * Every audio file a project plays, as paths inside the song folder: each clip's file, the
- * song an instrumental was made from (`withVocals`, so vocals can go back), and a version 1
- * project's backing track. Paths that reach outside audio/ are left out.
+ * song an instrumental was made from (`withVocals`, so vocals can go back). Paths that reach
+ * outside audio/ are left out.
  */
 export function archiveFilesOf(manifest: unknown): string[] {
-  const m = manifest as { tracks?: unknown; backingTrack?: { file?: unknown } } | null
+  const m = manifest as { tracks?: unknown } | null
   if (!m || !Array.isArray(m.tracks)) return []
   const files = new Set<string>()
   const add = (file: unknown): void => {
     if (typeof file === 'string' && file !== MANIFEST && archiveEntryOk(file)) files.add(file)
   }
-  add(m.backingTrack?.file)
   for (const track of m.tracks as unknown[]) {
     const clips = (track as { clips?: unknown } | null)?.clips
     if (!Array.isArray(clips)) continue

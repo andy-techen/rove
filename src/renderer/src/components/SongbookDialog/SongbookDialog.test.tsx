@@ -158,18 +158,6 @@ describe('SongbookDialog', () => {
   })
 })
 
-describe('Songbook size', () => {
-  it('opens at the size it was last dragged to', () => {
-    localStorage.setItem('rove.songbook.width', '720')
-    localStorage.setItem('rove.songbook.height', '640')
-    renderDialog()
-    const dialog = screen.getByRole('dialog')
-    expect(dialog.style.getPropertyValue('--dialog-width')).toBe('720px')
-    expect(dialog.style.getPropertyValue('--dialog-height')).toBe('640px')
-    localStorage.clear()
-  })
-})
-
 describe('Songbook search', () => {
   it('narrows the list to songs whose name or artist matches', async () => {
     renderDialog()

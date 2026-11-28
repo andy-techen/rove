@@ -11,8 +11,12 @@ export default defineConfig({
     }
   },
   test: {
-    // Component tests run in a simulated DOM; pure modules don't need one but it's cheap.
+    // Component tests run in a simulated DOM. Pure modules pay for it too (about half of
+    // the audio tests' time); setup.ts needs `window`, so they can't opt out yet.
     environment: 'jsdom',
+    // Vitest marks tests slower than this in its output; docs/testing.md asks new tests
+    // to stay under it.
+    slowTestThreshold: 300,
     setupFiles: ['src/renderer/src/test/setup.ts'],
     // Each test starts with fresh call counts on the fake window.api.
     clearMocks: true,

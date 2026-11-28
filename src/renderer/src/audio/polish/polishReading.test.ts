@@ -1,20 +1,24 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { dbToGain } from '../dsp/units'
 import { seededNoise } from '../dsp/noise'
-import { HeardWindow, analyseVoice } from './polishReading'
+import { join, silence as silenceAt } from '../../test/signals'
+import { HeardWindow, PolishReading, analyseVoice } from './polishReading'
 
-const RATE = 48000
+// High enough to hold the "s" band (up to 11 kHz); lower rates keep the fixtures quick.
+const RATE = 24000
+const PHRASE_SEC = 2
 
-/** A sung-like tone: a 220 Hz voice with harmonics up to about 4 kHz, at an RMS level. */
-function voice(sec: number, db: number, body = 1): Float32Array {
-  const out = new Float32Array(Math.round(sec * RATE))
+const silence = (sec: number): Float32Array => silenceAt(sec, RATE)
+
+/** A sung-like phrase at 0 dB RMS: a 220 Hz voice with harmonics up to about 4 kHz. */
+function unitVoice(body: number): Float32Array {
+  const out = new Float32Array(PHRASE_SEC * RATE)
   const harmonics = Array.from({ length: 18 }, (_, i) => (i < 2 ? body : 1) / (i + 1))
   const rms = Math.sqrt(harmonics.reduce((sum, a) => sum + (a * a) / 2, 0))
-  const scale = dbToGain(db) / rms
   for (let n = 0; n < out.length; n++) {
     let v = 0
     harmonics.forEach((a, i) => (v += a * Math.sin((2 * Math.PI * 220 * (i + 1) * n) / RATE)))
-    out[n] = v * scale
+    out[n] = v / rms
   }
   return out
 }
@@ -36,18 +40,6 @@ function ess(sec: number, db: number): Float32Array {
   return out
 }
 
-const silence = (sec: number): Float32Array => new Float32Array(Math.round(sec * RATE))
-
-const join = (...parts: Float32Array[]): Float32Array => {
-  const out = new Float32Array(parts.reduce((n, p) => n + p.length, 0))
-  let at = 0
-  for (const p of parts) {
-    out.set(p, at)
-    at += p.length
-  }
-  return out
-}
-
 /** Room noise (white, at an RMS level) and an optional 60 Hz hum over the whole take. */
 function inRoom(take: Float32Array, noiseDb: number, humDb?: number): Float32Array {
   const random = seededNoise(7)
@@ -57,9 +49,27 @@ function inRoom(take: Float32Array, noiseDb: number, humDb?: number): Float32Arr
   return take.map((s, n) => s + random() * noise + hum * Math.sin((2 * Math.PI * 60 * n) / RATE))
 }
 
+const FULL = unitVoice(1)
+const THIN = unitVoice(0.2)
+
 /** Phrases of singing with short gaps between them. */
-const phrases = (count: number, db: (i: number) => number, gap = silence(0.6)): Float32Array =>
-  join(...Array.from({ length: count }, (_, i) => join(voice(2, db(i)), gap)))
+const phrases = (
+  count: number,
+  db: (i: number) => number,
+  { gap = silence(0.6), sung = FULL } = {}
+): Float32Array =>
+  join(
+    ...Array.from({ length: count }, (_, i) =>
+      join(
+        sung.map((s) => s * dbToGain(db(i))),
+        gap
+      )
+    )
+  )
+
+const ROOM_DB = -65
+const VOICE_DB = -20
+const steady = (): Float32Array => phrases(4, () => VOICE_DB)
 
 const heard = (data: Float32Array, offsetSec = 0, durationSec = 0): HeardWindow => ({
   audio: {
@@ -72,102 +82,55 @@ const heard = (data: Float32Array, offsetSec = 0, durationSec = 0): HeardWindow 
   durationSec
 })
 
+const read = async (data: Float32Array, offsetSec = 0, durationSec = 0) =>
+  (await analyseVoice([heard(data, offsetSec, durationSec)]))!
+
 describe('analyseVoice', () => {
-  it('hears how loud the room is between lines', async () => {
-    const profile = await analyseVoice([
-      heard(
-        inRoom(
-          phrases(4, () => -20),
-          -60
-        )
-      )
-    ])
-    expect(Math.abs(profile!.noiseDb + 60)).toBeLessThan(2)
+  // A steady voice in a quiet, clean room: the other side of most comparisons.
+  let usual: PolishReading
+  beforeAll(async () => {
+    usual = await read(inRoom(steady(), ROOM_DB))
   })
 
-  it('hears how loud the voice is', async () => {
-    const profile = await analyseVoice([
-      heard(
-        inRoom(
-          phrases(4, () => -20),
-          -60
-        )
-      )
-    ])
-    expect(Math.abs(profile!.voiceDb + 20)).toBeLessThan(1)
+  it('hears how loud the voice is, and the room between lines', () => {
+    expect(Math.abs(usual.voiceDb - VOICE_DB)).toBeLessThan(1)
+    expect(Math.abs(usual.noiseDb - ROOM_DB)).toBeLessThan(2)
   })
 
   it('hears soft and strong moments as a spread', async () => {
-    const steady = await analyseVoice([
-      heard(
-        inRoom(
-          phrases(6, () => -20),
-          -70
-        )
+    const wide = await read(
+      inRoom(
+        phrases(4, (i) => -32 + i * 6),
+        ROOM_DB
       )
-    ])
-    const wide = await analyseVoice([
-      heard(
-        inRoom(
-          phrases(6, (i) => -32 + i * 4),
-          -70
-        )
-      )
-    ])
-    expect(wide!.rangeDb).toBeGreaterThan(steady!.rangeDb + 10)
+    )
+    expect(wide.rangeDb).toBeGreaterThan(usual.rangeDb + 10)
   })
 
   it('hears mains hum in the room', async () => {
-    const clean = await analyseVoice([
-      heard(
-        inRoom(
-          phrases(4, () => -20),
-          -65
-        )
-      )
-    ])
-    const humming = await analyseVoice([
-      heard(
-        inRoom(
-          phrases(4, () => -20),
-          -65,
-          -50
-        )
-      )
-    ])
-    expect(clean?.hum).toBe(false)
-    expect(humming?.hum).toBe(true)
+    expect(usual.hum).toBe(false)
+    expect((await read(inRoom(steady(), ROOM_DB, -50))).hum).toBe(true)
   })
 
   it('hears louder "s" sounds as more sibilance', async () => {
     const withEss = (db: number): Float32Array =>
       inRoom(
-        phrases(4, () => -20, join(ess(0.15, db), silence(0.45))),
+        phrases(4, () => VOICE_DB, { gap: join(ess(0.15, db), silence(0.45)) }),
         -70
       )
-    const soft = await analyseVoice([heard(withEss(-40))])
-    const sharp = await analyseVoice([heard(withEss(-25))])
-    expect(sharp!.sibilanceDb!).toBeGreaterThan(soft!.sibilanceDb! + 10)
+    const soft = await read(withEss(-40))
+    const sharp = await read(withEss(-25))
+    expect(sharp.sibilanceDb!).toBeGreaterThan(soft.sibilanceDb! + 10)
   })
 
   it('hears a thin voice as having less body', async () => {
-    const full = await analyseVoice([
-      heard(
-        inRoom(
-          phrases(4, () => -20),
-          -70
-        )
+    const thin = await read(
+      inRoom(
+        phrases(4, () => VOICE_DB, { sung: THIN }),
+        ROOM_DB
       )
-    ])
-    const thin = await analyseVoice([
-      heard(
-        inRoom(
-          join(...Array.from({ length: 4 }, () => join(voice(2, -20, 0.2), silence(0.6)))),
-          -70
-        )
-      )
-    ])
-    expect(thin!.bodyDb).toBeLessThan(full!.bodyDb - 6)
+    )
+    expect(thin.bodyDb).toBeLessThan(usual.bodyDb - 6)
   })
 
   it('only listens to the part of a take that plays', async () => {
@@ -178,15 +141,15 @@ describe('analyseVoice', () => {
       ),
       -70
     )
-    const profile = await analyseVoice([heard(take, 10.4, 10.4)])
-    expect(Math.abs(profile!.voiceDb + 30)).toBeLessThan(1)
+    const profile = await read(take, 10.4, 10.4)
+    expect(Math.abs(profile.voiceDb + 30)).toBeLessThan(1)
   })
 
   it('notices when a take was too loud', async () => {
-    const take = phrases(4, () => -20)
+    const take = steady()
     take.fill(1, 1000, 1100)
-    expect((await analyseVoice([heard(take)]))?.clipped).toBe(true)
-    expect((await analyseVoice([heard(phrases(4, () => -20))]))?.clipped).toBe(false)
+    expect((await read(take)).clipped).toBe(true)
+    expect(usual.clipped).toBe(false)
   })
 
   it('needs a few seconds of singing to say anything', async () => {
@@ -195,7 +158,7 @@ describe('analyseVoice', () => {
       await analyseVoice([
         heard(
           inRoom(
-            phrases(1, () => -20),
+            phrases(1, () => VOICE_DB),
             -60
           )
         )

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { LaneView } from '../../state/song/selectors'
-import { createFakeApi } from '../../test/fakeApi'
+import { fireMenu } from '../../test/fakeApi'
 import { Timeline } from '.'
 
 const lane = (overrides: Partial<LaneView>): LaneView => ({
@@ -68,6 +68,33 @@ function renderTimeline(overrides: Partial<Parameters<typeof Timeline>[0]> = {})
   return props
 }
 
+const clip = (overrides: Partial<LaneView['clips'][number]> = {}) => ({
+  id: 'c1',
+  start: 0,
+  offset: 0,
+  duration: 300,
+  fadeIn: 0,
+  fadeOut: 0,
+  audio: null,
+  joinedBefore: false,
+  joinedAfter: false,
+  ...overrides
+})
+
+/** A five-minute take, followed as it plays. */
+const longSong = (position = 0) =>
+  timelineProps({ tracks: [lane({ clips: [clip()] })], follow: true, position })
+
+async function scrollAwayFromPlayhead(container: HTMLElement) {
+  for (let i = 0; i < 3; i++) {
+    await userEvent.click(screen.getByRole('button', { name: t('timeline.zoomIn') }))
+  }
+  // The custom scrollbar has no role to find it by.
+  const bar = container.querySelector<HTMLElement>('.timeline-scrollbar')!
+  bar.scrollLeft = 1000
+  fireEvent.scroll(bar)
+}
+
 const cell = (bar: number, carried = false) => ({
   start: bar * 2,
   end: bar * 2 + 2,
@@ -107,6 +134,52 @@ describe('Timeline', () => {
     expect(props.onRecordWithoutMusic).toHaveBeenCalled()
   })
 
+  it.each<{
+    does: string
+    name: string | RegExp
+    prop: 'onAddVocal' | 'onMix' | 'onRenaming' | 'onAddChords'
+    /** What it's called with, when that matters. */
+    args?: unknown[]
+    tracks?: LaneView[]
+    gesture?: 'click' | 'dblClick'
+  }>([
+    {
+      does: 'adds a harmony vocal',
+      name: t('timeline.addHarmony'),
+      prop: 'onAddVocal',
+      args: ['harmony']
+    },
+    {
+      does: 'mutes a track from its speaker',
+      name: t('track.mute', { name: 'Vocal 1' }),
+      prop: 'onMix',
+      args: ['v1', { muted: true }]
+    },
+    {
+      does: 'asks to rename a track when its name is double-clicked',
+      name: /^Vocal 1/,
+      gesture: 'dblClick',
+      prop: 'onRenaming',
+      args: ['v1']
+    },
+    {
+      does: 'offers to play chords when the song has no music yet',
+      name: t('timeline.addInstrumental'),
+      prop: 'onAddChords'
+    },
+    {
+      does: 'keeps offering instrumentals once the song has one',
+      tracks: [chordsLane(), lane({})],
+      name: t('timeline.addInstrumental'),
+      prop: 'onAddChords'
+    }
+  ])('$does', async ({ name, prop, args, tracks, gesture = 'click' }) => {
+    const props = renderTimeline(tracks && { tracks })
+    await userEvent[gesture](screen.getByRole('button', { name }))
+    expect(props[prop]).toHaveBeenCalled()
+    if (args) expect(props[prop]).toHaveBeenCalledWith(...args)
+  })
+
   it('notes "No music" under the backing lane name, like a track detail', () => {
     renderTimeline({ skipBacking: true })
     const name = screen.getByText(t('timeline.backingTrack'))
@@ -133,12 +206,6 @@ describe('Timeline', () => {
     expect(second).toBeGreaterThan(first)
   })
 
-  it('adds a harmony vocal in one click', async () => {
-    const props = renderTimeline()
-    await userEvent.click(screen.getByRole('button', { name: t('timeline.addHarmony') }))
-    expect(props.onAddVocal).toHaveBeenCalledWith('harmony')
-  })
-
   it('records only on the track whose record button is pressed', async () => {
     const props = renderTimeline({ tracks: [lane({}), lane({ id: 'v2', name: 'Vocal 2' })] })
     await userEvent.click(
@@ -162,14 +229,6 @@ describe('Timeline', () => {
     expect(
       screen.getByRole('button', { name: t('track.record', { name: 'Vocal 2' }) })
     ).toBeDisabled()
-  })
-
-  it('mutes a track when its speaker is clicked', async () => {
-    const props = renderTimeline()
-    await userEvent.click(
-      screen.getByRole('button', { name: t('track.mute', { name: 'Vocal 1' }) })
-    )
-    expect(props.onMix).toHaveBeenCalledWith('v1', { muted: true })
   })
 
   it('puts a track back to its starting volume on double-click', async () => {
@@ -222,13 +281,7 @@ describe('Timeline', () => {
     expect(props.onMoveTrack).toHaveBeenCalledWith('v1', 1)
   })
 
-  it('asks to rename a track when its name is double-clicked', async () => {
-    const props = renderTimeline()
-    await userEvent.dblClick(screen.getByRole('button', { name: /^Vocal 1/ }))
-    expect(props.onRenaming).toHaveBeenCalledWith('v1')
-  })
-
-  it('saves a new track name on Enter and keeps the old one on Esc', async () => {
+  it('saves a new track name on Enter', async () => {
     const props = renderTimeline({ renamingTrackId: 'v1' })
     const field = screen.getByRole('textbox', { name: t('track.nameLabel') })
     await userEvent.clear(field)
@@ -258,28 +311,9 @@ describe('Timeline', () => {
   })
 
   it('lets the singer scroll away from the playhead while the song plays', async () => {
-    const clip = {
-      id: 'c1',
-      start: 0,
-      offset: 0,
-      duration: 300,
-      fadeIn: 0,
-      fadeOut: 0,
-      audio: null,
-      joinedBefore: false,
-      joinedAfter: false
-    }
-    const playing = (position: number) =>
-      timelineProps({ tracks: [lane({ clips: [clip] })], follow: true, position })
-    const { container, rerender } = render(<Timeline {...playing(0)} />)
-    for (let i = 0; i < 3; i++) {
-      await userEvent.click(screen.getByRole('button', { name: t('timeline.zoomIn') }))
-    }
-    // The custom scrollbar has no role to find it by.
-    const bar = container.querySelector<HTMLElement>('.timeline-scrollbar')!
-    bar.scrollLeft = 1000
-    fireEvent.scroll(bar)
-    rerender(<Timeline {...playing(1)} />)
+    const { container, rerender } = render(<Timeline {...longSong(0)} />)
+    await scrollAwayFromPlayhead(container)
+    rerender(<Timeline {...longSong(1)} />)
     // Still where they scrolled, not snapped back to the start.
     expect(screen.getByText('2:00')).toBeInTheDocument()
     expect(screen.queryByText('0:10')).not.toBeInTheDocument()
@@ -292,60 +326,17 @@ describe('Timeline', () => {
     expect(screen.getByRole('button', { name: t('timeline.zoomIn') })).toBeInTheDocument()
   })
 
-  it('jumps back to the playhead from the button beside zoom', async () => {
-    const clip = {
-      id: 'c1',
-      start: 0,
-      offset: 0,
-      duration: 300,
-      fadeIn: 0,
-      fadeOut: 0,
-      audio: null,
-      joinedBefore: false,
-      joinedAfter: false
-    }
-    const { container } = render(
-      <Timeline {...timelineProps({ tracks: [lane({ clips: [clip] })], follow: true })} />
-    )
-    for (let i = 0; i < 3; i++) {
-      await userEvent.click(screen.getByRole('button', { name: t('timeline.zoomIn') }))
-    }
-    const bar = container.querySelector<HTMLElement>('.timeline-scrollbar')!
-    bar.scrollLeft = 1000
-    fireEvent.scroll(bar)
-    await userEvent.click(screen.getByRole('button', { name: t('timeline.toPlayhead') }))
+  it.each([
+    [
+      'the button beside zoom',
+      () => userEvent.click(screen.getByRole('button', { name: t('timeline.toPlayhead') }))
+    ],
+    ['the View menu shortcut', () => fireMenu('toPlayhead')]
+  ])('jumps back to the playhead from %s', async (_, jump) => {
+    const { container } = render(<Timeline {...longSong()} />)
+    await scrollAwayFromPlayhead(container)
+    await jump()
     expect(screen.getByText('0:10')).toBeInTheDocument()
-  })
-
-  it('jumps back to the playhead from the View menu shortcut', async () => {
-    const clip = {
-      id: 'c1',
-      start: 0,
-      offset: 0,
-      duration: 300,
-      fadeIn: 0,
-      fadeOut: 0,
-      audio: null,
-      joinedBefore: false,
-      joinedAfter: false
-    }
-    const { container } = render(
-      <Timeline {...timelineProps({ tracks: [lane({ clips: [clip] })], follow: true })} />
-    )
-    for (let i = 0; i < 3; i++) {
-      await userEvent.click(screen.getByRole('button', { name: t('timeline.zoomIn') }))
-    }
-    const bar = container.querySelector<HTMLElement>('.timeline-scrollbar')!
-    bar.scrollLeft = 1000
-    fireEvent.scroll(bar)
-    act(() => (window.api as ReturnType<typeof createFakeApi>).fireMenu('toPlayhead'))
-    expect(screen.getByText('0:10')).toBeInTheDocument()
-  })
-
-  it('offers to play chords when the song has no music yet', async () => {
-    const props = renderTimeline()
-    await userEvent.click(screen.getByRole('button', { name: t('timeline.addInstrumental') }))
-    expect(props.onAddChords).toHaveBeenCalled()
   })
 
   it('shows the chords on a chords lane, which plays rather than records', () => {
@@ -415,22 +406,7 @@ describe('Timeline', () => {
     expect(props.onPickChord).toHaveBeenLastCalledWith('k1', { bar: 0, slot: 0, last: 2 })
   })
 
-  it('keeps offering instrumentals once the song has one', () => {
-    renderTimeline({ tracks: [chordsLane(), lane({})] })
-    expect(screen.getByRole('button', { name: t('timeline.addInstrumental') })).toBeEnabled()
-  })
-
-  const take = {
-    id: 'c1',
-    start: 10,
-    offset: 0,
-    duration: 30,
-    fadeIn: 0,
-    fadeOut: 0,
-    audio: null,
-    joinedBefore: false,
-    joinedAfter: false
-  }
+  const take = clip({ start: 10, duration: 30 })
 
   it('offers to line up a late take on its clip, or leave it', async () => {
     const onApplyOffer = vi.fn()
@@ -463,7 +439,7 @@ describe('Timeline', () => {
     [[{ from: 1, to: 3, bySec: 0.1 }], null, 'transport.harmonySync.timing'],
     [null, 0.5, 'transport.harmonySync.volume'],
     [[{ from: 1, to: 3, bySec: 0.1 }], 0.5, 'transport.harmonySync.both']
-  ] as const)('says on hover what syncing will change', async (phrases, volume, key) => {
+  ] as const)('says in its tooltip what syncing will change', async (phrases, volume, key) => {
     renderTimeline({
       tracks: [lane({ clips: [take] })],
       offer: {
@@ -475,7 +451,7 @@ describe('Timeline', () => {
       },
       onApplyOffer: vi.fn()
     })
-    await userEvent.hover(screen.getByRole('button', { name: t('transport.harmonySync.apply') }))
+    act(() => screen.getByRole('button', { name: t('transport.harmonySync.apply') }).focus())
     expect(await screen.findByRole('tooltip')).toHaveTextContent(t(key))
   })
 

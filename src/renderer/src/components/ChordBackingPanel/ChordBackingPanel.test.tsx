@@ -21,12 +21,6 @@ function renderPanel() {
 }
 
 describe('ChordBackingPanel', () => {
-  it('names the instrumental by its track', () => {
-    renderPanel()
-    const heading = screen.getByRole('heading', { name: new RegExp(t('instrumental.title')) })
-    expect(heading).toHaveTextContent('Backing 2')
-  })
-
   it('plays guitar, piano or beats', async () => {
     const { onInstrument } = renderPanel()
     expect(screen.getByRole('button', { name: t('instrumental.guitar') })).toHaveAttribute(

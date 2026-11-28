@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { PianoEvent } from '../../state/chords/pianoPart'
 import { nearestSample, onsetOf, renderPiano } from './piano'
+import { midiToHz } from '../pitch/pitch'
+import { tone } from '../../test/signals'
 
 const RATE = 8000
 
 // A stand-in sample: a steady sine at the note's pitch, one second long.
-const sine = (midi: number): Float32Array => {
-  const hz = 440 * 2 ** ((midi - 69) / 12)
-  return Float32Array.from({ length: RATE }, (_, n) => Math.sin((2 * Math.PI * hz * n) / RATE))
-}
+const sine = (midi: number): Float32Array => tone(midiToHz(midi), 1, 1, RATE)
 const samples = new Map([60, 63].map((m) => [m, sine(m)]))
 const note = (midi: number, time = 0, holdSec = 0.5): PianoEvent => ({
   time,

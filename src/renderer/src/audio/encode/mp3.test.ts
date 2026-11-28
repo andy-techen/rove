@@ -1,11 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { encodeMp3 } from './mp3'
+import { tone as toneAt } from '../../test/signals'
 
 const RATE = 48000
-const tone = Float32Array.from(
-  { length: RATE },
-  (_, i) => 0.3 * Math.sin((2 * Math.PI * 440 * i) / RATE)
-)
+const tone = toneAt(440, 1, 0.3, RATE)
 
 describe('encodeMp3', () => {
   it('encodes a second of stereo at about 320 kbps, reporting progress', async () => {

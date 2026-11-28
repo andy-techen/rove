@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   CHART_BPM_RANGE,
   Project,
-  Track,
   chordsTracksOf,
   createProject,
   parseProject,
@@ -76,42 +75,19 @@ describe('withChordBacking', () => {
     expect(chartOf(parseProject({ ...p, tracks: [broken] }))).toBeUndefined()
   })
 
-  it('numbers an older song’s “Chords” track with its music', () => {
-    const p = withNewTrack(song('C'), 'backing').project
-    const named = (t: Track) => (t.role === 'chords' ? { ...t, name: 'Chords' } : t)
-    const opened = parseProject({ ...p, tracks: p.tracks.map(named) })
-    expect(opened.tracks.filter((t) => t.role !== 'vocal').map((t) => t.name)).toEqual([
-      'Backing 3',
-      'Backing 2'
-    ])
-  })
-
-  it('gives an older song the tempo its chart kept', () => {
-    const p = song('C G')
-    const track = chordsTracksOf(p)[0]
-    const old = {
-      ...p,
-      tempo: undefined,
-      tracks: [{ ...track, chart: { ...track.chart, bpm: 72, beatsPerBar: 3, startSec: 1 } }]
-    }
-    const opened = parseProject(old)
-    expect(tempoOf(opened)).toEqual({ bpm: 72, beatsPerBar: 3, startSec: 1 })
-    expect(chartOf(opened)).toEqual(track.chart)
-  })
-
-  it('keeps a piano part and its feels when the song is saved and opened', () => {
+  it('keeps a piano part with its feels, and your own beats, when the song is saved and opened', () => {
+    const reopen = (saved: Project) => parseProject(JSON.parse(JSON.stringify(saved)))
     const p = song('C G')
     const id = chordsTracksOf(p)[0].id
-    const piano = withChartFeel(withInstrument(p, id, 'piano', 2), id, 1, 1, 'flowing')
-    const opened = parseProject(JSON.parse(JSON.stringify(piano)))
-    expect(chordsTracksOf(opened)[0].instrument).toBe('piano')
-    expect(chartOf(opened)?.feels).toEqual(['strum', 'flowing'])
-  })
-
-  it('moves a song-wide chart from an older song onto its chords track', () => {
-    const p = song('C G')
-    const old = { ...p, chart: chartOf(p), tracks: [{ ...chordsTracksOf(p)[0], chart: undefined }] }
-    expect(chartOf(parseProject(old))).toEqual(chartOf(p))
+    const piano = reopen(withChartFeel(withInstrument(p, id, 'piano', 2), id, 1, 1, 'flowing'))
+    expect(chordsTracksOf(piano)[0].instrument).toBe('piano')
+    expect(chartOf(piano)?.feels).toEqual(['strum', 'flowing'])
+    const hits = [{ drum: 'kick' as const, at: 0 }]
+    const drums = withInstrument(p, id, 'beats', 1)
+    const made = withBeatParts(withMyBeat(drums, id, { n: 2, hits }), id, ['mine-2'])
+    const opened = reopen(made)
+    expect(chordsTracksOf(opened)[0].beats).toEqual(chordsTracksOf(made)[0].beats)
+    expect(selectLanes(opened, {})[0].chords?.[0].name).toBe(t('beats.mine', { n: 2 }))
   })
 })
 
@@ -154,10 +130,12 @@ describe('placeAt', () => {
 })
 
 describe('a song with only chords', () => {
-  it('can be sung over and runs as long as its chart', () => {
+  it('can be sung over and runs as long as its chart or its longest instrumental', () => {
     const p = song('C G Am F')
     expect(hasMusicChoice(p, false)).toBe(true)
     expect(songEnd(p)).toBe(16)
+    const { project, track } = withChordBacking(song('C G'), C)
+    expect(songEnd(withChartBars(project, track.id, chartFromText('C G Am F D').bars))).toBe(20)
   })
 
   it('shows the chords on their own lane, with the music and before vocals', () => {
@@ -177,12 +155,6 @@ describe('a song with only chords', () => {
       [0, false],
       [1, true]
     ])
-  })
-
-  it('runs as long as its longest instrumental', () => {
-    const p = song('C G')
-    const { project, track } = withChordBacking(p, C)
-    expect(songEnd(withChartBars(project, track.id, chartFromText('C G Am F D').bars))).toBe(20)
   })
 
   it('exports the chords as they sound, ringing on past the last bar', () => {
@@ -227,34 +199,6 @@ describe('a beats instrumental', () => {
       [t('beats.main'), 0, 8],
       [t('beats.fill'), 8, 12],
       [t('beats.rest'), 12, 16]
-    ])
-  })
-
-  it('keeps your own beats when the song opens again, named on the lane', () => {
-    const p = drums(1)
-    const id = chordsTracksOf(p)[0].id
-    const hits = [{ drum: 'kick' as const, at: 0 }]
-    const made = withBeatParts(withMyBeat(p, id, { n: 2, hits }), id, ['mine-2'])
-    const opened = parseProject(JSON.parse(JSON.stringify(made)))
-    expect(chordsTracksOf(opened)[0].beats).toEqual(chordsTracksOf(made)[0].beats)
-    expect(selectLanes(opened, {})[0].chords?.[0].name).toBe(t('beats.mine', { n: 2 }))
-  })
-
-  it('reads a beat made on the older eighth-note pad as hits on those eighths', () => {
-    const p = drums(1)
-    const track = chordsTracksOf(p)[0]
-    const old = { n: 1, pads: { kick: [0, 3], snare: [4], hat: [], rim: [] } }
-    const beats = { groove: 'pop', parts: ['mine-1'], mine: [old] }
-    const opened = parseProject({ ...p, tracks: [{ ...track, beats }] })
-    expect(chordsTracksOf(opened)[0].beats?.mine).toEqual([
-      {
-        n: 1,
-        hits: [
-          { drum: 'kick', at: 0 },
-          { drum: 'kick', at: 1.5 },
-          { drum: 'snare', at: 2 }
-        ]
-      }
     ])
   })
 

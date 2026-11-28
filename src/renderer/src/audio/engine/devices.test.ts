@@ -17,20 +17,13 @@ const device = (deviceId: string): MediaDeviceInfo => ({ deviceId }) as MediaDev
 describe('pickInputDevice', () => {
   const inputs = [device('default'), device('rode'), device('builtin')]
 
-  it('keeps the preferred mic when it is still connected', () => {
-    expect(pickInputDevice(inputs, 'rode')).toBe('rode')
-  })
-
-  it('falls back to the system default when the preferred mic is gone', () => {
-    expect(pickInputDevice(inputs, 'unplugged')).toBe('default')
-  })
-
-  it('uses the first mic when there is no default entry', () => {
-    expect(pickInputDevice([device('rode'), device('builtin')], null)).toBe('rode')
-  })
-
-  it('returns null when no mic is connected', () => {
-    expect(pickInputDevice([], 'rode')).toBeNull()
+  it.each([
+    ['the preferred mic when it is still connected', inputs, 'rode', 'rode'],
+    ['the system default when the preferred mic is gone', inputs, 'unplugged', 'default'],
+    ['the first mic when there is no default entry', inputs.slice(1), null, 'rode'],
+    ['nothing when no mic is connected', [], 'rode', null]
+  ])('picks %s', (_, connected, preferred, picked) => {
+    expect(pickInputDevice(connected, preferred)).toBe(picked)
   })
 })
 
@@ -38,21 +31,13 @@ describe('playsOutLoud', () => {
   const output = (deviceId: string, label: string): MediaDeviceInfo =>
     ({ deviceId, label, kind: 'audiooutput' }) as MediaDeviceInfo
 
-  it('spots the built-in speakers as the system output', () => {
-    expect(playsOutLoud([output('default', 'Default - MacBook Pro Speakers (Built-in)')])).toBe(
-      true
-    )
-  })
-
-  it('spots a display playing the sound', () => {
-    expect(playsOutLoud([output('default', 'Default - LG UltraFine Display Audio')])).toBe(true)
-  })
-
-  it('trusts headphones and earbuds', () => {
-    expect(playsOutLoud([output('default', 'Default - External Headphones (Built-in)')])).toBe(
-      false
-    )
-    expect(playsOutLoud([output('default', 'Default - AirPods Pro')])).toBe(false)
+  it.each([
+    ['Default - MacBook Pro Speakers (Built-in)', true],
+    ['Default - LG UltraFine Display Audio', true],
+    ['Default - External Headphones (Built-in)', false],
+    ['Default - AirPods Pro', false]
+  ])('hears "%s" as out loud: %s', (label, loud) => {
+    expect(playsOutLoud([output('default', label)])).toBe(loud)
   })
 
   it('reads only the system output, not other connected devices', () => {

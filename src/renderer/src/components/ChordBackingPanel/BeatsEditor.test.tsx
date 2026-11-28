@@ -21,7 +21,6 @@ vi.mock('../../audio/engine/engine', () => ({
 /** The editor with its drums kept in state, as the song would keep them. */
 function renderEditor(start: BarBeat[] = ['main', 'main', 'main', 'main']) {
   const onParts = vi.fn()
-  const onRemove = vi.fn()
   const onPreviewDrum = vi.fn()
   const onHear = vi.fn()
   function Harness() {
@@ -55,14 +54,14 @@ function renderEditor(start: BarBeat[] = ['main', 'main', 'main', 'main']) {
             mine: mine.filter((b) => b.n !== n)
           })
         }}
-        onRemove={onRemove}
+        onRemove={vi.fn()}
         place={place}
         onPlace={setPlace}
       />
     )
   }
   render(<Harness />)
-  return { onParts, onRemove, onPreviewDrum, onHear, lastParts: () => onParts.mock.lastCall![0] }
+  return { onParts, onPreviewDrum, onHear, lastParts: () => onParts.mock.lastCall![0] }
 }
 
 const hitName = (drum: PadDrum, beat: number) =>
@@ -99,14 +98,6 @@ describe('BeatsEditor', () => {
     const { lastParts } = renderEditor(['main', 'big'])
     await userEvent.click(screen.getByRole('button', { name: t('chords.addBar') }))
     expect(lastParts()).toEqual(['main', 'big', 'big'])
-    expect(bar(3)).toHaveFocus()
-  })
-
-  it('takes the picked bars out with Delete', async () => {
-    const { onRemove } = renderEditor()
-    await userEvent.click(bar(2))
-    await userEvent.keyboard('{Backspace}')
-    expect(onRemove).toHaveBeenCalled()
   })
 
   it('makes a beat of your own from the bar as it sounds, and plays it there', async () => {

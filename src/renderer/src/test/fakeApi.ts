@@ -1,3 +1,4 @@
+import { act } from '@testing-library/react'
 import { vi } from 'vitest'
 import { KeymapOverrides, parseOverrides } from '@shared/keymap'
 import type { MenuAction } from '@shared/menu'
@@ -8,8 +9,10 @@ import { FREE_STATUS, LicenseStatus } from '@shared/license'
 import type { ChosenProject } from '@shared/project'
 import type { RoveApi } from '../../../preload/index.d'
 
+type FakeApi = RoveApi & { fireMenu(action: MenuAction): void }
+
 /** A stand-in for the preload bridge: every call is a spy, menu events can be fired. */
-export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void } {
+export function createFakeApi(): FakeApi {
   const menuListeners = new Set<(action: MenuAction) => void>()
   return {
     platform: 'darwin',
@@ -99,3 +102,7 @@ export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void 
     openLicenseOrders: vi.fn(async () => {})
   }
 }
+
+/** Sends a menu command (or its shortcut) to whatever is listening on `window.api`. */
+export const fireMenu = (action: MenuAction): void =>
+  act(() => (window.api as FakeApi).fireMenu(action))

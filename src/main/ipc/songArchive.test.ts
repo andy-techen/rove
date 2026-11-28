@@ -81,16 +81,6 @@ describe('archiveFilesOf', () => {
     ])
   })
 
-  it('includes the backing track of a version 1 project', () => {
-    const v1 = {
-      version: 1,
-      name: 'Old',
-      backingTrack: { file: 'audio/backing.mp3' },
-      tracks: [{ clips: [clip('audio/take-001.wav')] }]
-    }
-    expect(archiveFilesOf(v1)).toEqual(['audio/backing.mp3', 'audio/take-001.wav'])
-  })
-
   it('leaves out paths that reach outside the audio folder', () => {
     expect(archiveFilesOf(manifest('Song', ['../secret.wav', 'audio/ok.wav']))).toEqual([
       'audio/ok.wav'

@@ -40,11 +40,6 @@ describe('vocalClipsOf', () => {
     expect(vocalClipsOf(manifest)[0].part).toBe('lead')
   })
 
-  it('reads version 1 projects, whose tracks held only takes', () => {
-    const manifest = { version: 1, tracks: [{ clips: [clip('audio/take-001.wav')] }] }
-    expect(vocalClipsOf(manifest)).toHaveLength(1)
-  })
-
   it('counts a clip copied elsewhere on the timeline once', () => {
     const copy = { ...clip('audio/take-001.wav'), start: 30 }
     const manifest = {

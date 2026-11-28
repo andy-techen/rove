@@ -2,19 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { alignTake, estimatedLatency, learnLatency } from './latency'
 
 describe('alignTake', () => {
-  it('shifts a take earlier by the latency', () => {
-    expect(alignTake(10, 5, 0.02)).toEqual({ start: 9.98, offset: 0, duration: 5 })
-  })
-
-  it('trims the late start instead of going before the song begins', () => {
-    const aligned = alignTake(0, 5, 0.02)
-    expect(aligned.start).toBe(0)
-    expect(aligned.offset).toBeCloseTo(0.02)
-    expect(aligned.duration).toBeCloseTo(4.98)
-  })
-
-  it('leaves the take alone with no latency', () => {
-    expect(alignTake(3, 5, 0)).toEqual({ start: 3, offset: 0, duration: 5 })
+  it.each([
+    ['shifts a take earlier by the latency', 10, 0.02, [9.98, 0, 5]],
+    ['trims the late start instead of going before the song begins', 0, 0.02, [0, 0.02, 4.98]],
+    ['leaves the take alone with no latency', 3, 0, [3, 0, 5]]
+  ])('%s', (_, start, latency, [alignedStart, offset, duration]) => {
+    const aligned = alignTake(start, 5, latency)
+    expect(aligned.start).toBeCloseTo(alignedStart)
+    expect(aligned.offset).toBeCloseTo(offset)
+    expect(aligned.duration).toBeCloseTo(duration)
   })
 })
 

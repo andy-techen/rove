@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { detectKey, keyFromChroma, nearestNote, scaleOf } from './key'
+import { detectKey, keyFromChroma, nearestNote, scaleOf, transposeKey } from './key'
 import { midiToHz } from './pitch'
 
 const SR = 48000
@@ -50,5 +50,10 @@ describe('musical keys', () => {
 
   it('finds no key in silence', async () => {
     expect(await detectKey([{ channels: [new Float32Array(SR)], sampleRate: SR }])).toBeNull()
+  })
+
+  it('moves a key up or down, wrapping round the octave', () => {
+    expect(transposeKey({ tonic: 11, mode: 'major' }, 2)).toEqual({ tonic: 1, mode: 'major' })
+    expect(transposeKey({ tonic: 0, mode: 'minor' }, -1)).toEqual({ tonic: 11, mode: 'minor' })
   })
 })

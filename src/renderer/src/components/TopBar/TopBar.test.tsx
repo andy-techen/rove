@@ -31,10 +31,35 @@ function renderBar(overrides: Partial<Parameters<typeof TopBar>[0]> = {}) {
 }
 
 describe('TopBar', () => {
-  it('switches to another song when its tab is clicked', async () => {
+  it.each<{
+    does: string
+    name: string
+    prop: 'onSwitch' | 'onClose' | 'onNew' | 'onSave'
+    args?: unknown[]
+  }>([
+    {
+      does: 'switches to another song when its tab is clicked',
+      name: 'Untitled Song',
+      prop: 'onSwitch',
+      args: ['b']
+    },
+    {
+      does: 'closes a song from its tab',
+      name: t('topBar.close', { name: 'Untitled Song' }),
+      prop: 'onClose',
+      args: ['b']
+    },
+    { does: 'opens a new song from the tab bar', name: t('topBar.newSong'), prop: 'onNew' },
+    {
+      does: 'saves on demand from the button beside the save status',
+      name: t('keymap.save'),
+      prop: 'onSave'
+    }
+  ])('$does', async ({ name, prop, args }) => {
     const props = renderBar()
-    await userEvent.click(screen.getByRole('button', { name: 'Untitled Song' }))
-    expect(props.onSwitch).toHaveBeenCalledWith('b')
+    await userEvent.click(screen.getByRole('button', { name }))
+    expect(props[prop]).toHaveBeenCalled()
+    if (args) expect(props[prop]).toHaveBeenCalledWith(...args)
   })
 
   it('renames the active song on Enter, and cancels on Escape', async () => {
@@ -50,30 +75,9 @@ describe('TopBar', () => {
     expect(props.onRename).toHaveBeenCalledOnce()
   })
 
-  it('closes a song and opens a new one from the tab bar', async () => {
-    const props = renderBar()
-    await userEvent.click(
-      screen.getByRole('button', { name: t('topBar.close', { name: 'Untitled Song' }) })
-    )
-    await userEvent.click(screen.getByRole('button', { name: t('topBar.newSong') }))
-    expect(props.onClose).toHaveBeenCalledWith('b')
-    expect(props.onNew).toHaveBeenCalled()
-  })
-
-  it('shows the logo before the song tabs', () => {
-    renderBar()
-    expect(screen.getByRole('img', { name: t('app.name') })).toBeInTheDocument()
-  })
-
   it('shows that the song is saved, and when', async () => {
     renderBar()
     expect(screen.getByRole('status')).toHaveTextContent(t('save.justNow'))
-  })
-
-  it('saves on demand from the button beside the save status', async () => {
-    const props = renderBar()
-    await userEvent.click(screen.getByRole('button', { name: t('keymap.save') }))
-    expect(props.onSave).toHaveBeenCalled()
   })
 
   it('warns when the latest changes could not be saved', () => {

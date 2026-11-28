@@ -77,6 +77,8 @@ describe('key presses', () => {
 describe('who handles a shortcut', () => {
   it('leaves modified keys to the menu and single or text keys to the app', () => {
     expect(handledInApp('save', 'CmdOrCtrl+S')).toBe(false)
+    // Through the menu, so text fields keep ⌘A too.
+    expect(handledInApp('selectAll', 'CmdOrCtrl+A')).toBe(false)
     expect(handledInApp('save', 'Shift+S')).toBe(true)
     expect(handledInApp('goToStart', 'CmdOrCtrl+Left')).toBe(true)
     // Not in the menu bar, so always the app's.
@@ -106,7 +108,8 @@ describe('rebinding', () => {
       save: 'Shift+Ctrl+S',
       deleteClip: 'CmdOrCtrl+Q',
       playPause: 'Alt+P',
-      zoomFit: 'Alt+P'
+      zoomFit: 'Alt+P',
+      deselect: 'S'
     }
     expect(parseOverrides(stored)).toEqual({ split: 'Alt+K' })
     expect(parseOverrides('junk')).toEqual({})
@@ -126,16 +129,5 @@ describe('keys that type', () => {
       expect(checkAccelerator(keymap, 'split', keys)).toEqual({ kind: 'typing' })
     }
     expect(checkAccelerator(keymap, 'split', 'Alt+S')).toBeNull()
-  })
-
-  it('drops a saved single-letter binding, so the new default applies', () => {
-    expect(parseOverrides({ split: 'S' })).toEqual({})
-  })
-})
-
-describe('select all', () => {
-  it('is ⌘A, and goes through the menu so text fields keep it too', () => {
-    expect(KEYMAP.selectAll.accelerator).toBe('CmdOrCtrl+A')
-    expect(handledInApp('selectAll', 'CmdOrCtrl+A')).toBe(false)
   })
 })

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
@@ -46,9 +46,9 @@ describe('TransportBar', () => {
     expect(onStop).toHaveBeenCalled()
   })
 
-  it('shows the stop shortcut on hover', async () => {
+  it('shows the stop shortcut in its tooltip', async () => {
     renderBar()
-    await userEvent.hover(screen.getByRole('button', { name: t('transport.stopPlayback') }))
+    act(() => screen.getByRole('button', { name: t('transport.stopPlayback') }).focus())
     expect(await screen.findByRole('tooltip')).toHaveTextContent('⌘.')
   })
 })

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { midiToHz } from '../pitch/pitch'
 import { pluck, renderStrums } from './guitar'
+import { parabolicOffset } from '../dsp/peakFit'
 
 const RATE = 48000
 
@@ -15,9 +16,7 @@ function pitchOf(samples: Float32Array, expectedHz: number): number {
   const guess = RATE / expectedHz
   let best = Math.round(guess * 0.9)
   for (let lag = best; lag <= Math.round(guess * 1.1); lag++) if (corr(lag) > corr(best)) best = lag
-  // Between samples: fit a parabola through the peak and its neighbours.
-  const [a, b, c] = [corr(best - 1), corr(best), corr(best + 1)]
-  return RATE / (best + (0.5 * (a - c)) / (a - 2 * b + c))
+  return RATE / (best + parabolicOffset(corr(best - 1), corr(best), corr(best + 1), 'peak'))
 }
 
 const cents = (hz: number, target: number): number => 1200 * Math.log2(hz / target)

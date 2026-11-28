@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
+import { tone as toneAt } from '../../test/signals'
 
 interface Processor {
   process(
@@ -41,11 +42,7 @@ const rms = (x: Float32Array, from: number, to: number): number => {
   return Math.sqrt(sum / (to - from))
 }
 
-const tone = (amp: number, seconds: number): Float32Array =>
-  Float32Array.from(
-    { length: seconds * SR },
-    (_, i) => amp * Math.sin((2 * Math.PI * 220 * i) / SR)
-  )
+const tone = (amp: number, seconds: number): Float32Array => toneAt(220, seconds, amp, SR)
 
 describe('gate worklet', () => {
   it('lets singing through untouched', () => {

@@ -79,8 +79,7 @@ describe('ChartEditor', () => {
     await userEvent.click(screen.getByRole('button', { name: t('chords.raiseKey') }))
     expect(lastBars()).toEqual(['C♯', 'B♭m F♯', '', 'A♭7'])
     await userEvent.click(screen.getByRole('button', { name: t('chords.lowerKey') }))
-    await userEvent.click(screen.getByRole('button', { name: t('chords.lowerKey') }))
-    expect(lastBars()).toEqual(['B', 'A♭m E', '', 'F♯7'])
+    expect(lastBars()).toEqual(['C', 'Am F', '', 'G7'])
   })
 
   it('fills a run of shift-clicked bars with one chord', async () => {
@@ -126,14 +125,6 @@ describe('ChartEditor', () => {
     expect(picker().getByText(half)).toBeInTheDocument()
     await userEvent.click(keyChord('G'))
     expect(lastBars()[0]).toBe('C G')
-  })
-
-  it('merges a split bar back when both halves are the same chord', async () => {
-    const { lastBars } = renderEditor('| C G | F |')
-    const second = t('chords.halfLabel', { n: 1, k: 2, chord: 'G' })
-    await userEvent.click(screen.getByRole('button', { name: second }))
-    await userEvent.click(keyChord('C'))
-    expect(lastBars()[0]).toBe('C')
   })
 
   it('lets a bar keep the chord before it playing', async () => {

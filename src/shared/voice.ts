@@ -89,15 +89,13 @@ const isSeconds = (n: unknown): n is number => typeof n === 'number' && Number.i
  * clip copied to another spot on the timeline counts once: it's the same singing.
  */
 export function vocalClipsOf(manifest: unknown): VocalClip[] {
-  const m = manifest as { version?: unknown; tracks?: unknown } | null
+  const m = manifest as { tracks?: unknown } | null
   if (!m || !Array.isArray(m.tracks)) return []
-  // Version 1 stacked every take on one lead track and kept the backing track apart.
-  const legacy = m.version === 1
   const clips: VocalClip[] = []
   const seen = new Set<string>()
   for (const track of m.tracks as unknown[]) {
     const tr = track as { role?: unknown; part?: unknown; clips?: unknown } | null
-    if (!tr || !Array.isArray(tr.clips) || (!legacy && tr.role !== 'vocal')) continue
+    if (!tr || !Array.isArray(tr.clips) || tr.role !== 'vocal') continue
     const part = tr.part === 'harmony' ? 'harmony' : 'lead'
     for (const clip of tr.clips as unknown[]) {
       const c = clip as { file?: unknown; offset?: unknown; duration?: unknown } | null

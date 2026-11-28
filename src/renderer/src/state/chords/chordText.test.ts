@@ -41,12 +41,6 @@ describe('chartFromText', () => {
   it('reads bars between lines, with chords in a bar sharing it', () => {
     expect(names(chartFromText('| C | F G | % | Am |').bars)).toEqual(['C', 'F G', '', 'Am'])
   })
-
-  it('lists what it could not read and leaves that bar carrying on', () => {
-    const { bars, unread } = chartFromText('C Hm G')
-    expect(names(bars)).toEqual(['C', '', 'G'])
-    expect(unread).toEqual([{ name: 'Hm', bar: 1 }])
-  })
 })
 
 describe('chartFromText with a chord sheet from the web', () => {
@@ -104,8 +98,9 @@ describe('chartFromText with a chord sheet from the web', () => {
     expect(sheet('C   (G)   Am\nsome words here\nF (C/E)')).toEqual(['C', 'G', 'Am', 'F', 'C/E'])
   })
 
-  it('says which bar each chord it couldn’t read is in', () => {
-    const { unread } = chartFromText('C   G\nla la la\nAm  Hm7#11  F')
+  it('says which bar each chord it couldn’t read is in, leaving that bar carrying on', () => {
+    const { bars, unread } = chartFromText('C   G\nla la la\nAm  Hm7#11  F')
+    expect(names(bars)).toEqual(['C', 'G', 'Am', '', 'F'])
     expect(unread).toEqual([{ name: 'Hm7#11', bar: 3 }])
   })
 

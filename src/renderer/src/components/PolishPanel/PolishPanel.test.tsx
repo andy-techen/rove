@@ -1,9 +1,11 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import { defaultPolish } from '../../audio/polish/polish'
 import { PolishPanel } from '.'
+
+const onHide = vi.fn()
 
 function renderPanel(polish = defaultPolish('lead'), canTune = true) {
   const onChange = vi.fn()
@@ -15,28 +17,22 @@ function renderPanel(polish = defaultPolish('lead'), canTune = true) {
       locked={false}
       canTune={canTune}
       onChange={onChange}
-      onHide={vi.fn()}
+      onHide={onHide}
     />
   )
   return onChange
+}
+
+async function tooltipOf(control: HTMLElement) {
+  act(() => control.focus())
+  return screen.findByRole('tooltip')
 }
 
 const slider = (name: string): HTMLElement => screen.getByRole('slider', { name })
 
 describe('PolishPanel', () => {
   it('hides itself from the button in its header', async () => {
-    const onHide = vi.fn()
-    render(
-      <PolishPanel
-        trackName="Vocal 1"
-        part="lead"
-        polish={defaultPolish('lead')}
-        locked={false}
-        canTune
-        onChange={vi.fn()}
-        onHide={onHide}
-      />
-    )
+    renderPanel()
     await userEvent.click(screen.getByRole('button', { name: t('panel.hide') }))
     expect(onHide).toHaveBeenCalled()
   })
@@ -84,12 +80,8 @@ describe('PolishPanel', () => {
   it('explains each Advanced setting behind a help tip', async () => {
     renderPanel()
     await userEvent.click(screen.getByRole('button', { name: t('polish.advanced') }))
-    await userEvent.hover(screen.getByRole('button', { name: t('polish.paramHints.compRatio') }))
-    await waitFor(() =>
-      expect(screen.getAllByRole('tooltip').map((tip) => tip.textContent)).toContain(
-        t('polish.paramHints.compRatio')
-      )
-    )
+    const help = screen.getByRole('button', { name: t('polish.paramHints.compRatio') })
+    expect(await tooltipOf(help)).toHaveTextContent(t('polish.paramHints.compRatio'))
   })
 
   it('ignores a typed value that is not a number', async () => {
@@ -110,10 +102,8 @@ describe('PolishPanel', () => {
 
   it('says what the switch will do from where it is', async () => {
     renderPanel({ ...defaultPolish('lead'), enabled: false })
-    await userEvent.hover(screen.getByRole('switch', { name: t('polish.switchLabel') }))
-    await waitFor(() =>
-      expect(screen.getByRole('tooltip')).toHaveTextContent(t('polish.turnOnTitle'))
-    )
+    const toggle = screen.getByRole('switch', { name: t('polish.switchLabel') })
+    expect(await tooltipOf(toggle)).toHaveTextContent(t('polish.turnOnTitle'))
   })
 
   it('puts one control back to its suggested value', async () => {

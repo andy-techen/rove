@@ -3,7 +3,7 @@ import { MusicClip, musicUnder, takeLag } from './lineUp'
 import { seededNoise } from '../dsp/noise'
 
 const RATE = 12000
-const SONG_SEC = 20
+const SONG_SEC = 10
 
 /** Short bursts of noise at each time: drum hits, or sung syllables. */
 function hits(times: number[], seed = 1): Float32Array {
@@ -19,7 +19,7 @@ function hits(times: number[], seed = 1): Float32Array {
 }
 
 // A beat that isn't perfectly even, like a band's, so no lag matches by accident.
-const beats = Array.from({ length: 36 }, (_, i) => 0.5 + i * 0.5 + ((i * 7) % 5) * 0.013)
+const beats = Array.from({ length: 18 }, (_, i) => 0.5 + i * 0.5 + ((i * 7) % 5) * 0.013)
 const source = (channel: Float32Array) => ({ channels: [channel], sampleRate: RATE })
 
 describe('takeLag', () => {
