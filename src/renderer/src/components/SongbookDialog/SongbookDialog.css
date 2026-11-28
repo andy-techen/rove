@@ -34,6 +34,10 @@
   overflow-y: auto;
   padding: var(--songbook-ring-room);
   margin: calc(-1 * var(--songbook-ring-room));
+  /* No room above the first row, so the gap under the search stays the same as rows
+     scroll past it. Rings in the rows are drawn to fit inside them. */
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .songbook-note {
@@ -90,6 +94,12 @@
   font-size: var(--font-size-ui);
   text-align: left;
   cursor: pointer;
+}
+
+/* The open button fills its row, so its ring goes just inside the row's edge, where
+   scrolling can't clip it. */
+:root:not([data-input='pointer']) .songbook-open:focus-visible {
+  outline-offset: calc(-1 * var(--songbook-ring-room));
 }
 
 .songbook-title {
@@ -169,8 +179,6 @@
   overflow-y: auto;
   padding: var(--songbook-ring-room);
   margin: calc(-1 * var(--songbook-ring-room));
-  /* No room above the first row, so the gap under the search stays the same as rows
-     scroll past it. Only the buttons inside a row take focus, and their rings fit in it. */
   margin-top: 0;
   padding-top: 0;
 }
