@@ -869,13 +869,17 @@
       "mixing": "Mixing…",
       "levelling": "Setting the volume…",
       "tuning": "Tuning vocals…",
-      "encoding": "Encoding… {percent}%",
+      "encoding": "Making your file…",
       "saving": "Saving…"
     },
-    "done": "Saved “{file}”.",
+    "timeLeft": {
+      "soon": "Almost done",
+      "sec": "About {count} sec left",
+      "min": "About {count} min left"
+    },
+    "savedIn": "Saved in {folder}",
     "reveal": "Show in Finder",
     "share": "Share…",
-    "shareHelp": "Send it to your phone with AirDrop, or to Messages, Mail or Photos.",
     "close": "Done",
     "failed": "Couldn't export the song. Try again, or pick another folder."
   },

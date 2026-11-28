@@ -1,4 +1,3 @@
-import { PERCENT } from '@shared/units'
 import { useState } from 'react'
 import { t } from '@shared/copy'
 import { EXPORT_FORMATS, ExportFormat } from '@shared/exportFormats'
@@ -10,6 +9,7 @@ import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
 import { HelpTip } from '../ui/HelpTip'
 import { VideoPicture } from './VideoPicture'
+import { ExportStatus } from './ExportStatus'
 import './ExportDialog.css'
 
 const LOUDNESS: ExportLoudness[] = ['streaming', 'asMixed']
@@ -32,20 +32,9 @@ interface Props {
   onShare(): void
   /** Saves the whole song as one .rove project file, when that's the format chosen. */
   onExportProject(): void
+  /** Forgets the last export, so changed options can be exported again. */
+  onReset(): void
   onClose(): void
-}
-
-function statusText(state: ExportState): string | null {
-  if (state.status === 'failed') return t('export.failed')
-  if (state.status === 'done') {
-    return t('export.done', { file: state.filePath.split(/[\\/]/).pop() ?? state.filePath })
-  }
-  if (state.status !== 'working') return null
-  const { stage } = state
-  if (stage.stage === 'encoding') {
-    return t('export.stages.encoding', { percent: Math.round(stage.progress * PERCENT) })
-  }
-  return t(`export.stages.${stage.stage}`)
 }
 
 /** Choose a format and loudness, then export the song's mix to a file. */
@@ -56,13 +45,24 @@ export function ExportDialog({
   onReveal,
   onShare,
   onExportProject,
+  onReset,
   onClose
 }: Props): React.JSX.Element {
-  const [format, setFormat] = useState<ExportChoice>('wav')
-  const [loudness, setLoudness] = useState<ExportLoudness>('streaming')
-  const [video, setVideo] = useState<VideoOptions>(DEFAULT_VIDEO)
+  const [format, setFormatState] = useState<ExportChoice>('wav')
+  const [loudness, setLoudnessState] = useState<ExportLoudness>('streaming')
+  const [video, setVideoState] = useState<VideoOptions>(DEFAULT_VIDEO)
   const working = state.status === 'working'
-  const status = statusText(state)
+  // A finished (or failed) export belongs to the options it ran with: changing one
+  // brings Export back for the new choice.
+  const changing =
+    <T,>(set: (value: T) => void) =>
+    (value: T): void => {
+      if (state.status === 'done' || state.status === 'failed') onReset()
+      set(value)
+    }
+  const setFormat = changing(setFormatState)
+  const setLoudness = changing(setLoudnessState)
+  const setVideo = changing(setVideoState)
 
   return (
     <Dialog
@@ -130,17 +130,11 @@ export function ExportDialog({
         </fieldset>
       )}
 
-      <p
-        className={state.status === 'failed' ? 'export-status error' : 'export-status'}
-        aria-live="polite"
-      >
-        {status}
-      </p>
+      <ExportStatus state={state} />
 
       <footer className="export-actions">
         {state.status === 'done' ? (
           <>
-            <HelpTip text={t('export.shareHelp')} />
             <Button variant="secondary" onClick={onShare}>
               {t('export.share')}
             </Button>

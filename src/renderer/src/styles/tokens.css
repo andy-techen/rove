@@ -111,6 +111,7 @@
   --size-logo-word-lg: 40px;
   --size-progress-ring: 16px;
   --size-progress-ring-width: 3px;
+  --size-progress-bar: 6px;
   --size-scrollbar-inset: 3px;
   --size-playhead: 2px;
   --size-switch-width: 30px;
@@ -200,6 +201,8 @@
   --duration-fast: 120ms;
   /* Something arriving, like a message sliding in. */
   --duration-gentle: 200ms;
+  /* One breath of a busy bar that can't say how far along it is. */
+  --duration-busy: 1.4s;
   --opacity-disabled: 0.4;
   --opacity-dimmed: 0.5;
   --opacity-muted-clip: 0.4;

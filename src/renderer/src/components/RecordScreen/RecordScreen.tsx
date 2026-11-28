@@ -466,6 +466,7 @@ export function RecordScreen({
           onStart={(options) => void exporter.start(options)}
           onReveal={exporter.reveal}
           onShare={exporter.share}
+          onReset={exporter.reset}
           onExportProject={() => {
             setExportOpen(false)
             exportProject()

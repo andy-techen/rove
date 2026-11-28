@@ -112,15 +112,88 @@
 }
 
 .export-status {
-  min-height: calc(var(--font-size-ui) * var(--line-height));
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
   margin-top: var(--space-7);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
   font-size: var(--font-size-ui);
+}
+
+.export-status.working {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.export-status.error {
+  background: none;
+  border: var(--size-hairline) solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+.export-status-icon {
+  display: flex;
+  flex: none;
+  color: var(--color-good);
+}
+
+.export-status-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.export-status-name {
+  overflow: hidden;
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.export-status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.export-status-detail {
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text-muted);
 }
 
-/* A failure keeps the danger colour; only progress and success are quiet. */
-.export-status.error {
-  color: var(--color-danger);
+.export-progress {
+  height: var(--size-progress-bar);
+  border-radius: var(--radius-pill);
+  background:
+    linear-gradient(to right, var(--color-accent) calc(var(--progress) * 100%), transparent 0),
+    var(--color-border);
+}
+
+/* Before encoding there's no telling how far along it is, so the whole bar breathes. */
+.export-progress.busy {
+  background: var(--color-accent);
+  animation: export-busy var(--duration-busy) ease-in-out infinite alternate;
+}
+
+@keyframes export-busy {
+  from {
+    opacity: var(--opacity-dimmed);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .export-progress.busy {
+    opacity: var(--opacity-dimmed);
+    animation: none;
+  }
 }
 
 .export-actions {
@@ -128,5 +201,5 @@
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-4);
-  margin-top: var(--space-4);
+  margin-top: var(--space-7);
 }

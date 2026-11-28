@@ -8,6 +8,8 @@ import { Song } from './useSong'
 import { ChordPart } from '../chords/chart/chart'
 import { SongLyrics } from '../lyrics/lyrics'
 import { VideoOptions, VideoScene } from '../../audio/export/videoFrame'
+import { MS_PER_SEC } from '@shared/units'
+import { TimeLeft, timeLeft } from './timeLeft'
 
 export interface ExportOptions {
   format: ExportFormat
@@ -34,7 +36,12 @@ async function sceneOf(
 
 export type ExportState =
   | { status: 'idle' }
-  | { status: 'working'; stage: ExportStage | { stage: 'tuning' } | { stage: 'saving' } }
+  | {
+      status: 'working'
+      stage: ExportStage | { stage: 'tuning' } | { stage: 'saving' }
+      /** How long encoding has left, once there's enough progress to tell. */
+      timeLeft?: TimeLeft | null
+    }
   | { status: 'done'; filePath: string }
   | { status: 'failed' }
 
@@ -67,9 +74,13 @@ export function useExport(song: Song, parts: ChordPart[]): Exporter {
         const processed = await processProject(open.data, song.audio, key, plan)
         const { tracks, lengthSec } = mixdownOf(open.data, song.audio, processed, parts)
         const video = options.video && (await sceneOf(options.video, open.data.lyrics))
-        const bytes = await exportMix(tracks, lengthSec, { ...options, video }, (stage) =>
-          setState({ status: 'working', stage })
-        )
+        let encodingSince = 0
+        const bytes = await exportMix(tracks, lengthSec, { ...options, video }, (stage) => {
+          if (stage.stage !== 'encoding') return setState({ status: 'working', stage })
+          if (stage.progress === 0) encodingSince = performance.now()
+          const elapsedSec = (performance.now() - encodingSince) / MS_PER_SEC
+          setState({ status: 'working', stage, timeLeft: timeLeft(stage.progress, elapsedSec) })
+        })
         setState({ status: 'working', stage: { stage: 'saving' } })
         await window.api.writeExport(filePath, bytes)
         setState({ status: 'done', filePath })

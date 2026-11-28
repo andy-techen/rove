@@ -28,6 +28,7 @@ const renderDialog = (
     onReveal: vi.fn(),
     onShare: vi.fn(),
     onExportProject: vi.fn(),
+    onReset: vi.fn(),
     onClose: vi.fn()
   }
   render(<ExportDialog {...props} />)
@@ -86,17 +87,30 @@ describe('ExportDialog', () => {
     expect(props.onStart).toHaveBeenCalledWith({ format: 'mp3', loudness: 'asMixed' })
   })
 
-  it('shows progress while working', () => {
-    renderDialog({ status: 'working', stage: { stage: 'encoding', progress: 0.42 } })
-    expect(screen.getByText(t('export.stages.encoding', { percent: 42 }))).toBeInTheDocument()
+  it('shows how far along it is and how long is left while working', () => {
+    renderDialog({
+      status: 'working',
+      stage: { stage: 'encoding', progress: 0.42 },
+      timeLeft: { kind: 'min', count: 2 }
+    })
+    const bar = screen.getByRole('progressbar', { name: t('export.stages.encoding') })
+    expect(bar).toHaveAttribute('aria-valuenow', '42')
+    expect(screen.getByText(t('export.timeLeft.min', { count: 2 }))).toBeInTheDocument()
     expect(screen.getByRole('button', { name: t('export.start') })).toBeDisabled()
   })
 
-  it('names the saved file and offers to show it in Finder', async () => {
+  it('names the saved file and its folder, and offers to show it in Finder', async () => {
     const props = renderDialog({ status: 'done', filePath: '/Music/My Song.wav' })
-    expect(screen.getByText(t('export.done', { file: 'My Song.wav' }))).toBeInTheDocument()
+    expect(screen.getByText('My Song.wav')).toBeInTheDocument()
+    expect(screen.getByText(t('export.savedIn', { folder: 'Music' }))).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: t('export.reveal') }))
     expect(props.onReveal).toHaveBeenCalled()
+  })
+
+  it('goes back to exporting when an option changes after saving', async () => {
+    const props = renderDialog({ status: 'done', filePath: '/Music/My Song.wav' })
+    await chooseVideo()
+    expect(props.onReset).toHaveBeenCalled()
   })
 
   it('offers to share the saved file, to send it to a phone with AirDrop', async () => {
