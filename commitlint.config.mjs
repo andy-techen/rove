@@ -3,23 +3,14 @@ const SCOPES = [
   'record',
   'timeline',
   'polish',
-  'pitch',
   'music',
-  'chords',
   'lyrics',
-  'voice',
   'export',
   'songbook',
-  'explore',
-  'catalog',
-  'settings',
-  'premium',
-  'keys',
-  'menu',
+  'app',
   'main',
   'ui',
-  'site',
-  'deps'
+  'site'
 ]
 
 export default {
