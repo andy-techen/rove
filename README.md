@@ -26,9 +26,8 @@
 
 ## About
 
-Rove is a desktop app for people who love to sing: in the car, at karaoke, in a choir,
-alone in their room. It's made for a recording you're proud of, without having to
-become an audio engineer.
+Rove is a desktop app for people who love to sing. It's made for a recording you're
+proud of, without having to become an audio engineer.
 
 ## Features
 
