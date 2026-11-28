@@ -3,15 +3,9 @@ import { t } from '@shared/copy'
 import { FONTS, FontId, FontScript, fontFamilyOf } from '../../audio/export/videoFonts'
 import { Button } from '../ui/Button'
 import { Tooltip } from '../ui/Tooltip'
+import { BELOW_TOP, BELOW_TOP_WITH_FONTS, SHIFT_EPSILON_PX } from './constants'
 
-// Text this near the top (as a share of the frame) gets its bar below it instead of
-// above, where it would run off the picture. With the fonts open the bar is taller.
-const BELOW_TOP = 0.12
-const BELOW_TOP_WITH_FONTS = 0.4
 const SCRIPTS: FontScript[] = ['latin', 'chinese']
-// Below this the bar's slide is rounding, not a real change; it stops the layout effect
-// re-rendering for nothing.
-const SHIFT_EPSILON_PX = 0.5
 
 interface Props {
   /** The top of the text the bar belongs to, as a share of the frame's height. */

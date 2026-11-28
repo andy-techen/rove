@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { SongLyrics } from '../../state/lyrics/lyrics'
-import {
-  DEFAULT_LYRICS_STYLE,
-  LYRICS_SIZES,
-  MARGIN,
-  VIDEO_HEIGHT,
-  VIDEO_WIDTH,
-  layoutLyrics
-} from './videoFrame'
+import { DEFAULT_LYRICS_STYLE, layoutLyrics } from './videoFrame'
+import { LYRICS_SIZES, MARGIN, VIDEO_HEIGHT, VIDEO_WIDTH } from './constants'
 
 /** A canvas stand-in where every letter is half as wide as the font is tall. */
 const fakeCanvas = () => {

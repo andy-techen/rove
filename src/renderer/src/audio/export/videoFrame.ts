@@ -15,10 +15,27 @@ import {
   placeBlock,
   wrapText
 } from './videoLayout'
-
-/** Portrait 1080p: what Reels, Shorts, TikTok and Stories all take full-screen. */
-export const VIDEO_WIDTH = 1080
-export const VIDEO_HEIGHT = 1920
+import {
+  CLEAR,
+  DARK_INK,
+  FRAME,
+  LIGHT_INK,
+  LINE_HEIGHT,
+  LYRICS_MIN_WIDTH,
+  LYRICS_TOP,
+  MARGIN,
+  NEXT_LYRIC_ALPHA,
+  NEXT_LYRIC_GAP_SCALE,
+  NEXT_LYRIC_SCALE,
+  SHADE,
+  SHADE_BOTTOM,
+  SHADOW_BLUR,
+  VIDEO_HEIGHT,
+  VIDEO_WIDTH,
+  WEIGHT_LYRIC,
+  WEIGHT_WORDS,
+  WORDS_MIN_WIDTH
+} from './constants'
 
 /**
  * The blank backgrounds on offer. Canvas can't read CSS tokens per theme, and a video
@@ -36,9 +53,6 @@ export const BACKGROUNDS = {
 } as const
 export type BackgroundId = keyof typeof BACKGROUNDS
 export const BACKGROUND_IDS = Object.keys(BACKGROUNDS) as BackgroundId[]
-
-/** What the colour picker starts on before the singer picks: a dusky evening blue. */
-export const FIRST_PICKED_COLOUR = '#4f6d8f'
 
 /** Where new words go from the add button: centred, near the top. */
 export const DEFAULT_TEXT_POSITION: Position = { x: 0.5, y: 1 / 6 }
@@ -112,33 +126,6 @@ export interface WordsLayout {
   nudge: number
 }
 
-// Text on a photo is cream with a soft shadow, and the lyrics sit over a soft shade, so
-// they read on any picture. On a colour, it's warm brown or cream, whichever reads.
-const LIGHT_INK = '#fffaf2'
-const DARK_INK = '#2a211b'
-const SHADE = 'rgba(20, 14, 8, 0.5)'
-const CLEAR = 'rgba(20, 14, 8, 0)'
-// How far the lyrics' shade reaches up from the bottom.
-const SHADE_BOTTOM = 0.45
-const SHADOW_BLUR = 18
-
-// Sizes in video pixels; a phone shows the frame about a third this size.
-export const MARGIN = 120
-export const WORDS_SIZE = 72
-/** The sizes words step through: a small credit line up to a big title. */
-export const WORDS_SIZES = [40, 56, 72, 96, 128] as const
-/** The sizes the sung line steps through; the next line is set smaller in proportion. */
-export const LYRICS_SIZES = [48, 56, 64, 80, 96] as const
-const NEXT_LYRIC_SCALE = 0.7
-// The gap between the sung line and the next, as a share of the sung line's size.
-const NEXT_LYRIC_GAP_SCALE = 0.55
-const LYRICS_TOP = 1300
-// The narrowest the lyrics' lines may get when they're moved near an edge.
-const LYRICS_MIN_WIDTH = 360
-// The narrowest words may be sized to: room for a short word in the smallest size.
-const WORDS_MIN_WIDTH = 160
-const FRAME = { width: VIDEO_WIDTH, height: VIDEO_HEIGHT, margin: MARGIN }
-
 /** Lyrics start centred under the middle of the picture, in the app's own font. */
 export const DEFAULT_LYRICS_STYLE: LyricsStyle = {
   font: DEFAULT_FONT,
@@ -155,10 +142,6 @@ export function lyricsEdge(align: Align): number {
   if (align === 'right') return (VIDEO_WIDTH - MARGIN) / VIDEO_WIDTH
   return 0.5
 }
-export const LINE_HEIGHT = 1.25
-const NEXT_LYRIC_ALPHA = 0.65
-export const WEIGHT_WORDS = 700
-const WEIGHT_LYRIC = 600
 
 /**
  * Where a line's baseline goes, below the top of its slot, so its capitals sit in the

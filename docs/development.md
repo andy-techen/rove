@@ -131,7 +131,7 @@ Import components through their folder (`'../Timeline'`), not deep paths.
     `CENTS_PER_SEMITONE`, `PITCH_CLASSES`) are in `src/shared/units.ts`. Import them;
     never declare one again.
   - **An area's values** (its thresholds, limits, defaults and tuning) are in that
-    area's `constants.ts`: `audio/pitch/constants.ts`, `state/chords/constants.ts`,
+    area's `constants.ts`: `audio/pitch/constants.ts`, `state/chords/chart/constants.ts`,
     `components/Timeline/constants.ts`. Group them under short comments by what they
     tune.
   - **Values both processes need** are in `src/shared/constants.ts`.

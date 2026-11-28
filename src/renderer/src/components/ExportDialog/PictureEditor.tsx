@@ -5,12 +5,11 @@ import {
   BACKGROUNDS,
   BACKGROUND_IDS,
   DEFAULT_TEXT_POSITION,
-  FIRST_PICKED_COLOUR,
   TextBox,
   VideoOptions,
-  WORDS_SIZE,
   inkOn
 } from '../../audio/export/videoFrame'
+import { FIRST_PICKED_COLOUR, WORDS_SIZE } from '../../audio/export/constants'
 import { DEFAULT_FONT } from '../../audio/export/videoFonts'
 import { SongLyrics, isTimed } from '../../state/lyrics/lyrics'
 import { Command, onCommand, typingIn } from '../../state/commands/commands'
@@ -28,13 +27,8 @@ import { IconButton } from '../ui/IconButton'
 import { Tooltip } from '../ui/Tooltip'
 import { PictureStage } from './PictureStage'
 import { Picture, sceneFor, useDrawing } from './videoHooks'
+import { NEW_WORDS_LOWEST, NEW_WORDS_STEP, THUMBNAIL_SIZE } from './constants'
 import './PictureEditor.css'
-
-// Canvas pixels for the picture's swatch: sharp on a Retina screen at swatch size.
-const THUMBNAIL_SIZE = 64
-// Each new set of words starts a little lower than the last, so they don't stack up.
-const NEW_WORDS_STEP = 1 / 6
-const NEW_WORDS_LOWEST = 5 / 6
 
 interface Props {
   value: VideoOptions

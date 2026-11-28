@@ -34,7 +34,8 @@ import { LiveWaveform } from './Waveform'
 import { PeakAccumulator } from './timelineMath'
 import type { TakeOffer } from '../../state/transport/useTransport'
 import { useTimelineView } from './useTimelineView'
-import { CLIP_HEIGHT, CLIP_INSET, DRAG_THRESHOLD_PX, LANE_HEIGHT, SNAP_PX } from './constants'
+import { DRAG_THRESHOLD_PX } from '../../state/ui/constants'
+import { CLIP_HEIGHT, CLIP_INSET, LANE_HEIGHT, SNAP_PX } from './constants'
 import './Timeline.css'
 
 export interface LiveRecording {

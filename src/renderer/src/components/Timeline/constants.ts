@@ -6,9 +6,6 @@ export const CLIP_INSET = 6
 export const CLIP_HEIGHT = LANE_HEIGHT - CLIP_INSET * 2
 
 // Pointer gestures.
-// Movement below this many pixels is a click, not a drag: on a clip, or on the
-// timeline before a selection box starts.
-export const DRAG_THRESHOLD_PX = 4
 // A clip edge this close (on screen) to something worth lining up with snaps onto it.
 export const SNAP_PX = 8
 

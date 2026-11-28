@@ -8,8 +8,8 @@ import { scheduleClips } from '../mix/playback'
 import { dbToGain } from '../dsp/units'
 import { encodeWav } from '../encode/wav'
 import { encodeMp4 } from '../encode/mp4'
-import { VIDEO_HEIGHT, VIDEO_WIDTH, VideoScene, drawVideoFrame, frameKey } from './videoFrame'
-import { STREAMING_LUFS, PEAK_CEILING_DB, STEREO } from './constants'
+import { VideoScene, drawVideoFrame, frameKey } from './videoFrame'
+import { PEAK_CEILING_DB, STEREO, STREAMING_LUFS, VIDEO_HEIGHT, VIDEO_WIDTH } from './constants'
 
 export type { ExportFormat }
 export type ExportLoudness = 'streaming' | 'asMixed'

@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { ClipGestureKind } from '../../state/editing/clipGestures'
 import { SelectMode, selectMode } from '../../state/editing/trackSelection'
 import type { Props as ClipProps } from './ClipView'
-import { DRAG_THRESHOLD_PX } from './constants'
+import { DRAG_THRESHOLD_PX } from '../../state/ui/constants'
 
 /**
  * Pointer handling for anything that drags a clip: the clip body and its handles, or the

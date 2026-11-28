@@ -2,6 +2,7 @@ import { RefObject, useEffect, useRef, useState } from 'react'
 import { VideoOptions, VideoScene } from '../../audio/export/videoFrame'
 import { FONT_IDS, FontId, installedFonts } from '../../audio/export/videoFonts'
 import { SongLyrics, lineStart } from '../../state/lyrics/lyrics'
+import { PROBE_PX } from './constants'
 
 /** The singer's own picture, kept while the export dialog is open so they can switch back. */
 export interface Picture {
@@ -72,8 +73,6 @@ export function previewTime(lyrics: SongLyrics | null): number {
   return (first && lineStart(first, lyrics?.offsetSec ?? 0)) ?? 0
 }
 
-// Big enough that a font's own widths show over rounding.
-const PROBE_PX = 48
 let installed: FontId[] | null = null
 
 /** The fonts this machine has, found once: fonts don't come and go while Rove runs. */

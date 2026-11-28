@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import { t } from '@shared/copy'
-import {
-  VIDEO_HEIGHT,
-  VIDEO_WIDTH,
-  VideoOptions,
-  drawVideoFrame
-} from '../../audio/export/videoFrame'
+import { VideoOptions, drawVideoFrame } from '../../audio/export/videoFrame'
+import { VIDEO_HEIGHT, VIDEO_WIDTH } from '../../audio/export/constants'
 import { SongLyrics } from '../../state/lyrics/lyrics'
 import { Icon } from '../ui/Icon'
 import { PictureEditor } from './PictureEditor'

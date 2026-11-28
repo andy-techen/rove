@@ -1,3 +1,4 @@
+import { PERCENT } from '@shared/units'
 import { useState } from 'react'
 import { t } from '@shared/copy'
 import { EXPORT_FORMATS, ExportFormat } from '@shared/exportFormats'
@@ -14,7 +15,6 @@ import './ExportDialog.css'
 const LOUDNESS: ExportLoudness[] = ['streaming', 'asMixed']
 // Besides the mix, the whole song can go out as a Rove project file.
 type ExportChoice = ExportFormat | 'project'
-const PERCENT = 100
 // A video starts plain: the warmest background, no words and no lyrics, until the singer adds them.
 const DEFAULT_VIDEO: VideoOptions = {
   background: { kind: 'blank', id: 'goldenHour' },

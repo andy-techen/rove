@@ -22,3 +22,9 @@ export const BOTTOM_HEIGHT = { min: 200, max: 640, start: 300 }
 // The Instrumental panel needs more: a line of bars beside the picker with every kind of
 // chord showing. Matches --layout-instrumental-panel-min.
 export const INSTRUMENTAL_MIN_HEIGHT = 300
+
+// Pointer gestures
+
+// Movement below this many screen pixels is a click, not a drag: on a clip, on the
+// timeline before a selection box starts, or on words in the picture editor.
+export const DRAG_THRESHOLD_PX = 4

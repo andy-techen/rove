@@ -11,13 +11,8 @@ import {
 import { t } from '@shared/copy'
 import { Align, Edges, Guides, Position, alignTo, placeBlock } from '../../audio/export/videoLayout'
 import {
-  LINE_HEIGHT,
-  MARGIN,
   TextBox,
-  VIDEO_HEIGHT,
-  VIDEO_WIDTH,
   VideoOptions,
-  WEIGHT_WORDS,
   drawVideoFrame,
   layoutWords,
   LyricsStyle,
@@ -34,30 +29,31 @@ import { EdgeHandles, Side } from './EdgeHandles'
 import { LyricsBar } from './LyricsBar'
 import { previewTime, sceneFor, fontsOnThisMachine, useDrawing } from './videoHooks'
 import { WordsBar } from './WordsBar'
+import {
+  EMPTY_LETTERS,
+  GRAB_PAD,
+  NUDGE,
+  NUDGE_FAR,
+  SNAP_DISTANCE,
+  WORDS_MAX_LENGTH
+} from './constants'
+import { DRAG_THRESHOLD_PX } from '../../state/ui/constants'
+import {
+  FRAME,
+  LINE_HEIGHT,
+  MARGIN,
+  VIDEO_HEIGHT,
+  VIDEO_WIDTH,
+  WEIGHT_WORDS
+} from '../../audio/export/constants'
 
-// An arrow key moves words this share of the frame; Shift, further.
-const NUDGE = 0.02
-const NUDGE_FAR = 0.1
 const ARROWS: Record<string, Position> = {
   ArrowLeft: { x: -1, y: 0 },
   ArrowRight: { x: 1, y: 0 },
   ArrowUp: { x: 0, y: -1 },
   ArrowDown: { x: 0, y: 1 }
 }
-// Screen pixels a press must travel before it's a drag rather than a click to edit.
-const DRAG_START_PX = 4
-// Room around words that still grabs them, in video pixels. The field being typed in gets
-// a letter's width spare, so it wraps where the video will.
-const GRAB_PAD = 24
-// An empty set of words, or one jsdom can't measure, is this many letters wide.
-const EMPTY_LETTERS = 3
-const FRAME = { width: VIDEO_WIDTH, height: VIDEO_HEIGHT, margin: MARGIN }
-// Long enough for a title and a dedication, short enough to stay a few lines on a phone.
-const WORDS_MAX_LENGTH = 120
 
-// How near (in video pixels) words must come to a line before they're pulled onto it:
-// about six screen pixels at the editor's usual size.
-const SNAP_DISTANCE = 24
 const NO_GUIDES: Guides = { x: null, y: null }
 
 const unit = (n: number): number => Math.min(1, Math.max(0, n))
@@ -240,7 +236,7 @@ export function PictureStage({
     const held = press.current
     if (!held) return
     const travelled = Math.hypot(e.clientX - held.start.x, e.clientY - held.start.y)
-    if (!held.moved && travelled < DRAG_START_PX) return
+    if (!held.moved && travelled < DRAG_THRESHOLD_PX) return
     held.moved = true
     setDragging(true)
     const point = pointOf(e)

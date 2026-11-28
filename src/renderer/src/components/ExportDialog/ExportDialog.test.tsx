@@ -4,15 +4,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { t } from '@shared/copy'
 import type { SongLyrics } from '../../state/lyrics/lyrics'
 import type { ExportState } from '../../state/song/useExport'
+import { DEFAULT_LYRICS_STYLE, DEFAULT_TEXT_POSITION } from '../../audio/export/videoFrame'
 import {
-  DEFAULT_LYRICS_STYLE,
-  DEFAULT_TEXT_POSITION,
   MARGIN,
   VIDEO_WIDTH,
   LYRICS_SIZES,
   WORDS_SIZE,
   WORDS_SIZES
-} from '../../audio/export/videoFrame'
+} from '../../audio/export/constants'
 import { DEFAULT_FONT, FontId } from '../../audio/export/videoFonts'
 import { Align, stepSize } from '../../audio/export/videoLayout'
 import { fireMenu } from '../../test/fakeApi'

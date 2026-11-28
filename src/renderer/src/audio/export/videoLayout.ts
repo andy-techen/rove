@@ -1,5 +1,6 @@
 import { SongLyrics, activeLineIndex } from '../../state/lyrics/lyrics'
 import { clamp } from '../dsp/units'
+import { LIGHT_LUMINANCE, LUMA } from './constants'
 
 export interface Rect {
   x: number
@@ -58,10 +59,7 @@ export function lyricsAt(lyrics: SongLyrics, timeSec: number): { current: string
   return { current, next }
 }
 
-// Relative luminance above which dark text reads better than light (WCAG's crossover).
-const LIGHT_LUMINANCE = 0.18
 const HEX_CHANNELS = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i
-const LUMA = [0.2126, 0.7152, 0.0722]
 
 /** Whether dark or light text reads better on a colour like "#336699". */
 export function inkFor(colour: string): 'dark' | 'light' {
