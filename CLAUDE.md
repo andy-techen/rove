@@ -44,7 +44,9 @@ site/                  The website (Astro, GitHub Pages); shares the app's token
   `@app/`, so its colours follow the app's; its larger type scale and page sizes are in
   `site/src/styles/site.css`.
 - A pre-commit hook (husky + lint-staged) lints and formats staged files and runs the
-  typecheck; a commit with lint or type errors is rejected. Don't bypass it.
+  typecheck; a commit with lint or type errors is rejected. A commit-msg hook checks
+  the message is a Conventional Commit with a known scope (`docs/development.md`,
+  "Commit messages"). Don't bypass either.
 - Microphone access in development is attributed to the app that launched
   `npm run dev`; run it from your own terminal.
 - Never start Electron from automated tooling to "check the UI": it asks macOS for the

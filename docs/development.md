@@ -176,3 +176,48 @@ workarounds (with a link) are worth a comment; restating the code isn't.
 - Only the main process goes online (lyrics search, `main/ipc/online/lyrics.ts`), and only
   with words the singer typed. Validate what comes back (`parseSearchResults`).
 - `project.json` is written to a temp file and renamed, so a crash can't half-write it.
+
+## Commit messages
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org):
+`type(scope): what changed`, in lowercase, as a short plain sentence. A `commit-msg`
+hook runs commitlint (`commitlint.config.mjs`) and rejects anything else.
+
+```
+feat(explore): load the next page of songs as you scroll to the end
+fix(songbook): the gap under the search holds while scrolling
+refactor(main): split menu.ts into the menu bar, Dock and right-click menus
+docs: trim the README's About to one line
+```
+
+- **Types:** `feat` (something new for the singer), `fix`, `refactor`, `perf`, `test`,
+  `docs`, `style` (formatting only), `build`, `ci`, `chore`, `revert`.
+- **Scope** is optional; leave it out when a change spans several areas. When given, it
+  must be one of these (the list in `commitlint.config.mjs` is what the hook checks;
+  add a scope in both places):
+
+  | Scope      | Area                                                      |
+  | ---------- | --------------------------------------------------------- |
+  | `record`   | Recording, the mic check, transport and the record screen |
+  | `timeline` | Lanes, clips and editing them (trim, split, fade, snap)   |
+  | `polish`   | The Polish panel, auto polish and the polish chain        |
+  | `pitch`    | Tuning and pitch detection                                |
+  | `music`    | Backing tracks, beats, grooves, key and tempo             |
+  | `chords`   | The chords lane, chord chart and chord backing            |
+  | `lyrics`   | The lyrics panel, lyrics search and synced lyrics         |
+  | `voice`    | The voice profile and key suggestions from your takes     |
+  | `export`   | Audio, video and project exports                          |
+  | `songbook` | The Songbook dialog and your songs                        |
+  | `explore`  | Explore: browsing and filtering the catalog               |
+  | `catalog`  | The song catalog data and `scripts/catalog`               |
+  | `settings` | The app dialog's Settings                                 |
+  | `premium`  | Premium, the license and feature gates                    |
+  | `keys`     | Shortcuts and the keymap                                  |
+  | `menu`     | The native menu bar, Dock and right-click menus           |
+  | `main`     | The main process: IPC, files, windows, saving             |
+  | `ui`       | Shared building blocks (`components/ui/`) and tokens      |
+  | `site`     | The website                                               |
+  | `deps`     | Dependency updates                                        |
+
+- A breaking change to a saved format (`project.json`, `.rove`) gets a `!`:
+  `feat(main)!: …`, with a `BREAKING CHANGE:` line in the body saying what migrates.

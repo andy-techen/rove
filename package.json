@@ -37,6 +37,8 @@
   "devDependencies": {
     "@audio/neural-runtime": "0.2.1",
     "@audio/neural-separate": "0.7.1",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@electron-toolkit/eslint-config-prettier": "^3.0.1",
     "@electron-toolkit/eslint-config-ts": "^4.0.0",
     "@electron-toolkit/tsconfig": "^2.0.0",
