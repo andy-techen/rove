@@ -14,6 +14,7 @@ import { useProcessedAudio } from '../../state/processing/processedAudio'
 import { useSongKey } from '../../state/processing/songKey'
 import { useAutoPolish } from '../../state/processing/useAutoPolish'
 import { useVocalRemoval } from '../../state/processing/useVocalRemoval'
+import { useKeySuggestion } from '../../state/voice/useKeySuggestion'
 import { musicOf, withTrackChanges } from '../../state/song/project'
 import {
   canExportSong,
@@ -273,6 +274,11 @@ export function RecordScreen({
     song,
     polishTrack?.role === 'backing' ? polishTrack.id : null
   )
+  // Only while the Music panel shows: it listens to takes it hasn't heard yet.
+  const keySuggestion = useKeySuggestion(
+    open,
+    active && panelShown && polishTrack?.role === 'backing'
+  )
   const error = song.error ?? transport.error
 
   return (
@@ -432,6 +438,7 @@ export function RecordScreen({
               bpm={beat?.bpm ?? null}
               songKey={songKey}
               vocalRemoval={vocalRemoval}
+              keySuggestion={keySuggestion}
               autoPolish={autoPolish}
               instrumentals={instrumentals}
               pasteNote={clipboard.pasteNote}

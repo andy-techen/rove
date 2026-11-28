@@ -1,13 +1,15 @@
 import { t } from '@shared/copy'
 import { PERCENT } from '@shared/units'
-import { SongKey } from '../../audio/pitch/key'
+import { SongKey, transposeKey } from '../../audio/pitch/key'
+import { showSnack } from '../../state/ui/snackbar'
 import {
   MUSIC_SEMITONES_MAX,
   MUSIC_SPEED_RANGE,
   MUSIC_TONE_MAX_DB,
   MusicSettings
 } from '../../state/song/project'
-import { keyName } from '../../state/chords/theory/noteNames'
+import { keyName, noteWithOctave } from '../../state/chords/theory/noteNames'
+import type { KeySuggestion } from '../../state/voice/keyFit'
 import { IconButton } from '../ui/IconButton'
 import { KnobControl, KnobRow } from '../ui/KnobControl'
 import { parseTypedNumber } from '../ui/NumberField'
@@ -31,6 +33,8 @@ interface Props {
   /** Back to the original speed, key and tone. */
   onReset(): void
   onHide(): void
+  /** A key that suits the singer better, from their own takes. */
+  keySuggestion?: KeySuggestion | null
   /** Removing the vocals, for music from a file; the chords track has none to remove. */
   vocals?: {
     state: VocalsState
@@ -44,6 +48,18 @@ interface Props {
 
 type ToneField = 'bassDb' | 'brightnessDb'
 
+/** Why a key suits the singer: the end of their comfort zone this song goes past. */
+function suitsYouText({ semitones, sung, zone }: KeySuggestion): string {
+  const values = {
+    shift: formatSigned(semitones),
+    low: noteWithOctave(zone.low),
+    high: noteWithOctave(zone.high)
+  }
+  return sung.high > zone.high
+    ? t('music.suitsYouHigh', { ...values, note: noteWithOctave(sung.high) })
+    : t('music.suitsYouLow', { ...values, note: noteWithOctave(sung.low) })
+}
+
 /** Speed and key for the backing music, shown when a music track is selected. */
 export function MusicPanel({
   trackName,
@@ -56,6 +72,7 @@ export function MusicPanel({
   onTone,
   onReset,
   onHide,
+  keySuggestion,
   vocals
 }: Props): React.JSX.Element {
   const changed =
@@ -158,6 +175,28 @@ export function MusicPanel({
           typeLabel={t('music.typeKey')}
           // The key you'll sing in comes first; the shift only shows once there is one.
           lead={songKey ? keyName(songKey) : undefined}
+          extra={
+            keySuggestion && (
+              <IconButton
+                icon="sparkle"
+                iconSize="secondary"
+                label={suitsYouText(keySuggestion)}
+                disabled={locked}
+                onClick={() => {
+                  const { semitones } = keySuggestion
+                  onSemitones(semitones)
+                  // The takes so far stay in the old key, so say what changed and what's next.
+                  showSnack(
+                    songKey
+                      ? t('music.suitsYouTaken', {
+                          key: keyName(transposeKey(songKey, semitones - music.semitones))
+                        })
+                      : t('music.suitsYouTakenShift', { shift: formatSigned(semitones) })
+                  )
+                }}
+              />
+            )
+          }
           hideValue={!!songKey && music.semitones === 0}
           onType={(text) => {
             const semitones = parseSemitones(text)
@@ -173,6 +212,8 @@ export function MusicPanel({
             max: MUSIC_SEMITONES_MAX,
             value: music.semitones,
             centre: 0,
+            // Double-click goes to the key that suits the singer, when there is one.
+            marker: keySuggestion?.semitones,
             valueText: keyText,
             onChange: (v) => onSemitones(v, 'music-key')
           }}

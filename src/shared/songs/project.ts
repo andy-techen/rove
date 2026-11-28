@@ -37,3 +37,6 @@ export interface SongbookEntry {
   note?: string
   modifiedAt: number
 }
+
+/** A song's folder name, as the Songbook and the voice profile name songs. */
+export const songFolderName = (dir: string): string => dir.split(/[\\/]/).pop() ?? ''

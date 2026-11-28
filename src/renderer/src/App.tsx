@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { songFolderName } from '@shared/songs/project'
 import { AppDialog, useAppDialog } from './components/AppDialog'
 import { NewSongDialog } from './components/NewSongDialog'
 import { SongbookDialog } from './components/SongbookDialog'
@@ -136,10 +137,7 @@ function App(): React.JSX.Element {
       {songbookOpen && (
         <SongbookDialog
           openFolders={tabs.tabs.map((tab) => {
-            const dir = tabs.info[tab.id]?.dir ?? tab.initial.dir
-            // Basename only: openFolders is compared against the folder name under
-            // the songs folder, not an arbitrary path.
-            return dir.split(/[\\/]/).pop() ?? ''
+            return songFolderName(tabs.info[tab.id]?.dir ?? tab.initial.dir)
           })}
           onOpen={(folder) => {
             setSongbookOpen(false)

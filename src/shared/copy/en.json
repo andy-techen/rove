@@ -522,7 +522,11 @@
     "clickNoBeat": "No steady beat found in this music",
     "reset": "Back to the original speed and key",
     "resetSpeed": "Back to the original speed",
-    "resetKey": "Back to the original key"
+    "resetKey": "Back to the original key",
+    "suitsYouHigh": "Key {shift} suits your voice. Here you sing up to {note}; your comfort zone is {low} to {high}.",
+    "suitsYouLow": "Key {shift} suits your voice. Here you sing down to {note}; your comfort zone is {low} to {high}.",
+    "suitsYouTaken": "Now in {key}. Sing it again to hear yourself in the new key.",
+    "suitsYouTakenShift": "Key moved to {shift}. Sing it again to hear yourself in the new key."
   },
   "appearance": {
     "label": "Theme: {theme}"

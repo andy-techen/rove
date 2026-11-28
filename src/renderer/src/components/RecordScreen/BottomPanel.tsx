@@ -5,6 +5,7 @@ import type { SongKey } from '../../audio/pitch/key'
 import { offersVocals } from '../../state/license/premiumControls'
 import type { AutoPolishState } from '../../state/processing/useAutoPolish'
 import type { VocalRemoval } from '../../state/processing/useVocalRemoval'
+import type { KeySuggestion } from '../../state/voice/keyFit'
 import {
   Project,
   Track,
@@ -42,6 +43,7 @@ interface Props {
   bpm: number | null
   songKey: SongKey | null
   vocalRemoval: VocalRemoval
+  keySuggestion: KeySuggestion | null
   autoPolish: AutoPolishState
   instrumentals: Instrumentals
   pasteNote: { trackId: string; text: string } | null
@@ -64,6 +66,7 @@ export function BottomPanel({
   bpm,
   songKey,
   vocalRemoval,
+  keySuggestion,
   autoPolish,
   instrumentals,
   pasteNote,
@@ -97,6 +100,7 @@ export function BottomPanel({
           onSpeed={(speed, key) => edit(withMusicSpeed(project, speed), key)}
           onSemitones={(n, key) => edit(withMusicPitch(project, n), key)}
           onTone={(tone, key) => edit(withMusicTone(project, tone), key)}
+          keySuggestion={keySuggestion}
           vocals={
             offersVocals(plan, vocalRemoval.vocals)
               ? {

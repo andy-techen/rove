@@ -51,6 +51,12 @@ hears.
   reads better broken up: steps on their own lines, options or parts as bullets.
 - **Visible text is for names, values and warnings** the singer must act on (a song
   name, a time, "Too loud!").
+- **Asking Rove to do something gets a snackbar.** When the singer explicitly has Rove
+  act for them (Auto polish, a suggested key, Line up), a `Snackbar` says it happened,
+  even when it's instant: the point is to show something took place, not that it took
+  time. Add the next step when there is one ("Sing it again to hear yourself in the new
+  key."). Direct changes (turning a knob, dragging a clip) don't get one: the control
+  already shows the change.
 - **Plain language.** Name controls by what the singer hears ("Space", "Smoothness");
   real parameters live behind Advanced. Tone of voice is in `docs/brand.md`.
 

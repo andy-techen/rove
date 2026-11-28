@@ -20,6 +20,11 @@ export interface Clip {
   fadeOut?: number
   /** Set when the vocals were removed: the song this clip played before (still on disk). */
   withVocals?: string
+  /**
+   * Vocal takes: semitones the music was moved while it was sung (unset is the song's own
+   * key), so the voice profile can tell where the song sits for the singer.
+   */
+  semitones?: number
   /** Clips sharing a group id are picked, moved, copied and deleted together. */
   group?: string
 }

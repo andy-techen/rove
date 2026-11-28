@@ -4,7 +4,10 @@ import { Mock, describe, expect, it, vi } from 'vitest'
 import { CopyKey, t } from '@shared/copy'
 import { MusicSettings } from '../../state/song/project'
 import type { VocalsState } from '../../state/processing/useVocalRemoval'
+import { keyName, noteWithOctave } from '../../state/chords/theory/noteNames'
+import { Snackbar } from '../ui/Snackbar'
 import { MusicPanel } from '.'
+import { formatSigned } from './musicFormat'
 
 const vocalsIn = (state: VocalsState) => ({
   state,
@@ -143,5 +146,30 @@ describe('MusicPanel', () => {
     )
     await userEvent.click(screen.getByRole('button', { name: t('music.stopRemovingVocals') }))
     expect(vocals.onCancel).toHaveBeenCalled()
+  })
+
+  describe('a key that suits your voice', () => {
+    const suggestion = { semitones: -3, sung: { low: 57, high: 69 }, zone: { low: 52, high: 65 } }
+    const tip = t('music.suitsYouHigh', {
+      shift: formatSigned(-3),
+      note: noteWithOctave(69),
+      low: noteWithOctave(52),
+      high: noteWithOctave(65)
+    })
+
+    it('moves the key there when picked, and says so', async () => {
+      render(<Snackbar />)
+      const songKey = { tonic: 7, mode: 'major' as const }
+      const { onSemitones } = renderPanel({}, { keySuggestion: suggestion, songKey })
+      await userEvent.click(screen.getByRole('button', { name: tip }))
+      expect(onSemitones).toHaveBeenCalledWith(-3)
+      const key = keyName({ tonic: 4, mode: 'major' })
+      expect(screen.getByText(t('music.suitsYouTaken', { key }))).toBeInTheDocument()
+    })
+
+    it('is not offered without one', () => {
+      renderPanel()
+      expect(screen.queryByRole('button', { name: tip })).not.toBeInTheDocument()
+    })
   })
 })

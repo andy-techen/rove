@@ -16,6 +16,7 @@ const ref = (folder: string, recordedAt: Date): TakeRef => ({
   offsetSec: 0,
   durationSec: 0,
   part: 'lead',
+  semitones: 0,
   recordedAt: recordedAt.getTime()
 })
 const entry = (folder: string, recordedAt: Date, sungSec = 1) => ({

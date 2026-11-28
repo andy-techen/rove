@@ -11,19 +11,23 @@ const clip = (file: string, offset = 0, duration = 4) => ({
 })
 
 describe('vocalClipsOf', () => {
-  it('lists vocal clips only, keeping each track’s part', () => {
+  it('lists vocal clips only, keeping each track’s part and the key it was sung in', () => {
     const manifest = {
       version: 2,
       tracks: [
         { role: 'backing', clips: [clip('audio/backing-song.mp3')] },
         { role: 'vocal', part: 'lead', clips: [clip('audio/take-001.wav', 1, 3)] },
-        { role: 'vocal', part: 'harmony', clips: [clip('audio/take-002.wav')] },
+        {
+          role: 'vocal',
+          part: 'harmony',
+          clips: [{ ...clip('audio/take-002.wav'), semitones: -2 }]
+        },
         { role: 'chords', clips: [] }
       ]
     }
     expect(vocalClipsOf(manifest)).toEqual([
-      { file: 'audio/take-001.wav', offsetSec: 1, durationSec: 3, part: 'lead' },
-      { file: 'audio/take-002.wav', offsetSec: 0, durationSec: 4, part: 'harmony' }
+      { file: 'audio/take-001.wav', offsetSec: 1, durationSec: 3, part: 'lead', semitones: 0 },
+      { file: 'audio/take-002.wav', offsetSec: 0, durationSec: 4, part: 'harmony', semitones: -2 }
     ])
   })
 

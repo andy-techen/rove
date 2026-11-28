@@ -36,6 +36,8 @@ export interface TakeRef {
   /** 0 means to the end of the file (older projects). */
   durationSec: number
   part: 'lead' | 'harmony'
+  /** Semitones the music was moved when it was sung; 0 is the song's own key. */
+  semitones: number
   /** When the take was recorded, in ms since the epoch. */
   recordedAt: number
 }
@@ -67,7 +69,7 @@ export interface VoiceApi {
 }
 
 /** A vocal clip as project.json has it: which part of which take plays. */
-export type VocalClip = Pick<TakeRef, 'file' | 'offsetSec' | 'durationSec' | 'part'>
+export type VocalClip = Pick<TakeRef, 'file' | 'offsetSec' | 'durationSec' | 'part' | 'semitones'>
 
 const isSeconds = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0
 
@@ -85,7 +87,12 @@ export function vocalClipsOf(manifest: unknown): VocalClip[] {
     if (!tr || !Array.isArray(tr.clips) || tr.role !== 'vocal') continue
     const part = tr.part === 'harmony' ? 'harmony' : 'lead'
     for (const clip of tr.clips as unknown[]) {
-      const c = clip as { file?: unknown; offset?: unknown; duration?: unknown } | null
+      const c = clip as {
+        file?: unknown
+        offset?: unknown
+        duration?: unknown
+        semitones?: unknown
+      } | null
       if (!c || typeof c.file !== 'string' || !c.file) continue
       const offsetSec = c.offset ?? 0
       const durationSec = c.duration ?? 0
@@ -93,7 +100,9 @@ export function vocalClipsOf(manifest: unknown): VocalClip[] {
       const key = JSON.stringify([c.file, offsetSec, durationSec])
       if (seen.has(key)) continue
       seen.add(key)
-      clips.push({ file: c.file, offsetSec, durationSec, part })
+      // Takes from before the key was kept were sung at the song's own key, most likely.
+      const semitones = Number.isInteger(c.semitones) ? (c.semitones as number) : 0
+      clips.push({ file: c.file, offsetSec, durationSec, part, semitones })
     }
   }
   return clips

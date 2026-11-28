@@ -25,6 +25,7 @@ export function sungEntry(folder: string, date: string, sung: Sung = {}): Entry 
       offsetSec: 0,
       durationSec: 0,
       part: 'lead',
+      semitones: 0,
       recordedAt: new Date(`${date}T12:00:00`).getTime()
     },
     summary: {

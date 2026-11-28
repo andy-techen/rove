@@ -28,6 +28,7 @@ import {
   canBalanceMusic,
   findClip,
   lineUpClip,
+  musicOf,
   syncPhrases,
   withMusicVolume,
   withRecordedClip,
@@ -492,10 +493,12 @@ export function useTransport(
     let file = take.file
     try {
       file ??= await window.api.saveTake(open.dir, take.wav)
-      const clip = {
+      const { semitones } = musicOf(open.data)
+      const clip: Clip = {
         id: crypto.randomUUID(),
         file,
-        ...alignTake(take.fromSec, take.audio.duration, latencySec)
+        ...alignTake(take.fromSec, take.audio.duration, latencySec),
+        ...(semitones ? { semitones } : {})
       }
       const recorded = withRecordedClip(open.data, take.trackId, clip)
       const balanced = withBalance(recorded, take.trackId, clip, take.audio)
