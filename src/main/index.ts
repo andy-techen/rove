@@ -12,6 +12,7 @@ import { join } from 'path'
 import { electronApp, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { setUpAbout } from './about'
+import { installDockMenu } from './menu'
 import { registerProjectIpc } from './ipc/songs/project'
 import { forgetLastExportDir, registerExportIpc } from './ipc/songs/export'
 import { registerLyricsIpc } from './ipc/online/lyrics'
@@ -36,7 +37,7 @@ import { MIC_CHANNELS } from '@shared/songs/mic'
 import { WINDOW } from './constants'
 import { loadWindowBounds, rememberWindowBounds } from './windowBounds'
 
-async function createWindow(): Promise<void> {
+async function createWindow(): Promise<BrowserWindow> {
   const workAreas = screen.getAllDisplays().map((d) => d.workArea)
   const { maximized, ...bounds } = await loadWindowBounds(workAreas)
   const mainWindow = new BrowserWindow({
@@ -82,6 +83,21 @@ async function createWindow(): Promise<void> {
   } else {
     mainWindow.loadURL(`${APP_ORIGIN}/index.html`)
   }
+  return mainWindow
+}
+
+/** The window, brought forward; a closed one opens again and is ready for a menu choice. */
+async function showWindow(): Promise<BrowserWindow> {
+  const existing = BrowserWindow.getAllWindows()[0]
+  if (existing) {
+    if (existing.isMinimized()) existing.restore()
+    existing.show()
+    existing.focus()
+    return existing
+  }
+  const created = await createWindow()
+  await new Promise<void>((resolve) => created.webContents.once('did-finish-load', () => resolve()))
+  return created
 }
 
 registerAppScheme()
@@ -136,6 +152,7 @@ app.whenReady().then(async () => {
   await registerLicenseIpc()
 
   await createWindow()
+  installDockMenu(showWindow)
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) void createWindow()

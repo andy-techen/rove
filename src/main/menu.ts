@@ -154,6 +154,25 @@ export function installMenu(keymap: Keymap): void {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
+/**
+ * Right-clicking Rove in the Dock: start or find a song without hunting for the window.
+ * `showWindow` brings the window forward (opening one if it was closed) before the
+ * choice is sent, since nothing has focus while the Dock menu is open.
+ */
+export function installDockMenu(showWindow: () => Promise<BrowserWindow>): void {
+  const item = (label: string, action: MenuAction): MenuItemConstructorOptions => ({
+    label,
+    click: () => void showWindow().then((window) => window.webContents.send(MENU_CHANNEL, action))
+  })
+  app.dock?.setMenu(
+    Menu.buildFromTemplate([
+      item(t('keymap.newSong'), 'newSong'),
+      item(t('keymap.open'), 'open'),
+      item(t('keymap.songbook'), 'songbook')
+    ])
+  )
+}
+
 const isShortcut = (action: MenuAction): action is MenuAction & ShortcutId => action in KEYMAP
 
 // Actions only right-click menus offer; they have no shortcut, so they're named here.
