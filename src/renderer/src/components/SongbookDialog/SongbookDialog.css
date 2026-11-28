@@ -167,9 +167,10 @@
   overflow-y: auto;
   padding: var(--songbook-ring-room);
   margin: calc(-1 * var(--songbook-ring-room));
-  /* Not pulled up under the search: rows scrolling past are cut off as far below the
-     search as the first row sits at rest. */
+  /* No room above the first row, so the gap under the search stays the same as rows
+     scroll past it. Only the buttons inside a row take focus, and their rings fit in it. */
   margin-top: 0;
+  padding-top: 0;
 }
 
 /* Explore: a search box with a funnel icon beside it; clicking the funnel reveals a
