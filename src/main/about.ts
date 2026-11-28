@@ -17,7 +17,9 @@ export function setUpAbout(icon: string): void {
     applicationVersion: app.getVersion(),
     // Empty, or macOS adds the build number in brackets, which is the same version again.
     version: '',
-    credits: `${t('app.tagline')}\n\n${t('app.credits')}`,
+    // Third-party licences ship with the app's files and the README credits them, so
+    // the panel keeps to who Rove is for.
+    credits: t('app.tagline'),
     copyright: t('app.copyright', { year: new Date().getFullYear() }),
     // Windows and Linux; macOS shows the app's own icon.
     iconPath: icon

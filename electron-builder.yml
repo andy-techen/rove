@@ -12,6 +12,11 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,vitest.config.ts}'
 asarUnpack:
   - resources/**
+# The piano samples are bundled into the renderer, so their CC BY licence, which asks
+# for credit wherever they're shared, travels beside them.
+extraResources:
+  - from: src/renderer/src/audio/music/pianoSamples/LICENSE.txt
+    to: licenses/salamander-grand-piano.txt
 # The interface is English only; Chromium's other ~50 languages add ~50 MB.
 electronLanguages:
   - en

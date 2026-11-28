@@ -87,4 +87,5 @@ Start with [`CLAUDE.md`](CLAUDE.md), which links the guides every change follows
   [Salamander Grand Piano v3](https://github.com/sfzinstruments/SalamanderGrandPiano) by
   Alexander Holm, licensed under
   [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); trimmed and re-encoded, with
-  its licence in `src/renderer/src/audio/music/pianoSamples/`.
+  its licence in `src/renderer/src/audio/music/pianoSamples/` (shipped with the app in
+  `licenses/`).
