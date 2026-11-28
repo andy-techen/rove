@@ -25,6 +25,12 @@ describe('findSyncedLyrics', () => {
   it.each([
     ['a same-length entry with synced lyrics', [entry()], 1],
     ['the same name in the other script', [entry({ trackName: '小幸运' })], 1],
+    [
+      'the same name without its bracketed extra',
+      [entry({ trackName: '滿座' })],
+      1,
+      '滿座 (Full House)'
+    ],
     ['the same name with a plain dash', [entry({ trackName: 'Anti-Hero' })], 1, 'Anti\u2010Hero'],
     ['a different length (another recording)', [entry({ duration: 280 })], null],
     ['only plain lyrics', [entry({ syncedLyrics: null, plainLyrics: 'la' })], null],

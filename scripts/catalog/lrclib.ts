@@ -17,7 +17,8 @@ export interface LyricsLookup {
 /**
  * LRCLIB's id for synced lyrics of this exact recording, or null. Searches by title and
  * artist, then by title alone, since LRCLIB often credits Chinese artists differently
- * ("G.E.M." for 鄧紫棋). Only a same-named entry of the same length counts.
+ * ("G.E.M." for 鄧紫棋), and again without bracketed extras, which LRCLIB usually leaves
+ * off ("滿座 (Full House)"). Only a same-named entry of the same length counts.
  */
 export async function findSyncedLyrics(
   song: LyricsLookup,
@@ -25,10 +26,11 @@ export async function findSyncedLyrics(
 ): Promise<number | null> {
   const { durationSec } = song
   if (durationSec === null) return null
-  const searches: Record<string, string>[] = [
-    { track_name: song.title, artist_name: song.artist },
-    { track_name: song.title }
-  ]
+  const titles = [...new Set([song.title, withoutBrackets(song.title)])]
+  const searches = titles.flatMap((title): Record<string, string>[] => [
+    { track_name: title, artist_name: song.artist },
+    { track_name: title }
+  ])
   for (const params of searches) {
     const results = parseSearchResults(await fetchJson(`${SEARCH}?${new URLSearchParams(params)}`))
     const match = results.find((result) => isSameSong(result, song.title, durationSec))
@@ -45,6 +47,14 @@ export function isSameSong(result: LyricsResult, title: string, durationSec: num
   )
 }
 
+/** "滿座 (Full House)" and "大夢歸（主題曲）" without the bracketed part. */
+function withoutBrackets(name: string): string {
+  return name
+    .normalize('NFKC')
+    .replace(/\s*\([^)]*\)/g, '')
+    .trim()
+}
+
 /**
  * Case, width, script (simplified or traditional) and typographic dashes and quotes
  * (MusicBrainz writes "Anti‐Hero" with U+2010) don't make a different song.
@@ -54,5 +64,5 @@ function plainName(name: string): string {
     .normalize('NFKC')
     .replace(/[\u2010-\u2015\u2212]/g, '-')
     .replace(/[\u2018\u2019]/g, "'")
-  return toTraditional(plain.trim().toLocaleLowerCase())
+  return toTraditional(withoutBrackets(plain).toLocaleLowerCase())
 }
