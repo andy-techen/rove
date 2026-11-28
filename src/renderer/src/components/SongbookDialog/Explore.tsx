@@ -165,8 +165,7 @@ export function Explore(): React.JSX.Element {
                 aria-pressed={syncedOnly}
                 onClick={() => setSyncedOnly((v) => !v)}
               >
-                {syncedOnly && <Icon name="check" size="secondary" />}
-                <span>{t('songbook.explore.syncedLyrics')}</span>
+                {t('songbook.explore.syncedLyrics')}
               </button>
             </div>
           )}
