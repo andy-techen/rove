@@ -61,8 +61,8 @@ type Filters = Record<GroupId, string[]>
 const EMPTY_FILTERS: Filters = { language: [], genre: [], tag: [] }
 
 /**
- * A curated catalog to browse. The singer searches by song or artist, and the funnel
- * icon beside the search reveals a row of filter dropdowns (language, genre, tag).
+ * A curated catalog to browse. The singer searches by song or artist, and the filter
+ * button beside the search reveals a row of filter dropdowns (language, genre, tag).
  * Each filter is a multi-select; "Add" copies the chosen song to the wishlist.
  */
 export function Explore(): React.JSX.Element {

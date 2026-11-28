@@ -26,7 +26,6 @@ import {
   parseProject,
   polishOf,
   tracksOf,
-  withSongKey,
   musicOf,
   withMusicSpeed,
   withMusicPitch,
@@ -533,12 +532,6 @@ describe('tuning settings', () => {
     delete older.tuning
     expect(polishOf({ ...track, polish: older as PolishSettings }).tuning).toBe(0)
   })
-
-  it('stores the song key, or clears it for any note', () => {
-    const project = withSongKey(createProject('Song', 48000), { tonic: 9, mode: 'minor' })
-    expect(project.key).toEqual({ tonic: 9, mode: 'minor' })
-    expect(withSongKey(project, null).key).toBeNull()
-  })
 })
 
 describe('lyrics', () => {
@@ -596,7 +589,7 @@ describe('music speed and key', () => {
   })
 
   it('moves the song key along with the music', () => {
-    const inA = withSongKey(withMusic(), { tonic: 9, mode: 'minor' })
+    const inA = { ...withMusic(), key: { tonic: 9, mode: 'minor' } as const }
     const up = withMusicPitch(inA, 3)
     expect(musicOf(up).semitones).toBe(3)
     expect(up.key).toEqual({ tonic: 0, mode: 'minor' })

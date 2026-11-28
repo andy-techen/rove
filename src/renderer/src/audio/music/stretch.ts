@@ -1,6 +1,6 @@
 import { AudioSource } from '../pitch/key'
 import { bufferOf, cachedRender, channelsOf } from '../dsp/renderCache'
-import { nextTick } from '../dsp/resample'
+import { lowpass, nextTick } from '../dsp/resample'
 import { onsetStrength } from '../dsp/onsets'
 
 // --- Tempo ---------------------------------------------------------------------
@@ -222,30 +222,6 @@ function resample(x: Float32Array, ratio: number): Float32Array<ArrayBuffer> {
       p1 + 0.5 * t * (p2 - p0 + t * (2 * p0 - 5 * p1 + 4 * p2 - p3 + t * (3 * (p1 - p2) + p3 - p0)))
   }
   return out
-}
-
-/** A second-order Butterworth low-pass, in place (RBJ cookbook). */
-function lowpass(x: Float32Array, sampleRate: number, cutoffHz: number): void {
-  const w0 = (2 * Math.PI * cutoffHz) / sampleRate
-  const alpha = Math.sin(w0) / (2 * Math.SQRT1_2)
-  const cos = Math.cos(w0)
-  const a0 = 1 + alpha
-  const b0 = (1 - cos) / 2 / a0
-  const b1 = (1 - cos) / a0
-  const a1 = (-2 * cos) / a0
-  const a2 = (1 - alpha) / a0
-  let x1 = 0
-  let x2 = 0
-  let y1 = 0
-  let y2 = 0
-  for (let i = 0; i < x.length; i++) {
-    const y = b0 * x[i] + b1 * x1 + b0 * x2 - a1 * y1 - a2 * y2
-    x2 = x1
-    x1 = x[i]
-    y2 = y1
-    y1 = y
-    x[i] = y
-  }
 }
 
 /**

@@ -11,8 +11,8 @@ const LANDED_CENTS = 20
 
 /**
  * Where each tone measure (per Hz, relative to 1–2 kHz) sits from 0 to 1. Centred on
- * auto polish's TONE_REFERENCE, so a typical voice lands mid-scale. Starting values:
- * the main session will tune them by ear across voices and mics.
+ * auto polish's TONE_REFERENCE, so a typical voice lands mid-scale. Starting values;
+ * tune by ear across voices and mics.
  */
 const TONE_RANGE_DB: Record<keyof Tone, { band: Band; low: number; high: number }> = {
   body: { band: BODY_BAND, low: -5, high: 25 },

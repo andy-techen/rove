@@ -26,6 +26,40 @@ If a component grows an `if` chain or a calculation, move it into a helper and t
 list is in `CLAUDE.md`). A new file goes in the folder for its area, with its test next to
 it; start a new folder only when no area fits.
 
+## Reuse before you write
+
+Most duplication here came from writing a small helper again instead of finding the
+existing one. Before adding a helper, search for it (`grep -rn "function hann"`), and
+if it already exists anywhere, import it, moving it to a shared home if needed.
+
+- **Signal maths goes in `audio/dsp/`**: filters (`lowpass`), windows, FFT, peak
+  fitting, seeded noise, stats (`mean`, `median`, `percentile`), dB conversions
+  (`units.ts`: `dbToGain`, `gainToDb`). Don't write `10 ** (x / 20)` or a clamp inline
+  in a second file.
+- **One value, one definition.** When two modules must agree (the de-esser's split
+  and `DE_ESS_BAND`), one imports the other's constant. A comment saying the two
+  "match" is a sign that one should import the other. Unit constants (`SEC_PER_MIN`,
+  `MS_PER_SEC`, `PITCH_CLASSES`) are imported, not redeclared.
+- **A list and its type come from one place:** `const GROOVES = ['rock', …] as const`
+  then `type GrooveId = (typeof GROOVES)[number]`, never a union beside an array that
+  must be kept in step by hand.
+- **Repeated hook shapes become a hook.** If two hooks do the same effect dance
+  (keep-latest ref, debounced cancellable render, localStorage read/write with
+  try/catch), extract it into `state/` instead of copying a third time.
+- **Two copies is the limit.** The second copy is fine while you learn the shape; the
+  third goes into a shared helper with a test, and the earlier two switch to it.
+
+## Size and shape
+
+- A file past ~500 lines, or one that needs `// --- Section ---` banners, wants
+  splitting by area (a folder with an `index.ts` keeps imports unchanged). A banner is
+  where the split goes.
+- Export only what another file imports. Types that appear in an exported signature
+  are the exception.
+- Don't keep code alive for its tests. When a feature goes, remove everything it
+  owned: its component, its project operations, its copy keys, its CSS classes, and its
+  rows in the docs. A function only its test calls is dead.
+
 ## Components
 
 One folder per component:
@@ -99,6 +133,15 @@ Import components through their folder (`'../Timeline'`), not deep paths.
 Explain why, not what. Product reasoning, non-obvious edge cases, browser quirks and
 workarounds (with a link) are worth a comment; restating the code isn't.
 
+- Say it once. Put the reason at the constant or at its use, not both.
+- A doc comment that repeats the function name ("A new buffer holding these
+  channels" on `bufferOf`) goes; improve the name instead.
+- Comments that state numbers or name paths go stale: when you change a range, a
+  file's location or what a function covers, fix the comments that describe it.
+  Better still, word them so they don't repeat the number.
+- No notes about the process ("tune these later", "the main session will…"); say what
+  the value is for.
+
 ## Safety
 
 - The renderer can only touch song folders the main process opened (dialog, created,
@@ -108,6 +151,12 @@ workarounds (with a link) are worth a comment; restating the code isn't.
   `voice:readTake`, which serves a file only if one of that song's vocal clips plays it.
 - Tuning plays and exports tuned copies held in memory (`audio/pitch/tuning.ts`); the
   recordings on disk stay as sung.
+- Every file under `userData` or a song folder is written with `writeAtomically`
+  (`main/ipc/writeAtomically.ts`), never a bare `fs.writeFile` or a hand-made temp
+  name.
+- IPC channel names live in a `*_CHANNELS` const in `src/shared/`, used by both main
+  and preload; payload types and input cleaning (`cleanText`) live there too, never
+  written again on one side.
 - Only the main process goes online (lyrics search, `main/ipc/lyrics.ts`), and only
   with words the singer typed. Validate what comes back (`parseSearchResults`).
 - `project.json` is written to a temp file and renamed, so a crash can't half-write it.

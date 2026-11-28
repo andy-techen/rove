@@ -336,10 +336,6 @@ export function polishOf(track: Track): PolishSettings {
   return { ...defaultPolish(track.part ?? 'lead'), ...track.polish }
 }
 
-export function withSongKey(project: Project, key: SongKey | null): Project {
-  return { ...project, key }
-}
-
 export function withLyrics(project: Project, lyrics: SongLyrics | null): Project {
   return { ...project, lyrics }
 }

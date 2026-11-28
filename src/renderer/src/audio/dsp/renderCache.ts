@@ -29,7 +29,6 @@ export function cachedRender(
   return result
 }
 
-/** A new buffer holding these channels. */
 export function bufferOf(channels: Float32Array<ArrayBuffer>[], sampleRate: number): AudioBuffer {
   const out = new AudioBuffer({
     length: channels[0]?.length ?? 0,

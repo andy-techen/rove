@@ -7,6 +7,7 @@ import {
 } from '../polish/polish'
 import { GATE_PROCESSOR } from '../worklets/messages'
 import { dbToGain, gainToDb } from '../dsp/units'
+import { DE_ESS_BAND } from '../dsp/voiceBands'
 
 export interface TrackMix {
   role: 'vocal' | 'backing'
@@ -43,7 +44,7 @@ const COMP_ATTACK_SEC = 0.005
 const COMP_RELEASE_SEC = 0.15
 
 // De-esser: compress only the band above the split, fast enough to catch an "s".
-const DE_ESS_SPLIT_HZ = 6000
+const DE_ESS_SPLIT_HZ = DE_ESS_BAND[0]
 const DE_ESS_RATIO = 6
 const DE_ESS_KNEE_DB = 3
 const DE_ESS_ATTACK_SEC = 0.001
@@ -350,7 +351,7 @@ export class Mixer {
 }
 
 // The volume slider is laid out in decibels so equal slider moves sound like equal
-// changes in loudness: the bottom is silent, 5/6 of the way is unity, the top is +6 dB.
+// changes in loudness: the bottom is silent, about 87% of the way is unity, the top is +6 dB.
 const SLIDER_MIN_DB = -40
 const SLIDER_MAX_DB = 6
 

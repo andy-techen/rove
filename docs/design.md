@@ -52,6 +52,8 @@ hears.
 
 ## Styling
 
+- Use only tokens that exist. No `var(--made-up, fallback)`: a fallback hides an
+  undefined token and its literal slips past the rule below.
 - All colours, spacing, radii, font sizes, sizes and durations come from the tokens in
   `src/renderer/src/styles/tokens.css`. Never hard-code one in a component stylesheet,
   not even a 1px border (`--size-hairline`).
@@ -115,12 +117,14 @@ Reach for these before writing new markup:
 | `Splitter`     | A draggable edge between areas (side panel width, the lyrics/chords split).                                                                    |
 | `NumberField`  | A number to type over (Enter applies, Esc reverts); pair it with a slider.                                                                     |
 | `Switch`       | On/off toggles with a label.                                                                                                                   |
-| `Select`       | A short list to pick one from (the song key). Native, so the keyboard just works.                                                              |
 | `HelpTip`      | A "?" that reveals help on hover or focus: `text` for a sentence; `lines` (steps) and `items` (bullets) for longer help.                       |
 | `Snackbar`     | One-off news the singer needn't act on ("Auto-polished."), bottom left: call `showSnack(text)`. Warnings and errors stay beside their control. |
 | `Logo`         | The app icon with the "rove" wordmark (top bar `sm`, full-screen headings `lg`).                                                               |
 
-If a pattern repeats in two places, promote it to `ui/`.
+If a pattern repeats in two places, promote it to `ui/`. Things that have been copied
+before and should be promoted next time they're needed: a segmented control (a group of
+`aria-pressed` buttons), a popover surface (which also sets the raised-surface fills),
+and click-versus-drag handling with one shared threshold.
 
 ## Accessibility
 

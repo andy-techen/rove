@@ -1,7 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent, shell } from 'electron'
-import { SONG_NAME_MAX_LENGTH } from '@shared/constants'
 import { t } from '@shared/copy'
-import { cleanNote } from '@shared/wishlist'
+import { cleanNote, cleanText } from '@shared/wishlist'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
@@ -33,7 +32,7 @@ interface SavedTabs {
 }
 
 async function saveTabs(tabs: SavedTabs): Promise<void> {
-  await fs.writeFile(stateFile(), JSON.stringify(tabs))
+  await writeAtomically(stateFile(), JSON.stringify(tabs))
 }
 
 /** The songs that were open last time, skipping any that were moved or deleted. */
@@ -101,9 +100,6 @@ async function followName(projectDir: string, songName: string): Promise<string>
 async function writeManifestFile(projectDir: string, manifest: unknown): Promise<void> {
   await writeAtomically(path.join(projectDir, MANIFEST), JSON.stringify(manifest, null, 2))
 }
-
-const cleanText = (raw: unknown): string =>
-  typeof raw === 'string' ? raw.trim().slice(0, SONG_NAME_MAX_LENGTH) : ''
 
 export function registerProjectIpc(): void {
   ipcMain.handle('project:choose', async (e) => {
@@ -225,9 +221,8 @@ export function registerProjectIpc(): void {
 
   // A named song gets a folder after its name; an unnamed one (the first launch) is untitled.
   ipcMain.handle('project:createNew', async (_e, name: unknown, artist: unknown, note: unknown) => {
-    const wanted = typeof name === 'string' ? name.trim().slice(0, SONG_NAME_MAX_LENGTH) : ''
-    const artistName =
-      typeof artist === 'string' ? artist.trim().slice(0, SONG_NAME_MAX_LENGTH) : ''
+    const wanted = cleanText(name)
+    const artistName = cleanText(artist)
     await fs.mkdir(songsRoot(), { recursive: true })
     const existing = await fs.readdir(songsRoot())
     const folder = songFolderName(wanted)

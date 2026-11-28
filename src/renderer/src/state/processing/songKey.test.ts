@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { transposeKey } from '../../audio/pitch/key'
-import { createProject, withSongKey } from '../song/project'
+import { createProject } from '../song/project'
 import { songKeyOf } from './songKey'
 
 describe('songKeyOf', () => {
   it('keeps a key chosen in an older version of Rove', async () => {
-    const song = withSongKey(createProject('Song', 48000), { tonic: 9, mode: 'minor' })
+    const song = { ...createProject('Song', 48000), key: { tonic: 9, mode: 'minor' } as const }
     expect(await songKeyOf(song, {})).toEqual({ tonic: 9, mode: 'minor' })
   })
 

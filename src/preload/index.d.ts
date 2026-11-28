@@ -64,7 +64,7 @@ export interface RoveApi {
   listSongs(): Promise<SongbookEntry[]>
   /** Opens a song by its folder name under the songs folder. */
   openSongbookSong(folder: string): Promise<ChosenProject>
-  /** Changes a closed song's name and artist; resolves to its entry, folder renamed to match. */
+  /** Changes a closed song's name, artist and note; resolves to its entry, folder renamed to match. */
   updateSongbookSong(
     folder: string,
     name: string,

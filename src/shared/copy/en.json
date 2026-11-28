@@ -58,12 +58,10 @@
   "topBar": {
     "tabsLabel": "Open songs",
     "newSong": "New song",
-    "open": "Open…",
     "close": "Close {name}",
     "closeTitle": "Close",
     "rename": "Rename song",
     "songName": "Song name",
-    "opening": "Opening…",
     "songbook": "Songbook"
   },
   "transport": {
@@ -85,7 +83,6 @@
     "redo": "Redo",
     "split": "Split clip",
     "delete": "Delete",
-    "needsBacking": "Add a backing track below, or record without music.",
     "saving": "Saving…",
     "tooShort": "That take was too short to keep.",
     "retrySave": "Try saving again",
@@ -115,7 +112,6 @@
   },
   "timeline": {
     "label": "Song timeline",
-    "zoom": "Zoom",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "toPlayhead": "Back to the playhead",
@@ -159,12 +155,9 @@
     "mutedTitle": "Muted: click to hear this track",
     "volume": "{name} volume",
     "volumeTitle": "Volume {percent}%",
-    "volumeShort": "Vol",
     "position": "{name} position, left to right",
     "positionTitle": "Position: {where}",
     "positionIcon": "Where the track sits, left to right",
-    "left": "L",
-    "right": "R",
     "centre": "Centre",
     "panLeft": "{percent}% left",
     "panRight": "{percent}% right",
@@ -189,7 +182,6 @@
     "advanced": "Advanced settings",
     "hideAdvanced": "Hide advanced settings",
     "followSlider": "Follow the slider again",
-    "vocalOnly": "Polish is for vocal tracks. Select a vocal to shape its sound.",
     "auto": {
       "label": "Auto-polish",
       "title": "Listen to your takes and set Polish for your voice",
@@ -499,7 +491,6 @@
     "db": "dB",
     "resetTone": "Back to the original {name}",
     "click": "Metronome",
-    "clickHint": "Ticks on the beat, with a count-in",
     "clickOn": "Metronome on",
     "clickOnTitle": "Metronome on",
     "clickOffTitle": "Metronome off",
@@ -509,9 +500,7 @@
     "stopRemovingVocals": "Stop removing vocals",
     "restoreVocals": "Restore vocals",
     "removeVocalsFailed": "Couldn't remove the vocals. Try again, or try another copy of the song.",
-    "typeClick": "Metronome volume, typed value",
     "clickNoBeat": "No steady beat found in this music",
-    "off": "Off",
     "reset": "Back to the original speed and key",
     "resetSpeed": "Back to the original speed",
     "resetKey": "Back to the original key"
@@ -606,7 +595,6 @@
     "none": "No chords heard in this music.",
     "detected": "Chords are auto-generated from the music.",
     "noChord": "—",
-    "goTo": "Go to {chord} at {time}",
     "grip": "How to play {chord} on guitar",
     "fret": "{n}fr",
     "yours": "These are the chords you wrote. Rove plays them on the Chords track.",
@@ -651,8 +639,7 @@
     "pickerTabs": "Chords to show",
     "roots": "Root note",
     "onRoot": "Chords on {note}",
-    "split": "Split into two chords",
-    "join": "Back to one chord"
+    "split": "Split into two chords"
   },
   "lyrics": {
     "title": "Lyrics",
@@ -796,7 +783,6 @@
       "closeEditor": "Close the picture",
       "done": "Done",
       "background": "Background",
-      "wordsHeading": "Words",
       "wordsField": "Words",
       "wordsOnPicture": "Words: {text}",
       "wordsColour": "Colour of these words",
@@ -868,12 +854,10 @@
       "filtersActive": "Filters ({count} active)",
       "filterSummary": "{name} ({count})",
       "clearGroup": "Clear",
-      "activeFilters": "Active filters",
       "removeFilter": "Remove {name}: {value}",
       "clearAll": "Clear all",
       "genreLabel": "Genre",
       "genres": {
-        "all": "Any genre",
         "pop": "Pop",
         "rock": "Rock",
         "ballad": "Ballad",
@@ -881,7 +865,6 @@
       },
       "tagLabel": "Tag",
       "tags": {
-        "all": "Any tag",
         "love": "Love",
         "classic": "Classic",
         "movie": "Movie / TV",
@@ -898,15 +881,12 @@
         "es": "Español",
         "other": "Other"
       },
-      "songTypeLabel": "Song type",
       "songTypes": {
         "all": "Any type",
         "solo": "Solo",
         "duet": "Duet",
         "band": "Band"
       },
-      "add": "Add",
-      "added": "Added",
       "addLabel": "Add {name} to your wishlist",
       "addedLabel": "{name} is already on your wishlist",
       "addFailed": "Couldn't add that one to your wishlist.",
@@ -917,7 +897,6 @@
     "addToWishlistButton": "Add to wishlist",
     "wishlistEmpty": "Nothing here yet. Add a song you'd love to try.",
     "wishlistError": "Couldn't update your wishlist.",
-    "start": "Start",
     "startLabel": "Start {name}",
     "removeTitle": "Remove {name}?",
     "removeWarning": "This removes the song and every recording in it. They go to your Mac's Trash, and once the Trash is emptied they're gone for good.",

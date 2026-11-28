@@ -6,7 +6,7 @@ const ANALYSIS_RATE = 12000
 const PASSES = 2
 
 /** Runs a second-order low-pass (RBJ cookbook, Butterworth Q) over `x` in place. */
-function lowpass(x: Float32Array, sampleRate: number, cutoffHz: number): void {
+export function lowpass(x: Float32Array, sampleRate: number, cutoffHz: number): void {
   const w0 = (2 * Math.PI * cutoffHz) / sampleRate
   const alpha = Math.sin(w0) / (2 * Math.SQRT1_2)
   const cos = Math.cos(w0)

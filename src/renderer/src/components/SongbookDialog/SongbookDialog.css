@@ -168,13 +168,13 @@
 }
 
 .remove-song {
-  width: min(var(--layout-dialog-narrow), calc(100vw - var(--space-12)));
+  --dialog-default-width: var(--layout-dialog-narrow);
 }
 
 .remove-song-warning {
   margin: 0 0 var(--space-8);
   font-size: var(--font-size-ui);
-  line-height: 1.5;
+  line-height: var(--line-height);
 }
 
 .remove-song-actions {
@@ -282,7 +282,7 @@
   gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
   border: var(--size-hairline) solid var(--color-border);
-  border-radius: var(--radius-pill, var(--radius-md));
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-text);
   font-size: var(--font-size-caption);
@@ -294,6 +294,8 @@
 }
 
 .explore-filter-popover {
+  --hover-fill: var(--color-highlight);
+  --quiet-fill: var(--color-surface);
   position: absolute;
   top: calc(100% + var(--space-2));
   left: 0;
@@ -304,7 +306,7 @@
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: var(--color-text);
-  box-shadow: var(--shadow-popover, 0 6px 20px rgb(0 0 0 / 0.15));
+  box-shadow: var(--shadow-raised);
 }
 
 .explore-filter-option {

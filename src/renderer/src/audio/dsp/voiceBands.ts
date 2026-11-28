@@ -8,7 +8,7 @@ export const HOP = FRAME / 2
 
 export type Band = readonly [number, number]
 
-// Bands, in Hz. The de-esser band matches the de-esser's split in the mixer.
+// Bands, in Hz. The mixer's de-esser splits at DE_ESS_BAND's lower edge.
 export const VOICED_BAND: Band = [80, 5000]
 export const SIBILANT_BAND: Band = [5000, Infinity]
 export const HUM_BAND: Band = [0, 150]
