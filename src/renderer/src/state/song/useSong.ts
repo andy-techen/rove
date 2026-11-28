@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
 import { decodeAudio, getAudioContext } from '../../audio/engine/engine'
-import type { ChosenProject } from '../../../../preload/index.d'
+import type { ChosenProject } from '@shared/project'
 import {
   Project,
   VocalPart,

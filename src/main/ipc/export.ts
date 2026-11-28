@@ -1,9 +1,10 @@
-import { app, BrowserWindow, dialog, ipcMain, shell, ShareMenu } from 'electron'
-import fs from 'node:fs/promises'
+import { app, ipcMain, shell, ShareMenu } from 'electron'
 import path from 'node:path'
 import { t } from '@shared/copy'
 import { EXPORT_CHANNELS, EXPORT_FORMATS, ExportFormat } from '@shared/exportFormats'
+import { showSave, windowFor } from './dialogs'
 import { songFolderName } from './fileNames'
+import { writeAtomically } from './writeAtomically'
 
 // The renderer may write only to a path the person just picked in the save dialog,
 // once, and reveal only files it exported.
@@ -18,20 +19,16 @@ const isFormat = (value: unknown): value is ExportFormat =>
 export function registerExportIpc(): void {
   ipcMain.handle(EXPORT_CHANNELS.choose, async (e, songName: unknown, format: unknown) => {
     if (typeof songName !== 'string' || !isFormat(format)) throw new Error(t('export.failed'))
-    const win = BrowserWindow.fromWebContents(e.sender)
     const fileName = `${songFolderName(songName) || t('dialogs.untitledSong')}.${format}`
-    const options = {
+    const filePath = await showSave(e, {
       title: t('export.dialogTitle'),
       defaultPath: path.join(lastDir ?? app.getPath('music'), fileName),
       filters: [{ name: t(`export.formats.${format}`), extensions: [format] }]
-    }
-    const result = win
-      ? await dialog.showSaveDialog(win, options)
-      : await dialog.showSaveDialog(options)
-    if (result.canceled || !result.filePath) return null
-    chosen.add(result.filePath)
-    lastDir = path.dirname(result.filePath)
-    return result.filePath
+    })
+    if (!filePath) return null
+    chosen.add(filePath)
+    lastDir = path.dirname(filePath)
+    return filePath
   })
 
   ipcMain.handle(EXPORT_CHANNELS.write, async (_e, filePath: unknown, bytes: unknown) => {
@@ -39,10 +36,8 @@ export function registerExportIpc(): void {
       throw new Error(t('export.failed'))
     }
     chosen.delete(filePath)
-    // Written beside the target and renamed, so a failed export never leaves half a file.
-    const tmp = `${filePath}.rove-partial`
-    await fs.writeFile(tmp, bytes)
-    await fs.rename(tmp, filePath)
+    // A failed export never leaves half a file.
+    await writeAtomically(filePath, bytes)
     written.add(filePath)
   })
 
@@ -58,7 +53,6 @@ export function registerExportIpc(): void {
       shell.showItemInFolder(filePath)
       return
     }
-    const win = BrowserWindow.fromWebContents(e.sender) ?? undefined
-    new ShareMenu({ filePaths: [filePath] }).popup({ window: win })
+    new ShareMenu({ filePaths: [filePath] }).popup({ window: windowFor(e) })
   })
 }

@@ -20,4 +20,10 @@ describe('writeAtomically', () => {
     expect(['"first"', '"second"']).toContain(await readFile(file, 'utf8'))
     expect(await readdir(dir)).toEqual(['voice.json'])
   })
+
+  it('writes bytes as they are', async () => {
+    const file = path.join(await scratch(), 'song.wav')
+    await writeAtomically(file, new Uint8Array([0, 1, 255]))
+    expect([...(await readFile(file))]).toEqual([0, 1, 255])
+  })
 })

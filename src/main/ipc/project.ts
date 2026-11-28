@@ -1,8 +1,10 @@
-import { app, BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent, shell } from 'electron'
+import { app, ipcMain, shell } from 'electron'
 import { t } from '@shared/copy'
+import { ChosenProject, PROJECT_CHANNELS, SongbookEntry } from '@shared/project'
 import { cleanNote, cleanText } from '@shared/wishlist'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { showOpen, showSave } from './dialogs'
 import {
   instrumentalName,
   nextTakeName,
@@ -62,7 +64,7 @@ async function recallTabs(): Promise<SavedTabs> {
   }
 }
 
-async function openSong(dir: string): Promise<{ dir: string; name: string; manifest: unknown }> {
+async function openSong(dir: string): Promise<ChosenProject> {
   openProjects.add(dir)
   const manifest = await readManifest(dir)
   return { dir, name: path.basename(dir), manifest }
@@ -70,10 +72,6 @@ async function openSong(dir: string): Promise<{ dir: string; name: string; manif
 
 function assertOpen(projectDir: string): void {
   if (!openProjects.has(projectDir)) throw new Error(t('dialogs.songNotOpen'))
-}
-
-function windowFor(e: IpcMainInvokeEvent): BrowserWindow | undefined {
-  return BrowserWindow.fromWebContents(e.sender) ?? undefined
 }
 
 async function audioDirFiles(projectDir: string): Promise<string[]> {
@@ -102,31 +100,20 @@ async function writeManifestFile(projectDir: string, manifest: unknown): Promise
 }
 
 export function registerProjectIpc(): void {
-  ipcMain.handle('project:choose', async (e) => {
-    const options = {
+  ipcMain.handle(PROJECT_CHANNELS.choose, async (e) => {
+    const dir = await showOpen(e, {
       title: t('dialogs.openSongTitle'),
       buttonLabel: t('dialogs.openSongButton'),
       defaultPath: songsRoot(),
-      properties: ['openDirectory', 'createDirectory'] as Array<'openDirectory' | 'createDirectory'>
-    }
-    const win = windowFor(e)
-    const result = win
-      ? await dialog.showOpenDialog(win, options)
-      : await dialog.showOpenDialog(options)
-    if (result.canceled || !result.filePaths[0]) return null
-    return openSong(result.filePaths[0])
+      properties: ['openDirectory', 'createDirectory']
+    })
+    return dir ? openSong(dir) : null
   })
 
   // Lists every song under the songs folder for the Songbook. Folders without a
   // project.json are skipped: the user's other folders aren't Rove songs.
-  ipcMain.handle('project:list', async () => {
-    const songs: {
-      folder: string
-      name: string
-      artist?: string
-      note?: string
-      modifiedAt: number
-    }[] = []
+  ipcMain.handle(PROJECT_CHANNELS.list, async () => {
+    const songs: SongbookEntry[] = []
     for (const { folder, dir } of await songbookDirs()) {
       try {
         const [manifest, stat] = await Promise.all([
@@ -155,7 +142,7 @@ export function registerProjectIpc(): void {
   // Opens a song by its folder name under the songs folder. The renderer can't pass
   // an arbitrary path: anything with a separator, parent reference or that resolves
   // outside the songs folder is refused.
-  ipcMain.handle('project:openByName', async (_e, folder: unknown) => {
+  ipcMain.handle(PROJECT_CHANNELS.openByName, async (_e, folder: unknown) => {
     const dir = await songbookSong(folder)
     return openSong(dir)
   })
@@ -163,7 +150,7 @@ export function registerProjectIpc(): void {
   // The singer asked to remove the whole song, so it goes to the Trash, where they can
   // still get it back; Rove itself never deletes recordings. The Songbook keeps songs
   // open in a tab out of reach (openProjects also holds songs whose tabs have closed).
-  ipcMain.handle('project:trashByName', async (_e, folder: unknown) => {
+  ipcMain.handle(PROJECT_CHANNELS.trashByName, async (_e, folder: unknown) => {
     const dir = await songbookSong(folder)
     await shell.trashItem(dir)
     openProjects.delete(dir)
@@ -172,8 +159,14 @@ export function registerProjectIpc(): void {
   // Changes a closed song's name, artist and note from the Songbook; its folder follows
   // the name.
   ipcMain.handle(
-    'project:updateDetails',
-    async (_e, folder: unknown, name: unknown, artist: unknown, note: unknown) => {
+    PROJECT_CHANNELS.updateDetails,
+    async (
+      _e,
+      folder: unknown,
+      name: unknown,
+      artist: unknown,
+      note: unknown
+    ): Promise<SongbookEntry> => {
       const dir = await songbookSong(folder)
       const songName = cleanText(name)
       if (!songFolderName(songName)) throw new Error(t('dialogs.songNameNeeded'))
@@ -199,9 +192,9 @@ export function registerProjectIpc(): void {
     }
   )
 
-  ipcMain.handle('project:restoreTabs', async () => {
+  ipcMain.handle(PROJECT_CHANNELS.restoreTabs, async () => {
     const { openSongs, activeSong } = await recallTabs()
-    const songs: Awaited<ReturnType<typeof openSong>>[] = []
+    const songs: ChosenProject[] = []
     for (const dir of openSongs) {
       try {
         songs.push(await openSong(dir))
@@ -214,61 +207,65 @@ export function registerProjectIpc(): void {
 
   // Only folders this session already opened can be remembered, so a renderer
   // can't plant an arbitrary path to be trusted on the next launch.
-  ipcMain.handle('project:rememberTabs', async (_e, dirs: string[], active: string | null) => {
-    const openSongs = dirs.filter((d) => openProjects.has(d))
-    await saveTabs({ openSongs, activeSong: active && openSongs.includes(active) ? active : null })
-  })
+  ipcMain.handle(
+    PROJECT_CHANNELS.rememberTabs,
+    async (_e, dirs: string[], active: string | null) => {
+      const openSongs = dirs.filter((d) => openProjects.has(d))
+      await saveTabs({
+        openSongs,
+        activeSong: active && openSongs.includes(active) ? active : null
+      })
+    }
+  )
 
   // A named song gets a folder after its name; an unnamed one (the first launch) is untitled.
-  ipcMain.handle('project:createNew', async (_e, name: unknown, artist: unknown, note: unknown) => {
-    const wanted = cleanText(name)
-    const artistName = cleanText(artist)
-    await fs.mkdir(songsRoot(), { recursive: true })
-    const existing = await fs.readdir(songsRoot())
-    const folder = songFolderName(wanted)
-    const dir = path.join(
-      songsRoot(),
-      folder ? uniqueFolderName(existing, folder) : nextUntitledName(existing)
-    )
-    await fs.mkdir(dir)
-    const opened = await openSong(dir)
-    const named = folder ? { ...opened, name: wanted } : opened
-    const songNote = cleanNote(note)
-    return {
-      ...named,
-      ...(artistName && { artist: artistName }),
-      ...(songNote && { note: songNote })
+  ipcMain.handle(
+    PROJECT_CHANNELS.createNew,
+    async (_e, name: unknown, artist: unknown, note: unknown) => {
+      const wanted = cleanText(name)
+      const artistName = cleanText(artist)
+      await fs.mkdir(songsRoot(), { recursive: true })
+      const existing = await fs.readdir(songsRoot())
+      const folder = songFolderName(wanted)
+      const dir = path.join(
+        songsRoot(),
+        folder ? uniqueFolderName(existing, folder) : nextUntitledName(existing)
+      )
+      await fs.mkdir(dir)
+      const opened = await openSong(dir)
+      const named = folder ? { ...opened, name: wanted } : opened
+      const songNote = cleanNote(note)
+      return {
+        ...named,
+        ...(artistName && { artist: artistName }),
+        ...(songNote && { note: songNote })
+      }
     }
-  })
+  )
 
-  ipcMain.handle('project:rename', async (_e, projectDir: string, songName: string) => {
+  ipcMain.handle(PROJECT_CHANNELS.rename, async (_e, projectDir: string, songName: string) => {
     assertOpen(projectDir)
     return followName(projectDir, songName)
   })
 
   // Copies the chosen file into the project so the song folder is self-contained
   // and the user's original file is never touched.
-  ipcMain.handle('project:importBackingTrack', async (e, projectDir: string) => {
+  ipcMain.handle(PROJECT_CHANNELS.importBackingTrack, async (e, projectDir: string) => {
     assertOpen(projectDir)
-    const options = {
+    const source = await showOpen(e, {
       title: t('dialogs.backingTitle'),
       buttonLabel: t('dialogs.backingButton'),
-      properties: ['openFile'] as Array<'openFile'>,
+      properties: ['openFile'],
       filters: [{ name: t('dialogs.audioFiles'), extensions: BACKING_EXTENSIONS }]
-    }
-    const win = windowFor(e)
-    const result = win
-      ? await dialog.showOpenDialog(win, options)
-      : await dialog.showOpenDialog(options)
-    const source = result.filePaths[0]
-    if (result.canceled || !source) return null
+    })
+    if (!source) return null
     const name = path.basename(source)
     const fileName = uniqueName(await audioDirFiles(projectDir), `backing-${name}`)
     await fs.copyFile(source, path.join(projectDir, 'audio', fileName), fs.constants.COPYFILE_EXCL)
     return { file: `audio/${fileName}`, name }
   })
 
-  ipcMain.handle('project:saveTake', async (_e, projectDir: string, data: ArrayBuffer) => {
+  ipcMain.handle(PROJECT_CHANNELS.saveTake, async (_e, projectDir: string, data: ArrayBuffer) => {
     assertOpen(projectDir)
     const fileName = nextTakeName(await audioDirFiles(projectDir))
     // 'wx' refuses to overwrite: an existing recording is never replaced.
@@ -278,7 +275,7 @@ export function registerProjectIpc(): void {
 
   // An instrumental made by removing the vocals: a new file beside its song, which stays.
   ipcMain.handle(
-    'project:saveInstrumental',
+    PROJECT_CHANNELS.saveInstrumental,
     async (_e, projectDir: string, source: string, data: ArrayBuffer) => {
       assertOpen(projectDir)
       resolveAudioPath(projectDir, source)
@@ -290,51 +287,45 @@ export function registerProjectIpc(): void {
     }
   )
 
-  ipcMain.handle('project:readAudio', async (_e, projectDir: string, relPath: string) => {
+  ipcMain.handle(PROJECT_CHANNELS.readAudio, async (_e, projectDir: string, relPath: string) => {
     assertOpen(projectDir)
     return new Uint8Array(await fs.readFile(resolveAudioPath(projectDir, relPath)))
   })
 
   // Packs an open song into one .rove file, written only to the path just chosen.
-  ipcMain.handle('project:exportSongFile', async (e, projectDir: unknown) => {
+  ipcMain.handle(PROJECT_CHANNELS.exportSongFile, async (e, projectDir: unknown) => {
     if (typeof projectDir !== 'string') throw new Error(t('dialogs.songNotOpen'))
     assertOpen(projectDir)
     const manifest = (await readManifest(projectDir)) as { name?: unknown } | null
     const songName = typeof manifest?.name === 'string' ? manifest.name : ''
     const fileName = `${songFolderName(songName) || t('dialogs.untitledSong')}.${SONG_FILE_EXTENSION}`
-    const options = {
+    const target = await showSave(e, {
       title: t('songFile.exportTitle'),
       defaultPath: path.join(app.getPath('documents'), fileName),
       filters: [{ name: t('songFile.fileType'), extensions: [SONG_FILE_EXTENSION] }]
-    }
-    const win = windowFor(e)
-    const result = win
-      ? await dialog.showSaveDialog(win, options)
-      : await dialog.showSaveDialog(options)
-    if (result.canceled || !result.filePath) return null
-    await packSong(projectDir, result.filePath)
-    return result.filePath
+    })
+    if (!target) return null
+    await packSong(projectDir, target)
+    return target
   })
 
   // Unpacks a .rove file the singer picked into a new song under the songs folder.
-  ipcMain.handle('project:importSongFile', async (e) => {
-    const options = {
+  ipcMain.handle(PROJECT_CHANNELS.importSongFile, async (e) => {
+    const source = await showOpen(e, {
       title: t('songFile.importTitle'),
       buttonLabel: t('songFile.importButton'),
-      properties: ['openFile'] as Array<'openFile'>,
+      properties: ['openFile'],
       filters: [{ name: t('songFile.fileType'), extensions: [SONG_FILE_EXTENSION] }]
-    }
-    const win = windowFor(e)
-    const result = win
-      ? await dialog.showOpenDialog(win, options)
-      : await dialog.showOpenDialog(options)
-    const source = result.filePaths[0]
-    if (result.canceled || !source) return null
+    })
+    if (!source) return null
     return openSong(await unpackSong(source, songsRoot()))
   })
 
-  ipcMain.handle('project:writeManifest', async (_e, projectDir: string, manifest: unknown) => {
-    assertOpen(projectDir)
-    await writeManifestFile(projectDir, manifest)
-  })
+  ipcMain.handle(
+    PROJECT_CHANNELS.writeManifest,
+    async (_e, projectDir: string, manifest: unknown) => {
+      assertOpen(projectDir)
+      await writeManifestFile(projectDir, manifest)
+    }
+  )
 }

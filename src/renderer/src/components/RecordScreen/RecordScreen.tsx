@@ -1,6 +1,6 @@
 import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react'
 import { t } from '@shared/copy'
-import type { ChosenProject } from '../../../../preload/index.d'
+import type { ChosenProject } from '@shared/project'
 import { getAudioContext } from '../../audio/engine/engine'
 import { Command, onCommand, typingIn } from '../../state/commands/commands'
 import { useTrackNumberKeys } from '../../state/commands/trackKeys'

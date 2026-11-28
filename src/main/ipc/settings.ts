@@ -1,13 +1,15 @@
-import { app, BrowserWindow, dialog, ipcMain } from 'electron'
-import { promises as fs } from 'node:fs'
+import { app, ipcMain } from 'electron'
 import path from 'node:path'
 import { t } from '@shared/copy'
 import { SETTINGS_CHANNELS, Settings, parseSettings } from '@shared/settings'
-import { writeAtomically } from './writeAtomically'
+import { showOpen } from './dialogs'
+import { jsonStore } from './jsonStore'
 
-const settingsFile = (): string => path.join(app.getPath('userData'), 'settings.json')
+const DEFAULTS: Settings = { songsFolder: null }
+// With no file, or one we can't read, the defaults stand.
+const store = jsonStore('settings.json', parseSettings, DEFAULTS)
 
-let settings: Settings = { songsFolder: null }
+let settings = DEFAULTS
 
 /** Where new songs go: the folder the singer chose, or ~/Music/Rove like other music apps. */
 export const songsFolder = (): string =>
@@ -15,29 +17,20 @@ export const songsFolder = (): string =>
 
 async function save(next: Settings): Promise<void> {
   settings = next
-  await writeAtomically(settingsFile(), JSON.stringify(settings, null, 2))
+  await store.save(settings)
 }
 
 /** Loads settings before the first window opens and serves them to windows. */
 export async function registerSettingsIpc(): Promise<void> {
-  try {
-    settings = parseSettings(JSON.parse(await fs.readFile(settingsFile(), 'utf8')))
-  } catch {
-    // No file yet, or one we can't read: the defaults stand.
-  }
+  settings = await store.load()
   ipcMain.handle(SETTINGS_CHANNELS.songsFolder, () => songsFolder())
   ipcMain.handle(SETTINGS_CHANNELS.chooseSongsFolder, async (e) => {
-    const win = BrowserWindow.fromWebContents(e.sender)
-    const options: Electron.OpenDialogOptions = {
+    const chosen = await showOpen(e, {
       title: t('settings.chooseFolderTitle'),
       buttonLabel: t('settings.chooseFolderButton'),
       defaultPath: songsFolder(),
       properties: ['openDirectory', 'createDirectory']
-    }
-    const result = win
-      ? await dialog.showOpenDialog(win, options)
-      : await dialog.showOpenDialog(options)
-    const chosen = result.canceled ? undefined : result.filePaths[0]
+    })
     if (!chosen) return null
     await save({ ...settings, songsFolder: chosen })
     return chosen

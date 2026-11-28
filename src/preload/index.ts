@@ -16,6 +16,9 @@ import { VOICE_CHANNELS } from '@shared/voice'
 import { TASTE_CHANNELS } from '@shared/polishTaste'
 import { INPUT_VOLUME_CHANNELS, parseInputVolume } from '@shared/inputVolume'
 import { parseOverrides } from '@shared/keymap'
+import { MIC_CHANNELS } from '@shared/mic'
+import { PROJECT_CHANNELS } from '@shared/project'
+import { SEPARATION_MODEL_CHANNEL } from '@shared/separation'
 import {
   CONTEXT_MENU_CHANNEL,
   FULL_SCREEN_CHANNEL,
@@ -27,35 +30,42 @@ import {
 } from '@shared/menu'
 import type { RoveApi } from './index.d'
 
-// The window reports full screen once when the page loads and then on each change. The
-// title bar only listens once a song is open, long after that first report, so the
-// latest state is kept here and handed to each new listener; otherwise a window that
+type Subscribe<T> = (listener: (value: T) => void) => () => void
+
+/**
+ * Listens on a channel the main process sends to, parsing each message. With `cached`, the
+ * latest value is kept from the moment the page loads and handed to each new listener
+ * first: the main process reports some state once on load, long before anything listens.
+ */
+function subscribe<T>(channel: string, parse: (raw: unknown) => T, cached?: T): Subscribe<T> {
+  let latest = cached
+  if (cached !== undefined) {
+    ipcRenderer.on(channel, (_e, raw: unknown) => {
+      latest = parse(raw)
+    })
+  }
+  return (listener) => {
+    if (latest !== undefined) listener(latest)
+    const handler = (_e: Electron.IpcRendererEvent, raw: unknown): void => listener(parse(raw))
+    ipcRenderer.on(channel, handler)
+    return () => ipcRenderer.removeListener(channel, handler)
+  }
+}
+
+// The title bar only listens once a song is open; without the cached state, a window that
 // starts full screen keeps the gap for the window buttons it doesn't show.
-let fullScreen = false
-ipcRenderer.on(FULL_SCREEN_CHANNEL, (_e, full: unknown) => {
-  fullScreen = full === true
-})
-
-// The chosen theme arrives the same way, once on load and then on each change.
-let theme: Theme = 'system'
-ipcRenderer.on(APPEARANCE_CHANNELS.changed, (_e, raw: unknown) => {
-  theme = parseTheme(raw)
-})
-
-// The license arrives the same way, so features show or lock from the first render.
-let license: LicenseStatus = FREE_STATUS
-ipcRenderer.on(LICENSE_CHANNELS.changed, (_e, raw: unknown) => {
-  license = parseLicenseStatus(raw)
-})
+const onFullScreen = subscribe(FULL_SCREEN_CHANNEL, (full) => full === true, false)
+const onTheme = subscribe<Theme>(APPEARANCE_CHANNELS.changed, parseTheme, 'system')
+// Cached so features show or lock from the first render.
+const onLicense = subscribe<LicenseStatus>(
+  LICENSE_CHANNELS.changed,
+  parseLicenseStatus,
+  FREE_STATUS
+)
 
 const api: RoveApi = {
   platform: process.platform,
-  onFullScreen: (listener) => {
-    listener(fullScreen)
-    const handler = (_e: Electron.IpcRendererEvent, full: unknown): void => listener(full === true)
-    ipcRenderer.on(FULL_SCREEN_CHANNEL, handler)
-    return () => ipcRenderer.removeListener(FULL_SCREEN_CHANNEL, handler)
-  },
+  onFullScreen,
   onMenu: (listener) => {
     const handler = (_e: Electron.IpcRendererEvent, action: unknown): void => {
       if (isMenuAction(action)) listener(action)
@@ -65,12 +75,7 @@ const api: RoveApi = {
   },
   getKeymap: () => ipcRenderer.invoke(KEYMAP_CHANNELS.get),
   setKeymap: (overrides) => ipcRenderer.invoke(KEYMAP_CHANNELS.set, overrides),
-  onKeymapChanged: (listener) => {
-    const handler = (_e: Electron.IpcRendererEvent, raw: unknown): void =>
-      listener(parseOverrides(raw))
-    ipcRenderer.on(KEYMAP_CHANNELS.changed, handler)
-    return () => ipcRenderer.removeListener(KEYMAP_CHANNELS.changed, handler)
-  },
+  onKeymapChanged: subscribe(KEYMAP_CHANNELS.changed, parseOverrides),
   captureShortcutKeys: (on) => ipcRenderer.invoke(KEYMAP_CHANNELS.capture, on),
   showContextMenu: (items) => ipcRenderer.invoke(CONTEXT_MENU_CHANNEL, items),
   nativeEdit: (command) => ipcRenderer.invoke(NATIVE_EDIT_CHANNEL, command),
@@ -78,17 +83,17 @@ const api: RoveApi = {
     const text: unknown = await ipcRenderer.invoke(CLIPBOARD_TEXT_CHANNEL)
     return typeof text === 'string' ? text : ''
   },
-  requestMicAccess: () => ipcRenderer.invoke('mic:requestAccess'),
-  openMicSettings: () => ipcRenderer.invoke('mic:openSettings'),
+  requestMicAccess: () => ipcRenderer.invoke(MIC_CHANNELS.requestAccess),
+  openMicSettings: () => ipcRenderer.invoke(MIC_CHANNELS.openSettings),
   getInputVolume: async () => parseInputVolume(await ipcRenderer.invoke(INPUT_VOLUME_CHANNELS.get)),
   setInputVolume: async (volume) =>
     parseInputVolume(await ipcRenderer.invoke(INPUT_VOLUME_CHANNELS.set, volume)),
-  chooseProjectFolder: () => ipcRenderer.invoke('project:choose'),
-  listSongs: () => ipcRenderer.invoke('project:list'),
-  openSongbookSong: (folder) => ipcRenderer.invoke('project:openByName', folder),
+  chooseProjectFolder: () => ipcRenderer.invoke(PROJECT_CHANNELS.choose),
+  listSongs: () => ipcRenderer.invoke(PROJECT_CHANNELS.list),
+  openSongbookSong: (folder) => ipcRenderer.invoke(PROJECT_CHANNELS.openByName, folder),
   updateSongbookSong: (folder, name, artist, note) =>
-    ipcRenderer.invoke('project:updateDetails', folder, name, artist, note),
-  removeSongbookSong: (folder) => ipcRenderer.invoke('project:trashByName', folder),
+    ipcRenderer.invoke(PROJECT_CHANNELS.updateDetails, folder, name, artist, note),
+  removeSongbookSong: (folder) => ipcRenderer.invoke(PROJECT_CHANNELS.trashByName, folder),
   listWishlist: () => ipcRenderer.invoke(WISHLIST_CHANNELS.list),
   addToWishlist: (name, artist, note) =>
     ipcRenderer.invoke(WISHLIST_CHANNELS.add, name, artist, note),
@@ -96,24 +101,26 @@ const api: RoveApi = {
   updateWishlistItem: (id, name, artist, note) =>
     ipcRenderer.invoke(WISHLIST_CHANNELS.update, id, name, artist, note),
   searchCatalog: (options) => ipcRenderer.invoke(CATALOG_CHANNELS.search, options),
-  restoreTabs: () => ipcRenderer.invoke('project:restoreTabs'),
-  rememberTabs: (dirs, active) => ipcRenderer.invoke('project:rememberTabs', dirs, active),
-  createSong: (name, artist, note) => ipcRenderer.invoke('project:createNew', name, artist, note),
-  renameSong: (dir, name) => ipcRenderer.invoke('project:rename', dir, name),
-  importBackingTrack: (dir) => ipcRenderer.invoke('project:importBackingTrack', dir),
-  saveTake: (dir, wav) => ipcRenderer.invoke('project:saveTake', dir, wav),
-  readAudio: (dir, relPath) => ipcRenderer.invoke('project:readAudio', dir, relPath),
-  writeManifest: (dir, manifest) => ipcRenderer.invoke('project:writeManifest', dir, manifest),
-  exportSongFile: (dir) => ipcRenderer.invoke('project:exportSongFile', dir),
-  importSongFile: () => ipcRenderer.invoke('project:importSongFile'),
+  restoreTabs: () => ipcRenderer.invoke(PROJECT_CHANNELS.restoreTabs),
+  rememberTabs: (dirs, active) => ipcRenderer.invoke(PROJECT_CHANNELS.rememberTabs, dirs, active),
+  createSong: (name, artist, note) =>
+    ipcRenderer.invoke(PROJECT_CHANNELS.createNew, name, artist, note),
+  renameSong: (dir, name) => ipcRenderer.invoke(PROJECT_CHANNELS.rename, dir, name),
+  importBackingTrack: (dir) => ipcRenderer.invoke(PROJECT_CHANNELS.importBackingTrack, dir),
+  saveTake: (dir, wav) => ipcRenderer.invoke(PROJECT_CHANNELS.saveTake, dir, wav),
+  readAudio: (dir, relPath) => ipcRenderer.invoke(PROJECT_CHANNELS.readAudio, dir, relPath),
+  writeManifest: (dir, manifest) =>
+    ipcRenderer.invoke(PROJECT_CHANNELS.writeManifest, dir, manifest),
+  exportSongFile: (dir) => ipcRenderer.invoke(PROJECT_CHANNELS.exportSongFile, dir),
+  importSongFile: () => ipcRenderer.invoke(PROJECT_CHANNELS.importSongFile),
   chooseExportPath: (name, format) => ipcRenderer.invoke(EXPORT_CHANNELS.choose, name, format),
   writeExport: (filePath, bytes) => ipcRenderer.invoke(EXPORT_CHANNELS.write, filePath, bytes),
   revealExport: (filePath) => ipcRenderer.invoke(EXPORT_CHANNELS.reveal, filePath),
   shareExport: (filePath) => ipcRenderer.invoke(EXPORT_CHANNELS.share, filePath),
   searchLyrics: (query) => ipcRenderer.invoke(LYRICS_CHANNELS.search, query),
-  readSeparationModel: () => ipcRenderer.invoke('separation:model'),
+  readSeparationModel: () => ipcRenderer.invoke(SEPARATION_MODEL_CHANNEL),
   saveInstrumental: (projectDir, source, wav) =>
-    ipcRenderer.invoke('project:saveInstrumental', projectDir, source, wav),
+    ipcRenderer.invoke(PROJECT_CHANNELS.saveInstrumental, projectDir, source, wav),
   voice: {
     listTakes: () => ipcRenderer.invoke(VOICE_CHANNELS.listTakes),
     readTake: (folder, file) => ipcRenderer.invoke(VOICE_CHANNELS.readTake, folder, file),
@@ -126,19 +133,8 @@ const api: RoveApi = {
   getSongsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.songsFolder),
   chooseSongsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.chooseSongsFolder),
   setTheme: (next) => ipcRenderer.invoke(APPEARANCE_CHANNELS.set, next),
-  onTheme: (listener) => {
-    listener(theme)
-    const handler = (_e: Electron.IpcRendererEvent, raw: unknown): void => listener(parseTheme(raw))
-    ipcRenderer.on(APPEARANCE_CHANNELS.changed, handler)
-    return () => ipcRenderer.removeListener(APPEARANCE_CHANNELS.changed, handler)
-  },
-  onLicense: (listener) => {
-    listener(license)
-    const handler = (_e: Electron.IpcRendererEvent, raw: unknown): void =>
-      listener(parseLicenseStatus(raw))
-    ipcRenderer.on(LICENSE_CHANNELS.changed, handler)
-    return () => ipcRenderer.removeListener(LICENSE_CHANNELS.changed, handler)
-  },
+  onTheme,
+  onLicense,
   activateLicense: async (key) =>
     parseActivationResult(await ipcRenderer.invoke(LICENSE_CHANNELS.activate, key)),
   deactivateLicense: async () =>

@@ -23,6 +23,7 @@ import {
   NATIVE_EDIT_CHANNEL,
   NATIVE_EDITS
 } from '@shared/menu'
+import { MIC_CHANNELS } from '@shared/mic'
 
 // Opening size, and the smallest that still fits the timeline and mixer.
 const WINDOW = { width: 900, height: 670, minWidth: 640, minHeight: 480 }
@@ -93,8 +94,8 @@ app.whenReady().then(async () => {
     callback(mediaTypes.length > 0 && mediaTypes.every((t) => t === 'audio'))
   })
 
-  ipcMain.handle('mic:requestAccess', requestMicAccess)
-  ipcMain.handle('mic:openSettings', () =>
+  ipcMain.handle(MIC_CHANNELS.requestAccess, requestMicAccess)
+  ipcMain.handle(MIC_CHANNELS.openSettings, () =>
     shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone')
   )
   // Text fields keep their own undo, cut, copy and paste (see the Edit menu).

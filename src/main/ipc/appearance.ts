@@ -1,11 +1,13 @@
-import { BrowserWindow, app, ipcMain, nativeTheme } from 'electron'
-import { promises as fs } from 'node:fs'
-import path from 'node:path'
+import { BrowserWindow, ipcMain, nativeTheme } from 'electron'
 import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/appearance'
 import { refreshMenu } from '../menu'
-import { writeAtomically } from './writeAtomically'
+import { jsonStore } from './jsonStore'
 
-const appearanceFile = (): string => path.join(app.getPath('userData'), 'appearance.json')
+const store = jsonStore(
+  'appearance.json',
+  (raw) => ({ theme: parseTheme((raw as { theme?: unknown } | null)?.theme) }),
+  { theme: 'system' as Theme }
+)
 
 let theme: Theme = 'system'
 
@@ -25,7 +27,7 @@ export async function setTheme(raw: unknown): Promise<Theme> {
   refreshMenu()
   for (const win of BrowserWindow.getAllWindows()) reportTheme(win)
   try {
-    await writeAtomically(appearanceFile(), JSON.stringify({ theme }, null, 2))
+    await store.save({ theme })
   } catch {
     // Not remembered for next time, but the switch still holds for this session.
   }
@@ -34,11 +36,7 @@ export async function setTheme(raw: unknown): Promise<Theme> {
 
 /** Applies the saved theme before the first window opens, so it never flashes. */
 export async function registerAppearanceIpc(): Promise<void> {
-  try {
-    theme = parseTheme(JSON.parse(await fs.readFile(appearanceFile(), 'utf8')).theme)
-  } catch {
-    theme = 'system'
-  }
+  theme = (await store.load()).theme
   nativeTheme.themeSource = theme
   ipcMain.handle(APPEARANCE_CHANNELS.set, (_e, raw: unknown) => setTheme(raw))
 }
