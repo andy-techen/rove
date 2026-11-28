@@ -8,25 +8,7 @@ import type { WishlistItem } from '../shared/wishlist'
 import type { VoiceApi } from '../shared/voice'
 import type { TasteApi } from '../shared/polishTaste'
 import type { ContextMenuItem, MenuAction, NativeEdit } from '../shared/menu'
-
-export interface ChosenProject {
-  dir: string
-  name: string
-  manifest: unknown
-  /** Set only when the user named a artist as they created the song. */
-  artist?: string
-  /** Set only when a new song carries a note over from the wishlist. */
-  note?: string
-}
-
-export interface SongbookEntry {
-  folder: string
-  name: string
-  artist?: string
-  /** The singer's own reminder: what to practise, the key, who it's for. */
-  note?: string
-  modifiedAt: number
-}
+import type { ChosenProject, SongbookEntry } from '../shared/project'
 
 export interface ImportedBackingTrack {
   file: string

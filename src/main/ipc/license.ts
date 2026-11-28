@@ -1,6 +1,4 @@
-import { BrowserWindow, app, ipcMain, shell } from 'electron'
-import { promises as fs } from 'node:fs'
-import path from 'node:path'
+import { BrowserWindow, ipcMain, shell } from 'electron'
 import { FeatureId, Plan, requireFeature } from '@shared/features'
 import {
   ActivationResult,
@@ -12,7 +10,7 @@ import {
   parseStoredLicense
 } from '@shared/license'
 import { fakeLicenseService } from './licenseService'
-import { writeAtomically } from './writeAtomically'
+import { jsonStore } from './jsonStore'
 
 // Lemon Squeezy's page where buyers find their orders and keys again.
 const ORDERS_URL = 'https://app.lemonsqueezy.com/my-orders'
@@ -20,7 +18,8 @@ const ORDERS_URL = 'https://app.lemonsqueezy.com/my-orders'
 const MAX_KEY_LENGTH = 200
 
 const service = fakeLicenseService()
-const licenseFile = (): string => path.join(app.getPath('userData'), 'license.json')
+// With no license saved, or one we can't read, this Mac is on free.
+const store = jsonStore<StoredLicense | null>('license.json', parseStoredLicense, null)
 
 let stored: StoredLicense | null = null
 
@@ -39,7 +38,7 @@ export const reportLicense = (win: BrowserWindow): void =>
 async function keep(next: StoredLicense | null): Promise<void> {
   stored = next
   for (const win of BrowserWindow.getAllWindows()) reportLicense(win)
-  await writeAtomically(licenseFile(), JSON.stringify(next, null, 2))
+  await store.save(next)
 }
 
 async function activate(raw: unknown): Promise<ActivationResult> {
@@ -59,11 +58,7 @@ async function deactivate(): Promise<LicenseStatus> {
 
 /** Reads the saved license before the first window opens, and serves the license screens. */
 export async function registerLicenseIpc(): Promise<void> {
-  try {
-    stored = parseStoredLicense(JSON.parse(await fs.readFile(licenseFile(), 'utf8')))
-  } catch {
-    // No license yet, or one we can't read: free.
-  }
+  stored = await store.load()
   ipcMain.handle(LICENSE_CHANNELS.activate, (_e, key: unknown) => activate(key))
   ipcMain.handle(LICENSE_CHANNELS.deactivate, () => deactivate())
   // Only fixed addresses open in the browser; the window can't name one.

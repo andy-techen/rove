@@ -1,27 +1,17 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
-import { promises as fs } from 'fs'
-import path from 'path'
+import { BrowserWindow, ipcMain } from 'electron'
 import { KeymapOverrides, effectiveKeymap, parseOverrides } from '@shared/keymap'
 import { CONTEXT_MENU_CHANNEL, KEYMAP_CHANNELS, parseContextMenu } from '@shared/menu'
 import { installMenu, showContextMenu } from '../menu'
-import { writeAtomically } from './writeAtomically'
+import { jsonStore } from './jsonStore'
 
-const keymapFile = (): string => path.join(app.getPath('userData'), 'keymap.json')
+// With no file, or one we can't read, the defaults stand.
+const store = jsonStore<KeymapOverrides>('keymap.json', parseOverrides, {})
 
 let overrides: KeymapOverrides = {}
 
-async function load(): Promise<void> {
-  try {
-    overrides = parseOverrides(JSON.parse(await fs.readFile(keymapFile(), 'utf8')))
-  } catch {
-    // No file yet, or one we can't read: the defaults stand.
-    overrides = {}
-  }
-}
-
 async function save(raw: unknown): Promise<KeymapOverrides> {
   overrides = parseOverrides(raw)
-  await writeAtomically(keymapFile(), JSON.stringify(overrides, null, 2))
+  await store.save(overrides)
   installMenu(effectiveKeymap(overrides))
   for (const win of BrowserWindow.getAllWindows()) {
     win.webContents.send(KEYMAP_CHANNELS.changed, overrides)
@@ -34,7 +24,7 @@ async function save(raw: unknown): Promise<KeymapOverrides> {
  * also shows right-click menus, which list the same shortcuts.
  */
 export async function registerKeymapIpc(): Promise<void> {
-  await load()
+  overrides = await store.load()
   installMenu(effectiveKeymap(overrides))
   ipcMain.handle(KEYMAP_CHANNELS.get, () => overrides)
   ipcMain.handle(KEYMAP_CHANNELS.set, (_e, raw: unknown) => save(raw))

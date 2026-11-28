@@ -7,7 +7,7 @@ import { promises as fs } from 'node:fs'
  * same file at once (React runs effects twice in development, autosave can overlap)
  * renamed each other's temp file away and the second failed.
  */
-export async function writeAtomically(file: string, data: string): Promise<void> {
+export async function writeAtomically(file: string, data: string | Uint8Array): Promise<void> {
   const tmp = `${file}.${randomUUID()}.tmp`
   try {
     await fs.writeFile(tmp, data)

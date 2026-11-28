@@ -1,7 +1,5 @@
-import { app, ipcMain } from 'electron'
+import { ipcMain } from 'electron'
 import { randomUUID } from 'node:crypto'
-import { promises as fs } from 'node:fs'
-import path from 'node:path'
 import { t } from '@shared/copy'
 import {
   WISHLIST_CHANNELS,
@@ -10,22 +8,10 @@ import {
   cleanText,
   parseWishlist
 } from '@shared/wishlist'
-import { writeAtomically } from './writeAtomically'
+import { jsonStore } from './jsonStore'
 
-const wishlistFile = (): string => path.join(app.getPath('userData'), 'wishlist.json')
-
-async function load(): Promise<WishlistItem[]> {
-  try {
-    return parseWishlist(JSON.parse(await fs.readFile(wishlistFile(), 'utf8')))
-  } catch {
-    // No file yet, or one we can't read: start empty.
-    return []
-  }
-}
-
-async function save(items: WishlistItem[]): Promise<void> {
-  await writeAtomically(wishlistFile(), JSON.stringify(items, null, 2))
-}
+// With no file, or one we can't read, the wishlist starts empty.
+const { load, save } = jsonStore<WishlistItem[]>('wishlist.json', parseWishlist, [])
 
 /** Newest first, as the Songbook shows them. */
 const newestFirst = (items: WishlistItem[]): WishlistItem[] =>

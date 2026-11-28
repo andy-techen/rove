@@ -5,7 +5,8 @@ import type { LyricsResult } from '@shared/lyrics'
 import type { Theme } from '@shared/appearance'
 import type { TasteExample } from '@shared/polishTaste'
 import { FREE_STATUS, LicenseStatus } from '@shared/license'
-import type { ChosenProject, RoveApi } from '../../../preload/index.d'
+import type { ChosenProject } from '@shared/project'
+import type { RoveApi } from '../../../preload/index.d'
 
 /** A stand-in for the preload bridge: every call is a spy, menu events can be fired. */
 export function createFakeApi(): RoveApi & { fireMenu(action: MenuAction): void } {
