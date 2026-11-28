@@ -244,8 +244,12 @@
   cursor: pointer;
 }
 
+/* An applied filter is filled and bold, so it reads as on at a glance; the border alone
+   was too quiet. */
 .explore-filter.active .explore-filter-toggle {
-  border-color: var(--color-text-muted);
+  border-color: transparent;
+  background: var(--color-highlight);
+  font-weight: var(--font-weight-semibold);
 }
 
 .explore-filter-popover {

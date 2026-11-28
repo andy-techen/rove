@@ -126,7 +126,9 @@ describe('Explore', () => {
   it('narrows to songs with synced lyrics when that filter is on', async () => {
     await renderExplore()
     await openFilters()
-    await userEvent.click(screen.getByRole('button', { name: t('songbook.explore.syncedLyrics') }))
+    const synced = screen.getByRole('button', { name: t('songbook.explore.syncedLyrics') })
+    await userEvent.click(synced)
+    expect(synced).toHaveAttribute('aria-pressed', 'true')
     expect(window.api.searchCatalog).toHaveBeenLastCalledWith({ query: '', syncedLyrics: true })
   })
 
