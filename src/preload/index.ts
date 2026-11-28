@@ -1,7 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { EXPORT_CHANNELS } from '@shared/exportFormats'
 import { LYRICS_CHANNELS } from '@shared/online/lyrics'
-import { APPEARANCE_CHANNELS, Theme, parseTheme } from '@shared/preferences/appearance'
+import {
+  APPEARANCE_CHANNELS,
+  TextSize,
+  Theme,
+  parseTextSize,
+  parseTheme
+} from '@shared/preferences/appearance'
 import { CATALOG_CHANNELS } from '@shared/online/catalog'
 import {
   FREE_STATUS,
@@ -56,6 +62,7 @@ function subscribe<T>(channel: string, parse: (raw: unknown) => T, cached?: T): 
 // starts full screen keeps the gap for the window buttons it doesn't show.
 const onFullScreen = subscribe(FULL_SCREEN_CHANNEL, (full) => full === true, false)
 const onTheme = subscribe<Theme>(APPEARANCE_CHANNELS.changed, parseTheme, 'system')
+const onTextSize = subscribe<TextSize>(APPEARANCE_CHANNELS.textSizeChanged, parseTextSize, 'medium')
 // Cached so features show or lock from the first render.
 const onLicense = subscribe<LicenseStatus>(
   LICENSE_CHANNELS.changed,
@@ -146,6 +153,8 @@ const api: RoveApi = {
   chooseExportsFolder: () => ipcRenderer.invoke(SETTINGS_CHANNELS.chooseExportsFolder),
   setTheme: (next) => ipcRenderer.invoke(APPEARANCE_CHANNELS.set, next),
   onTheme,
+  setTextSize: (next) => ipcRenderer.invoke(APPEARANCE_CHANNELS.setTextSize, next),
+  onTextSize,
   onLicense,
   activateLicense: async (key) =>
     parseActivationResult(await ipcRenderer.invoke(LICENSE_CHANNELS.activate, key)),

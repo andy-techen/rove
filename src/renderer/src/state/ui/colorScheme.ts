@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import type { Theme } from '@shared/preferences/appearance'
+import type { TextSize, Theme } from '@shared/preferences/appearance'
 import { DEFAULT_SCHEME } from './constants'
 
 export type ColorScheme = 'light' | 'dark'
@@ -28,4 +28,11 @@ export function useTheme(): { theme: Theme; setTheme(theme: Theme): void } {
   const [theme, setChoice] = useState<Theme>('system')
   useEffect(() => window.api.onTheme(setChoice), [])
   return { theme, setTheme: (next) => void window.api.setTheme(next) }
+}
+
+/** The chosen text size, and a way to change it. */
+export function useTextSize(): { textSize: TextSize; setTextSize(size: TextSize): void } {
+  const [textSize, setChoice] = useState<TextSize>('medium')
+  useEffect(() => window.api.onTextSize(setChoice), [])
+  return { textSize, setTextSize: (next) => void window.api.setTextSize(next) }
 }

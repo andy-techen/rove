@@ -96,6 +96,12 @@ describe('AppDialog settings', () => {
     expect(window.api.setTheme).toHaveBeenCalledWith('dark')
   })
 
+  it('makes the text larger', async () => {
+    const user = openAt('settings')
+    await user.click(screen.getByRole('button', { name: t('settings.textSizes.large') }))
+    expect(window.api.setTextSize).toHaveBeenCalledWith('large')
+  })
+
   it('opens the mic check', async () => {
     const onMicCheck = vi.fn()
     const user = openAt('settings', onMicCheck)

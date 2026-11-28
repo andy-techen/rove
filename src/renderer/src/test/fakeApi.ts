@@ -3,7 +3,7 @@ import { vi } from 'vitest'
 import { KeymapOverrides, parseOverrides } from '@shared/preferences/keymap'
 import type { MenuAction } from '@shared/preferences/menu'
 import type { LyricsResult } from '@shared/online/lyrics'
-import type { Theme } from '@shared/preferences/appearance'
+import type { TextSize, Theme } from '@shared/preferences/appearance'
 import type { TasteExample } from '@shared/preferences/polishTaste'
 import { FREE_STATUS, LicenseStatus } from '@shared/license/license'
 import type { ChosenProject } from '@shared/songs/project'
@@ -97,6 +97,11 @@ export function createFakeApi(): FakeApi {
     chooseExportsFolder: vi.fn(async (): Promise<string | null> => null),
     onTheme: vi.fn((listener: (theme: Theme) => void) => {
       listener('system')
+      return () => {}
+    }),
+    setTextSize: vi.fn(async (size: TextSize) => size),
+    onTextSize: vi.fn((listener: (size: TextSize) => void) => {
+      listener('medium')
       return () => {}
     }),
     onLicense: vi.fn((listener: (status: LicenseStatus) => void) => {

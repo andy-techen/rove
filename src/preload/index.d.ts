@@ -6,7 +6,7 @@ import type {
 import type { ExportFormat } from '../shared/exportFormats'
 import type { KeymapOverrides } from '../shared/preferences/keymap'
 import type { LyricsResult } from '../shared/online/lyrics'
-import type { Theme } from '../shared/preferences/appearance'
+import type { TextSize, Theme } from '../shared/preferences/appearance'
 import type { ActivationResult, LicenseStatus } from '../shared/license/license'
 import type { WishlistItem } from '../shared/preferences/wishlist'
 import type { VoiceApi } from '../shared/songs/voice'
@@ -127,6 +127,10 @@ export interface RoveApi {
   chooseExportsFolder(): Promise<string | null>
   /** Listens for the chosen theme (now, then on each change); returns an unsubscribe. */
   onTheme(listener: (theme: Theme) => void): () => void
+  /** Makes everything in the window bigger or smaller, remembered for next time. */
+  setTextSize(size: TextSize): Promise<TextSize>
+  /** Listens for the chosen text size (now, then on each change); returns an unsubscribe. */
+  onTextSize(listener: (size: TextSize) => void): () => void
   /** Listens for this Mac's plan and key hint (now, then on each change). */
   onLicense(listener: (status: LicenseStatus) => void): () => void
   /** Activates a license key on this Mac; premium turns on if it's accepted. */

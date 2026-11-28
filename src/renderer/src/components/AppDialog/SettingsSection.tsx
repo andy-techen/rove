@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 import { t } from '@shared/copy'
-import { THEMES } from '@shared/preferences/appearance'
-import { useTheme } from '../../state/ui/colorScheme'
+import { TEXT_SIZES, THEMES } from '@shared/preferences/appearance'
+import { useTextSize, useTheme } from '../../state/ui/colorScheme'
 import { Button } from '../ui/Button'
 import { HelpTip } from '../ui/HelpTip'
 import { Segmented } from '../ui/Segmented'
 
 const THEME_OPTIONS = THEMES.map((value) => ({ value, label: t(`menu.themes.${value}`) }))
+const TEXT_SIZE_OPTIONS = TEXT_SIZES.map((value) => ({
+  value,
+  label: t(`settings.textSizes.${value}`)
+}))
 
 interface FolderProps {
   label: string
@@ -52,9 +56,10 @@ interface Props {
   onMicCheck(): void
 }
 
-/** App settings: the mic, where songs and exports go, and how Rove looks. */
+/** App settings: the mic, where songs and exports go, and how Rove looks and reads. */
 export function SettingsSection({ onMicCheck }: Props): React.JSX.Element {
   const { theme, setTheme } = useTheme()
+  const { textSize, setTextSize } = useTextSize()
 
   return (
     <div className="settings">
@@ -90,6 +95,14 @@ export function SettingsSection({ onMicCheck }: Props): React.JSX.Element {
         options={THEME_OPTIONS}
         value={theme}
         onChange={setTheme}
+      />
+
+      <span className="settings-label">{t('settings.textSize')}</span>
+      <Segmented
+        label={t('settings.textSize')}
+        options={TEXT_SIZE_OPTIONS}
+        value={textSize}
+        onChange={setTextSize}
       />
     </div>
   )

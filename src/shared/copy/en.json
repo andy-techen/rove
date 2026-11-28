@@ -451,6 +451,12 @@
     "chooseFolderTitle": "Choose where to save new songs",
     "chooseFolderButton": "Use This Folder",
     "appearance": "Appearance",
+    "textSize": "Text size",
+    "textSizes": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large"
+    },
     "microphone": "Microphone",
     "microphoneHint": "Pick your mic and set its level",
     "checkMicrophone": "Check microphone",

@@ -16,7 +16,7 @@ import { installDockMenu, refreshDockMenu } from './menu'
 import { registerProjectIpc } from './ipc/songs/project'
 import { forgetLastExportDir, registerExportIpc } from './ipc/songs/export'
 import { registerLyricsIpc } from './ipc/online/lyrics'
-import { registerAppearanceIpc, reportTheme } from './ipc/preferences/appearance'
+import { currentZoom, registerAppearanceIpc, reportAppearance } from './ipc/preferences/appearance'
 import { registerKeymapIpc } from './ipc/preferences/keymap'
 import { registerSettingsIpc } from './ipc/preferences/settings'
 import { registerSeparationIpc } from './ipc/songs/separation'
@@ -54,7 +54,8 @@ async function createWindow(): Promise<BrowserWindow> {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      zoomFactor: currentZoom()
     }
   })
 
@@ -70,7 +71,7 @@ async function createWindow(): Promise<BrowserWindow> {
   mainWindow.on('enter-full-screen', reportFullScreen)
   mainWindow.on('leave-full-screen', reportFullScreen)
   mainWindow.webContents.on('did-finish-load', reportFullScreen)
-  mainWindow.webContents.on('did-finish-load', () => reportTheme(mainWindow))
+  mainWindow.webContents.on('did-finish-load', () => reportAppearance(mainWindow))
   mainWindow.webContents.on('did-finish-load', () => reportLicense(mainWindow))
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
