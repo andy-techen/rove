@@ -109,6 +109,7 @@ const api: RoveApi = {
   importBackingTrack: (dir) => ipcRenderer.invoke(PROJECT_CHANNELS.importBackingTrack, dir),
   saveTake: (dir, wav) => ipcRenderer.invoke(PROJECT_CHANNELS.saveTake, dir, wav),
   readAudio: (dir, relPath) => ipcRenderer.invoke(PROJECT_CHANNELS.readAudio, dir, relPath),
+  catalogFacets: () => ipcRenderer.invoke(CATALOG_CHANNELS.facets),
   writeManifest: (dir, manifest) =>
     ipcRenderer.invoke(PROJECT_CHANNELS.writeManifest, dir, manifest),
   exportSongFile: (dir) => ipcRenderer.invoke(PROJECT_CHANNELS.exportSongFile, dir),

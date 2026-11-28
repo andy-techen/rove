@@ -932,14 +932,28 @@
         "pop": "Pop",
         "rock": "Rock",
         "ballad": "Ballad",
-        "folk": "Folk"
+        "r&b": "R&B",
+        "folk": "Folk",
+        "country": "Country",
+        "hiphop": "Hip-hop",
+        "jazz": "Jazz",
+        "classical": "Classical",
+        "other": "Other"
       },
       "tagLabel": "Tag",
       "tags": {
         "love": "Love",
-        "classic": "Classic",
+        "heartbreak": "Heartbreak",
+        "friendship": "Friendship",
+        "youth": "Growing up",
+        "wedding": "Wedding",
         "movie": "Movie / TV",
-        "karaoke-classic": "Karaoke classic"
+        "classic": "Classic",
+        "karaoke-classic": "Karaoke classic",
+        "mellow": "Mellow",
+        "piano": "Piano",
+        "poetic": "Poetic",
+        "storytelling": "Storytelling"
       },
       "languageLabel": "Language",
       "languages": {
@@ -958,6 +972,7 @@
         "duet": "Duet",
         "band": "Band"
       },
+      "syncedLyrics": "Synced lyrics",
       "addLabel": "Add {name} to your wishlist",
       "addedLabel": "{name} is already on your wishlist",
       "addFailed": "Couldn't add that one to your wishlist.",

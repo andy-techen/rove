@@ -23,6 +23,23 @@ export const CATALOG_GENRES = [
 ] as const
 export type CatalogGenre = (typeof CATALOG_GENRES)[number]
 
+/** Moods and occasions to browse by. Curation keeps to this list so each has a label. */
+export const CATALOG_TAGS = [
+  'love',
+  'heartbreak',
+  'friendship',
+  'youth',
+  'wedding',
+  'movie',
+  'classic',
+  'karaoke-classic',
+  'mellow',
+  'piano',
+  'poetic',
+  'storytelling'
+] as const
+export type CatalogTag = (typeof CATALOG_TAGS)[number]
+
 export interface CatalogSong {
   /** Stable id, usually an ISRC; a synthetic id for the handful that don't have one. */
   id: string
@@ -34,8 +51,7 @@ export interface CatalogSong {
   songType: CatalogSongType
   /** The song's genre; free-form on disk but narrowed to CATALOG_GENRES so filters stay tidy. */
   genre?: CatalogGenre
-  /** Free-form tags for moods and occasions: "love", "karaoke-classic", "wedding". */
-  tags?: string[]
+  tags?: CatalogTag[]
   /** Seconds, when known; used to disambiguate lyrics lookups later. */
   durationSec?: number
   /** True when LRCLIB has synced lyrics for this song; the UI can promote them. */
@@ -51,7 +67,9 @@ export interface CatalogSearchOptions {
   /** Any of these genres (OR). */
   genres?: CatalogGenre[]
   /** Any of these tags (OR): a song matches when it has at least one of them. */
-  tags?: string[]
+  tags?: CatalogTag[]
+  /** Only songs LRCLIB has synced lyrics for. */
+  syncedLyrics?: boolean
   limit?: number
 }
 
@@ -61,8 +79,18 @@ export interface CatalogSearchResult {
   total: number
 }
 
+/** The filter values at least one song has, so Explore never offers an empty filter. */
+export interface CatalogFacets {
+  languages: CatalogLanguage[]
+  genres: CatalogGenre[]
+  tags: CatalogTag[]
+  /** Some songs have synced lyrics, so filtering by them can match something. */
+  syncedLyrics: boolean
+}
+
 export const CATALOG_CHANNELS = {
-  search: 'catalog:search'
+  search: 'catalog:search',
+  facets: 'catalog:facets'
 } as const
 
 /** The options as they arrive over IPC: anything odd falls back to a safe default. */
@@ -71,13 +99,14 @@ export function parseSearchOptions(raw: unknown): CatalogSearchOptions {
   const languages = pickArray(r.languages, isLanguage)
   const songTypes = pickArray(r.songTypes, isSongType)
   const genres = pickArray(r.genres, isGenre)
-  const tags = pickArray(r.tags, (v): v is string => typeof v === 'string' && v.length > 0)
+  const tags = pickArray(r.tags, isTag)
   return {
     query: typeof r.query === 'string' ? r.query : '',
     ...(languages.length && { languages }),
     ...(songTypes.length && { songTypes }),
     ...(genres.length && { genres }),
     ...(tags.length && { tags }),
+    ...(r.syncedLyrics === true && { syncedLyrics: true }),
     ...(typeof r.limit === 'number' && r.limit > 0 && { limit: Math.floor(r.limit) })
   }
 }
@@ -97,4 +126,8 @@ export function isSongType(value: unknown): value is CatalogSongType {
 
 export function isGenre(value: unknown): value is CatalogGenre {
   return (CATALOG_GENRES as readonly string[]).includes(value as string)
+}
+
+export function isTag(value: unknown): value is CatalogTag {
+  return (CATALOG_TAGS as readonly string[]).includes(value as string)
 }

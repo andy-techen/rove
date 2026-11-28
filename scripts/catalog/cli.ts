@@ -6,14 +6,26 @@ import {
   CATALOG_GENRES,
   CATALOG_LANGUAGES,
   CATALOG_SONG_TYPES,
+  CATALOG_TAGS,
+  CatalogTag,
   isGenre,
   isLanguage,
-  isSongType
+  isSongType,
+  isTag
 } from '../../src/shared/online/catalog'
 import { addSong, AddRequest, AddResult } from './add'
 import { cachedFetchJson } from './http'
 import { ArtistPick, importArtist } from './importArtists'
-import { finishWrite, openCatalog, removeSong, reviewList } from './store'
+import { findSyncedLyrics } from './lrclib'
+import {
+  editSong,
+  finishWrite,
+  openCatalog,
+  removeSong,
+  reviewList,
+  setSyncedLyrics,
+  songsToEnrich
+} from './store'
 
 // Curation commands for the song catalog. The SQLite file is the source of truth; see
 // docs/plans/catalog.md. Run through npm: `npm run catalog:add -- "Title" "Artist" --lang en`.
@@ -31,6 +43,10 @@ const USAGE = `Usage:
   catalog:import -- --artists <list.txt> [--count 5] [--refresh]
       adds each artist's most played songs (Deezer), pinned by ISRC; one per line:
       "<deezer artist id> <lang> <type> [genre]   # name"
+  catalog:edit -- <id> [--lang <lang>] [--type <type>] [--genre <genre>] [--tags a,b]
+      --tags replaces the song's tags; tags are one of: ${CATALOG_TAGS.join(', ')}
+  catalog:enrich [-- --id <id>] [--refresh]
+      checks LRCLIB for synced lyrics of the exact recording (by its length)
   catalog:remove -- <id>
   catalog:review
   catalog:setup        show catalog changes as SQL in git diff`
@@ -42,6 +58,10 @@ async function main(argv: string[]): Promise<void> {
       return add(rest)
     case 'import':
       return importArtists(rest)
+    case 'edit':
+      return edit(rest)
+    case 'enrich':
+      return enrich(rest)
     case 'remove':
       return remove(rest)
     case 'review':
@@ -73,10 +93,7 @@ async function add(args: string[]): Promise<void> {
     language: optional(values.lang, isLanguage, '--lang', CATALOG_LANGUAGES),
     songType: required(values.type, isSongType, '--type', CATALOG_SONG_TYPES),
     genre: optional(values.genre, isGenre, '--genre', CATALOG_GENRES),
-    tags: (values.tags ?? '')
-      .split(',')
-      .map((tag) => tag.trim().toLowerCase())
-      .filter(Boolean),
+    tags: parseTags(values.tags ?? ''),
     aliases: values.alias ?? []
   }
 
@@ -151,6 +168,67 @@ function parseArtist(line: string): { pick: ArtistPick; name: string }[] {
   ]
 }
 
+function edit(args: string[]): void {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      lang: { type: 'string' },
+      type: { type: 'string' },
+      genre: { type: 'string' },
+      tags: { type: 'string' }
+    }
+  })
+  const id = Number(positionals[0])
+  if (!Number.isInteger(id)) throw new UsageError('Give the id of the song to edit.')
+  const changes = {
+    ...(values.lang !== undefined && {
+      language: required(values.lang, isLanguage, '--lang', CATALOG_LANGUAGES)
+    }),
+    ...(values.type !== undefined && {
+      songType: required(values.type, isSongType, '--type', CATALOG_SONG_TYPES)
+    }),
+    ...(values.genre !== undefined && {
+      genre: required(values.genre, isGenre, '--genre', CATALOG_GENRES)
+    }),
+    ...(values.tags !== undefined && { tags: parseTags(values.tags) })
+  }
+  if (!Object.keys(changes).length) throw new UsageError('Nothing to change.')
+  const db = openCatalog(CATALOG)
+  try {
+    if (!editSong(db, id, changes)) throw new UsageError(`No song #${id}.`)
+    console.log(`Edited #${id}.`)
+    finishWrite(db)
+  } finally {
+    db.close()
+  }
+}
+
+async function enrich(args: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    options: { id: { type: 'string' }, refresh: { type: 'boolean', default: false } }
+  })
+  const id = values.id === undefined ? null : Number(values.id)
+  if (id !== null && !Number.isInteger(id)) throw new UsageError('--id must be a song id.')
+  const db = openCatalog(CATALOG)
+  const fetchJson = cachedFetchJson(CACHE, values.refresh)
+  let synced = 0
+  try {
+    const songs = songsToEnrich(db, id)
+    for (const song of songs) {
+      const lrclibId = await findSyncedLyrics(song, fetchJson)
+      setSyncedLyrics(db, song.id, lrclibId)
+      if (lrclibId !== null) synced++
+      console.log(`${lrclibId === null ? '  ' : '♪ '}#${song.id} ${song.title} — ${song.artist}`)
+    }
+    console.log(`\nSynced lyrics for ${synced} of ${songs.length}.`)
+  } finally {
+    finishWrite(db)
+    db.close()
+  }
+}
+
 function remove(args: string[]): void {
   const id = Number(args[0])
   if (!Number.isInteger(id)) throw new UsageError('Give the id of the song to remove.')
@@ -202,6 +280,14 @@ function print(result: AddResult): void {
     console.log(`Needs review: ${song}`)
     for (const line of result.note.split('\n')) console.log(`    ${line}`)
   }
+}
+
+function parseTags(list: string): CatalogTag[] {
+  const tags = list
+    .split(',')
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean)
+  return tags.map((tag) => required(tag, isTag, '--tags', CATALOG_TAGS))
 }
 
 function optional<T>(

@@ -22,6 +22,8 @@
     "prepare": "husky && npm run catalog:setup --silent",
     "catalog:add": "tsx scripts/catalog/cli.ts add",
     "catalog:import": "tsx scripts/catalog/cli.ts import",
+    "catalog:edit": "tsx scripts/catalog/cli.ts edit",
+    "catalog:enrich": "tsx scripts/catalog/cli.ts enrich",
     "catalog:remove": "tsx scripts/catalog/cli.ts remove",
     "catalog:review": "tsx scripts/catalog/cli.ts review",
     "catalog:setup": "tsx scripts/catalog/cli.ts setup"

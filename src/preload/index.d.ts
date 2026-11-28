@@ -1,4 +1,8 @@
-import type { CatalogSearchOptions, CatalogSearchResult } from '../shared/online/catalog'
+import type {
+  CatalogFacets,
+  CatalogSearchOptions,
+  CatalogSearchResult
+} from '../shared/online/catalog'
 import type { ExportFormat } from '../shared/exportFormats'
 import type { KeymapOverrides } from '../shared/preferences/keymap'
 import type { LyricsResult } from '../shared/online/lyrics'
@@ -70,6 +74,8 @@ export interface RoveApi {
   searchCatalog(options: CatalogSearchOptions): Promise<CatalogSearchResult>
   /** Reopens the songs that were open last time. */
   restoreTabs(): Promise<{ songs: ChosenProject[]; activeSong: string | null }>
+  /** The filters worth offering: values at least one catalog song has. */
+  catalogFacets(): Promise<CatalogFacets>
   rememberTabs(dirs: string[], active: string | null): Promise<void>
   /** Makes a song folder under ~/Music/Rove, named after the song (untitled without a name). */
   createSong(name?: string, artist?: string, note?: string): Promise<ChosenProject>

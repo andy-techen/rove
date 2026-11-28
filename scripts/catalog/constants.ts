@@ -13,3 +13,7 @@ export const TOP_TRACKS = 30
 export const MIN_GAP_MS = 1100
 /** When it answers 503 (too fast, or busy, which is common), back off up to a minute. */
 export const RETRY_DELAYS_MS = [2000, 4000, 8000, 16_000, 30_000, 60_000]
+
+// LRCLIB
+/** Lyrics timed to a recording this close in length line up with it (LRCLIB's own tolerance). */
+export const SAME_LYRICS_SEC = 2

@@ -2,7 +2,8 @@ import type { DatabaseSync } from 'node:sqlite'
 import type {
   CatalogGenre,
   CatalogLanguage,
-  CatalogSongType
+  CatalogSongType,
+  CatalogTag
 } from '../../src/shared/online/catalog'
 import { isChinese, toTraditional } from './chinese'
 import { creditOf, describeCandidates, FetchJson, lookupRecording } from './musicbrainz'
@@ -16,7 +17,7 @@ export interface AddRequest {
   language: CatalogLanguage | null
   songType: CatalogSongType
   genre: CatalogGenre | null
-  tags: string[]
+  tags: CatalogTag[]
   aliases: string[]
   deezerId?: number
   popularity?: number

@@ -53,6 +53,12 @@ export function createFakeApi(): FakeApi {
     updateWishlistItem: vi.fn(async () => []),
     searchCatalog: vi.fn(async () => ({ items: [], total: 0 })),
     restoreTabs: vi.fn(async () => ({ songs: [], activeSong: null })),
+    catalogFacets: vi.fn(async () => ({
+      languages: [],
+      genres: [],
+      tags: [],
+      syncedLyrics: false
+    })),
     rememberTabs: vi.fn(async () => {}),
     createSong: vi.fn(async () => ({
       dir: '/songs/Untitled Song',

@@ -1,12 +1,17 @@
 import { ipcMain } from 'electron'
 import { DatabaseSync } from 'node:sqlite'
 import catalogFile from '../../../../resources/catalog/catalog.sqlite?asset'
-import { CATALOG_CHANNELS, CatalogSearchResult, parseSearchOptions } from '@shared/online/catalog'
-import { searchCatalog } from '../../catalog/query'
+import {
+  CATALOG_CHANNELS,
+  CatalogFacets,
+  CatalogSearchResult,
+  parseSearchOptions
+} from '@shared/online/catalog'
+import { catalogFacets, searchCatalog } from '../../catalog/query'
 import { CATALOG_SCHEMA_VERSION, schemaVersion } from '../../catalog/schema'
 
 // The curated catalog ships with the app as a read-only SQLite file, written only by
-// the curation scripts (scripts/catalog). Opened once, on the first search.
+// the curation scripts (scripts/catalog). Opened once, on the first call.
 let db: DatabaseSync | null | undefined
 
 function open(): DatabaseSync | null {
@@ -31,5 +36,11 @@ export function registerCatalogIpc(): void {
   ipcMain.handle(CATALOG_CHANNELS.search, (_e, raw: unknown): CatalogSearchResult => {
     const catalog = open()
     return catalog ? searchCatalog(catalog, parseSearchOptions(raw)) : { items: [], total: 0 }
+  })
+  ipcMain.handle(CATALOG_CHANNELS.facets, (): CatalogFacets => {
+    const catalog = open()
+    return catalog
+      ? catalogFacets(catalog)
+      : { languages: [], genres: [], tags: [], syncedLyrics: false }
   })
 }

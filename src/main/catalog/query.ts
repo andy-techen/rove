@@ -1,11 +1,17 @@
 import type { DatabaseSync, SQLInputValue } from 'node:sqlite'
 import {
+  CATALOG_GENRES,
+  CATALOG_LANGUAGES,
+  CATALOG_TAGS,
+  CatalogFacets,
   CatalogSearchOptions,
   CatalogSearchResult,
   CatalogSong,
   isGenre,
   isLanguage,
-  isSongType
+  isSongType,
+  isTag,
+  CatalogTag
 } from '@shared/online/catalog'
 import { DEFAULT_LIMIT } from './constants'
 
@@ -45,6 +51,7 @@ export function searchCatalog(
   anyOf('language', options.languages)
   anyOf('song_type', options.songTypes)
   anyOf('genre', options.genres)
+  if (options.syncedLyrics) where.push('has_synced_lyrics = 1')
   if (options.tags?.length) {
     where.push(
       `EXISTS (SELECT 1 FROM song_tags t WHERE t.song_id = songs.id AND t.tag IN (${placeholders(options.tags.length)}))`
@@ -68,20 +75,40 @@ export function searchCatalog(
   return { items: rows.flatMap((row) => toSong(row, tags.get(row.id) ?? [])), total }
 }
 
-function tagsFor(db: DatabaseSync, ids: number[]): Map<number, string[]> {
-  const byId = new Map<number, string[]>()
+/** The languages, genres and tags of the songs the app shows, in the lists' order. */
+export function catalogFacets(db: DatabaseSync): CatalogFacets {
+  const present = (sql: string): Set<unknown> =>
+    new Set((db.prepare(sql).all() as { value: unknown }[]).map((row) => row.value))
+  const ok = "FROM songs WHERE status = 'ok'"
+  const languages = present(`SELECT DISTINCT language AS value ${ok}`)
+  const genres = present(`SELECT DISTINCT genre AS value ${ok}`)
+  const tags = present(
+    `SELECT DISTINCT tag AS value FROM song_tags WHERE song_id IN (SELECT id ${ok})`
+  )
+  return {
+    languages: CATALOG_LANGUAGES.filter((value) => languages.has(value)),
+    genres: CATALOG_GENRES.filter((value) => genres.has(value)),
+    tags: CATALOG_TAGS.filter((value) => tags.has(value)),
+    syncedLyrics: db.prepare(`SELECT 1 ${ok} AND has_synced_lyrics = 1 LIMIT 1`).get() !== undefined
+  }
+}
+
+function tagsFor(db: DatabaseSync, ids: number[]): Map<number, CatalogTag[]> {
+  const byId = new Map<number, CatalogTag[]>()
   if (!ids.length) return byId
   const rows = db
     .prepare(
       `SELECT song_id, tag FROM song_tags WHERE song_id IN (${placeholders(ids.length)}) ORDER BY tag`
     )
     .all(...ids) as { song_id: number; tag: string }[]
-  for (const { song_id, tag } of rows) byId.set(song_id, [...(byId.get(song_id) ?? []), tag])
+  for (const { song_id, tag } of rows) {
+    if (isTag(tag)) byId.set(song_id, [...(byId.get(song_id) ?? []), tag])
+  }
   return byId
 }
 
 /** A row the app can't show (unknown language or type) is skipped, not fatal. */
-function toSong(row: SongRow, tags: string[]): CatalogSong[] {
+function toSong(row: SongRow, tags: CatalogTag[]): CatalogSong[] {
   if (!isLanguage(row.language) || !isSongType(row.song_type)) return []
   const aliases = parseAliases(row.aliases)
   return [

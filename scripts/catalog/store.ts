@@ -4,7 +4,8 @@ import { buildSearchText } from '../../src/main/catalog/searchText'
 import type {
   CatalogGenre,
   CatalogLanguage,
-  CatalogSongType
+  CatalogSongType,
+  CatalogTag
 } from '../../src/shared/online/catalog'
 
 // Writes to the catalog. Only the curation scripts use this; the app opens the file
@@ -18,7 +19,7 @@ export interface SongInput {
   language: CatalogLanguage | null
   songType: CatalogSongType
   genre: CatalogGenre | null
-  tags: string[]
+  tags: CatalogTag[]
   isrc: string | null
   mbid: string | null
   durationSec: number | null
@@ -117,6 +118,57 @@ export function saveSong(
     for (const tag of song.tags) addTag.run(id, tag)
     return id
   })
+}
+
+/** What `catalog:edit` can change by hand. Tags replace the song's tags. */
+export type SongEdit = Partial<Pick<SongInput, 'language' | 'songType' | 'genre' | 'tags'>>
+
+/** Applies hand fixes to a song. False when there's no song with that id. */
+export function editSong(db: DatabaseSync, id: number, edit: SongEdit): boolean {
+  const columns = {
+    language: edit.language,
+    song_type: edit.songType,
+    genre: edit.genre
+  }
+  return transaction(db, () => {
+    if (!db.prepare('SELECT 1 FROM songs WHERE id = ?').get(id)) return false
+    for (const [column, value] of Object.entries(columns)) {
+      if (value !== undefined)
+        db.prepare(`UPDATE songs SET ${column} = ? WHERE id = ?`).run(value, id)
+    }
+    if (edit.tags) {
+      db.prepare('DELETE FROM song_tags WHERE song_id = ?').run(id)
+      const addTag = db.prepare('INSERT INTO song_tags (song_id, tag) VALUES (?, ?)')
+      for (const tag of new Set(edit.tags)) addTag.run(id, tag)
+    }
+    return true
+  })
+}
+
+export interface EnrichRow {
+  id: number
+  title: string
+  artist: string
+  durationSec: number | null
+}
+
+/** Songs to look up again: one by id, or every song. */
+export function songsToEnrich(db: DatabaseSync, id: number | null = null): EnrichRow[] {
+  return db
+    .prepare(
+      `SELECT id, title, artist, duration_sec AS durationSec FROM songs
+       WHERE ? IS NULL OR id = ? ORDER BY id`
+    )
+    .all(id, id) as unknown as EnrichRow[]
+}
+
+/** Records LRCLIB's id for the song's synced lyrics, or that it has none. */
+export function setSyncedLyrics(db: DatabaseSync, id: number, lrclibId: number | null): void {
+  db.prepare('UPDATE songs SET lrclib_id = ?, has_synced_lyrics = ? WHERE id = ?').run(
+    lrclibId,
+    lrclibId === null ? 0 : 1,
+    id
+  )
 }
 
 export function removeSong(db: DatabaseSync, id: number): boolean {

@@ -19,7 +19,8 @@ const yueliang: CatalogSong = {
   artist: '鄧麗君',
   language: 'zh-Hant',
   songType: 'solo',
-  genre: 'ballad'
+  genre: 'ballad',
+  hasSyncedLyrics: true
 }
 
 const filtersButton = () => screen.getByRole('button', { name: t('songbook.explore.filters') })
@@ -39,6 +40,12 @@ describe('Explore', () => {
       items: [dreams, yueliang],
       total: 2
     })
+    vi.mocked(window.api.catalogFacets).mockResolvedValue({
+      languages: ['en', 'zh-Hant'],
+      genres: ['rock', 'ballad'],
+      tags: ['love'],
+      syncedLyrics: true
+    })
     vi.mocked(window.api.listWishlist).mockResolvedValue([])
   })
   afterEach(() => vi.clearAllMocks())
@@ -47,6 +54,30 @@ describe('Explore', () => {
     await renderExplore()
     expect(screen.getByText('Fleetwood Mac')).toBeInTheDocument()
     expect(screen.getAllByText(t('songbook.explore.languages.en')).length).toBeGreaterThan(0)
+  })
+
+  it('marks songs that have synced lyrics', async () => {
+    await renderExplore()
+    expect(screen.getAllByText(t('songbook.explore.syncedLyrics'))).toHaveLength(1)
+  })
+
+  it('only offers filters that some catalog song has', async () => {
+    vi.mocked(window.api.catalogFacets).mockResolvedValue({
+      languages: ['en'],
+      genres: ['rock'],
+      tags: [],
+      syncedLyrics: false
+    })
+    await renderExplore()
+    await openFilters()
+    expect(filter('tagLabel')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: t('songbook.explore.syncedLyrics') })
+    ).not.toBeInTheDocument()
+    await userEvent.click(filter('genreLabel')!)
+    expect(screen.getAllByRole('checkbox').map((box) => box.getAttribute('value'))).toEqual([
+      'rock'
+    ])
   })
 
   it('passes the search query to the catalog as the singer types', async () => {
@@ -90,6 +121,13 @@ describe('Explore', () => {
     await userEvent.click(filter('tagLabel')!)
     await userEvent.click(screen.getByRole('checkbox', { name: t('songbook.explore.tags.love') }))
     expect(window.api.searchCatalog).toHaveBeenLastCalledWith({ query: '', tags: ['love'] })
+  })
+
+  it('narrows to songs with synced lyrics when that filter is on', async () => {
+    await renderExplore()
+    await openFilters()
+    await userEvent.click(screen.getByRole('button', { name: t('songbook.explore.syncedLyrics') }))
+    expect(window.api.searchCatalog).toHaveBeenLastCalledWith({ query: '', syncedLyrics: true })
   })
 
   it('adds a song to the wishlist and marks it as added', async () => {

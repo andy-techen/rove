@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { openCatalog, saveSong } from '../../../scripts/catalog/store'
+import { openCatalog, saveSong, setSyncedLyrics } from '../../../scripts/catalog/store'
 import { song } from '../../../scripts/catalog/testing'
-import { searchCatalog } from './query'
+import { catalogFacets, searchCatalog } from './query'
 
 function catalog(...songs: Parameters<typeof song>[0][]) {
   const db = openCatalog(':memory:')
@@ -12,12 +12,12 @@ function catalog(...songs: Parameters<typeof song>[0][]) {
 const names = (db: ReturnType<typeof catalog>, options: Parameters<typeof searchCatalog>[1]) =>
   searchCatalog(db, options).items.map((s) => s.name)
 
-const dreams = { title: 'Dreams', artist: 'Fleetwood Mac', tags: ['classic'] }
+const dreams = { title: 'Dreams', artist: 'Fleetwood Mac', tags: ['classic' as const] }
 const shallow = {
   title: 'Shallow',
   artist: 'Lady Gaga & Bradley Cooper',
   songType: 'duet' as const,
-  tags: ['movie']
+  tags: ['movie' as const]
 }
 const yueliang = {
   title: '月亮代表我的心',
@@ -25,7 +25,7 @@ const yueliang = {
   aliases: ['Yue Liang Dai Biao Wo De Xin'],
   language: 'zh-Hant' as const,
   songType: 'solo' as const,
-  tags: ['love']
+  tags: ['love' as const]
 }
 
 describe('searchCatalog', () => {
@@ -54,6 +54,12 @@ describe('searchCatalog', () => {
     ])
   })
 
+  it('narrows to songs with synced lyrics', () => {
+    const db = catalog(dreams, yueliang)
+    setSyncedLyrics(db, 2, 99)
+    expect(names(db, { query: '', syncedLyrics: true })).toEqual(['月亮代表我的心'])
+  })
+
   it('hides songs that still wait for review', () => {
     const db = catalog(dreams, { ...shallow, status: 'review', language: null })
     expect(names(db, { query: '' })).toEqual(['Dreams'])
@@ -79,6 +85,22 @@ describe('searchCatalog', () => {
       tags: ['love'],
       durationSec: 213,
       hasSyncedLyrics: false
+    })
+  })
+})
+
+describe('catalogFacets', () => {
+  it('lists the values shown songs have, in the lists’ order', () => {
+    const db = catalog(
+      { ...dreams, genre: 'rock' },
+      { ...yueliang, genre: 'ballad' },
+      { ...shallow, genre: 'pop', tags: ['wedding'], status: 'review' }
+    )
+    expect(catalogFacets(db)).toEqual({
+      languages: ['en', 'zh-Hant'],
+      genres: ['rock', 'ballad'],
+      tags: ['love', 'classic'],
+      syncedLyrics: false
     })
   })
 })

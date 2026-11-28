@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { CatalogGenre, CatalogLanguage, CatalogSong } from '@shared/online/catalog'
+import type {
+  CatalogFacets,
+  CatalogGenre,
+  CatalogLanguage,
+  CatalogSong,
+  CatalogTag
+} from '@shared/online/catalog'
 import { t } from '@shared/copy'
 import type { WishlistItem } from '@shared/preferences/wishlist'
 import { Icon } from '../ui/Icon'
@@ -12,9 +18,9 @@ import { cx } from '../ui/cx'
 type State =
   { kind: 'loading' } | { kind: 'ready'; items: CatalogSong[]; total: number } | { kind: 'error' }
 
-// Filter groups, defined as data so adding another group (year, duration, tempo…)
-// means one more entry here plus its copy keys. Each group holds a set of selected
-// values; an empty set means "don't narrow by this group".
+// Filter groups, built from the values catalog songs actually have, so every option
+// matches something. Each group holds a set of selected values; an empty set means
+// "don't narrow by this group".
 type CopyKey = Parameters<typeof t>[0]
 type GroupId = 'language' | 'genre' | 'tag'
 interface FilterOption {
@@ -26,37 +32,6 @@ interface FilterGroup {
   labelKey: CopyKey
   options: FilterOption[]
 }
-
-// A small starter set of tags. A real catalog ships with its own facet API; this list
-// mirrors what the seed uses so each option matches a few songs.
-const TAG_OPTIONS: FilterOption[] = [
-  { value: 'love', labelKey: 'songbook.explore.tags.love' },
-  { value: 'classic', labelKey: 'songbook.explore.tags.classic' },
-  { value: 'movie', labelKey: 'songbook.explore.tags.movie' },
-  { value: 'karaoke-classic', labelKey: 'songbook.explore.tags.karaoke-classic' }
-]
-
-const FILTER_GROUPS: FilterGroup[] = [
-  {
-    id: 'language',
-    labelKey: 'songbook.explore.languageLabel',
-    options: [
-      { value: 'en', labelKey: 'songbook.explore.languages.en' },
-      { value: 'zh-Hant', labelKey: 'songbook.explore.languages.zh-Hant' }
-    ]
-  },
-  {
-    id: 'genre',
-    labelKey: 'songbook.explore.genreLabel',
-    options: [
-      { value: 'pop', labelKey: 'songbook.explore.genres.pop' },
-      { value: 'rock', labelKey: 'songbook.explore.genres.rock' },
-      { value: 'ballad', labelKey: 'songbook.explore.genres.ballad' },
-      { value: 'folk', labelKey: 'songbook.explore.genres.folk' }
-    ]
-  },
-  { id: 'tag', labelKey: 'songbook.explore.tagLabel', options: TAG_OPTIONS }
-]
 
 type Filters = Record<GroupId, string[]>
 const EMPTY_FILTERS: Filters = { language: [], genre: [], tag: [] }
@@ -71,6 +46,9 @@ export function Explore(): React.JSX.Element {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [state, setState] = useState<State>({ kind: 'loading' })
+  const [groups, setGroups] = useState<FilterGroup[]>([])
+  const [canFilterSynced, setCanFilterSynced] = useState(false)
+  const [syncedOnly, setSyncedOnly] = useState(false)
   const [wishlist, setWishlist] = useState<WishlistItem[] | null>(null)
   const [adding, setAdding] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -79,14 +57,30 @@ export function Explore(): React.JSX.Element {
     // Keep the previous list visible while the next search resolves, so typing in the
     // search box doesn't flash "loading" between every keystroke.
     let cancelled = false
-    window.api.searchCatalog(toSearchOptions(query, filters)).then(
+    window.api.searchCatalog(toSearchOptions(query, filters, syncedOnly)).then(
       (result) => !cancelled && setState({ kind: 'ready', ...result }),
       () => !cancelled && setState({ kind: 'error' })
     )
     return () => {
       cancelled = true
     }
-  }, [query, filters])
+  }, [query, filters, syncedOnly])
+
+  useEffect(() => {
+    let cancelled = false
+    // Without facets the filter row is just empty; search still works.
+    window.api.catalogFacets().then(
+      (facets) => {
+        if (cancelled) return
+        setGroups(filterGroups(facets))
+        setCanFilterSynced(facets.syncedLyrics)
+      },
+      () => {}
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -105,7 +99,8 @@ export function Explore(): React.JSX.Element {
     return set
   }, [wishlist])
 
-  const activeCount = FILTER_GROUPS.reduce((n, group) => n + filters[group.id].length, 0)
+  const activeCount =
+    groups.reduce((n, group) => n + filters[group.id].length, 0) + Number(syncedOnly)
 
   const add = async (song: CatalogSong): Promise<void> => {
     setAdding(song.id)
@@ -153,7 +148,7 @@ export function Explore(): React.JSX.Element {
 
       {filtersOpen && (
         <div className="explore-filter-row" role="group" aria-label={t('songbook.explore.filters')}>
-          {FILTER_GROUPS.map((group) => (
+          {groups.map((group) => (
             <FilterDropdown
               key={group.id}
               group={group}
@@ -162,7 +157,19 @@ export function Explore(): React.JSX.Element {
               onClear={() => setFilters((prev) => ({ ...prev, [group.id]: [] }))}
             />
           ))}
-          {FILTER_GROUPS.flatMap((group) =>
+          {canFilterSynced && (
+            <div className={cx('explore-filter', syncedOnly && 'active')}>
+              <button
+                type="button"
+                className="explore-filter-toggle"
+                aria-pressed={syncedOnly}
+                onClick={() => setSyncedOnly((v) => !v)}
+              >
+                {t('songbook.explore.syncedLyrics')}
+              </button>
+            </div>
+          )}
+          {groups.flatMap((group) =>
             filters[group.id].map((value) => {
               const option = group.options.find((o) => o.value === value)
               const valueLabel = option ? t(option.labelKey) : value
@@ -189,7 +196,10 @@ export function Explore(): React.JSX.Element {
             <button
               type="button"
               className="explore-active-clear"
-              onClick={() => setFilters(EMPTY_FILTERS)}
+              onClick={() => {
+                setFilters(EMPTY_FILTERS)
+                setSyncedOnly(false)
+              }}
             >
               {t('songbook.explore.clearAll')}
             </button>
@@ -225,6 +235,9 @@ export function Explore(): React.JSX.Element {
                       <span className="explore-tag">
                         {t(`songbook.explore.songTypes.${song.songType}`)}
                       </span>
+                    )}
+                    {song.hasSyncedLyrics && (
+                      <span className="explore-tag">{t('songbook.explore.syncedLyrics')}</span>
                     )}
                   </span>
                   <IconButton
@@ -318,14 +331,43 @@ function FilterDropdown({
 
 function toSearchOptions(
   query: string,
-  filters: Filters
+  filters: Filters,
+  syncedOnly: boolean
 ): Parameters<typeof window.api.searchCatalog>[0] {
   return {
     query,
+    ...(syncedOnly && { syncedLyrics: true }),
     ...(filters.language.length && { languages: filters.language as CatalogLanguage[] }),
     ...(filters.genre.length && { genres: filters.genre as CatalogGenre[] }),
-    ...(filters.tag.length && { tags: filters.tag })
+    ...(filters.tag.length && { tags: filters.tag as CatalogTag[] })
   }
+}
+
+function filterGroups(facets: CatalogFacets): FilterGroup[] {
+  const groups: FilterGroup[] = [
+    {
+      id: 'language',
+      labelKey: 'songbook.explore.languageLabel',
+      options: facets.languages.map((value) => ({
+        value,
+        labelKey: `songbook.explore.languages.${value}`
+      }))
+    },
+    {
+      id: 'genre',
+      labelKey: 'songbook.explore.genreLabel',
+      options: facets.genres.map((value) => ({
+        value,
+        labelKey: `songbook.explore.genres.${value}`
+      }))
+    },
+    {
+      id: 'tag',
+      labelKey: 'songbook.explore.tagLabel',
+      options: facets.tags.map((value) => ({ value, labelKey: `songbook.explore.tags.${value}` }))
+    }
+  ]
+  return groups.filter((group) => group.options.length > 0)
 }
 
 // Treat two wishlist entries as the same song when the name and artist match; a name
