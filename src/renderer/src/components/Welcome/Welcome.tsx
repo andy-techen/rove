@@ -7,7 +7,7 @@ import { useFullScreen } from '../../state/ui/useFullScreen'
 import { Button } from '../ui/Button'
 import { Logo } from '../ui/Logo'
 import { Tooltip } from '../ui/Tooltip'
-import { RECENT_SONGS } from './constants'
+import { RECENT_SONGS } from '@shared/constants'
 import './Welcome.css'
 
 interface Props {

@@ -60,6 +60,9 @@ export function isMenuAction(value: unknown): value is MenuAction {
   return typeof value === 'string' && (MENU_ACTIONS as readonly string[]).includes(value)
 }
 
+/** A song picked from the Dock menu's recent songs: its folder under the songs folder. */
+export const OPEN_SONG_CHANNEL = 'menu:openSong'
+
 /** The window asks the main process to show a right-click menu of these rows. */
 export const CONTEXT_MENU_CHANNEL = 'menu:context'
 

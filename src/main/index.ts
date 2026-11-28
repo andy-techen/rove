@@ -12,7 +12,7 @@ import { join } from 'path'
 import { electronApp, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { setUpAbout } from './about'
-import { installDockMenu } from './menu'
+import { installDockMenu, refreshDockMenu } from './menu'
 import { registerProjectIpc } from './ipc/songs/project'
 import { forgetLastExportDir, registerExportIpc } from './ipc/songs/export'
 import { registerLyricsIpc } from './ipc/online/lyrics'
@@ -153,6 +153,8 @@ app.whenReady().then(async () => {
 
   await createWindow()
   installDockMenu(showWindow)
+  // Saving reorders recent songs; catch up whenever the singer leaves the window.
+  app.on('browser-window-blur', () => void refreshDockMenu())
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) void createWindow()

@@ -60,6 +60,15 @@ function App(): React.JSX.Element {
   })
   useEffect(() => onCommand((action) => menu.current(action)), [])
 
+  // A recent song picked from the Dock menu.
+  const openSong = useRef<(folder: string) => void>(() => {})
+  useEffect(() => {
+    openSong.current = (folder) => {
+      if (onboarded) void tabs.openByName(folder)
+    }
+  })
+  useEffect(() => window.api.onOpenSong((folder) => openSong.current(folder)), [])
+
   return (
     <>
       {/* Every open song stays mounted so switching tabs keeps its place and undo history. */}

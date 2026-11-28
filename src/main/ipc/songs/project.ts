@@ -16,8 +16,9 @@ import {
 } from '../files/fileNames'
 import { songsFolder } from '../preferences/settings'
 import { SONG_FILE_EXTENSION, packSong, unpackSong } from './songArchive'
-import { MANIFEST, readManifest, songbookDirs, songbookSong } from './songbook'
+import { MANIFEST, listSongbook, readManifest, songbookSong } from './songbook'
 import { writeAtomically } from '../files/writeAtomically'
+import { refreshDockMenu } from '../../menu'
 import { BACKING_EXTENSIONS } from './constants'
 
 // The renderer may only touch song folders the main process opened for it:
@@ -109,34 +110,7 @@ export function registerProjectIpc(): void {
     return dir ? openSong(dir) : null
   })
 
-  // Lists every song under the songs folder for the Songbook. Folders without a
-  // project.json are skipped: the user's other folders aren't Rove songs.
-  ipcMain.handle(PROJECT_CHANNELS.list, async () => {
-    const songs: SongbookEntry[] = []
-    for (const { folder, dir } of await songbookDirs()) {
-      try {
-        const [manifest, stat] = await Promise.all([
-          readManifest(dir),
-          fs.stat(path.join(dir, MANIFEST))
-        ])
-        const m = manifest as { name?: unknown; artist?: unknown; note?: unknown } | null
-        const name = m && typeof m.name === 'string' && m.name.trim() ? m.name : folder
-        const artist = m && typeof m.artist === 'string' && m.artist.trim() ? m.artist : undefined
-        const note = cleanNote(m?.note)
-        songs.push({
-          folder,
-          name,
-          ...(artist && { artist }),
-          ...(note && { note }),
-          modifiedAt: stat.mtimeMs
-        })
-      } catch {
-        // Not a Rove song (no project.json) or unreadable; skip it.
-      }
-    }
-    songs.sort((a, b) => b.modifiedAt - a.modifiedAt)
-    return songs
-  })
+  ipcMain.handle(PROJECT_CHANNELS.list, listSongbook)
 
   // Opens a song by its folder name under the songs folder. The renderer can't pass
   // an arbitrary path: anything with a separator, parent reference or that resolves
@@ -214,6 +188,8 @@ export function registerProjectIpc(): void {
         openSongs,
         activeSong: active && openSongs.includes(active) ? active : null
       })
+      // Opening, closing or renaming a song changes what's recent.
+      void refreshDockMenu()
     }
   )
 

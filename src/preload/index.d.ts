@@ -32,6 +32,8 @@ export interface RoveApi {
   showContextMenu(items: ContextMenuItem[]): Promise<void>
   /** Listens for native menu choices; returns a function that stops listening. */
   onMenu(listener: (action: MenuAction) => void): () => void
+  /** A recent song picked from the Dock menu, by its folder under the songs folder. */
+  onOpenSong(listener: (folder: string) => void): () => void
   /** The shortcuts the person has rebound (the rest keep their defaults). */
   getKeymap(): Promise<KeymapOverrides>
   /** Saves rebinds and rebuilds the menu; resolves to what was kept after validation. */

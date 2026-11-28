@@ -24,6 +24,7 @@ import {
   FULL_SCREEN_CHANNEL,
   KEYMAP_CHANNELS,
   MENU_CHANNEL,
+  OPEN_SONG_CHANNEL,
   NATIVE_EDIT_CHANNEL,
   CLIPBOARD_TEXT_CHANNEL,
   isMenuAction
@@ -72,6 +73,13 @@ const api: RoveApi = {
     }
     ipcRenderer.on(MENU_CHANNEL, handler)
     return () => ipcRenderer.removeListener(MENU_CHANNEL, handler)
+  },
+  onOpenSong: (listener) => {
+    const handler = (_e: Electron.IpcRendererEvent, folder: unknown): void => {
+      if (typeof folder === 'string') listener(folder)
+    }
+    ipcRenderer.on(OPEN_SONG_CHANNEL, handler)
+    return () => ipcRenderer.removeListener(OPEN_SONG_CHANNEL, handler)
   },
   getKeymap: () => ipcRenderer.invoke(KEYMAP_CHANNELS.get),
   setKeymap: (overrides) => ipcRenderer.invoke(KEYMAP_CHANNELS.set, overrides),

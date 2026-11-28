@@ -314,7 +314,8 @@
     "makeHarmony": "Make Harmony",
     "makeLead": "Make Lead",
     "exportProject": "Export Project…",
-    "importProject": "Import Project…"
+    "importProject": "Import Project…",
+    "recentSongs": "Recent Songs"
   },
   "songFile": {
     "exportTitle": "Export Project",

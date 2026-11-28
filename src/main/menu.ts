@@ -2,9 +2,16 @@ import { app, BrowserWindow, Menu, MenuItemConstructorOptions, WebContents } fro
 import { is } from '@electron-toolkit/utils'
 import { t } from '@shared/copy'
 import { KEYMAP, Keymap, ShortcutId, isInAppAccelerator } from '@shared/preferences/keymap'
-import { ContextMenuItem, MENU_CHANNEL, MenuAction } from '@shared/preferences/menu'
+import { RECENT_SONGS } from '@shared/constants'
+import {
+  ContextMenuItem,
+  MENU_CHANNEL,
+  MenuAction,
+  OPEN_SONG_CHANNEL
+} from '@shared/preferences/menu'
 import { THEMES } from '@shared/preferences/appearance'
 import { currentTheme, setTheme } from './ipc/preferences/appearance'
+import { listSongbook } from './ipc/songs/songbook'
 
 /** Sends a menu choice to the focused window; the renderer decides what it means. */
 function send(action: MenuAction): void {
@@ -154,21 +161,48 @@ export function installMenu(keymap: Keymap): void {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
+let showForDock: (() => Promise<BrowserWindow>) | null = null
+
 /**
- * Right-clicking Rove in the Dock: start or find a song without hunting for the window.
- * `showWindow` brings the window forward (opening one if it was closed) before the
- * choice is sent, since nothing has focus while the Dock menu is open.
+ * Right-clicking Rove in the Dock: pick up a recent song, or start or find one, without
+ * hunting for the window. `showWindow` brings the window forward (opening one if it was
+ * closed) before the choice is sent, since nothing has focus while the Dock menu is open.
  */
 export function installDockMenu(showWindow: () => Promise<BrowserWindow>): void {
+  showForDock = showWindow
+  void refreshDockMenu()
+}
+
+/** Rebuilds the Dock menu's recent songs, after the songs may have changed. */
+export async function refreshDockMenu(): Promise<void> {
+  const showWindow = showForDock
+  if (!app.dock || !showWindow) return
+  const toWindow =
+    (channel: string, payload: string): (() => void) =>
+    () =>
+      void showWindow().then((window) => window.webContents.send(channel, payload))
   const item = (label: string, action: MenuAction): MenuItemConstructorOptions => ({
     label,
-    click: () => void showWindow().then((window) => window.webContents.send(MENU_CHANNEL, action))
+    click: toWindow(MENU_CHANNEL, action)
   })
-  app.dock?.setMenu(
+  // The Dock menu is a list to glance at, so a failed read just leaves the songs out.
+  const recent = (await listSongbook().catch(() => [])).slice(0, RECENT_SONGS)
+  const songs = recent.map((song): MenuItemConstructorOptions => ({
+    label: song.name,
+    click: toWindow(OPEN_SONG_CHANNEL, song.folder)
+  }))
+  // A dimmed row titles the songs, as Music's Dock menu does over Recently Played; a
+  // macOS section header (type 'header') would draw it smaller and bold instead.
+  const recentHeader: MenuItemConstructorOptions = {
+    label: t('menu.recentSongs'),
+    enabled: false
+  }
+  app.dock.setMenu(
     Menu.buildFromTemplate([
       item(t('keymap.newSong'), 'newSong'),
       item(t('keymap.open'), 'open'),
-      item(t('keymap.songbook'), 'songbook')
+      item(t('keymap.songbook'), 'songbook'),
+      ...(songs.length ? [separator, recentHeader, ...songs] : [])
     ])
   )
 }
